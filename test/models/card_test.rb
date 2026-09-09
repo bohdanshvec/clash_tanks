@@ -21,7 +21,13 @@ class CardTest < ActiveSupport::TestCase
       card_type: "technique",
       weight: 1
     )
-    technique = Technique.create!(card: card)
+    technique = Technique.create!(
+			card: card,
+			technique_type: "medium_tank",
+			attack_range: 1,
+			movement_count: 1,
+			movement_type: "diagonal"
+		)
 
     assert_equal technique, card.technique
   end

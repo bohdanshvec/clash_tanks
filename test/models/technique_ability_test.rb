@@ -9,7 +9,13 @@ class TechniqueAbilityTest < ActiveSupport::TestCase
       card_type: "technique",
       weight: 1
     )
-    technique = Technique.create!(card: card)
+    technique = Technique.create!(
+			card: card,
+			technique_type: "medium_tank",
+			attack_range: 1,
+			movement_count: 1,
+			movement_type: "diagonal"
+		)
 
     ability = Ability.create!(
       name: "Первый выстрел",
@@ -32,7 +38,13 @@ class TechniqueAbilityTest < ActiveSupport::TestCase
       card_type: "technique",
       weight: 1
     )
-    technique = Technique.create!(card: card)
+    technique = Technique.create!(
+			card: card,
+			technique_type: "medium_tank",
+			attack_range: 1,
+			movement_count: 1,
+			movement_type: "diagonal"
+		)
 
     ability = Ability.create!(
       name: "Первый выстрел",
@@ -55,7 +67,13 @@ class TechniqueAbilityTest < ActiveSupport::TestCase
       card_type: "technique",
       weight: 1
     )
-    technique = Technique.create!(card: card)
+    technique = Technique.create!(
+			card: card,
+			technique_type: "medium_tank",
+			attack_range: 1,
+			movement_count: 1,
+			movement_type: "diagonal"
+		)
 
     ability = Ability.create!(
       name: "Первый выстрел",

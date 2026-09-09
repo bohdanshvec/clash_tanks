@@ -1,38 +1,51 @@
 require "test_helper"
 
 class AbilityTest < ActiveSupport::TestCase
-  test "has many techniques through technique abilities" do
-    ussr = Nation.create!(name: "СССР", code: "ussr")
-    germany = Nation.create!(name: "Германия", code: "germany")
+	test "has many techniques through technique abilities" do
+		ussr = Nation.create!(name: "СССР", code: "ussr")
+		germany = Nation.create!(name: "Германия", code: "germany")
 
-    t34_card = Card.create!(
-      nation: ussr,
-      name: "Т-34",
-      card_type: "technique",
-      weight: 1
-    )
+		t34_card = Card.create!(
+		  nation: ussr,
+		  name: "Т-34",
+		  card_type: "technique",
+		  weight: 1
+		)
 
-    panther_card = Card.create!(
-      nation: germany,
-      name: "Panther",
-      card_type: "technique",
-      weight: 1
-    )
+		panther_card = Card.create!(
+		  nation: germany,
+		  name: "Panther",
+		  card_type: "technique",
+		  weight: 1
+		)
 
-    t34 = Technique.create!(card: t34_card)
-    panther = Technique.create!(card: panther_card)
+		t34 = Technique.create!(
+		  card: t34_card,
+		  technique_type: "medium_tank",
+		  attack_range: 1,
+		  movement_count: 1,
+		  movement_type: "diagonal"
+		)
 
-    ability = Ability.create!(
-      name: "Диагональное перемещение",
-      code: "diagonal_movement"
-    )
+		panther = Technique.create!(
+		  card: panther_card,
+		  technique_type: "heavy_tank",
+		  attack_range: 1,
+		  movement_count: 1,
+		  movement_type: "orthogonal"
+		)
 
-    TechniqueAbility.create!(technique: t34, ability: ability)
-    TechniqueAbility.create!(technique: panther, ability: ability)
+		ability = Ability.create!(
+		  name: "Диагональное перемещение",
+		  code: "diagonal_movement"
+		)
 
-    assert_includes ability.techniques, t34
-    assert_includes ability.techniques, panther
-  end
+		TechniqueAbility.create!(technique: t34, ability: ability)
+		TechniqueAbility.create!(technique: panther, ability: ability)
+
+		assert_includes ability.techniques, t34
+		assert_includes ability.techniques, panther
+	end
   
   test "requires name" do
 		ability = Ability.new(code: "first_attack")
