@@ -8,20 +8,24 @@ module GameEngine
       { row: 0, column: 4 }
     ].freeze
 
-    def self.initial(current_player_id:, player_ids:)
+    def self.initial(current_player_id:, participants:)
       {
         "turn_number" => 1,
         "current_player_id" => current_player_id,
-        "players" => initial_players(player_ids),
-        "field" => initial_field(player_ids)
+        "players" => initial_players(participants),
+        "field" => initial_field(participants)
       }
     end
 
-    def self.initial_players(player_ids)
-      player_ids.to_h do |player_id|
+    def self.initial_players(participants)
+      participants.to_h do |participant|
+        player_id = participant[:player_id]
+        nation_id = participant[:nation_id]
+
         [
           player_id.to_s,
           {
+            "nation_id" => nation_id,
             "hand" => [],
             "resources" => 0,
             "remaining_time" => nil
@@ -30,15 +34,16 @@ module GameEngine
       end
     end
 
-    def self.initial_field(player_ids)
+    def self.initial_field(participants)
       field = empty_field
 
-      player_ids.each_with_index do |player_id, index|
+      participants.each_with_index do |participant, index|
         position = HEADQUARTERS_POSITIONS[index]
 
         field[position[:row]][position[:column]] = {
           "type" => "headquarters",
-          "player_id" => player_id
+          "player_id" => participant[:player_id],
+          "nation_id" => participant[:nation_id]
         }
       end
 
@@ -66,7 +71,6 @@ module GameEngine
 
       new_field = field.map(&:dup)
       new_field[row][column] = object
-
       new_field
     end
 

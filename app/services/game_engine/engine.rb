@@ -1,6 +1,8 @@
 module GameEngine
   class Engine
     ACTIONS = {
+    	"move" => Actions::Move,
+    	"attack" => Actions::Attack,
       "end_turn" => Actions::EndTurn
     }.freeze
 

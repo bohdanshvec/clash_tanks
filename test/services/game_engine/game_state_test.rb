@@ -1,10 +1,15 @@
 require "test_helper"
 
 class GameEngine::GameStateTest < ActiveSupport::TestCase
+  PARTICIPANTS = [
+    { player_id: 42, nation_id: 10 },
+    { player_id: 57, nation_id: 20 }
+  ].freeze
+
   test "initial returns the default game state" do
     state = GameEngine::GameState.initial(
       current_player_id: 42,
-      player_ids: [42, 57]
+      participants: PARTICIPANTS
     )
 
     assert_equal 1, state["turn_number"]
@@ -13,11 +18,13 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal(
       {
         "42" => {
+          "nation_id" => 10,
           "hand" => [],
           "resources" => 0,
           "remaining_time" => nil
         },
         "57" => {
+          "nation_id" => 20,
           "hand" => [],
           "resources" => 0,
           "remaining_time" => nil
@@ -29,7 +36,8 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "headquarters",
-        "player_id" => 42
+        "player_id" => 42,
+        "nation_id" => 10
       },
       state["field"][2][0]
     )
@@ -37,7 +45,8 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "headquarters",
-        "player_id" => 57
+        "player_id" => 57,
+        "nation_id" => 20
       },
       state["field"][0][4]
     )
@@ -64,12 +73,13 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
   end
 
   test "returns object at field coordinates" do
-    field = GameEngine::GameState.initial_field([42, 57])
+    field = GameEngine::GameState.initial_field(PARTICIPANTS)
 
     assert_equal(
       {
         "type" => "headquarters",
-        "player_id" => 42
+        "player_id" => 42,
+        "nation_id" => 10
       },
       GameEngine::GameState.object_at(field:, row: 2, column: 0)
     )
@@ -111,7 +121,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
   end
 
   test "does not place object on occupied cell" do
-    field = GameEngine::GameState.initial_field([42, 57])
+    field = GameEngine::GameState.initial_field(PARTICIPANTS)
 
     object = {
       "type" => "technique",
@@ -265,7 +275,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
   end
 
   test "does not move headquarters" do
-    field = GameEngine::GameState.initial_field([42, 57])
+    field = GameEngine::GameState.initial_field(PARTICIPANTS)
 
     assert_raises(ArgumentError, "Headquarters cannot be moved") do
       GameEngine::GameState.move_object(
@@ -279,7 +289,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
   end
 
   test "does not move object onto headquarters" do
-    field = GameEngine::GameState.initial_field([42, 57])
+    field = GameEngine::GameState.initial_field(PARTICIPANTS)
 
     object = {
       "type" => "technique",
