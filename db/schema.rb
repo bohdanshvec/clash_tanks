@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_11_123208) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_12_155808) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,17 +27,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_11_123208) do
     t.datetime "created_at", null: false
     t.string "name"
     t.bigint "nation_id", null: false
+    t.integer "price", null: false
     t.datetime "updated_at", null: false
     t.integer "weight"
     t.index ["nation_id"], name: "index_cards_on_nation_id"
   end
 
+  create_table "deck_cards", force: :cascade do |t|
+    t.bigint "card_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "deck_id", null: false
+    t.integer "quantity", null: false
+    t.datetime "updated_at", null: false
+    t.index ["card_id"], name: "index_deck_cards_on_card_id"
+    t.index ["deck_id", "card_id"], name: "index_deck_cards_on_deck_id_and_card_id", unique: true
+    t.index ["deck_id"], name: "index_deck_cards_on_deck_id"
+  end
+
+  create_table "decks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "nation_id", null: false
+    t.bigint "player_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["nation_id"], name: "index_decks_on_nation_id"
+    t.index ["player_id"], name: "index_decks_on_player_id"
+  end
+
   create_table "game_players", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "deck_id", null: false
     t.bigint "game_id", null: false
     t.bigint "nation_id"
     t.bigint "player_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["deck_id"], name: "index_game_players_on_deck_id"
     t.index ["game_id", "player_id"], name: "index_game_players_on_game_id_and_player_id", unique: true
     t.index ["game_id"], name: "index_game_players_on_game_id"
     t.index ["nation_id"], name: "index_game_players_on_nation_id"
@@ -78,6 +102,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_11_123208) do
     t.integer "attack_range", null: false
     t.bigint "card_id", null: false
     t.datetime "created_at", null: false
+    t.integer "firepower", null: false
+    t.integer "fuel", null: false
+    t.integer "hp", null: false
     t.integer "movement_count", null: false
     t.string "movement_type", null: false
     t.string "technique_type", null: false
@@ -86,6 +113,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_11_123208) do
   end
 
   add_foreign_key "cards", "nations"
+  add_foreign_key "deck_cards", "cards"
+  add_foreign_key "deck_cards", "decks"
+  add_foreign_key "decks", "nations"
+  add_foreign_key "decks", "players"
+  add_foreign_key "game_players", "decks"
   add_foreign_key "game_players", "games"
   add_foreign_key "game_players", "nations"
   add_foreign_key "game_players", "players"

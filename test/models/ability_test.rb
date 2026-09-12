@@ -1,78 +1,86 @@
 require "test_helper"
 
 class AbilityTest < ActiveSupport::TestCase
-	test "has many techniques through technique abilities" do
-		ussr = Nation.create!(name: "СССР", code: "ussr")
-		germany = Nation.create!(name: "Германия", code: "germany")
+  test "has many techniques through technique abilities" do
+    ussr = Nation.create!(name: "СССР", code: "ussr")
+    germany = Nation.create!(name: "Германия", code: "germany")
 
-		t34_card = Card.create!(
-		  nation: ussr,
-		  name: "Т-34",
-		  card_type: "technique",
-		  weight: 1
-		)
+    t34_card = Card.create!(
+      nation: ussr,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
 
-		panther_card = Card.create!(
-		  nation: germany,
-		  name: "Panther",
-		  card_type: "technique",
-		  weight: 1
-		)
+    panther_card = Card.create!(
+      nation: germany,
+      name: "Panther",
+      card_type: "technique",
+      weight: 1,
+      price: 3
+    )
 
-		t34 = Technique.create!(
-		  card: t34_card,
-		  technique_type: "medium_tank",
-		  attack_range: 1,
-		  movement_count: 1,
-		  movement_type: "diagonal"
-		)
+    t34 = Technique.create!(
+      card: t34_card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-		panther = Technique.create!(
-		  card: panther_card,
-		  technique_type: "heavy_tank",
-		  attack_range: 1,
-		  movement_count: 1,
-		  movement_type: "orthogonal"
-		)
+    panther = Technique.create!(
+      card: panther_card,
+      technique_type: "heavy_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "orthogonal",
+      firepower: 4,
+      hp: 6,
+      fuel: 1
+    )
 
-		ability = Ability.create!(
-		  name: "Диагональное перемещение",
-		  code: "diagonal_movement"
-		)
+    ability = Ability.create!(
+      name: "Диагональное перемещение",
+      code: "diagonal_movement"
+    )
 
-		TechniqueAbility.create!(technique: t34, ability: ability)
-		TechniqueAbility.create!(technique: panther, ability: ability)
+    TechniqueAbility.create!(technique: t34, ability: ability)
+    TechniqueAbility.create!(technique: panther, ability: ability)
 
-		assert_includes ability.techniques, t34
-		assert_includes ability.techniques, panther
-	end
-  
+    assert_includes ability.techniques, t34
+    assert_includes ability.techniques, panther
+  end
+
   test "requires name" do
-		ability = Ability.new(code: "first_attack")
+    ability = Ability.new(code: "first_attack")
 
-		assert_not ability.valid?
-		assert_includes ability.errors[:name], "can't be blank"
-	end
+    assert_not ability.valid?
+    assert_includes ability.errors[:name], "can't be blank"
+  end
 
-	test "requires code" do
-		ability = Ability.new(name: "Первый выстрел")
+  test "requires code" do
+    ability = Ability.new(name: "Первый выстрел")
 
-		assert_not ability.valid?
-		assert_includes ability.errors[:code], "can't be blank"
-	end
+    assert_not ability.valid?
+    assert_includes ability.errors[:code], "can't be blank"
+  end
 
-	test "requires unique code" do
-		Ability.create!(
-		  name: "Первый выстрел",
-		  code: "first_attack"
-		)
+  test "requires unique code" do
+    Ability.create!(
+      name: "Первый выстрел",
+      code: "first_attack"
+    )
 
-		ability = Ability.new(
-		  name: "Другая способность",
-		  code: "first_attack"
-		)
+    ability = Ability.new(
+      name: "Другая способность",
+      code: "first_attack"
+    )
 
-		assert_not ability.valid?
-		assert_includes ability.errors[:code], "has already been taken"
-	end
+    assert_not ability.valid?
+    assert_includes ability.errors[:code], "has already been taken"
+  end
 end

@@ -7,7 +7,8 @@ class TechniqueTest < ActiveSupport::TestCase
       nation: nation,
       name: "Т-34",
       card_type: "technique",
-      weight: 1
+      weight: 1,
+      price: 2
     )
 
     technique = Technique.create!(
@@ -15,7 +16,10 @@ class TechniqueTest < ActiveSupport::TestCase
       technique_type: "medium_tank",
       attack_range: 1,
       movement_count: 1,
-      movement_type: "diagonal"
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
     )
 
     assert_equal card, technique.card
@@ -27,7 +31,8 @@ class TechniqueTest < ActiveSupport::TestCase
       nation: nation,
       name: "Т-34",
       card_type: "technique",
-      weight: 1
+      weight: 1,
+      price: 2
     )
 
     technique = Technique.create!(
@@ -35,7 +40,10 @@ class TechniqueTest < ActiveSupport::TestCase
       technique_type: "medium_tank",
       attack_range: 1,
       movement_count: 1,
-      movement_type: "diagonal"
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
     )
 
     ability = Ability.create!(
@@ -57,7 +65,8 @@ class TechniqueTest < ActiveSupport::TestCase
       nation: nation,
       name: "Т-34",
       card_type: "technique",
-      weight: 1
+      weight: 1,
+      price: 2
     )
 
     technique = Technique.new(
@@ -65,201 +74,372 @@ class TechniqueTest < ActiveSupport::TestCase
       technique_type: "invalid",
       attack_range: 1,
       movement_count: 1,
-      movement_type: "orthogonal"
+      movement_type: "orthogonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
     )
 
     assert_not technique.valid?
     assert_includes technique.errors[:technique_type], "is not included in the list"
   end
-  
+
   test "accepts all technique types" do
-		nation = Nation.create!(name: "СССР", code: "ussr")
-		card = Card.create!(
-		  nation: nation,
-		  name: "Т-34",
-		  card_type: "technique",
-		  weight: 1
-		)
+    nation = Nation.create!(name: "СССР", code: "ussr")
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
 
-		Technique::TECHNIQUE_TYPES.each do |technique_type|
-		  technique = Technique.new(
-		    card: card,
-		    technique_type: technique_type,
-		    attack_range: 1,
-		    movement_count: 1,
-		    movement_type: "orthogonal"
-		  )
+    Technique::TECHNIQUE_TYPES.each do |technique_type|
+      technique = Technique.new(
+        card: card,
+        technique_type: technique_type,
+        attack_range: 1,
+        movement_count: 1,
+        movement_type: "orthogonal",
+        firepower: 3,
+        hp: 5,
+        fuel: 1
+      )
 
-		  assert technique.valid?, "Expected #{technique_type} to be valid"
-		end
-	end
+      assert technique.valid?, "Expected #{technique_type} to be valid"
+    end
+  end
 
-	test "rejects invalid movement type" do
-		nation = Nation.create!(name: "СССР", code: "ussr")
-		card = Card.create!(
-		  nation: nation,
-		  name: "Т-34",
-		  card_type: "technique",
-		  weight: 1
-		)
+  test "rejects invalid movement type" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
 
-		technique = Technique.new(
-		  card: card,
-		  technique_type: "medium_tank",
-		  attack_range: 1,
-		  movement_count: 1,
-		  movement_type: "invalid"
-		)
+    technique = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "invalid",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-		assert_not technique.valid?
-		assert_includes technique.errors[:movement_type], "is not included in the list"
-	end
+    assert_not technique.valid?
+    assert_includes technique.errors[:movement_type], "is not included in the list"
+  end
 
-	test "accepts orthogonal and diagonal movement types" do
-		nation = Nation.create!(name: "СССР", code: "ussr")
-		card = Card.create!(
-		  nation: nation,
-		  name: "Т-34",
-		  card_type: "technique",
-		  weight: 1
-		)
+  test "accepts orthogonal and diagonal movement types" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
 
-		Technique::MOVEMENT_TYPES.each do |movement_type|
-		  technique = Technique.new(
-		    card: card,
-		    technique_type: "medium_tank",
-		    attack_range: 1,
-		    movement_count: 1,
-		    movement_type: movement_type
-		  )
+    Technique::MOVEMENT_TYPES.each do |movement_type|
+      technique = Technique.new(
+        card: card,
+        technique_type: "medium_tank",
+        attack_range: 1,
+        movement_count: 1,
+        movement_type: movement_type,
+        firepower: 3,
+        hp: 5,
+        fuel: 1
+      )
 
-		  assert technique.valid?, "Expected #{movement_type} to be valid"
-		end
-	end
-	
-	test "attack range must be a positive integer" do
-		nation = Nation.create!(name: "СССР", code: "ussr")
-		card = Card.create!(
-		  nation: nation,
-		  name: "Т-34",
-		  card_type: "technique",
-		  weight: 1
-		)
+      assert technique.valid?, "Expected #{movement_type} to be valid"
+    end
+  end
 
-		zero_range = Technique.new(
-		  card: card,
-		  technique_type: "medium_tank",
-		  attack_range: 0,
-		  movement_count: 1,
-		  movement_type: "diagonal"
-		)
+  test "attack range must be a positive integer" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
 
-		negative_range = Technique.new(
-		  card: card,
-		  technique_type: "medium_tank",
-		  attack_range: -1,
-		  movement_count: 1,
-		  movement_type: "diagonal"
-		)
+    zero_range = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 0,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-		decimal_range = Technique.new(
-		  card: card,
-		  technique_type: "medium_tank",
-		  attack_range: 1.5,
-		  movement_count: 1,
-		  movement_type: "diagonal"
-		)
+    negative_range = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: -1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-		assert_not zero_range.valid?
-		assert_not negative_range.valid?
-		assert_not decimal_range.valid?
-	end
+    decimal_range = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1.5,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-	test "movement count must be a positive integer" do
-		nation = Nation.create!(name: "СССР", code: "ussr")
-		card = Card.create!(
-		  nation: nation,
-		  name: "Т-34",
-		  card_type: "technique",
-		  weight: 1
-		)
+    assert_not zero_range.valid?
+    assert_not negative_range.valid?
+    assert_not decimal_range.valid?
+  end
 
-		zero_count = Technique.new(
-		  card: card,
-		  technique_type: "medium_tank",
-		  attack_range: 1,
-		  movement_count: 0,
-		  movement_type: "diagonal"
-		)
+  test "movement count must be a positive integer" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
 
-		negative_count = Technique.new(
-		  card: card,
-		  technique_type: "medium_tank",
-		  attack_range: 1,
-		  movement_count: -1,
-		  movement_type: "diagonal"
-		)
+    zero_count = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 0,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-		decimal_count = Technique.new(
-		  card: card,
-		  technique_type: "medium_tank",
-		  attack_range: 1,
-		  movement_count: 1.5,
-		  movement_type: "diagonal"
-		)
+    negative_count = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: -1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-		assert_not zero_count.valid?
-		assert_not negative_count.valid?
-		assert_not decimal_count.valid?
-	end
-	
-	test "technique types have correct movement characteristics" do
-		expected = {
-		  "light_tank" => {
-		    movement_type: "orthogonal",
-		    movement_count: 2
-		  },
-		  "medium_tank" => {
-		    movement_type: "diagonal",
-		    movement_count: 1
-		  },
-		  "heavy_tank" => {
-		    movement_type: "orthogonal",
-		    movement_count: 1
-		  },
-		  "tank_destroyer" => {
-		    movement_type: "orthogonal",
-		    movement_count: 1
-		  },
-		  "artillery" => {
-		    movement_type: "orthogonal",
-		    movement_count: 1
-		  }
-		}
+    decimal_count = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1.5,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-		expected.each do |technique_type, characteristics|
-		  nation = Nation.create!(
-		    name: "СССР",
-		    code: "ussr_#{technique_type}"
-		  )
+    assert_not zero_count.valid?
+    assert_not negative_count.valid?
+    assert_not decimal_count.valid?
+  end
 
-		  card = Card.create!(
-		    nation: nation,
-		    name: technique_type,
-		    card_type: "technique",
-		    weight: 1
-		  )
+  test "firepower must be a positive integer" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
 
-		  technique = Technique.create!(
-		    card: card,
-		    technique_type: technique_type,
-		    attack_range: 1,
-		    movement_count: characteristics[:movement_count],
-		    movement_type: characteristics[:movement_type]
-		  )
+    zero_firepower = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 0,
+      hp: 5,
+      fuel: 1
+    )
 
-		  assert_equal characteristics[:movement_type], technique.movement_type
-		  assert_equal characteristics[:movement_count], technique.movement_count
-		end
-end
+    negative_firepower = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: -1,
+      hp: 5,
+      fuel: 1
+    )
+
+    decimal_firepower = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 1.5,
+      hp: 5,
+      fuel: 1
+    )
+
+    assert_not zero_firepower.valid?
+    assert_not negative_firepower.valid?
+    assert_not decimal_firepower.valid?
+  end
+
+  test "hp must be a positive integer" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
+
+    zero_hp = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 0,
+      fuel: 1
+    )
+
+    negative_hp = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: -1,
+      fuel: 1
+    )
+
+    decimal_hp = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 1.5,
+      fuel: 1
+    )
+
+    assert_not zero_hp.valid?
+    assert_not negative_hp.valid?
+    assert_not decimal_hp.valid?
+  end
+
+  test "fuel must be a non-negative integer" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
+
+    negative_fuel = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: -1
+    )
+
+    decimal_fuel = Technique.new(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1.5
+    )
+
+    assert_not negative_fuel.valid?
+    assert_not decimal_fuel.valid?
+  end
+
+  test "technique types have correct movement characteristics" do
+    expected = {
+      "light_tank" => {
+        movement_type: "orthogonal",
+        movement_count: 2
+      },
+      "medium_tank" => {
+        movement_type: "diagonal",
+        movement_count: 1
+      },
+      "heavy_tank" => {
+        movement_type: "orthogonal",
+        movement_count: 1
+      },
+      "tank_destroyer" => {
+        movement_type: "orthogonal",
+        movement_count: 1
+      },
+      "artillery" => {
+        movement_type: "orthogonal",
+        movement_count: 1
+      }
+    }
+
+    expected.each do |technique_type, characteristics|
+      nation = Nation.create!(
+        name: "СССР",
+        code: "ussr_#{technique_type}"
+      )
+
+      card = Card.create!(
+        nation: nation,
+        name: technique_type,
+        card_type: "technique",
+        weight: 1,
+        price: 2
+      )
+
+      technique = Technique.create!(
+        card: card,
+        technique_type: technique_type,
+        attack_range: 1,
+        movement_count: characteristics[:movement_count],
+        movement_type: characteristics[:movement_type],
+        firepower: 3,
+        hp: 5,
+        fuel: 1
+      )
+
+      assert_equal characteristics[:movement_type], technique.movement_type
+      assert_equal characteristics[:movement_count], technique.movement_count
+    end
+  end
 end

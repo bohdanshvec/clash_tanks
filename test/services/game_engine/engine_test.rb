@@ -104,4 +104,49 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     assert_equal "technique", result.state["field"][0][2]["type"]
     assert_equal 0, result.state["field"][0][2]["movement_count"]
   end
+
+  test "executes play_card for current player" do
+    @state["players"]["42"]["resources"] = 5
+    @state["players"]["42"]["hand"] = [
+      {
+        "card_id" => 15,
+        "name" => "Т-34",
+        "card_type" => "technique",
+        "nation_id" => 10,
+        "weight" => 1,
+        "price" => 2,
+        "technique" => {
+          "technique_type" => "medium_tank",
+          "attack_range" => 1,
+          "movement_count" => 1,
+          "movement_type" => "diagonal",
+          "firepower" => 4,
+          "hp" => 10,
+          "fuel" => 2
+        }
+      }
+    ]
+
+    action = GameEngine::Action.new(
+      player_id: 42,
+      type: "play_card",
+      payload: {
+        card_id: 15,
+        row: 2,
+        column: 1
+      }
+    )
+
+    result = GameEngine::Engine.new(@state).call(action)
+
+    assert_predicate result, :success?
+    assert_empty result.state["players"]["42"]["hand"]
+    assert_equal 3, result.state["players"]["42"]["resources"]
+
+    technique = result.state["field"][2][1]
+
+    assert_equal "technique", technique["type"]
+    assert_equal 15, technique["card_id"]
+    assert_equal 42, technique["player_id"]
+  end
 end

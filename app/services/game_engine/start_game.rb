@@ -1,5 +1,7 @@
 module GameEngine
   class StartGame
+    INITIAL_HAND_SIZE = 6
+
     def self.call(game)
       new(game).call
     end
@@ -16,9 +18,13 @@ module GameEngine
       raise ArgumentError, "Game must have exactly two players" unless game_players.size == 2
 
       participants = game_players.map do |game_player|
+        cards = GameState.cards_from_deck(game_player.deck).shuffle
+
         {
           player_id: game_player.player_id,
-          nation_id: game_player.nation_id
+          nation_id: game_player.nation_id,
+          hand: cards.first(INITIAL_HAND_SIZE),
+          deck: cards.drop(INITIAL_HAND_SIZE)
         }
       end
 

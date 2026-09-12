@@ -16,20 +16,22 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal 42, state["current_player_id"]
 
     assert_equal(
-      {
-        "42" => {
-          "nation_id" => 10,
-          "hand" => [],
-          "resources" => 0,
-          "remaining_time" => nil
-        },
-        "57" => {
-          "nation_id" => 20,
-          "hand" => [],
-          "resources" => 0,
-          "remaining_time" => nil
-        }
-      },
+			{
+				"42" => {
+					"nation_id" => 10,
+					"hand" => [],
+					"deck" => [],
+					"resources" => 0,
+					"remaining_time" => nil
+				},
+				"57" => {
+					"nation_id" => 20,
+					"hand" => [],
+					"deck" => [],
+					"resources" => 0,
+					"remaining_time" => nil
+				}
+			},
       state["players"]
     )
 
@@ -341,5 +343,156 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
         to_column: 0
       )
     end
+  end
+  
+  test "builds full card objects from deck cards" do
+    player = Player.create!
+    nation = Nation.create!(
+      name: "СССР",
+      code: "ussr"
+    )
+
+    deck = Deck.create!(
+      player: player,
+      nation: nation,
+      name: "Основная колода"
+    )
+
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
+
+    Technique.create!(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 10,
+      fuel: 1
+    )
+
+    DeckCard.create!(
+      deck: deck,
+      card: card,
+      quantity: 1
+    )
+
+    cards = GameEngine::GameState.cards_from_deck(deck)
+
+    assert_equal 1, cards.size
+
+    assert_equal(
+      {
+        "card_id" => card.id,
+        "name" => "Т-34",
+        "card_type" => "technique",
+        "nation_id" => nation.id,
+        "weight" => 1,
+        "price" => 2,
+        "technique" => {
+          "technique_type" => "medium_tank",
+          "attack_range" => 1,
+          "movement_count" => 1,
+          "movement_type" => "diagonal",
+          "firepower" => 3,
+          "hp" => 10,
+          "fuel" => 1
+        }
+      },
+      cards.first
+    )
+  end
+
+  test "expands deck card quantity into separate card objects" do
+    player = Player.create!
+    nation = Nation.create!(
+      name: "СССР",
+      code: "ussr"
+    )
+
+    deck = Deck.create!(
+      player: player,
+      nation: nation,
+      name: "Основная колода"
+    )
+
+    card = Card.create!(
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
+
+    Technique.create!(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 10,
+      fuel: 1
+    )
+
+    DeckCard.create!(
+      deck: deck,
+      card: card,
+      quantity: 3
+    )
+
+    cards = GameEngine::GameState.cards_from_deck(deck)
+
+    assert_equal 3, cards.size
+    assert cards.all? { |item| item["card_id"] == card.id }
+  end
+
+  test "builds card object without technique data for non-technique card" do
+    player = Player.create!
+    nation = Nation.create!(
+      name: "СССР",
+      code: "ussr"
+    )
+
+    deck = Deck.create!(
+      player: player,
+      nation: nation,
+      name: "Основная колода"
+    )
+
+    card = Card.create!(
+      nation: nation,
+      name: "Приказ",
+      card_type: "order",
+      weight: 1,
+      price: 2
+    )
+
+    DeckCard.create!(
+      deck: deck,
+      card: card,
+      quantity: 1
+    )
+
+    cards = GameEngine::GameState.cards_from_deck(deck)
+
+    assert_equal 1, cards.size
+    assert_equal(
+      {
+        "card_id" => card.id,
+        "name" => "Приказ",
+        "card_type" => "order",
+        "nation_id" => nation.id,
+        "weight" => 1,
+        "price" => 2
+      },
+      cards.first
+    )
   end
 end

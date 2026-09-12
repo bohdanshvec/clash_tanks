@@ -1,10 +1,11 @@
 module GameEngine
   class Engine
-    ACTIONS = {
-    	"move" => Actions::Move,
-    	"attack" => Actions::Attack,
-      "end_turn" => Actions::EndTurn
-    }.freeze
+		ACTIONS = {
+			"move" => Actions::Move,
+			"attack" => Actions::Attack,
+			"play_card" => Actions::PlayCard,
+			"end_turn" => Actions::EndTurn
+		}.freeze
 
     def initialize(state)
       @state = state

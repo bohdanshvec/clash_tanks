@@ -17,22 +17,54 @@ module GameEngine
       }
     end
 
-    def self.initial_players(participants)
-      participants.to_h do |participant|
-        player_id = participant[:player_id]
-        nation_id = participant[:nation_id]
+    def self.cards_from_deck(deck)
+      deck.deck_cards.includes(card: :technique).flat_map do |deck_card|
+        Array.new(deck_card.quantity) do
+          card = deck_card.card
 
-        [
-          player_id.to_s,
-          {
-            "nation_id" => nation_id,
-            "hand" => [],
-            "resources" => 0,
-            "remaining_time" => nil
+          card_data = {
+            "card_id" => card.id,
+            "name" => card.name,
+            "card_type" => card.card_type,
+            "nation_id" => card.nation_id,
+            "weight" => card.weight,
+            "price" => card.price
           }
-        ]
+
+          if card.technique
+            card_data["technique"] = {
+              "technique_type" => card.technique.technique_type,
+              "attack_range" => card.technique.attack_range,
+              "movement_count" => card.technique.movement_count,
+              "movement_type" => card.technique.movement_type,
+              "firepower" => card.technique.firepower,
+              "hp" => card.technique.hp,
+              "fuel" => card.technique.fuel
+            }
+          end
+
+          card_data
+        end
       end
     end
+
+		def self.initial_players(participants)
+			participants.to_h do |participant|
+				player_id = participant[:player_id]
+				nation_id = participant[:nation_id]
+
+				[
+				  player_id.to_s,
+				  {
+				    "nation_id" => nation_id,
+				    "hand" => participant[:hand] || [],
+				    "deck" => participant[:deck] || [],
+				    "resources" => 0,
+				    "remaining_time" => nil
+				  }
+				]
+			end
+		end
 
     def self.initial_field(participants)
       field = empty_field
