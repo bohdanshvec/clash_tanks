@@ -1,6 +1,10 @@
 class Card < ApplicationRecord
   belongs_to :nation
   has_one :technique
+  has_one :platoon
+
+  has_many :card_abilities
+  has_many :abilities, through: :card_abilities
 
   validates :name, presence: true
   validates :card_type, presence: true

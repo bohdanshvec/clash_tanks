@@ -40,6 +40,31 @@ class CardTest < ActiveSupport::TestCase
     assert_equal technique, card.technique
   end
 
+	test "has many abilities through card abilities" do
+		nation = Nation.create!(name: "СССР", code: "ussr")
+
+		card = Card.create!(
+		  nation: nation,
+		  name: "Артиллерия",
+		  card_type: "order",
+		  weight: 1,
+		  price: 2
+		)
+
+		ability = Ability.create!(
+		  name: "Нанесение урона",
+		  code: "damage_technique"
+		)
+
+		CardAbility.create!(
+		  card: card,
+		  ability: ability,
+		  parameters: { "damage" => 3 }
+		)
+
+		assert_includes card.abilities, ability
+	end
+
   test "requires name" do
     nation = Nation.create!(name: "СССР", code: "ussr")
 

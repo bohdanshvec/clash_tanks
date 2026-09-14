@@ -17,54 +17,75 @@ module GameEngine
       }
     end
 
-    def self.cards_from_deck(deck)
-      deck.deck_cards.includes(card: :technique).flat_map do |deck_card|
-        Array.new(deck_card.quantity) do
-          card = deck_card.card
+		def self.cards_from_deck(deck)
+			deck.deck_cards.includes(
+				card: [:technique, :platoon, { card_abilities: :ability }]
+			).flat_map do |deck_card|
+				Array.new(deck_card.quantity) do
+				  card = deck_card.card
 
-          card_data = {
-            "card_id" => card.id,
-            "name" => card.name,
-            "card_type" => card.card_type,
-            "nation_id" => card.nation_id,
-            "weight" => card.weight,
-            "price" => card.price
-          }
-
-          if card.technique
-            card_data["technique"] = {
-              "technique_type" => card.technique.technique_type,
-              "attack_range" => card.technique.attack_range,
-              "movement_count" => card.technique.movement_count,
-              "movement_type" => card.technique.movement_type,
-              "firepower" => card.technique.firepower,
-              "hp" => card.technique.hp,
-              "fuel" => card.technique.fuel
-            }
-          end
-
-          card_data
-        end
-      end
-    end
-
-		def self.initial_players(participants)
-			participants.to_h do |participant|
-				player_id = participant[:player_id]
-				nation_id = participant[:nation_id]
-
-				[
-				  player_id.to_s,
-				  {
-				    "nation_id" => nation_id,
-				    "hand" => participant[:hand] || [],
-				    "deck" => participant[:deck] || [],
-				    "resources" => 0,
-				    "remaining_time" => nil
+				  card_data = {
+				    "card_id" => card.id,
+				    "name" => card.name,
+				    "card_type" => card.card_type,
+				    "nation_id" => card.nation_id,
+				    "weight" => card.weight,
+				    "price" => card.price
 				  }
-				]
+
+				  if card.technique
+				    card_data["technique"] = {
+				      "technique_type" => card.technique.technique_type,
+				      "attack_range" => card.technique.attack_range,
+				      "movement_count" => card.technique.movement_count,
+				      "movement_type" => card.technique.movement_type,
+				      "firepower" => card.technique.firepower,
+				      "hp" => card.technique.hp,
+				      "fuel" => card.technique.fuel
+				    }
+				  end
+
+				  if card.platoon
+				    card_data["platoon"] = {
+				      "firepower" => card.platoon.firepower,
+				      "hp" => card.platoon.hp,
+				      "armor" => card.platoon.armor,
+				      "fuel" => card.platoon.fuel
+				    }
+				  end
+
+				  if card.card_abilities.any?
+				    card_data["abilities"] = card.card_abilities.map do |card_ability|
+				      {
+				        "code" => card_ability.ability.code
+				      }.merge(card_ability.parameters)
+				    end
+				  end
+
+				  card_data
+				end
 			end
 		end
+
+    def self.initial_players(participants)
+      participants.to_h do |participant|
+        player_id = participant[:player_id]
+        nation_id = participant[:nation_id]
+
+        [
+          player_id.to_s,
+          {
+            "nation_id" => nation_id,
+            "hand" => participant[:hand] || [],
+            "deck" => participant[:deck] || [],
+            "graveyard" => [],
+            "platoons" => [nil, nil, nil, nil],
+            "resources" => 0,
+            "remaining_time" => nil
+          }
+        ]
+      end
+    end
 
     def self.initial_field(participants)
       field = empty_field

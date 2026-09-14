@@ -13,10 +13,22 @@ module GameEngine
         card = card_from_hand
         return failure("Card is not in hand") unless card
 
-        return failure("Card is not a technique") unless card["card_type"] == "technique"
+        case card["card_type"]
+        when "technique"
+          play_technique(card)
+        when "order"
+          play_order(card)
+        when "platoon"
+          play_platoon(card)
+        else
+          failure("Unsupported card type")
+        end
+      end
 
-        price = card["price"].to_i
-        return failure("Not enough resources") if player_resources < price
+      private
+
+      def play_technique(card)
+        return failure("Not enough resources") if player_resources < card["price"].to_i
 
         position = [
           @action.payload[:row],
@@ -25,6 +37,7 @@ module GameEngine
 
         return failure("Invalid coordinates") unless valid_coordinates?(position)
         return failure("Destination cell is occupied") if object_at(position)
+
         return failure("Technique must be placed adjacent to headquarters") unless adjacent_to_own_headquarters?(position)
 
         new_state = @state.deep_dup
@@ -33,7 +46,8 @@ module GameEngine
         player["hand"].delete_at(
           player["hand"].index { |hand_card| hand_card["card_id"] == card["card_id"] }
         )
-        player["resources"] -= price
+
+        player["resources"] -= card["price"].to_i
 
         new_state["field"][position[0]][position[1]] = technique_object(card)
 
@@ -44,7 +58,69 @@ module GameEngine
         )
       end
 
-      private
+      def play_order(card)
+        return failure("Not enough resources") if player_resources < card["price"].to_i
+
+        abilities = card["abilities"] || []
+
+        return failure("Order has no abilities") if abilities.empty?
+
+        current_state = @state
+        targets = @action.payload[:targets] || []
+
+        abilities.each do |ability|
+          result = GameEngine::Abilities::Executor.new(
+            state: current_state,
+            ability: ability,
+            player_id: @action.player_id,
+            targets: targets
+          ).call
+
+          return failure(result.error) unless result.success?
+
+          current_state = result.state
+        end
+
+        new_state = current_state.deep_dup
+        player = new_state["players"][@action.player_id.to_s]
+
+        player["hand"].delete_at(
+          player["hand"].index { |hand_card| hand_card["card_id"] == card["card_id"] }
+        )
+
+        player["resources"] -= card["price"].to_i
+        player["graveyard"] << card
+
+        Result.new(
+          success: true,
+          state: new_state,
+          events: [{ type: "order_played" }]
+        )
+      end
+
+      def play_platoon(card)
+        return failure("Not enough resources") if player_resources < card["price"].to_i
+
+        slot = player["platoons"].index(&:nil?)
+
+        return failure("No free platoon slot") unless slot
+
+        new_state = @state.deep_dup
+        new_player = new_state["players"][@action.player_id.to_s]
+
+        new_player["hand"].delete_at(
+          new_player["hand"].index { |hand_card| hand_card["card_id"] == card["card_id"] }
+        )
+
+        new_player["resources"] -= card["price"].to_i
+        new_player["platoons"][slot] = platoon_object(card)
+
+        Result.new(
+          success: true,
+          state: new_state,
+          events: [{ type: "platoon_played" }]
+        )
+      end
 
       def player_exists?
         @state["players"].key?(@action.player_id.to_s)
@@ -125,6 +201,22 @@ module GameEngine
           "movement_type" => technique["movement_type"],
           "has_attacked" => false,
           "has_counterattacked" => false
+        }
+      end
+
+      def platoon_object(card)
+        platoon = card["platoon"]
+
+        {
+          "type" => "platoon",
+          "card_id" => card["card_id"],
+          "player_id" => @action.player_id,
+          "nation_id" => card["nation_id"],
+          "name" => card["name"],
+          "firepower" => platoon["firepower"],
+          "hp" => platoon["hp"],
+          "armor" => platoon["armor"],
+          "fuel" => platoon["fuel"]
         }
       end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_12_155808) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_14_055915) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,6 +20,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_155808) do
     t.string "name"
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_abilities_on_code", unique: true
+  end
+
+  create_table "card_abilities", force: :cascade do |t|
+    t.bigint "ability_id", null: false
+    t.bigint "card_id", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "parameters", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.index ["ability_id"], name: "index_card_abilities_on_ability_id"
+    t.index ["card_id", "ability_id"], name: "index_card_abilities_on_card_id_and_ability_id", unique: true
+    t.index ["card_id"], name: "index_card_abilities_on_card_id"
   end
 
   create_table "cards", force: :cascade do |t|
@@ -83,19 +94,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_155808) do
     t.index ["code"], name: "index_nations_on_code", unique: true
   end
 
+  create_table "platoons", force: :cascade do |t|
+    t.integer "armor", null: false
+    t.bigint "card_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "firepower", null: false
+    t.integer "fuel", null: false
+    t.integer "hp", null: false
+    t.datetime "updated_at", null: false
+    t.index ["card_id"], name: "index_platoons_on_card_id", unique: true
+  end
+
   create_table "players", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-  end
-
-  create_table "technique_abilities", force: :cascade do |t|
-    t.bigint "ability_id", null: false
-    t.datetime "created_at", null: false
-    t.bigint "technique_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["ability_id"], name: "index_technique_abilities_on_ability_id"
-    t.index ["technique_id", "ability_id"], name: "index_technique_abilities_on_technique_id_and_ability_id", unique: true
-    t.index ["technique_id"], name: "index_technique_abilities_on_technique_id"
   end
 
   create_table "techniques", force: :cascade do |t|
@@ -112,6 +124,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_155808) do
     t.index ["card_id"], name: "index_techniques_on_card_id", unique: true
   end
 
+  add_foreign_key "card_abilities", "abilities"
+  add_foreign_key "card_abilities", "cards"
   add_foreign_key "cards", "nations"
   add_foreign_key "deck_cards", "cards"
   add_foreign_key "deck_cards", "decks"
@@ -121,7 +135,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_155808) do
   add_foreign_key "game_players", "games"
   add_foreign_key "game_players", "nations"
   add_foreign_key "game_players", "players"
-  add_foreign_key "technique_abilities", "abilities"
-  add_foreign_key "technique_abilities", "techniques"
+  add_foreign_key "platoons", "cards"
   add_foreign_key "techniques", "cards"
 end

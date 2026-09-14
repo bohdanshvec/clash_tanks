@@ -25,39 +25,40 @@ class TechniqueTest < ActiveSupport::TestCase
     assert_equal card, technique.card
   end
 
-  test "has many abilities through technique abilities" do
-    nation = Nation.create!(name: "СССР", code: "ussr")
-    card = Card.create!(
-      nation: nation,
-      name: "Т-34",
-      card_type: "technique",
-      weight: 1,
-      price: 2
-    )
+	test "has many abilities through card abilities" do
+		nation = Nation.create!(name: "СССР", code: "ussr")
 
-    technique = Technique.create!(
-      card: card,
-      technique_type: "medium_tank",
-      attack_range: 1,
-      movement_count: 1,
-      movement_type: "diagonal",
-      firepower: 3,
-      hp: 5,
-      fuel: 1
-    )
+		card = Card.create!(
+		  nation: nation,
+		  name: "Т-34",
+		  card_type: "technique",
+		  weight: 1,
+		  price: 2
+		)
 
-    ability = Ability.create!(
-      name: "Диагональное перемещение",
-      code: "diagonal_movement"
-    )
+		technique = Technique.create!(
+		  card: card,
+		  technique_type: "medium_tank",
+		  attack_range: 1,
+		  movement_count: 1,
+		  movement_type: "diagonal",
+		  firepower: 3,
+		  hp: 5,
+		  fuel: 1
+		)
 
-    TechniqueAbility.create!(
-      technique: technique,
-      ability: ability
-    )
+		ability = Ability.create!(
+		  name: "Диагональное перемещение",
+		  code: "diagonal_movement"
+		)
 
-    assert_includes technique.abilities, ability
-  end
+		CardAbility.create!(
+		  card: card,
+		  ability: ability
+		)
+
+		assert_includes technique.card.abilities, ability
+	end
 
   test "validates technique type" do
     nation = Nation.create!(name: "СССР", code: "ussr")
