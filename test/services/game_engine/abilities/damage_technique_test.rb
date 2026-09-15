@@ -1,15 +1,13 @@
 require "test_helper"
 
 class GameEngine::Abilities::DamageTechniqueTest < ActiveSupport::TestCase
-  PARTICIPANTS = [
-    { player_id: 42, nation_id: 10 },
-    { player_id: 57, nation_id: 20 }
-  ].freeze
-
   setup do
     @state = GameEngine::GameState.initial(
       current_player_id: 42,
-      participants: PARTICIPANTS
+      participants: [
+        headquarters_participant(player_id: 42, nation_id: 10),
+        headquarters_participant(player_id: 57, nation_id: 20)
+      ]
     )
 
     @state["field"][1][2] = {

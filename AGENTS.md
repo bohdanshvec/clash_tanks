@@ -1,7 +1,7 @@
 # AGENTS.md
 
-## Без моей команды не изменять никакие файлы
-## Общаться со мною на русском языке
+> Без моей команды не изменять никакие файлы
+> Общаться со мною на русском языке
 
 ## 1. Проект
 
@@ -208,8 +208,8 @@ HQ хранится непосредственно в `field`, как и дру�
 ```ruby
 {
   "type" => "headquarters",
-  "player_id" => 42,
   "card_id" => 10,
+  "player_id" => 42,
   "nation_id" => 10,
   "name" => "Test HQ",
   "hp" => 20,
@@ -227,7 +227,7 @@ HQ хранится непосредственно в `field`, как и дру�
 
 Отдельная система `HeadquartersAbility` не создаётся.
 
-Создание HQ в GameState при StartGame ещё не реализовано.
+HQ создаётся в GameState при StartGame из выбранной `headquarters_card` каждого GamePlayer.
 
 ## 7. Модели
 
@@ -257,6 +257,8 @@ Game + Player + Nation + Deck
 Уникальная пара: `game_id + player_id`
 
 В партии два игрока.
+
+GamePlayer также связан с выбранной `headquarters_card`.
 
 ### Nation
 
@@ -316,12 +318,6 @@ app/models/headquarters.rb
 
 ```
 headquarters
-```
-
-Тест:
-
-```
-test/models/headquarters_test.rb
 ```
 
 Поля:
@@ -391,6 +387,46 @@ Technique не имеет Armor.
 - размещение;
 - расход ресурсов;
 - специальные боевые правила.
+
+### Runtime Technique
+
+При размещении Technique на поле сохраняется также:
+
+```ruby
+"movement_limit" => 1
+```
+
+`movement_count` — текущее количество оставшихся перемещений в текущем ходу.
+
+`movement_limit` — максимальное количество перемещений, которое Technique получает в начале своего хода.
+
+Пример:
+
+```ruby
+{
+  "type" => "technique",
+  "card_id" => 15,
+  "player_id" => 42,
+  "nation_id" => 10,
+  "name" => "Т-34",
+  "technique_type" => "medium_tank",
+  "hp" => 10,
+  "firepower" => 4,
+  "fuel" => 2,
+  "attack_range" => 1,
+  "movement_count" => 1,
+  "movement_limit" => 1,
+  "movement_type" => "diagonal",
+  "has_attacked" => false,
+  "has_counterattacked" => false
+}
+```
+
+В начале хода владельца:
+
+- `movement_count` восстанавливается до `movement_limit`;
+- `has_attacked` сбрасывается в `false`;
+- `has_counterattacked` сбрасывается в `false`.
 
 ### Platoon
 
@@ -561,14 +597,15 @@ Persistent Deck не изменяется во время партии.
 7. остальные — в текущую deck;
 8. выбирается случайный первый игрок;
 9. создаётся GameState;
-10. создаётся стартовое положение HQ;
-11. Game переводится в `started`.
+10. создаются runtime HQ обоих игроков;
+11. Game переводится в `started`;
+12. для выбранного первого игрока рассчитывается стартовый Fuel.
 
 Persistent Deck после этого не изменяется.
 
-Пункт 10 пока не реализован.
+HQ выбирается через `GamePlayer.headquarters_card`.
 
-Выбранная HQ должна быть отдельной картой типа `headquarters`, а её характеристики берутся из связанной записи Headquarters.
+Характеристики HQ берутся из связанной записи Headquarters.
 
 ## 10. Форматы карт в GameState
 
@@ -642,6 +679,7 @@ Order не имеет вложенного `technique` или `platoon`.
   "fuel" => 2,
   "attack_range" => 1,
   "movement_count" => 1,
+  "movement_limit" => 1,
   "movement_type" => "diagonal",
   "has_attacked" => false,
   "has_counterattacked" => false
@@ -656,6 +694,8 @@ Order не имеет вложенного `technique` или `platoon`.
 - вложенный объект `technique`.
 
 `movement_count` на поле — оставшееся количество перемещений.
+
+`movement_limit` — лимит восстановления движения в начале хода владельца.
 
 ### HQ на поле
 
@@ -791,7 +831,95 @@ GameEngine::TurnTimer
 
 Определение победителя/проигравшего относится к Stage 13.
 
-## 13. Реализованные действия
+## 13. Resources / Fuel
+
+### FuelCalculator
+
+Реализован:
+
+```
+GameEngine::Resources::FuelCalculator
+```
+
+Он рассчитывает Fuel текущего игрока по его активным объектам.
+
+В расчёт входят:
+
+- Fuel собственного HQ;
+- Fuel собственных Technique на поле;
+- Fuel собственных Platoon.
+
+Противоположные объекты не учитываются.
+
+`nil`-слоты Platoon игнорируются.
+
+Пример:
+
+```
+HQ 5
++ Technique 2
++ Technique 3
++ Platoon 3
+= 13 Fuel
+```
+
+FuelCalculator не изменяет переданный GameState.
+
+### Начало партии
+
+При StartGame:
+
+1. создаётся GameState;
+2. создаются оба HQ;
+3. выбирается первый игрок;
+4. для первого игрока рассчитывается начальный Fuel.
+
+Другой игрок на момент старта получает `resources = 0`.
+
+### Начало нового хода
+
+При переходе хода Fuel нового текущего игрока пересчитывается заново.
+
+Текущее значение `resources` заменяется рассчитанным значением.
+
+Это означает, что неиспользованный Fuel предыдущего хода не переносится автоматически.
+
+Дополнительные эффекты Fuel будут реализовываться отдельными игровыми механиками согласно `GAME_RULES.md`.
+
+## 14. Подготовка нового хода
+
+Реализован сервис:
+
+```
+GameEngine::Turns::PreparePlayer
+```
+
+Он получает:
+
+- `state`;
+- `player_id`.
+
+Создаёт новый state через `deep_dup`.
+
+Для всех Technique данного игрока:
+
+```ruby
+movement_count = movement_limit
+has_attacked = false
+has_counterattacked = false
+```
+
+Technique противника не изменяются.
+
+После восстановления состояния Technique пересчитывается Fuel нового игрока через:
+
+```
+GameEngine::Resources::FuelCalculator
+```
+
+PreparePlayer не изменяет исходный GameState.
+
+## 15. Реализованные действия
 
 ### Move
 
@@ -848,12 +976,19 @@ State не мутируется.
 - увеличивается `turn_number`;
 - переключается `current_player_id`;
 - обновляется `turn_started_at`;
-- создаётся событие `turn_ended`;
-- исходный state не мутируется.
+- вызывается `GameEngine::Turns::PreparePlayer` для нового текущего игрока;
+- восстанавливается движение его Technique;
+- сбрасываются `has_attacked` и `has_counterattacked`;
+- рассчитывается его новый Fuel;
+- создаётся событие `turn_ended`.
 
-Обязательный draw, расчёт fuel, восстановление движения и сброс ограничений действий ещё не завершены.
+Исходный state не мутируется.
 
-## 14. Stage 9 — PlayCard
+Mandatory draw при переходе хода пока не выполняется.
+
+Он относится к Stage 11.
+
+## 16. Stage 9 — PlayCard
 
 Stage 9 завершён.
 
@@ -871,6 +1006,7 @@ Stage 9 завершён.
 - persistent Deck;
 - DeckCard;
 - `GamePlayer.deck`;
+- `GamePlayer.headquarters_card`;
 - создание текущих deck и hand через `GameState.cards_from_deck`;
 - перемешивание deck;
 - начальная рука;
@@ -887,7 +1023,7 @@ Stage 9 завершён.
 - `damage_technique`;
 - атомарное выполнение нескольких Ability Order.
 
-### 14.1. PlayCard — Technique
+### 16.1. PlayCard — Technique
 
 Для Technique используется Action:
 
@@ -927,6 +1063,7 @@ Action.new(
 - списывается `price`;
 - удаляется ровно одна копия карты из hand;
 - создаётся объект Technique на поле;
+- `movement_limit` устанавливается равным исходному `movement_count`;
 - создаётся событие `technique_played`;
 - исходный state не изменяется.
 
@@ -940,7 +1077,7 @@ Action.new(
 
 `Technique.fuel` не является стоимостью розыгрыша.
 
-### 14.2. PlayCard — Order
+### 16.2. PlayCard — Order
 
 Order разыгрывается через:
 
@@ -1062,7 +1199,7 @@ Order удалён из hand
 Order помещён в graveyard
 ```
 
-### 14.3. Ability damage_technique
+### 16.3. Ability damage_technique
 
 Первая реализованная Ability:
 
@@ -1095,7 +1232,7 @@ ability["code"]
 
 Не использовать названия карт или `card_type` для выбора обработчика способности.
 
-### 14.4. PlayCard — Platoon
+### 16.4. PlayCard — Platoon
 
 Platoon является отдельным типом карты.
 
@@ -1157,7 +1294,7 @@ Action.new(
 
 Эти механики относятся к последующим этапам боевой системы.
 
-## 15. Stage 9 — тесты
+## 17. Stage 9 — тесты
 
 Stage 9 завершён.
 
@@ -1214,67 +1351,117 @@ Stage 9 завершён.
 - неотрицательное fuel;
 - возможность HQ иметь `price: nil`.
 
-### Полный набор тестов после Stage 9 и HQ
+## 18. Stage 10 — Resources / Turns
+
+Stage 10 завершён.
+
+Реализованы:
+
+- `TURN_TIME = 10.minutes.to_i`;
+- `turn_started_at`;
+- `remaining_time` для каждого игрока;
+- `GameEngine::TurnTimer`;
+- проверка истечения времени текущего игрока в Engine;
+- списание прошедшего времени при EndTurn;
+- переключение `current_player_id`;
+- увеличение `turn_number`;
+- обновление `turn_started_at`;
+- создание runtime HQ при StartGame;
+- стартовый Fuel первого игрока;
+- `GameEngine::Resources::FuelCalculator`;
+- Fuel от HQ;
+- Fuel от собственных Technique;
+- Fuel от собственных Platoon;
+- `GameEngine::Turns::PreparePlayer`;
+- восстановление `movement_count`;
+- `movement_limit`;
+- сброс `has_attacked`;
+- сброс `has_counterattacked`;
+- пересчёт Fuel при начале нового хода;
+- переход хода через EndTurn;
+- сохранение иммутабельности GameState.
+
+### Fuel
+
+Расчёт текущего Fuel:
 
 ```
-192 runs
-513 assertions
+HQ
++
+собственные Technique
++
+собственные Platoon
+```
+
+Неиспользованный Fuel автоматически не переносится на следующий ход.
+
+При начале нового хода ресурсы нового текущего игрока пересчитываются заново.
+
+### PreparePlayer
+
+Сервис:
+
+```
+GameEngine::Turns::PreparePlayer
+```
+
+отвечает за подготовку нового текущего игрока:
+
+```
+PreparePlayer
+├── восстановление movement_count
+├── сброс attack flags
+└── пересчёт Fuel
+```
+
+### EndTurn
+
+EndTurn выполняет переход от текущего игрока к следующему и вызывает PreparePlayer.
+
+Mandatory draw в EndTurn не реализуется.
+
+Он относится к Stage 11.
+
+### Тесты Stage 10
+
+Тесты PreparePlayer:
+
+```
+5 tests
+12 assertions
 0 failures
 0 errors
 0 skips
 ```
 
-## 16. Stage 10 — Resources / Turns
+Тесты EndTurn:
 
-Stage 10 находится в процессе разработки.
+```
+9 tests
+23 assertions
+0 failures
+0 errors
+0 skips
+```
 
-Уже реализовано:
+Полный набор тестов после завершения Stage 10:
 
-- `TURN_TIME = 10.minutes.to_i`;
-- `turn_started_at` в GameState;
-- `remaining_time` для каждого игрока;
-- `GameEngine::TurnTimer`;
-- проверка истечения времени текущего игрока в Engine;
-- списание прошедшего времени при EndTurn;
-- обновление `turn_started_at` при переходе хода;
-- защита от выполнения Action после истечения времени.
+```
+207 tests
+542 assertions
+0 failures
+0 errors
+0 skips
+```
 
-Основные задачи Stage 10:
+Stage 10 считается завершённым при этом зелёном полном прогоне.
 
-- начало хода;
-- запуск таймера текущего игрока;
-- независимое время игроков;
-- расчёт доступного fuel;
-- базовый fuel от HQ;
-- fuel от принадлежащих Technique;
-- fuel от Platoon;
-- дополнительные эффекты fuel;
-- списание/сгорание неиспользованного fuel;
-- восстановление движения Technique;
-- сброс необходимых ограничений действий;
-- корректное завершение хода.
-
-### Важный текущий момент
-
-Для расчёта fuel теперь необходим runtime HQ в GameState.
-
-Поэтому следующий технический шаг после текущей контрольной точки:
-
-1. реализовать создание HQ в StartGame;
-2. покрыть это тестами;
-3. после этого продолжить расчёт ресурсов Stage 10.
-
-Draw и empty deck пока не реализуются — это Stage 11.
-
-Не смешивать Stage 10 с полной боевой системой Stage 12.
-
-## 17. Что ещё не реализовано
+## 19. Что ещё не реализовано
 
 Основные будущие этапы:
 
 ```
-Stage 10 — Resources / Turns     ← текущий
-Stage 11 — Draw / Hand / Graveyard
+Stage 11 — Draw / Hand / Graveyard     ← текущий следующий
 Stage 12 — Combat Completion
 Stage 13 — Victory / Defeat
 Stage 14 — UI
@@ -1289,29 +1476,32 @@ Stage 21 — дальнейшее развитие
 
 ### Stage 11
 
-- draw;
-- обязательный добор;
+- обязательный draw в начале хода;
 - дополнительные карты;
-- пустая колода;
-- нарастающий урон HQ;
+- обработка пустой колоды;
+- нарастающий урон HQ при попытках draw из пустой колоды;
 - дальнейшая работа с hand/graveyard.
+
+**Важно:** mandatory draw ещё не реализован в PreparePlayer и EndTurn.
 
 ### Stage 12
 
 - оставшиеся правила артиллерии;
-- HQ;
+- полные правила HQ;
 - Platoon;
 - Armor;
 - каскадный урон;
-- полное уничтожение HQ.
+- полное уничтожение HQ;
+- оставшиеся боевые механики из GAME_RULES.md.
 
 ### Stage 13
 
 - победа;
 - поражение;
-- завершение партии.
+- завершение партии;
+- победа при достижении условий из GAME_RULES.md.
 
-## 18. AI
+## 20. AI
 
 Планируется локальный AI через Ollama:
 
@@ -1331,7 +1521,7 @@ AI не имеет права:
 - видеть скрытую информацию противника;
 - обходить проверки Engine.
 
-## 19. Ограничения разработки
+## 21. Ограничения разработки
 
 Не делать:
 
@@ -1356,7 +1546,7 @@ AI не имеет права:
 
 Не усложнять архитектуру без необходимости.
 
-## 20. Порядок работы над этапом
+## 22. Порядок работы над этапом
 
 Для каждого этапа:
 
@@ -1379,48 +1569,60 @@ bin/rails test
 
 При изменении существующего файла при необходимости предоставлять его полностью, чтобы файл можно было заменить без ручного поиска фрагментов.
 
-## 21. Текущая контрольная точка
+## 23. Текущая контрольная точка
 
-Проект находится на:
+Stage 1–10 завершены.
 
-**Stage 10 — Resources / Turns**
+Текущий следующий этап:
 
-Stage 1–9 завершены.
+**Stage 11 — Draw / Hand / Graveyard**
 
-Stage 9 завершён.
-
-После добавления модели HQ и связанных изменений полный набор тестов зелёный:
+Последний полный зелёный прогон:
 
 ```
-192 runs
-513 assertions
+207 tests
+542 assertions
 0 failures
 0 errors
 0 skips
 ```
 
-Текущее состояние Stage 10:
+Текущее состояние Stage 10 полностью включает:
 
-- TURN_TIME
-- turn_started_at
-- remaining_time
-- GameEngine::TurnTimer
-- проверка истечения времени в Engine
-- списание времени при EndTurn
-- переключение turn_started_at
+- таймер;
+- `turn_started_at`;
+- `remaining_time`;
+- TurnTimer;
+- проверку истечения времени;
+- HQ в GameState;
+- создание HQ при StartGame;
+- стартовый Fuel;
+- FuelCalculator;
+- Fuel от HQ;
+- Fuel от Technique;
+- Fuel от Platoon;
+- PreparePlayer;
+- восстановление движения Technique;
+- movement_limit;
+- сброс has_attacked;
+- сброс has_counterattacked;
+- пересчёт Fuel при начале нового хода;
+- полный переход хода через EndTurn.
 
-Следующий незавершённый шаг:
+Stage 11 должен добавить обязательный draw в начале хода.
 
-> StartGame → создание HQ в GameState.field
+При реализации Stage 11 необходимо учитывать:
 
-После него:
-
-> Stage 10 — расчёт Resources / Fuel
+- EndTurn уже подготавливает нового текущего игрока через PreparePlayer;
+- PreparePlayer уже отвечает за восстановление состояния Technique и Fuel;
+- mandatory draw не должен дублировать эту ответственность;
+- empty deck и нарастающий урон HQ должны реализовываться в рамках Stage 11;
+- не переносить сюда победу/поражение из-за уничтожения HQ или времени — это Stage 13.
 
 Перед продолжением разработки необходимо снова сверить актуальные:
 
-- AGENTS.md
-- GAME_RULES.md
+- AGENTS.md;
+- GAME_RULES.md.
 
 Не считать старые сообщения чата источником истины, если они противоречат этим файлам.
 

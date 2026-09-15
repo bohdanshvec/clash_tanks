@@ -2,8 +2,36 @@ require "test_helper"
 
 class GameEngine::GameStateTest < ActiveSupport::TestCase
   PARTICIPANTS = [
-    { player_id: 42, nation_id: 10 },
-    { player_id: 57, nation_id: 20 }
+    {
+      player_id: 42,
+      nation_id: 10,
+      headquarters: {
+        "type" => "headquarters",
+        "card_id" => 10,
+        "player_id" => 42,
+        "nation_id" => 10,
+        "name" => "HQ 1",
+        "hp" => 20,
+        "firepower" => 3,
+        "fuel" => 5,
+        "abilities" => []
+      }
+    },
+    {
+      player_id: 57,
+      nation_id: 20,
+      headquarters: {
+        "type" => "headquarters",
+        "card_id" => 11,
+        "player_id" => 57,
+        "nation_id" => 20,
+        "name" => "HQ 2",
+        "hp" => 25,
+        "firepower" => 4,
+        "fuel" => 6,
+        "abilities" => []
+      }
+    }
   ].freeze
 
   test "initial returns the default game state" do
@@ -42,8 +70,14 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "headquarters",
+        "card_id" => 10,
         "player_id" => 42,
-        "nation_id" => 10
+        "nation_id" => 10,
+        "name" => "HQ 1",
+        "hp" => 20,
+        "firepower" => 3,
+        "fuel" => 5,
+        "abilities" => []
       },
       state["field"][2][0]
     )
@@ -51,8 +85,14 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "headquarters",
+        "card_id" => 11,
         "player_id" => 57,
-        "nation_id" => 20
+        "nation_id" => 20,
+        "name" => "HQ 2",
+        "hp" => 25,
+        "firepower" => 4,
+        "fuel" => 6,
+        "abilities" => []
       },
       state["field"][0][4]
     )
@@ -84,8 +124,14 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "headquarters",
+        "card_id" => 10,
         "player_id" => 42,
-        "nation_id" => 10
+        "nation_id" => 10,
+        "name" => "HQ 1",
+        "hp" => 20,
+        "firepower" => 3,
+        "fuel" => 5,
+        "abilities" => []
       },
       GameEngine::GameState.object_at(field:, row: 2, column: 0)
     )

@@ -13,6 +13,7 @@ class DeckCard < ApplicationRecord
   validates :card_id, uniqueness: { scope: :deck_id }
 
   validate :card_belongs_to_deck_nation
+  validate :card_is_not_headquarters
 
   private
 
@@ -22,5 +23,11 @@ class DeckCard < ApplicationRecord
     if deck.nation_id != card.nation_id
       errors.add(:card, "must belong to the same nation as the deck")
     end
+  end
+
+  def card_is_not_headquarters
+    return if card.nil? || card.card_type != "headquarters"
+
+    errors.add(:card, "cannot be a headquarters card")
   end
 end

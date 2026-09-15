@@ -28,18 +28,23 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       name: "Deck 2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1, name: "HQ 1")
+    headquarters2 = create_headquarters_card(nation: nation2, name: "HQ 2")
+
     GamePlayer.create!(
       game: game,
       player: player1,
       nation: nation1,
-      deck: deck1
+      deck: deck1,
+      headquarters_card: headquarters1
     )
 
     GamePlayer.create!(
       game: game,
       player: player2,
       nation: nation2,
-      deck: deck2
+      deck: deck2,
+      headquarters_card: headquarters2
     )
 
     GameEngine::StartGame.call(game)
@@ -68,8 +73,14 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "headquarters",
+        "card_id" => headquarters1.id,
         "player_id" => player1.id,
-        "nation_id" => nation1.id
+        "nation_id" => nation1.id,
+        "name" => "HQ 1",
+        "hp" => 20,
+        "firepower" => 3,
+        "fuel" => 5,
+        "abilities" => []
       },
       game.state["field"][2][0]
     )
@@ -77,8 +88,14 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "headquarters",
+        "card_id" => headquarters2.id,
         "player_id" => player2.id,
-        "nation_id" => nation2.id
+        "nation_id" => nation2.id,
+        "name" => "HQ 2",
+        "hp" => 20,
+        "firepower" => 3,
+        "fuel" => 5,
+        "abilities" => []
       },
       game.state["field"][0][4]
     )
@@ -99,11 +116,14 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       name: "Deck 1"
     )
 
+    headquarters = create_headquarters_card(nation: nation)
+
     GamePlayer.create!(
       game: game,
       player: player,
       nation: nation,
-      deck: deck
+      deck: deck,
+      headquarters_card: headquarters
     )
 
     assert_raises(ArgumentError, "Game must have exactly two players") do
@@ -143,18 +163,23 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       name: "Deck 2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+
     GamePlayer.create!(
       game: game,
       player: player1,
       nation: nation1,
-      deck: deck1
+      deck: deck1,
+      headquarters_card: headquarters1
     )
 
     GamePlayer.create!(
       game: game,
       player: player2,
       nation: nation2,
-      deck: deck2
+      deck: deck2,
+      headquarters_card: headquarters2
     )
 
     GameEngine::StartGame.call(game)
@@ -192,6 +217,9 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       name: "Deck 2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+
     10.times do |index|
       card1 = Card.create!(
         nation: nation1,
@@ -226,14 +254,16 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       game: game,
       player: player1,
       nation: nation1,
-      deck: deck1
+      deck: deck1,
+      headquarters_card: headquarters1
     )
 
     GamePlayer.create!(
       game: game,
       player: player2,
       nation: nation2,
-      deck: deck2
+      deck: deck2,
+      headquarters_card: headquarters2
     )
 
     GameEngine::StartGame.call(game)
@@ -251,6 +281,8 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
     assert_equal 10, player1_state["hand"].size + player1_state["deck"].size
     assert_equal 10, player2_state["hand"].size + player2_state["deck"].size
+    refute_includes player1_state["hand"] + player1_state["deck"], headquarters1.id
+    refute_includes player2_state["hand"] + player2_state["deck"], headquarters2.id
   end
 
   test "does not modify saved decks when starting a game" do
@@ -281,6 +313,9 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       name: "Deck 2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+
     10.times do |index|
       card1 = Card.create!(
         nation: nation1,
@@ -315,14 +350,16 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       game: game,
       player: player1,
       nation: nation1,
-      deck: deck1
+      deck: deck1,
+      headquarters_card: headquarters1
     )
 
     GamePlayer.create!(
       game: game,
       player: player2,
       nation: nation2,
-      deck: deck2
+      deck: deck2,
+      headquarters_card: headquarters2
     )
 
     assert_equal 10, deck1.card_count
@@ -334,5 +371,114 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
     assert_equal 10, deck2.reload.card_count
     assert_equal 10, deck1.deck_cards.count
     assert_equal 10, deck2.deck_cards.count
+  end
+
+  test "serializes headquarters abilities without ability names" do
+    game = Game.create!
+    player1 = Player.create!
+    player2 = Player.create!
+    nation1 = Nation.create!(name: "Nation 1", code: "nation_1")
+    nation2 = Nation.create!(name: "Nation 2", code: "nation_2")
+    deck1 = Deck.create!(player: player1, nation: nation1, name: "Deck 1")
+    deck2 = Deck.create!(player: player2, nation: nation2, name: "Deck 2")
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+    ability = Ability.create!(name: "Test ability", code: "test_headquarters_ability")
+    CardAbility.create!(
+      card: headquarters1,
+      ability: ability,
+      parameters: { "bonus" => 2 }
+    )
+
+    GamePlayer.create!(game:, player: player1, nation: nation1, deck: deck1, headquarters_card: headquarters1)
+    GamePlayer.create!(game:, player: player2, nation: nation2, deck: deck2, headquarters_card: headquarters2)
+
+    GameEngine::StartGame.call(game)
+
+    assert_equal [
+      { "code" => "test_headquarters_ability", "bonus" => 2 }
+    ], game.reload.state["field"][2][0]["abilities"]
+  end
+  
+	test "calculates fuel for the first player's turn" do
+		game = Game.create!
+
+		player1 = Player.create!
+		player2 = Player.create!
+
+		nation1 = Nation.create!(
+		  name: "Nation 1",
+		  code: "nation_1"
+		)
+
+		nation2 = Nation.create!(
+		  name: "Nation 2",
+		  code: "nation_2"
+		)
+
+		deck1 = Deck.create!(
+		  player: player1,
+		  nation: nation1,
+		  name: "Deck 1"
+		)
+
+		deck2 = Deck.create!(
+		  player: player2,
+		  nation: nation2,
+		  name: "Deck 2"
+		)
+
+		headquarters1 = create_headquarters_card(
+		  nation: nation1,
+		  name: "HQ 1"
+		)
+
+		headquarters2 = create_headquarters_card(
+		  nation: nation2,
+		  name: "HQ 2"
+		)
+
+		GamePlayer.create!(
+		  game: game,
+		  player: player1,
+		  nation: nation1,
+		  deck: deck1,
+		  headquarters_card: headquarters1
+		)
+
+		GamePlayer.create!(
+		  game: game,
+		  player: player2,
+		  nation: nation2,
+		  deck: deck2,
+		  headquarters_card: headquarters2
+		)
+
+		GameEngine::StartGame.call(game)
+
+		game.reload
+
+		current_player_id = game.state["current_player_id"]
+		opponent_id = [player1.id, player2.id].find do |player_id|
+		  player_id != current_player_id
+		end
+
+		assert_equal 5, game.state["players"][current_player_id.to_s]["resources"]
+		assert_equal 0, game.state["players"][opponent_id.to_s]["resources"]
+	end
+
+  private
+
+  def create_headquarters_card(nation:, name: "Test HQ")
+    card = Card.create!(
+      nation: nation,
+      name: name,
+      card_type: "headquarters",
+      weight: 1,
+      price: nil
+    )
+
+    Headquarters.create!(card: card, hp: 20, firepower: 3, fuel: 5)
+    card
   end
 end

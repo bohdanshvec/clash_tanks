@@ -8,8 +8,8 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
     @state = GameEngine::GameState.initial(
       current_player_id: PLAYER_ID,
       participants: [
-        { player_id: PLAYER_ID, nation_id: 10 },
-        { player_id: OPPONENT_ID, nation_id: 20 }
+        headquarters_participant(player_id: PLAYER_ID, nation_id: 10),
+        headquarters_participant(player_id: OPPONENT_ID, nation_id: 20)
       ]
     )
 

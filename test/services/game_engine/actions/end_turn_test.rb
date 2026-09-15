@@ -10,8 +10,8 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     @state = GameEngine::GameState.initial(
       current_player_id: PLAYER_ID,
       participants: [
-        { player_id: PLAYER_ID, nation_id: 10 },
-        { player_id: OPPONENT_ID, nation_id: 20 }
+        headquarters_participant(player_id: PLAYER_ID, nation_id: 10),
+        headquarters_participant(player_id: OPPONENT_ID, nation_id: 20)
       ]
     )
 
@@ -133,4 +133,59 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     assert_not result.success?
     assert_equal "Time expired", result.error
   end
+  
+	test "calculates fuel for the player whose turn starts" do
+		@state["field"][1][0] = {
+		  "type" => "technique",
+		  "card_id" => 100,
+		  "player_id" => OPPONENT_ID,
+		  "nation_id" => 20,
+		  "name" => "Enemy Technique",
+		  "technique_type" => "medium_tank",
+		  "hp" => 10,
+		  "firepower" => 4,
+		  "fuel" => 2,
+		  "attack_range" => 1,
+		  "movement_count" => 1,
+		  "movement_type" => "diagonal",
+		  "has_attacked" => false,
+		  "has_counterattacked" => false
+		}
+
+		@state["players"][OPPONENT_ID.to_s]["platoons"][0] = {
+		  "type" => "platoon",
+		  "card_id" => 200,
+		  "player_id" => OPPONENT_ID,
+		  "nation_id" => 20,
+		  "name" => "Enemy Platoon",
+		  "firepower" => 5,
+		  "hp" => 10,
+		  "armor" => 3,
+		  "fuel" => 3
+		}
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "end_turn"
+		)
+
+		result = GameEngine::Actions::EndTurn.new(@state, action).call
+
+		assert result.success?
+		assert_equal 10, result.state["players"][OPPONENT_ID.to_s]["resources"]
+	end
+
+	test "replaces new player's resources with calculated fuel" do
+		@state["players"][OPPONENT_ID.to_s]["resources"] = 99
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "end_turn"
+		)
+
+		result = GameEngine::Actions::EndTurn.new(@state, action).call
+
+		assert result.success?
+		assert_equal 5, result.state["players"][OPPONENT_ID.to_s]["resources"]
+	end
 end

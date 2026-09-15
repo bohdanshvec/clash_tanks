@@ -6,6 +6,22 @@ module ActiveSupport
   class TestCase
     parallelize(workers: :number_of_processors)
 
-    # Add more helper methods to be used by all tests here...
+    def headquarters_participant(player_id:, nation_id:)
+      {
+        player_id: player_id,
+        nation_id: nation_id,
+        headquarters: {
+          "type" => "headquarters",
+          "card_id" => player_id,
+          "player_id" => player_id,
+          "nation_id" => nation_id,
+          "name" => "Test HQ",
+          "hp" => 20,
+          "firepower" => 3,
+          "fuel" => 5,
+          "abilities" => []
+        }
+      }
+    end
   end
 end

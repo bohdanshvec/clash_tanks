@@ -5,8 +5,8 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     @state = GameEngine::GameState.initial(
       current_player_id: 42,
       participants: [
-        { player_id: 42, nation_id: 10 },
-        { player_id: 57, nation_id: 20 }
+        headquarters_participant(player_id: 42, nation_id: 10),
+        headquarters_participant(player_id: 57, nation_id: 20)
       ]
     )
 

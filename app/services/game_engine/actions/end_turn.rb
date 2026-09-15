@@ -27,6 +27,11 @@ module GameEngine
         new_state["current_player_id"] = next_player_id
         new_state["turn_started_at"] = @current_time.change(usec: 0).iso8601
 
+        new_state = GameEngine::Turns::PreparePlayer.call(
+          state: new_state,
+          player_id: new_state["current_player_id"]
+        )
+
         Result.new(
           success: true,
           state: new_state,
@@ -51,6 +56,7 @@ module GameEngine
         next_player = player_ids.find do |player_id|
           player_id != @action.player_id.to_s
         end
+
         next_player.to_i
       end
 

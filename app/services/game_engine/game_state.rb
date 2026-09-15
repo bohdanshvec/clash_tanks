@@ -92,11 +92,7 @@ module GameEngine
       participants.each_with_index do |participant, index|
         position = HEADQUARTERS_POSITIONS[index]
 
-        field[position[:row]][position[:column]] = {
-          "type" => "headquarters",
-          "player_id" => participant[:player_id],
-          "nation_id" => participant[:nation_id]
-        }
+        field[position[:row]][position[:column]] = participant.fetch(:headquarters).deep_dup
       end
 
       field

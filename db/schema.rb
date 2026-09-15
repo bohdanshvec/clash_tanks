@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_14_154118) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,12 +69,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_154118) do
     t.datetime "created_at", null: false
     t.bigint "deck_id", null: false
     t.bigint "game_id", null: false
+    t.bigint "headquarters_card_id", null: false
     t.bigint "nation_id"
     t.bigint "player_id", null: false
     t.datetime "updated_at", null: false
     t.index ["deck_id"], name: "index_game_players_on_deck_id"
     t.index ["game_id", "player_id"], name: "index_game_players_on_game_id_and_player_id", unique: true
     t.index ["game_id"], name: "index_game_players_on_game_id"
+    t.index ["headquarters_card_id"], name: "index_game_players_on_headquarters_card_id"
     t.index ["nation_id"], name: "index_game_players_on_nation_id"
     t.index ["player_id"], name: "index_game_players_on_player_id"
   end
@@ -141,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_154118) do
   add_foreign_key "deck_cards", "decks"
   add_foreign_key "decks", "nations"
   add_foreign_key "decks", "players"
+  add_foreign_key "game_players", "cards", column: "headquarters_card_id"
   add_foreign_key "game_players", "decks"
   add_foreign_key "game_players", "games"
   add_foreign_key "game_players", "nations"

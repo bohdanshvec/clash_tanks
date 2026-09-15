@@ -198,6 +198,7 @@ module GameEngine
           "fuel" => technique["fuel"],
           "attack_range" => technique["attack_range"],
           "movement_count" => technique["movement_count"],
+          "movement_limit" => technique["movement_count"],
           "movement_type" => technique["movement_type"],
           "has_attacked" => false,
           "has_counterattacked" => false
