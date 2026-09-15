@@ -24,7 +24,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
 					"graveyard" => [],
 					"platoons" => [nil, nil, nil, nil],
 					"resources" => 0,
-					"remaining_time" => nil
+					"remaining_time" => GameEngine::GameState::TURN_TIME
 				},
 				"57" => {
 					"nation_id" => 20,
@@ -33,7 +33,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
 					"graveyard" => [],
 					"platoons" => [nil, nil, nil, nil],
 					"resources" => 0,
-					"remaining_time" => nil
+					"remaining_time" => GameEngine::GameState::TURN_TIME
 				}
 			},
       state["players"]

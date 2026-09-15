@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_14_055915) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_14_154118) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -38,7 +38,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_055915) do
     t.datetime "created_at", null: false
     t.string "name"
     t.bigint "nation_id", null: false
-    t.integer "price", null: false
+    t.integer "price"
     t.datetime "updated_at", null: false
     t.integer "weight"
     t.index ["nation_id"], name: "index_cards_on_nation_id"
@@ -84,6 +84,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_055915) do
     t.jsonb "state"
     t.string "status"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "headquarters", force: :cascade do |t|
+    t.bigint "card_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "firepower", null: false
+    t.integer "fuel", null: false
+    t.integer "hp", null: false
+    t.datetime "updated_at", null: false
+    t.index ["card_id"], name: "index_headquarters_on_card_id"
   end
 
   create_table "nations", force: :cascade do |t|
@@ -135,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_055915) do
   add_foreign_key "game_players", "games"
   add_foreign_key "game_players", "nations"
   add_foreign_key "game_players", "players"
+  add_foreign_key "headquarters", "cards"
   add_foreign_key "platoons", "cards"
   add_foreign_key "techniques", "cards"
 end

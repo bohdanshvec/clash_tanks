@@ -5,6 +5,8 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
   OPPONENT_ID = 2
 
   def setup
+    @started_at = Time.current.change(usec: 0)
+
     @state = GameEngine::GameState.initial(
       current_player_id: PLAYER_ID,
       participants: [
@@ -12,6 +14,8 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
         { player_id: OPPONENT_ID, nation_id: 20 }
       ]
     )
+
+    @state["turn_started_at"] = @started_at.iso8601
   end
 
   test "ends current player's turn" do
@@ -90,5 +94,43 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     assert second_result.success?
     assert_equal 3, second_result.state["turn_number"]
     assert_equal PLAYER_ID, second_result.state["current_player_id"]
+  end
+
+  test "deducts elapsed time from current player's remaining time" do
+    current_time = @started_at + 30
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "end_turn"
+    )
+
+    result = GameEngine::Actions::EndTurn.new(
+      @state,
+      action,
+      current_time: current_time
+    ).call
+
+    assert result.success?
+    assert_equal 570, result.state["players"][PLAYER_ID.to_s]["remaining_time"]
+    assert_equal current_time.iso8601, result.state["turn_started_at"]
+    assert_equal OPPONENT_ID, result.state["current_player_id"]
+  end
+
+  test "does not allow ending turn after time expires" do
+    current_time = @started_at + 600
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "end_turn"
+    )
+
+    result = GameEngine::Actions::EndTurn.new(
+      @state,
+      action,
+      current_time: current_time
+    ).call
+
+    assert_not result.success?
+    assert_equal "Time expired", result.error
   end
 end

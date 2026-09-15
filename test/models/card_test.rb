@@ -136,4 +136,21 @@ class CardTest < ActiveSupport::TestCase
     assert_not card.valid?
     assert card.errors[:price].any?
   end
+  
+	test "headquarters can have no price" do
+		nation = Nation.create!(
+		  name: "СССР",
+		  code: "ussr"
+		)
+
+		card = Card.new(
+		  nation: nation,
+		  name: "Test HQ",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
+
+		assert_predicate card, :valid?
+	end
 end

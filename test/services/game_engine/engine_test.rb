@@ -149,4 +149,50 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     assert_equal 15, technique["card_id"]
     assert_equal 42, technique["player_id"]
   end
+  
+  test "rejects action when current player's time has expired" do
+    started_at = Time.iso8601(@state["turn_started_at"])
+    current_time = started_at + 600
+
+    action = GameEngine::Action.new(
+      player_id: 42,
+      type: "move",
+      payload: {
+        from: [1, 1],
+        to: [0, 2]
+      }
+    )
+
+    result = GameEngine::Engine.new(
+      @state,
+      current_time: current_time
+    ).call(action)
+
+    refute_predicate result, :success?
+    assert_equal "Time expired", result.error
+    assert_equal "technique", @state["field"][1][1]["type"]
+  end
+
+  test "allows action when current player's time has not expired" do
+    started_at = Time.iso8601(@state["turn_started_at"])
+    current_time = started_at + 30
+
+    action = GameEngine::Action.new(
+      player_id: 42,
+      type: "move",
+      payload: {
+        from: [1, 1],
+        to: [0, 2]
+      }
+    )
+
+    result = GameEngine::Engine.new(
+      @state,
+      current_time: current_time
+    ).call(action)
+
+    assert_predicate result, :success?
+    assert_nil result.state["field"][1][1]
+    assert_equal "technique", result.state["field"][0][2]["type"]
+  end
 end

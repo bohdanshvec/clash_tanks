@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  card: one
+  hp: 1
+  firepower: 1
+  fuel: 1
+
+two:
+  card: two
+  hp: 1
+  firepower: 1
+  fuel: 1
