@@ -33,22 +33,22 @@ module GameEngine
 
       current_player_id = participants.sample[:player_id]
 
-			@game.transaction do
-				state = GameState.initial(
-					current_player_id: current_player_id,
-					participants: participants
-				)
+      @game.transaction do
+        state = GameState.initial(
+          current_player_id: current_player_id,
+          participants: participants
+        )
 
-				state["players"][current_player_id.to_s]["resources"] =
-					GameEngine::Resources::FuelCalculator.call(
-						state: state,
-						player_id: current_player_id
-					)
+        state["players"][current_player_id.to_s]["resources"] =
+          GameEngine::Resources::FuelCalculator.call(
+            state: state,
+            player_id: current_player_id
+          )
 
-				@game.state = state
-				@game.status = "started"
-				@game.save!
-			end
+        @game.state = state
+        @game.status = "started"
+        @game.save!
+      end
 
       @game
     end
@@ -68,6 +68,8 @@ module GameEngine
         "hp" => headquarters.hp,
         "firepower" => headquarters.firepower,
         "fuel" => headquarters.fuel,
+        "has_attacked" => false,
+        "has_counterattacked" => false,
         "abilities" => card.card_abilities.map do |card_ability|
           { "code" => card_ability.ability.code }.merge(card_ability.parameters)
         end

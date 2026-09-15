@@ -25,6 +25,7 @@ module GameEngine
       ).flat_map do |deck_card|
         Array.new(deck_card.quantity) do
           card = deck_card.card
+
           card_data = {
             "card_id" => card.id,
             "name" => card.name,
@@ -80,7 +81,8 @@ module GameEngine
             "graveyard" => [],
             "platoons" => [nil, nil, nil, nil],
             "resources" => 0,
-            "remaining_time" => TURN_TIME
+            "remaining_time" => TURN_TIME,
+            "empty_deck_draw_attempts" => 0
           }
         ]
       end
@@ -92,7 +94,8 @@ module GameEngine
       participants.each_with_index do |participant, index|
         position = HEADQUARTERS_POSITIONS[index]
 
-        field[position[:row]][position[:column]] = participant.fetch(:headquarters).deep_dup
+        field[position[:row]][position[:column]] =
+          participant.fetch(:headquarters).deep_dup
       end
 
       field
@@ -123,15 +126,26 @@ module GameEngine
     end
 
     def self.move_object(field:, from_row:, from_column:, to_row:, to_column:)
-      raise ArgumentError, "Invalid source coordinates" unless valid_coordinates?(row: from_row, column: from_column)
-      raise ArgumentError, "Invalid destination coordinates" unless valid_coordinates?(row: to_row, column: to_column)
+      raise ArgumentError, "Invalid source coordinates" unless valid_coordinates?(
+        row: from_row,
+        column: from_column
+      )
+
+      raise ArgumentError, "Invalid destination coordinates" unless valid_coordinates?(
+        row: to_row,
+        column: to_column
+      )
 
       object = field[from_row][from_column]
 
       raise ArgumentError, "Source cell is empty" if object.nil?
       raise ArgumentError, "Headquarters cannot be moved" if object["type"] == "headquarters"
       raise ArgumentError, "Destination cell is occupied" unless field[to_row][to_column].nil?
-      raise ArgumentError, "Cannot move onto headquarters" if headquarters_at?(field:, row: to_row, column: to_column)
+      raise ArgumentError, "Cannot move onto headquarters" if headquarters_at?(
+        field:,
+        row: to_row,
+        column: to_column
+      )
 
       new_field = field.map(&:dup)
       new_field[from_row][from_column] = nil

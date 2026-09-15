@@ -1,11 +1,6 @@
 module GameEngine
   module Abilities
-    class Executor
-      HANDLERS = {
-        "damage_technique" => DamageTechnique,
-        "draw_cards" => DrawCards
-      }.freeze
-
+    class DrawCards
       def initialize(state:, ability:, player_id:, targets:)
         @state = state
         @ability = ability
@@ -14,19 +9,21 @@ module GameEngine
       end
 
       def call
-        handler_class = HANDLERS[@ability["code"]]
+        return failure("Invalid draw count") unless valid_count?
 
-        return failure("Unknown ability") unless handler_class
-
-        handler_class.new(
+        GameEngine::Cards::Draw.call(
           state: @state,
-          ability: @ability,
           player_id: @player_id,
-          targets: @targets
-        ).call
+          count: @ability["count"]
+        )
       end
 
       private
+
+      def valid_count?
+        @ability["count"].is_a?(Integer) &&
+          @ability["count"].positive?
+      end
 
       def failure(error)
         Result.new(

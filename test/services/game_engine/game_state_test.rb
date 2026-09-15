@@ -44,26 +44,28 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal 42, state["current_player_id"]
 
     assert_equal(
-			{
-				"42" => {
-					"nation_id" => 10,
-					"hand" => [],
-					"deck" => [],
-					"graveyard" => [],
-					"platoons" => [nil, nil, nil, nil],
-					"resources" => 0,
-					"remaining_time" => GameEngine::GameState::TURN_TIME
-				},
-				"57" => {
-					"nation_id" => 20,
-					"hand" => [],
-					"deck" => [],
-					"graveyard" => [],
-					"platoons" => [nil, nil, nil, nil],
-					"resources" => 0,
-					"remaining_time" => GameEngine::GameState::TURN_TIME
-				}
-			},
+      {
+        "42" => {
+          "nation_id" => 10,
+          "hand" => [],
+          "deck" => [],
+          "graveyard" => [],
+          "platoons" => [nil, nil, nil, nil],
+          "resources" => 0,
+          "remaining_time" => GameEngine::GameState::TURN_TIME,
+          "empty_deck_draw_attempts" => 0
+        },
+        "57" => {
+          "nation_id" => 20,
+          "hand" => [],
+          "deck" => [],
+          "graveyard" => [],
+          "platoons" => [nil, nil, nil, nil],
+          "resources" => 0,
+          "remaining_time" => GameEngine::GameState::TURN_TIME,
+          "empty_deck_draw_attempts" => 0
+        }
+      },
       state["players"]
     )
 
@@ -394,7 +396,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       )
     end
   end
-  
+
   test "builds full card objects from deck cards" do
     player = Player.create!
     nation = Nation.create!(
@@ -533,6 +535,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     cards = GameEngine::GameState.cards_from_deck(deck)
 
     assert_equal 1, cards.size
+
     assert_equal(
       {
         "card_id" => card.id,
@@ -545,110 +548,111 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       cards.first
     )
   end
-  
+
   test "builds card object with abilities from deck card" do
-		player = Player.create!
-		nation = Nation.create!(
-		  name: "СССР",
-		  code: "ussr"
-		)
+    player = Player.create!
 
-		deck = Deck.create!(
-		  player: player,
-		  nation: nation,
-		  name: "Основная колода"
-		)
+    nation = Nation.create!(
+      name: "СССР",
+      code: "ussr"
+    )
 
-		card = Card.create!(
-		  nation: nation,
-		  name: "Артиллерия",
-		  card_type: "order",
-		  weight: 1,
-		  price: 2
-		)
+    deck = Deck.create!(
+      player: player,
+      nation: nation,
+      name: "Основная колода"
+    )
 
-		ability = Ability.create!(
-		  name: "Нанесение урона",
-		  code: "damage_technique"
-		)
+    card = Card.create!(
+      nation: nation,
+      name: "Артиллерия",
+      card_type: "order",
+      weight: 1,
+      price: 2
+    )
 
-		CardAbility.create!(
-		  card: card,
-		  ability: ability,
-		  parameters: { "damage" => 3 }
-		)
+    ability = Ability.create!(
+      name: "Нанесение урона",
+      code: "damage_technique"
+    )
 
-		DeckCard.create!(
-		  deck: deck,
-		  card: card,
-		  quantity: 1
-		)
+    CardAbility.create!(
+      card: card,
+      ability: ability,
+      parameters: { "damage" => 3 }
+    )
 
-		cards = GameEngine::GameState.cards_from_deck(deck)
+    DeckCard.create!(
+      deck: deck,
+      card: card,
+      quantity: 1
+    )
 
-		assert_equal(
-		  [
-		    {
-		      "code" => "damage_technique",
-		      "damage" => 3
-		    }
-		  ],
-		  cards.first["abilities"]
-		)
-	end
-	
-	test "cards_from_deck includes platoon data" do
-		nation = Nation.create!(
-		  name: "Test Nation",
-		  code: "test"
-		)
+    cards = GameEngine::GameState.cards_from_deck(deck)
 
-		card = Card.create!(
-		  nation: nation,
-		  name: "Test Platoon",
-		  card_type: "platoon",
-		  weight: 2,
-		  price: 3
-		)
+    assert_equal(
+      [
+        {
+          "code" => "damage_technique",
+          "damage" => 3
+        }
+      ],
+      cards.first["abilities"]
+    )
+  end
 
-		Platoon.create!(
-		  card: card,
-		  firepower: 5,
-		  hp: 10,
-		  armor: 3,
-		  fuel: 2
-		)
+  test "cards_from_deck includes platoon data" do
+    nation = Nation.create!(
+      name: "Test Nation",
+      code: "test"
+    )
 
-		deck = Deck.create!(
-		  player: Player.create!,
-		  nation: nation,
-		  name: "Test Deck"
-		)
+    card = Card.create!(
+      nation: nation,
+      name: "Test Platoon",
+      card_type: "platoon",
+      weight: 2,
+      price: 3
+    )
 
-		DeckCard.create!(
-		  deck: deck,
-		  card: card,
-		  quantity: 1
-		)
+    Platoon.create!(
+      card: card,
+      firepower: 5,
+      hp: 10,
+      armor: 3,
+      fuel: 2
+    )
 
-		cards = GameEngine::GameState.cards_from_deck(deck)
+    deck = Deck.create!(
+      player: Player.create!,
+      nation: nation,
+      name: "Test Deck"
+    )
 
-		assert_equal(
-		  {
-		    "card_id" => card.id,
-		    "name" => "Test Platoon",
-		    "card_type" => "platoon",
-		    "nation_id" => nation.id,
-		    "weight" => 2,
-		    "price" => 3,
-		    "platoon" => {
-		      "firepower" => 5,
-		      "hp" => 10,
-		      "armor" => 3,
-		      "fuel" => 2
-		    }
-		  },
-		  cards.first
-		)
-	end
+    DeckCard.create!(
+      deck: deck,
+      card: card,
+      quantity: 1
+    )
+
+    cards = GameEngine::GameState.cards_from_deck(deck)
+
+    assert_equal(
+      {
+        "card_id" => card.id,
+        "name" => "Test Platoon",
+        "card_type" => "platoon",
+        "nation_id" => nation.id,
+        "weight" => 2,
+        "price" => 3,
+        "platoon" => {
+          "firepower" => 5,
+          "hp" => 10,
+          "armor" => 3,
+          "fuel" => 2
+        }
+      },
+      cards.first
+    )
+  end
 end

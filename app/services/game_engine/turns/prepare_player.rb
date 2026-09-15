@@ -14,6 +14,7 @@ module GameEngine
         new_state = @state.deep_dup
 
         reset_techniques(new_state)
+        reset_headquarters(new_state)
 
         new_state["players"][@player_id]["resources"] =
           GameEngine::Resources::FuelCalculator.call(
@@ -21,7 +22,15 @@ module GameEngine
             player_id: @player_id
           )
 
-        new_state
+        draw_result = GameEngine::Cards::Draw.call(
+          state: new_state,
+          player_id: @player_id,
+          count: 1
+        )
+
+        raise draw_result.error unless draw_result.success?
+
+        draw_result.state
       end
 
       private
@@ -38,6 +47,19 @@ module GameEngine
             object["has_counterattacked"] = false
           end
         end
+      end
+
+      def reset_headquarters(state)
+        headquarters = state["field"].flatten.find do |object|
+          object &&
+            object["type"] == "headquarters" &&
+            object["player_id"].to_s == @player_id
+        end
+
+        return unless headquarters
+
+        headquarters["has_attacked"] = false
+        headquarters["has_counterattacked"] = false
       end
     end
   end
