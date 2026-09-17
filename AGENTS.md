@@ -1833,20 +1833,21 @@ Stage 12 ещё не считается завершённым.
 План:
 
 ```
-Stage 1–8   — завершены
-Stage 9     — PlayCard — завершён
-Stage 10    — Resources / Turns — завершён
-Stage 11    — Draw / Hand / Graveyard — завершён
-Stage 12    — Combat — следующий
-Stage 13    — Victory / Defeat
-Stage 14    — UI
-Stage 15    — Human vs Human
-Stage 16    — Decision Provider
-Stage 17    — AI
-Stage 18    — Ollama / Qwen3 1.7B
-Stage 19    — AI testing
-Stage 20    — Deck Weight
-Stage 21    — дальнейшее развитие
+Stage 1–8   — завершены 
+Stage 9     — PlayCard — завершён 
+Stage 10    — Resources / Turns — завершён 
+Stage 11    — Draw / Hand / Graveyard — завершён 
+Stage 12    — Combat — следующий 
+Stage 13    — Victory / Defeat 
+Stage 14    — Заполнение проект картами
+Stage 15    — UI 
+Stage 16    — Human vs Human 
+Stage 17    — Decision Provider 
+Stage 18    — AI 
+Stage 19    — Ollama / Qwen3 1.7B 
+Stage 20    — AI testing 
+Stage 21    — Deck Weight 
+Stage 22    — дальнейшее развитие
 ```
 
 Номера и содержание будущих этапов могут уточняться после сверки с `GAME_RULES.md`.
