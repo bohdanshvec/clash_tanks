@@ -21,14 +21,24 @@ module GameEngine
 
         return failure("Attacker cell is empty") unless attacker
         return failure("Target cell is empty") unless target
-        return failure("Attacker does not belong to player") unless attacker["player_id"] == @action.player_id
-        return failure("Target belongs to player") if target["player_id"] == @action.player_id
+        return failure("Attacker does not belong to player") unless own_object?(attacker)
+        return failure("Target belongs to player") if own_object?(target)
 
         case attacker["type"]
         when "technique"
-          attack_technique(attacker, target, attacker_position, target_position)
+          attack_technique(
+            attacker,
+            target,
+            attacker_position,
+            target_position
+          )
         when "headquarters"
-          attack_headquarters(attacker, target, attacker_position, target_position)
+          attack_headquarters(
+            attacker,
+            target,
+            attacker_position,
+            target_position
+          )
         else
           failure("Invalid attacker type")
         end
@@ -40,44 +50,42 @@ module GameEngine
       # Technique attacks
       # ------------------------------------------------------------------
 
-      def attack_technique(attacker, target, attacker_position, target_position)
-        return failure("Technique cannot attack headquarters at this range") if target["type"] == "headquarters" &&
-          !valid_technique_to_headquarters_attack?(
-            attacker,
-            attacker_position,
-            target_position
-          )
-
-        return failure("Target is not a technique") unless %w[technique headquarters].include?(target["type"])
+      def attack_technique(
+        attacker,
+        target,
+        attacker_position,
+        target_position
+      )
         return failure("Technique has already attacked") if attacker["has_attacked"]
 
-        if target["type"] == "technique"
+        case target["type"]
+        when "technique"
           attack_technique_target(
             attacker,
             target,
             attacker_position,
             target_position
           )
-        else
+        when "headquarters"
           attack_headquarters_target_from_technique(
             attacker,
             target,
             attacker_position,
             target_position
           )
+        else
+          failure("Invalid target type")
         end
       end
 
-      def attack_technique_target(attacker, target, attacker_position, target_position)
+      def attack_technique_target(
+        attacker,
+        target,
+        attacker_position,
+        target_position
+      )
         return failure("Invalid attack range") unless valid_attack_range?(
           attacker,
-          attacker_position,
-          target_position
-        )
-
-        ptsau_first = ptsau_shoots_first?(
-          attacker,
-          target,
           attacker_position,
           target_position
         )
@@ -96,41 +104,29 @@ module GameEngine
 
         new_attacker["has_attacked"] = true
 
-        if ptsau_first
-          new_attacker["hp"] -= new_target["firepower"]
-
-          if new_attacker["hp"] <= 0
-            move_to_graveyard(
-              new_state,
-              new_attacker
-            )
-
-            clear_field_cell(
-              new_state,
-              attacker_position
-            )
-
-            return Result.new(
-              success: true,
-              state: new_state,
-              events: [{ type: "technique_destroyed" }]
-            )
-          end
+        if ptsau_shoots_first?(
+          new_attacker,
+          new_target,
+          attacker_position,
+          target_position
+        )
+          return attack_with_ptsau_first(
+            new_state,
+            new_attacker,
+            new_target,
+            attacker_position
+          )
         end
 
         new_target["hp"] -= new_attacker["firepower"]
 
         if new_target["hp"] <= 0
-          move_to_graveyard(
+          destroy_technique(
             new_state,
-            new_target
-          )
-
-          clear_field_cell(
-            new_state,
+            new_target,
             target_position
           )
-        elsif !ptsau_first
+        else
           counterattack(
             new_state,
             attacker_position,
@@ -145,14 +141,53 @@ module GameEngine
         )
       end
 
+      def attack_with_ptsau_first(
+        state,
+        attacker,
+        target,
+        attacker_position
+      )
+        attacker["hp"] -= target["firepower"]
+
+        if attacker["hp"] <= 0
+          destroy_technique(
+            state,
+            attacker,
+            attacker_position
+          )
+
+          return Result.new(
+            success: true,
+            state: state,
+            events: [{ type: "technique_destroyed" }]
+          )
+        end
+
+        target["hp"] -= attacker["firepower"]
+
+        if target["hp"] <= 0
+          destroy_technique(
+            state,
+            target,
+            find_position_of_target(state, target)
+          )
+        end
+
+        Result.new(
+          success: true,
+          state: state,
+          events: [{ type: "technique_attacked" }]
+        )
+      end
+
       # Technique -> HQ
       #
-      # Adjacent attack:
+      # Adjacent:
       # - normal combat;
       # - Technique shoots first;
       # - HQ may counterattack if it survives.
       #
-      # Long-range attack:
+      # Long-range:
       # - only SAU;
       # - friendly Technique must provide spotting near the enemy HQ;
       # - HQ does not counterattack.
@@ -162,6 +197,13 @@ module GameEngine
         attacker_position,
         target_position
       )
+        return failure("Technique cannot attack headquarters at this range") unless
+          valid_technique_to_headquarters_attack?(
+            attacker,
+            attacker_position,
+            target_position
+          )
+
         new_state = @state.deep_dup
 
         new_attacker = object_at_in_state(
@@ -174,15 +216,16 @@ module GameEngine
           target_position
         )
 
-				new_attacker["has_attacked"] = true
+        new_attacker["has_attacked"] = true
 
-				apply_damage_to_headquarters(
-					new_state,
-					new_target,
-					new_attacker["firepower"]
-				)
+        apply_damage_to_headquarters(
+          new_state,
+          new_target,
+          new_attacker["firepower"]
+        )
 
-        if new_target["hp"] > 0 && adjacent?(attacker_position, target_position)
+        if new_target["hp"] > 0 &&
+            adjacent?(attacker_position, target_position)
           counterattack(
             new_state,
             attacker_position,
@@ -209,55 +252,6 @@ module GameEngine
             target_position,
             attacker["player_id"]
           )
-      end
-
-      # ------------------------------------------------------------------
-      # Counterattack
-      # ------------------------------------------------------------------
-
-      def counterattack(state, attacker_position, target_position)
-        attacker = object_at_in_state(
-          state,
-          attacker_position
-        )
-
-        defender = object_at_in_state(
-          state,
-          target_position
-        )
-
-        return unless attacker
-        return unless defender
-        return if defender["has_counterattacked"]
-
-        return unless adjacent?(
-          attacker_position,
-          target_position
-        )
-
-				defender["has_counterattacked"] = true
-
-				if attacker["type"] == "headquarters"
-					apply_damage_to_headquarters(
-						state,
-						attacker,
-						defender["firepower"]
-					)
-				else
-					attacker["hp"] -= defender["firepower"]
-
-					if attacker["hp"] <= 0
-						move_to_graveyard(
-							state,
-							attacker
-						)
-
-						clear_field_cell(
-							state,
-							attacker_position
-						)
-					end
-				end
       end
 
       # ------------------------------------------------------------------
@@ -316,12 +310,7 @@ module GameEngine
 
 				new_attacker["has_attacked"] = true
 
-				total_firepower = headquarters_firepower_with_platoons(
-					new_state,
-					new_attacker
-				)
-
-				damage_platoons_after_headquarters_attack(
+				total_firepower = fire_with_headquarters(
 					new_state,
 					new_attacker
 				)
@@ -338,16 +327,16 @@ module GameEngine
 					events: [{ type: "headquarters_attacked" }]
 				)
 			end
+			
       # HQ -> Technique
       #
-      # This works like SAU:
-      #
       # Adjacent:
-      #   normal attack, Technique may counterattack.
+      # - normal attack;
+      # - Technique may counterattack.
       #
       # Long-range:
-      #   friendly Technique or HQ must be adjacent to the target;
-      #   no counterattack.
+      # - friendly Technique or HQ must be adjacent to target;
+      # - no counterattack.
       def attack_technique_target_from_headquarters(
         attacker,
         target,
@@ -373,41 +362,29 @@ module GameEngine
           target_position
         )
 
-				new_attacker["has_attacked"] = true
+        new_attacker["has_attacked"] = true
 
-				total_firepower = headquarters_firepower_with_platoons(
+				total_firepower = fire_with_headquarters(
 					new_state,
 					new_attacker
 				)
 
-				damage_platoons_after_headquarters_attack(
-					new_state,
-					new_attacker
-				)
+				new_target["hp"] -= total_firepower
 
-				apply_damage_to_headquarters(
-					new_state,
-					new_target,
-					total_firepower
-				)
+        if new_target["hp"] <= 0
+          destroy_technique(
+            new_state,
+            new_target,
+            target_position
+          )
+        elsif adjacent?(attacker_position, target_position)
+          counterattack(
+            new_state,
+            attacker_position,
+            target_position
+          )
+        end
 
-				if new_target["hp"] <= 0
-					move_to_graveyard(
-						new_state,
-						new_target
-					)
-
-					clear_field_cell(
-						new_state,
-						target_position
-					)
-				elsif adjacent?(attacker_position, target_position)
-					counterattack(
-						new_state,
-						attacker_position,
-						target_position
-					)
-				end
         Result.new(
           success: true,
           state: new_state,
@@ -420,16 +397,109 @@ module GameEngine
         attacker_position,
         target_position
       )
-        return true if adjacent?(
-          attacker_position,
-          target_position
-        )
+        return true if adjacent?(attacker_position, target_position)
 
         allied_unit_near?(
           target_position,
           attacker["player_id"]
         )
       end
+
+      # ------------------------------------------------------------------
+      # Counterattack
+      # ------------------------------------------------------------------
+
+			def counterattack(
+				state,
+				attacker_position,
+				target_position
+			)
+				attacker = object_at_in_state(
+					state,
+					attacker_position
+				)
+
+				defender = object_at_in_state(
+					state,
+					target_position
+				)
+
+				return unless attacker
+				return unless defender
+				return if defender["has_counterattacked"]
+
+				return unless adjacent?(
+					attacker_position,
+					target_position
+				)
+
+				defender["has_counterattacked"] = true
+
+				if defender["type"] == "headquarters"
+					counterattack_with_headquarters(
+						state,
+						attacker,
+						defender,
+						attacker_position
+					)
+				else
+					counterattack_with_technique(
+						state,
+						attacker,
+						defender,
+						attacker_position
+					)
+				end
+			end
+
+			def counterattack_with_technique(
+				state,
+				attacker,
+				defender,
+				attacker_position
+			)
+				attacker["hp"] -= defender["firepower"]
+				attacker["hp"] = 0 if attacker["hp"] < 0
+
+				return unless attacker["hp"] <= 0
+
+				destroy_technique(
+					state,
+					attacker,
+					attacker_position
+				)
+			end
+
+			def counterattack_with_headquarters(
+				state,
+				attacker,
+				defender,
+				attacker_position
+			)
+				total_firepower = fire_with_headquarters(
+					state,
+					defender
+				)
+
+				if attacker["type"] == "headquarters"
+					apply_damage_to_headquarters(
+						state,
+						attacker,
+						total_firepower
+					)
+				else
+					attacker["hp"] -= total_firepower
+					attacker["hp"] = 0 if attacker["hp"] < 0
+
+					return unless attacker["hp"] <= 0
+
+					destroy_technique(
+						state,
+						attacker,
+						attacker_position
+					)
+				end
+			end
 
       # ------------------------------------------------------------------
       # PT-SAU
@@ -453,6 +523,131 @@ module GameEngine
           attacker_position,
           target_position
         )
+      end
+
+      # ------------------------------------------------------------------
+      # Headquarters + Platoons
+      # ------------------------------------------------------------------
+
+			def fire_with_headquarters(state, headquarters)
+				total_firepower = headquarters_total_firepower(
+					state,
+					headquarters
+				)
+
+				damage_platoons_after_headquarters_attack(
+					state,
+					headquarters
+				)
+
+				total_firepower
+			end
+
+      def headquarters_total_firepower(state, headquarters)
+        player = state["players"][headquarters["player_id"].to_s]
+        platoons = player["platoons"] || []
+
+        headquarters["firepower"] +
+          platoons.compact.sum { |platoon| platoon["firepower"] }
+      end
+
+      def damage_platoons_after_headquarters_attack(
+        state,
+        headquarters
+      )
+        player = state["players"][headquarters["player_id"].to_s]
+        platoons = player["platoons"] || []
+
+        platoons.each_with_index do |platoon, index|
+          next unless platoon
+
+          platoon["hp"] -= platoon["firepower"]
+          platoon["hp"] = 0 if platoon["hp"] < 0
+
+          next unless platoon["hp"] <= 0
+
+          player["graveyard"] << platoon.deep_dup
+          player["platoons"][index] = nil
+        end
+      end
+
+      # Incoming damage to HQ is absorbed by Platoons in slot order.
+      #
+      # Slot 0 -> Slot 1 -> Slot 2 -> Slot 3
+      #
+      # Each Platoon can absorb up to its armor value.
+      # Remaining damage continues to the next Platoon and then to HQ.
+      def apply_damage_to_headquarters(
+        state,
+        headquarters,
+        damage
+      )
+        return if damage <= 0
+
+        player = state["players"][headquarters["player_id"].to_s]
+        platoons = player["platoons"] || []
+
+        remaining_damage = damage
+
+        platoons.each_with_index do |platoon, index|
+          next unless platoon
+
+          absorbed_damage = [
+            remaining_damage,
+            platoon["armor"]
+          ].min
+
+          platoon["hp"] -= absorbed_damage
+          platoon["hp"] = 0 if platoon["hp"] < 0
+
+          remaining_damage -= absorbed_damage
+
+          next unless platoon["hp"] <= 0
+
+          player["graveyard"] << platoon.deep_dup
+          player["platoons"][index] = nil
+
+          break if remaining_damage <= 0
+        end
+
+        headquarters["hp"] -= remaining_damage
+        headquarters["hp"] = 0 if headquarters["hp"] < 0
+      end
+
+      # ------------------------------------------------------------------
+      # Destruction / graveyard
+      # ------------------------------------------------------------------
+
+      def destroy_technique(
+        state,
+        technique,
+        position
+      )
+        move_to_graveyard(
+          state,
+          technique
+        )
+
+        clear_field_cell(
+          state,
+          position
+        )
+      end
+
+      def move_to_graveyard(
+        state,
+        object
+      )
+        player = state["players"][object["player_id"].to_s]
+
+        player["graveyard"] << object.deep_dup
+      end
+
+      def clear_field_cell(
+        state,
+        position
+      )
+        state["field"][position[0]][position[1]] = nil
       end
 
       # ------------------------------------------------------------------
@@ -491,7 +686,7 @@ module GameEngine
         row = position[0]
         column = position[1]
 
-        (-1..1).filter_map do |row_offset|
+        (-1..1).flat_map do |row_offset|
           (-1..1).filter_map do |column_offset|
             next if row_offset.zero? && column_offset.zero?
 
@@ -505,21 +700,7 @@ module GameEngine
 
             @state["field"][neighbor_row][neighbor_column]
           end
-        end.flatten
-      end
-
-      # ------------------------------------------------------------------
-      # Graveyard
-      # ------------------------------------------------------------------
-
-      def move_to_graveyard(state, object)
-        player = state["players"][object["player_id"].to_s]
-
-        player["graveyard"] << object.deep_dup
-      end
-
-      def clear_field_cell(state, position)
-        state["field"][position[0]][position[1]] = nil
+        end
       end
 
       # ------------------------------------------------------------------
@@ -537,6 +718,11 @@ module GameEngine
           @action.player_id.to_s
       end
 
+      def own_object?(object)
+        object["player_id"].to_s ==
+          @action.player_id.to_s
+      end
+
       def valid_coordinates?(coordinates)
         coordinates.is_a?(Array) &&
           coordinates.length == 2 &&
@@ -551,11 +737,18 @@ module GameEngine
         @state["field"][coordinates[0]][coordinates[1]]
       end
 
-      def object_at_in_state(state, coordinates)
+      def object_at_in_state(
+        state,
+        coordinates
+      )
         state["field"][coordinates[0]][coordinates[1]]
       end
 
-      def valid_attack_range?(attacker, from, to)
+      def valid_attack_range?(
+        attacker,
+        from,
+        to
+      )
         row_delta = (to[0] - from[0]).abs
         column_delta = (to[1] - from[1]).abs
 
@@ -564,67 +757,22 @@ module GameEngine
         distance <= attacker["attack_range"]
       end
 
+      def find_position_of_target(state, target)
+        state["field"].each_with_index do |row, row_index|
+          column_index = row.index(target)
+
+          return [row_index, column_index] if column_index
+        end
+
+        nil
+      end
+
       def failure(error)
         Result.new(
           success: false,
           error: error
         )
       end
-						
-			def headquarters_firepower_with_platoons(state, headquarters)
-				player = state["players"][headquarters["player_id"].to_s]
-				platoons = player["platoons"] || []
-
-				headquarters["firepower"] +
-					platoons.compact.sum { |platoon| platoon["firepower"] }
-			end
-
-			def damage_platoons_after_headquarters_attack(state, headquarters)
-				player = state["players"][headquarters["player_id"].to_s]
-				platoons = player["platoons"] || []
-
-				platoons.compact.each do |platoon|
-					platoon["hp"] -= platoon["firepower"]
-
-					next unless platoon["hp"] <= 0
-
-					player["graveyard"] << platoon.deep_dup
-
-					index = player["platoons"].index(platoon)
-					player["platoons"][index] = nil
-				end
-			end
-				
-			def apply_damage_to_headquarters(state, headquarters, damage)
-				return if damage <= 0
-
-				player = state["players"][headquarters["player_id"].to_s]
-				platoons = player["platoons"] || []
-
-				remaining_damage = damage
-
-				platoons.each do |platoon|
-					next unless platoon
-
-					absorbed_damage = [remaining_damage, platoon["armor"]].min
-
-					platoon["hp"] -= absorbed_damage
-					platoon["hp"] = 0 if platoon["hp"] < 0
-					remaining_damage -= absorbed_damage
-
-					if platoon["hp"] <= 0
-						player["graveyard"] << platoon.deep_dup
-
-						index = player["platoons"].index(platoon)
-						player["platoons"][index] = nil
-					end
-
-					break if remaining_damage <= 0
-				end
-
-				headquarters["hp"] -= remaining_damage
-				headquarters["hp"] = 0 if headquarters["hp"] < 0
-			end
     end
   end
 end

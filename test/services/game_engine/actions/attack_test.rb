@@ -1065,97 +1065,109 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
     assert_equal original_state, @state
   end
   
-  test "platoon armor absorbs incoming headquarters damage" do
-    state = @state
+	test "platoon armor absorbs incoming headquarters damage" do
+		state = @state
 
-    state["players"]["2"]["platoons"][0] = {
-      "type" => "platoon",
-      "card_id" => 100,
-      "player_id" => 2,
-      "nation_id" => 20,
-      "name" => "Пехотный взвод",
-      "firepower" => 3,
-      "hp" => 10,
-      "armor" => 3,
-      "fuel" => 2
-    }
+		state["players"]["2"]["platoons"][0] = {
+		  "type" => "platoon",
+		  "card_id" => 100,
+		  "player_id" => 2,
+		  "nation_id" => 20,
+		  "name" => "Пехотный взвод",
+		  "firepower" => 3,
+		  "hp" => 10,
+		  "armor" => 3,
+		  "fuel" => 2
+		}
 
-    state["field"][0][3] = state["field"][1][1].deep_dup
-    state["field"][0][3]["firepower"] = 6
+		state["field"][0][3] = state["field"][1][1].deep_dup
+		state["field"][0][3]["firepower"] = 6
 
-    action = GameEngine::Action.new(
-      player_id: 1,
-      type: "attack",
-      payload: {
-        attacker: [0, 3],
-        target: [0, 4]
-      }
-    )
+		action = GameEngine::Action.new(
+		  player_id: 1,
+		  type: "attack",
+		  payload: {
+		    attacker: [0, 3],
+		    target: [0, 4]
+		  }
+		)
 
-    result = GameEngine::Actions::Attack.new(state, action).call
+		result = GameEngine::Actions::Attack.new(state, action).call
 
-    assert result.success?
+		assert result.success?, result.error
 
-    # 6 урона:
-    # 3 поглощает Platoon, 3 получает HQ.
-    assert_equal 7, result.state["players"]["2"]["platoons"][0]["hp"]
-    assert_equal 17, result.state["field"][0][4]["hp"]
-  end
+		# Основная атака:
+		# 6 урона.
+		# 3 поглощает Platoon -> HP 7.
+		# 3 получает HQ -> HP 17.
+		#
+		# Затем HQ контратакует.
+		# Platoon firepower = 3, поэтому Platoon теряет ещё 3 HP.
+		# Итоговый HP Platoon = 4.
+		assert_equal 4, result.state["players"]["2"]["platoons"][0]["hp"]
+		assert_equal 17, result.state["field"][0][4]["hp"]
+	end
 
-  test "incoming headquarters damage cascades through platoons" do
-    state = @state
+	test "incoming headquarters damage cascades through platoons" do
+		state = @state
 
-    state["players"]["2"]["platoons"] = [
-      {
-        "type" => "platoon",
-        "card_id" => 101,
-        "player_id" => 2,
-        "nation_id" => 20,
-        "name" => "Взвод 1",
-        "firepower" => 2,
-        "hp" => 10,
-        "armor" => 3,
-        "fuel" => 2
-      },
-      {
-        "type" => "platoon",
-        "card_id" => 102,
-        "player_id" => 2,
-        "nation_id" => 20,
-        "name" => "Взвод 2",
-        "firepower" => 2,
-        "hp" => 10,
-        "armor" => 4,
-        "fuel" => 2
-      },
-      nil,
-      nil
-    ]
+		state["players"]["2"]["platoons"] = [
+		  {
+		    "type" => "platoon",
+		    "card_id" => 101,
+		    "player_id" => 2,
+		    "nation_id" => 20,
+		    "name" => "Взвод 1",
+		    "firepower" => 2,
+		    "hp" => 10,
+		    "armor" => 3,
+		    "fuel" => 2
+		  },
+		  {
+		    "type" => "platoon",
+		    "card_id" => 102,
+		    "player_id" => 2,
+		    "nation_id" => 20,
+		    "name" => "Взвод 2",
+		    "firepower" => 2,
+		    "hp" => 10,
+		    "armor" => 4,
+		    "fuel" => 2
+		  },
+		  nil,
+		  nil
+		]
 
-    state["field"][0][3] = state["field"][1][1].deep_dup
-    state["field"][0][3]["firepower"] = 10
+		state["field"][0][3] = state["field"][1][1].deep_dup
+		state["field"][0][3]["firepower"] = 10
 
-    action = GameEngine::Action.new(
-      player_id: 1,
-      type: "attack",
-      payload: {
-        attacker: [0, 3],
-        target: [0, 4]
-      }
-    )
+		action = GameEngine::Action.new(
+		  player_id: 1,
+		  type: "attack",
+		  payload: {
+		    attacker: [0, 3],
+		    target: [0, 4]
+		  }
+		)
 
-    result = GameEngine::Actions::Attack.new(state, action).call
+		result = GameEngine::Actions::Attack.new(state, action).call
 
-    assert result.success?
+		assert result.success?, result.error
 
-    # 10 урона:
-    # Platoon 1 поглощает 3 -> HP 7.
-    # Platoon 2 поглощает 4 -> HP 6.
-    # Оставшиеся 3 получает HQ.
-    assert_equal 7, result.state["players"]["2"]["platoons"][0]["hp"]
-    assert_equal 6, result.state["players"]["2"]["platoons"][1]["hp"]
-    assert_equal 17, result.state["field"][0][4]["hp"]
-  end
+		# Основная атака:
+		# 10 урона.
+		# Platoon 1 поглощает 3 -> HP 7.
+		# Platoon 2 поглощает 4 -> HP 6.
+		# Оставшиеся 3 получает HQ -> HP 17.
+		#
+		# Затем HQ контратакует.
+		# Каждый Platoon имеет firepower 2.
+		# Platoon 1: 7 -> 5.
+		# Platoon 2: 6 -> 4.
+		assert_equal 5, result.state["players"]["2"]["platoons"][0]["hp"]
+		assert_equal 4, result.state["players"]["2"]["platoons"][1]["hp"]
+		assert_equal 17, result.state["field"][0][4]["hp"]
+	end
 
   test "platoon is destroyed when incoming damage exceeds its hp" do
     state = @state
@@ -1204,4 +1216,59 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
     # Оставшиеся 2 получает HQ.
     assert_equal 18, result.state["field"][0][4]["hp"]
   end
+  
+	test "headquarters counterattack includes platoon firepower" do
+		state = @state.deep_dup
+
+		state["players"]["1"]["platoons"][0] = {
+		  "type" => "platoon",
+		  "card_id" => 101,
+		  "player_id" => 1,
+		  "nation_id" => 10,
+		  "name" => "Пехотный взвод",
+		  "firepower" => 3,
+		  "hp" => 10,
+		  "armor" => 2,
+		  "fuel" => 1
+		}
+
+		state["field"][1][1] = state["field"][1][2].deep_dup
+		state["field"][1][1]["player_id"] = 2
+		state["field"][1][1]["hp"] = 10
+		state["field"][1][1]["firepower"] = 4
+
+		state["current_player_id"] = 2
+
+		action = GameEngine::Action.new(
+		  player_id: 2,
+		  type: "attack",
+		  payload: {
+		    attacker: [1, 1],
+		    target: [2, 0]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(state, action).call
+
+		assert result.success?
+
+		# Первая атака:
+		# P2 Technique наносит 4 урона P1 HQ.
+		# Platoon поглощает 2 armor.
+		# HQ: 20 -> 18.
+		assert_equal 18, result.state["field"][2][0]["hp"]
+
+		# При контратаке HQ:
+		# HQ 4 + Platoon 3 = 7 firepower.
+		# Перед этим Platoon уже получил 2 урона от первой атаки:
+		# 10 -> 8.
+		# Затем при выстреле HQ теряет свои 3 HP:
+		# 8 -> 5.
+		assert_equal 5, result.state["players"]["1"]["platoons"][0]["hp"]
+
+		# 7 урона получает атакующая Technique.
+		assert_equal 3, result.state["field"][1][1]["hp"]
+
+		assert result.state["field"][2][0]["has_counterattacked"]
+	end
 end
