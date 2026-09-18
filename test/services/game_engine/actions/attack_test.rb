@@ -1271,4 +1271,254 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
 
 		assert result.state["field"][2][0]["has_counterattacked"]
 	end
+	
+  test "platoon with zero armor does not absorb incoming headquarters damage" do
+    @state["players"][OPPONENT_ID.to_s]["platoons"][0] = {
+      "type" => "platoon",
+      "card_id" => 104,
+      "player_id" => OPPONENT_ID,
+      "nation_id" => 20,
+      "name" => "Взвод без брони",
+      "firepower" => 2,
+      "hp" => 10,
+      "armor" => 0,
+      "fuel" => 2
+    }
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "attack",
+      payload: {
+        attacker: [2, 0],
+        target: [0, 4]
+      }
+    )
+
+    result = GameEngine::Actions::Attack.new(@state, action).call
+
+    assert result.success?, result.error
+
+    # Armor = 0, поэтому Platoon не поглощает урон.
+    # HQ получает все 4 урона.
+    assert_equal 10, result.state["players"][OPPONENT_ID.to_s]["platoons"][0]["hp"]
+    assert_equal 16, result.state["field"][0][4]["hp"]
+  end
+  
+  test "platoon without armor does not absorb incoming headquarters damage" do
+    @state["players"][OPPONENT_ID.to_s]["platoons"][0] = {
+      "type" => "platoon",
+      "card_id" => 105,
+      "player_id" => OPPONENT_ID,
+      "nation_id" => 20,
+      "name" => "Взвод без брони",
+      "firepower" => 2,
+      "hp" => 10,
+      "fuel" => 2
+    }
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "attack",
+      payload: {
+        attacker: [2, 0],
+        target: [0, 4]
+      }
+    )
+
+    result = GameEngine::Actions::Attack.new(@state, action).call
+
+    assert result.success?, result.error
+
+    # Отсутствующий armor трактуется как 0.
+    assert_equal 10, result.state["players"][OPPONENT_ID.to_s]["platoons"][0]["hp"]
+    assert_equal 16, result.state["field"][0][4]["hp"]
+  end
+  
+  test "SAU attacks distant technique through allied technique spotting" do
+    @state["field"][2][2] = {
+      "type" => "technique",
+      "card_id" => 32,
+      "player_id" => PLAYER_ID,
+      "technique_type" => "artillery",
+      "hp" => 10,
+      "firepower" => 4,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "orthogonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
+
+    # Союзная Technique обнаруживает цель.
+    @state["field"][0][2] = {
+      "type" => "technique",
+      "card_id" => 33,
+      "player_id" => PLAYER_ID,
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 3,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
+
+    @state["field"][0][3] = {
+      "type" => "technique",
+      "card_id" => 34,
+      "player_id" => OPPONENT_ID,
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 3,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "attack",
+      payload: {
+        attacker: [2, 2],
+        target: [0, 3]
+      }
+    )
+
+    result = GameEngine::Actions::Attack.new(@state, action).call
+
+    assert result.success?, result.error
+    assert_equal 6, result.state["field"][0][3]["hp"]
+    assert result.state["field"][2][2]["has_attacked"]
+
+    # Дальний выстрел SAU не вызывает counterattack.
+    assert_equal false, result.state["field"][0][3]["has_counterattacked"]
+  end
+  
+  test "SAU cannot attack distant technique without spotting" do
+    @state["field"][2][2] = {
+      "type" => "technique",
+      "card_id" => 35,
+      "player_id" => PLAYER_ID,
+      "technique_type" => "artillery",
+      "hp" => 10,
+      "firepower" => 4,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "orthogonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
+
+    @state["field"][0][3] = {
+      "type" => "technique",
+      "card_id" => 36,
+      "player_id" => OPPONENT_ID,
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 3,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "attack",
+      payload: {
+        attacker: [2, 2],
+        target: [0, 3]
+      }
+    )
+
+    result = GameEngine::Actions::Attack.new(@state, action).call
+
+    assert_not result.success?
+    assert_equal "Invalid attack range", result.error
+  end
+  
+  test "headquarters attacks adjacent technique and technique counterattacks" do
+    @state["field"][1][1]["player_id"] = OPPONENT_ID
+    @state["field"][1][1]["firepower"] = 3
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "attack",
+      payload: {
+        attacker: [2, 0],
+        target: [1, 1]
+      }
+    )
+
+    result = GameEngine::Actions::Attack.new(@state, action).call
+
+    assert result.success?, result.error
+
+    # HQ наносит 4 урона: 10 -> 6.
+    assert_equal 6, result.state["field"][1][1]["hp"]
+
+    # Technique контратакует с firepower 3: 20 -> 17.
+    assert_equal 17, result.state["field"][2][0]["hp"]
+
+    assert result.state["field"][1][1]["has_counterattacked"]
+    assert result.state["field"][2][0]["has_attacked"]
+  end
+  
+  test "headquarters attacks distant technique through allied technique spotting without counterattack" do
+    @state["field"][0][2] = {
+      "type" => "technique",
+      "card_id" => 37,
+      "player_id" => PLAYER_ID,
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 3,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
+
+    @state["field"][0][3] = {
+      "type" => "technique",
+      "card_id" => 38,
+      "player_id" => OPPONENT_ID,
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 3,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "attack",
+      payload: {
+        attacker: [2, 0],
+        target: [0, 3]
+      }
+    )
+
+    result = GameEngine::Actions::Attack.new(@state, action).call
+
+    assert result.success?, result.error
+    assert_equal 6, result.state["field"][0][3]["hp"]
+
+    # Дальняя атака HQ не вызывает counterattack.
+    assert_equal false, result.state["field"][0][3]["has_counterattacked"]
+  end
 end
