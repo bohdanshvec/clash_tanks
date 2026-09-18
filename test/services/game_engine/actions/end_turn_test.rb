@@ -116,23 +116,45 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     assert_equal OPPONENT_ID, result.state["current_player_id"]
   end
 
-  test "does not allow ending turn after time expires" do
-    current_time = @started_at + 600
+	test "finishes game when ending turn after time expires" do
+		current_time = @started_at + 600
 
-    action = GameEngine::Action.new(
-      player_id: PLAYER_ID,
-      type: "end_turn"
-    )
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "end_turn"
+		)
 
-    result = GameEngine::Actions::EndTurn.new(
-      @state,
-      action,
-      current_time: current_time
-    ).call
+		result = GameEngine::Actions::EndTurn.new(
+		  @state,
+		  action,
+		  current_time: current_time
+		).call
 
-    assert_not result.success?
-    assert_equal "Time expired", result.error
-  end
+		assert result.success?
+
+		assert_equal "finished", result.state["status"]
+
+		assert_equal(
+		  {
+		    "winner_id" => OPPONENT_ID.to_s,
+		    "loser_id" => PLAYER_ID.to_s,
+		    "reason" => "time_expired"
+		  },
+		  result.state["result"]
+		)
+
+		assert_equal(
+		  [
+		    {
+		      type: "game_finished",
+		      winner_id: OPPONENT_ID.to_s,
+		      loser_id: PLAYER_ID.to_s,
+		      reason: "time_expired"
+		    }
+		  ],
+		  result.events
+		)
+	end
   
 	test "calculates fuel for the player whose turn starts" do
 		@state["field"][1][0] = {

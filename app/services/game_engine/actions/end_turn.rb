@@ -16,7 +16,7 @@ module GameEngine
           current_time: @current_time
         )
 
-        return failure("Time expired") if timer.expired?
+        return finish_game_by_timeout if timer.expired?
 
         new_state = @state.deep_dup
         current_player = new_state["players"][@action.player_id.to_s]
@@ -63,6 +63,23 @@ module GameEngine
       def failure(error)
         Result.new(success: false, error: error)
       end
+      
+			def finish_game_by_timeout
+				loser_id = @action.player_id.to_s
+
+				winner_id = @state["players"].keys.find do |player_id|
+					player_id != loser_id
+				end
+
+				return failure("Opponent does not exist") unless winner_id
+
+				GameEngine::FinishGame.call(
+					state: @state,
+					winner_id: winner_id,
+					loser_id: loser_id,
+					reason: "time_expired"
+				)
+			end
     end
   end
 end

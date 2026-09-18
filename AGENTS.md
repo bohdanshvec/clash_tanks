@@ -104,7 +104,24 @@ ACTIONS = {
 }.freeze
 ```
 
-Engine также проверяет истечение времени текущего игрока до выполнения его Action.
+Engine также:
+
+- проверяет истечение времени текущего игрока до выполнения его Action;
+- не позволяет выполнять Action после завершения игры.
+
+Если:
+
+```ruby
+state["status"] == "finished"
+```
+
+то любой известный Action отклоняется с ошибкой:
+
+```
+Game is already finished
+```
+
+Проверка выполняется централизованно в Engine, а не дублируется во всех Actions.
 
 Механизм Draw **не является отдельным Action**.
 
@@ -123,15 +140,61 @@ Engine также проверяет истечение времени теку�
 
 Не нужно сохранять каждое промежуточное изменение.
 
+### Статус игры
+
+GameState содержит:
+
+```ruby
+"status" => "started"
+```
+
+или:
+
+```ruby
+"status" => "finished"
+```
+
+Начальное состояние партии имеет статус `started`.
+
+После завершения партии статус меняется на:
+
+```ruby
+"finished"
+```
+
+### Результат игры
+
+После завершения в GameState сохраняется:
+
+```ruby
+"result" => {
+  "winner_id" => "...",
+  "loser_id" => "...",
+  "reason" => "..."
+}
+```
+
+Допустимые причины завершения:
+
+```
+headquarters_destroyed
+empty_deck_damage
+time_expired
+```
+
+Победитель и проигравший хранятся внутри GameState, а не отдельными полями Game.
+
 ### Основные данные GameState
 
 State содержит:
 
+- `status`;
 - `turn_number`;
 - `current_player_id`;
 - `turn_started_at`;
 - `players`;
-- `field`.
+- `field`;
+- при завершённой игре — `result`.
 
 Состояние игрока может содержать:
 
@@ -911,9 +974,13 @@ Draw 2
 вторая попытка → 1 урон
 ```
 
-В Stage 11 уничтожение HQ не приводит автоматически к завершению партии.
+Если урон от пустой колоды уменьшает HP HQ до 0, игра завершается через `GameEngine::FinishGame`.
 
-Победа/поражение относится к Stage 13.
+Причина завершения:
+
+```
+empty_deck_damage
+```
 
 ### Ограничение HP при пустой колоде
 
@@ -967,7 +1034,18 @@ Draw не изменяет graveyard.
 }
 ```
 
-Событие также не раскрывает скрытую информацию о картах.
+Если такая попытка приводит к уничтожению HQ, дополнительно создаётся:
+
+```ruby
+{
+  type: "game_finished",
+  winner_id: "...",
+  loser_id: "...",
+  reason: "empty_deck_damage"
+}
+```
+
+События не раскрывают скрытую информацию о картах.
 
 ## 12. Таймер хода
 
@@ -1013,15 +1091,41 @@ GameEngine::TurnTimer
 
 ### Engine
 
-Перед Action текущего игрока Engine проверяет:
+Перед Action текущего игрока Engine проверяет истечение времени.
 
-**Time expired**
+Если время текущего игрока истекло:
 
-Если время истекло, Action не выполняется.
+- Action не выполняется;
+- игра завершается;
+- текущий игрок становится проигравшим;
+- противник становится победителем;
+- причина:
 
-На Stage 10 завершение игры из-за истечения времени не реализуется.
+```
+time_expired
+```
 
-Определение победителя/проигравшего относится к Stage 13.
+Результат создаётся через:
+
+```
+GameEngine::FinishGame
+```
+
+Исходный GameState не изменяется.
+
+### EndTurn
+
+EndTurn также самостоятельно проверяет таймер.
+
+Если игрок пытается завершить ход после истечения своего времени:
+
+- переход хода не выполняется;
+- игра завершается;
+- причина:
+
+```
+time_expired
+```
 
 ## 13. Resources / Fuel
 
@@ -1178,7 +1282,7 @@ State не мутируется.
 
 ### Attack
 
-Attack реализован в рамках Stage 12.
+Attack реализован в рамках Stage 12 и интегрирован с Stage 13.
 
 Основные правила:
 
@@ -1194,6 +1298,19 @@ Attack реализован в рамках Stage 12.
 
 ```ruby
 "has_attacked" => true
+```
+
+Если в результате атаки уничтожается HQ:
+
+- HP HQ становится 0;
+- атака завершается;
+- counterattack уничтоженного HQ не выполняется;
+- вызывается `GameEngine::FinishGame`;
+- игра получает статус `finished`;
+- причина:
+
+```
+headquarters_destroyed
 ```
 
 Исходный GameState не изменяется.
@@ -1220,6 +1337,12 @@ Attack реализован в рамках Stage 12.
 - рассчитывается его новый Fuel;
 - выполняется обязательный Draw 1;
 - создаётся событие `turn_ended`.
+
+Если время текущего игрока уже истекло, вместо перехода хода выполняется завершение игры с причиной:
+
+```
+time_expired
+```
 
 Исходный state не мутируется.
 
@@ -1487,6 +1610,8 @@ GameEngine::Cards::Draw
 - возрастающий урон собственного HQ;
 - событие `empty_deck_draw_attempt`.
 
+Если этот урон уничтожает HQ, игра завершается через `GameEngine::FinishGame`.
+
 ### 16.5. PlayCard — Platoon
 
 Platoon является отдельным типом карты.
@@ -1735,9 +1860,17 @@ empty_deck_draw_attempts += 1
 HQ HP -= empty_deck_draw_attempts
 ```
 
-В Stage 11 это только изменение состояния.
+Если HQ достигает 0 HP, вызывается:
 
-Условия победы/поражения обрабатываются на Stage 13.
+```
+GameEngine::FinishGame
+```
+
+с причиной:
+
+```
+empty_deck_damage
+```
 
 ## 20. Stage 12 — Combat
 
@@ -1842,7 +1975,10 @@ PT-SAU → обычная Technique
 
 ### 20.5. Spotting
 
-Spotting реализован только через союзную Technique.
+Spotting реализован через:
+
+- союзную Technique;
+- наш HQ (штаб атакующего игрока).
 
 Используется логика:
 
@@ -1852,7 +1988,13 @@ allied Technique
      target
 ```
 
-Наш HQ также используется как источник spotting.
+или:
+
+```
+наш HQ
+  ↓
+target
+```
 
 Не создавать отдельный механизм `allied_unit_near?` для включения HQ в spotting.
 
@@ -1863,6 +2005,8 @@ Spotting применяется к:
 - SAU → HQ.
 
 Для дальнего удара SAU или HQ по Technique необходима союзная Technique рядом с целью.
+
+Для SAU → HQ источником spotting также может быть наш штаб согласно правилам атаки.
 
 ### 20.6. Technique → HQ
 
@@ -1881,7 +2025,7 @@ Technique → HQ
 
 Обычная Technique не может атаковать HQ с расстояния.
 
-SAU может атаковать HQ с расстояния при наличии союзной Technique рядом с HQ.
+SAU может атаковать HQ с расстояния при наличии требуемого spotting.
 
 При дальней атаке SAU по HQ counterattack HQ не выполняется.
 
@@ -1895,9 +2039,11 @@ HQ может атаковать вражеский HQ.
 
 Вражеский HQ не выполняет counterattack на HQ.
 
+Если HP вражеского HQ достигает 0, игра завершается через `GameEngine::FinishGame`.
+
 ### 20.8. HQ → Technique
 
-HQ может атаковать вражескую Technique:
+HQ может атаковать вражескую Technique.
 
 **Соседняя Technique**
 
@@ -2052,17 +2198,27 @@ armor = platoon["armor"].to_i
 
 ### 20.14. Победа и поражение
 
-Stage 12 не завершает игру автоматически.
+Combat отвечает за применение боевого урона.
 
-Даже если HP HQ становится:
+При достижении HQ `hp <= 0` Attack передаёт завершение игры в:
 
 ```
-0
+GameEngine::FinishGame
 ```
 
-GameState не переводится автоматически в `finished`.
+Таким образом:
 
-Условия победы и поражения реализуются на Stage 13.
+```
+Attack
+  ↓
+HQ hp <= 0
+  ↓
+FinishGame
+  ↓
+status = finished
+```
+
+Combat не содержит отдельной системы определения победителя.
 
 ### 20.15. Рефакторинг Attack
 
@@ -2095,8 +2251,8 @@ test/services/game_engine/actions/attack_test.rb
 Актуальный результат:
 
 ```
-48 tests
-153 assertions
+52 tests
+166 assertions
 0 failures
 0 errors
 0 skips
@@ -2141,11 +2297,12 @@ test/services/game_engine/actions/attack_test.rb
 - SAU может атаковать HQ на расстоянии через spotting;
 - SAU может атаковать HQ рядом как обычную атаку;
 - SAU не может атаковать HQ на расстоянии без spotting;
-- Наш штаб (штаб атакующего игрока) также может предоставлять SAU данные разведки для дальней атаки.
+- наш штаб (штаб атакующего игрока) также может предоставлять SAU данные разведки для дальней атаки.
 
 ### HQ
 
 - HQ атакует HQ;
+- уничтожение HQ завершает игру;
 - HQ не получает counterattack от HQ;
 - HQ атакует соседнюю Technique;
 - соседняя Technique может контратаковать HQ;
@@ -2171,13 +2328,310 @@ test/services/game_engine/actions/attack_test.rb
 - HQ получает только оставшийся после Platoon урон;
 - firepower Platoon учитывается также при counterattack HQ.
 
-## 22. Общий статус тестов
+## 22. Stage 13 — Victory / Defeat
 
-Актуальный полный прогон:
+Stage 13 завершён.
+
+Реализован единый механизм завершения партии:
 
 ```
-244 tests
-677 assertions
+GameEngine::FinishGame
+```
+
+Он является центральным сервисом завершения игры.
+
+### 22.1. GameState status
+
+В начальном GameState:
+
+```ruby
+"status" => "started"
+```
+
+При завершении:
+
+```ruby
+"status" => "finished"
+```
+
+### 22.2. FinishGame
+
+`GameEngine::FinishGame` принимает:
+
+- `state`;
+- `winner_id`;
+- `loser_id`;
+- `reason`.
+
+Допустимые причины:
+
+```
+headquarters_destroyed
+time_expired
+empty_deck_damage
+```
+
+При успешном завершении:
+
+```ruby
+new_state["status"] = "finished"
+
+new_state["result"] = {
+  "winner_id" => winner_id,
+  "loser_id" => loser_id,
+  "reason" => reason
+}
+```
+
+Также создаётся событие:
+
+```ruby
+{
+  type: "game_finished",
+  winner_id: winner_id,
+  loser_id: loser_id,
+  reason: reason
+}
+```
+
+FinishGame проверяет:
+
+- игра ещё не завершена;
+- победитель существует;
+- проигравший существует;
+- победитель и проигравший различаются;
+- причина завершения допустима.
+
+FinishGame не изменяет исходный state.
+
+### 22.3. Уничтожение HQ
+
+При Attack, если HP вражеского HQ становится 0:
+
+```
+Attack
+  ↓
+HQ destroyed
+  ↓
+FinishGame
+```
+
+Используется причина:
+
+```
+headquarters_destroyed
+```
+
+Уничтоженный HQ не выполняет counterattack.
+
+Поддерживаются:
+
+- Technique → HQ;
+- SAU → HQ;
+- HQ → HQ;
+- HQ → Technique с соответствующим завершением, если целью является HQ.
+
+### 22.4. Пустая колода
+
+Если возрастающий урон от попыток Draw из пустой колоды уничтожает собственный HQ:
+
+```
+Draw
+  ↓
+empty_deck_draw_attempt
+  ↓
+HQ hp == 0
+  ↓
+FinishGame
+```
+
+Используется причина:
+
+```
+empty_deck_damage
+```
+
+Событие `empty_deck_draw_attempt` сохраняется, после него добавляется `game_finished`.
+
+### 22.5. Истечение времени
+
+Если время текущего игрока истекло до выполнения его Action:
+
+```
+Engine
+  ↓
+TurnTimer.expired?
+  ↓
+FinishGame
+```
+
+Текущий игрок становится проигравшим.
+
+Противник становится победителем.
+
+Причина:
+
+```
+time_expired
+```
+
+Action не выполняется.
+
+EndTurn также завершает игру при попытке завершить ход после истечения времени.
+
+### 22.6. Действия после завершения игры
+
+Engine централизованно блокирует известные Actions после:
+
+```ruby
+state["status"] == "finished"
+```
+
+Возвращается:
+
+```ruby
+Result.success? == false
+Result.error == "Game is already finished"
+Result.state == nil
+```
+
+Блокируются:
+
+- `move`;
+- `attack`;
+- `play_card`;
+- `end_turn`.
+
+Проверка выполняется в Engine, поэтому не требуется дублировать её во всех Actions.
+
+### 22.7. Событие завершения
+
+Все способы завершения игры используют единый формат:
+
+```ruby
+{
+  type: "game_finished",
+  winner_id: winner_id,
+  loser_id: loser_id,
+  reason: reason
+}
+```
+
+### 22.8. Повторное завершение
+
+FinishGame не позволяет повторно завершить уже завершённую игру.
+
+При:
+
+```ruby
+state["status"] == "finished"
+```
+
+возвращается ошибка:
+
+```
+Game is already finished
+```
+
+### 22.9. Иммутабельность
+
+Все способы завершения создают новый state.
+
+Исходный GameState не изменяется.
+
+Это относится к:
+
+- уничтожению HQ;
+- пустой колоде;
+- истечению времени;
+- FinishGame напрямую.
+
+## 23. Stage 13 — тесты
+
+Stage 13 завершён.
+
+Проверяются:
+
+### FinishGame
+
+- успешное завершение;
+- установка `status = "finished"`;
+- запись `winner_id`;
+- запись `loser_id`;
+- запись `reason`;
+- событие `game_finished`;
+- неизвестный победитель;
+- неизвестный проигравший;
+- одинаковые winner/loser;
+- недопустимая причина;
+- повторное завершение;
+- неизменность исходного state.
+
+### HQ destruction
+
+- завершение через `headquarters_destroyed`;
+- корректный winner/loser;
+- событие `game_finished`;
+- отсутствие counterattack уничтоженного HQ.
+
+### Empty deck
+
+- возрастающий урон HQ;
+- достижение HP 0;
+- завершение через `empty_deck_damage`;
+- корректный winner/loser;
+- событие `game_finished`.
+
+### Timeout
+
+- истечение времени текущего игрока до Action;
+- завершение через `time_expired`;
+- текущий игрок становится loser;
+- противник становится winner;
+- Action не выполняется;
+- исходный state не изменяется.
+
+### EndTurn timeout
+
+- попытка EndTurn после истечения времени;
+- завершение через `time_expired`;
+- переход хода не выполняется;
+- создаётся `game_finished`.
+
+### Finished game
+
+Через центральный Engine проверяются:
+
+- `move`;
+- `attack`;
+- `play_card`;
+- `end_turn`.
+
+После `status = "finished"` каждое из них возвращает:
+
+```ruby
+success? == false
+error == "Game is already finished"
+state == nil
+```
+
+## 24. Общий статус тестов
+
+Актуальный полный прогон после Stage 13:
+
+```
+260 tests
+744 assertions
+0 failures
+0 errors
+0 skips
+```
+
+Отдельный прогон Engine после Stage 13.6:
+
+```
+10 tests
+49 assertions
 0 failures
 0 errors
 0 skips
@@ -2186,72 +2640,93 @@ test/services/game_engine/actions/attack_test.rb
 Отдельный прогон Combat:
 
 ```
-48 tests
-153 assertions
+52 tests
+166 assertions
 0 failures
 0 errors
 0 skips
 ```
 
-Все реализованные Stage 1–12 находятся в зелёном состоянии.
+Все реализованные Stage 1–13 находятся в зелёном состоянии.
 
-## 23. Stage 13 — Victory / Defeat
+## 25. Текущая контрольная точка
 
-Следующий этап:
+Stage 1–13 завершены.
 
-**Stage 13 — Victory / Defeat**
+Следующий рабочий этап:
 
-На Stage 13 необходимо реализовать условия окончания партии из `GAME_RULES.md`.
+**Stage 14 — Заполнение проекта картами.**
 
-В частности:
-
-- уничтожение вражеского HQ;
-- окончание общего времени игрока;
-- правила пустой колоды как условие победы/поражения;
-- перевод Game в `finished`;
-- определение победителя;
-- определение проигравшего;
-- сохранение результата партии;
-- соответствующие события;
-- другие условия завершения партии из GAME_RULES.md.
-
-**Важно:**
-
-Stage 12 может оставить HQ с:
+Текущий полный зелёный прогон:
 
 ```
-hp = 0
+260 tests
+744 assertions
+0 failures
+0 errors
+0 skips
 ```
 
-но сама Combat-логика не должна самостоятельно определять победителя.
-
-Stage 13 отвечает за окончательное разрешение результата партии.
-
-## 24. Будущие этапы
-
-План:
+Отдельная проверка Combat:
 
 ```
-Stage 1–8   — завершены
-Stage 9     — PlayCard — завершён
-Stage 10    — Resources / Turns — завершён
-Stage 11    — Draw / Hand / Graveyard — завершён
-Stage 12    — Combat — завершён
-Stage 13    — Victory / Defeat — следующий
-Stage 14    — Заполнение проекта картами
-Stage 15    — UI
-Stage 16    — Human vs Human
-Stage 17    — Decision Provider
-Stage 18    — AI
-Stage 19    — Ollama / Qwen3 1.7B
-Stage 20    — AI testing
-Stage 21    — Deck Weight
-Stage 22    — дальнейшее развитие
+52 tests
+166 assertions
+0 failures
+0 errors
+0 skips
 ```
 
-Номера и содержание будущих этапов могут уточняться после сверки с `GAME_RULES.md`.
+для:
 
-## 25. AI
+```
+test/services/game_engine/actions/attack_test.rb
+```
+
+### Stage 13
+
+Реализованы:
+
+- `GameState.status`;
+- `GameEngine::FinishGame`;
+- единый формат результата партии;
+- `headquarters_destroyed`;
+- `empty_deck_damage`;
+- `time_expired`;
+- событие `game_finished`;
+- завершение игры при уничтожении HQ;
+- завершение игры при смертельном уроне от пустой колоды;
+- завершение игры при истечении времени;
+- завершение игры при EndTurn после истечения времени;
+- централизованная блокировка Actions после завершения игры;
+- защита от повторного завершения;
+- сохранение иммутабельности исходного GameState.
+
+### Следующий шаг
+
+Следующий рабочий этап:
+
+**Stage 14 — Заполнение проекта картами.**
+
+Не переносить правила победы/поражения обратно в Combat без необходимости.
+
+Не переносить игровую логику в контроллеры или UI.
+
+Не считать старые сообщения чата источником истины, если они противоречат этим файлам.
+
+**Главный принцип:**
+
+```
+GAME_RULES.md = ЧТО
+AGENTS.md     = КАК
+```
+
+- Game Engine — арбитр.
+- Decision Provider — источник Action.
+- Game.state — текущее состояние партии.
+- Client/AI — только Action.
+
+## 26. AI
 
 Планируется локальный AI через Ollama:
 
@@ -2283,7 +2758,7 @@ Action
 GameEngine
 ```
 
-## 26. Ограничения разработки
+## 27. Ограничения разработки
 
 Не делать:
 
@@ -2320,7 +2795,7 @@ GameEngine
 
 Не создавать отдельную систему spotting для HQ.
 
-Не считать HQ источником spotting.
+HQ может быть источником spotting согласно правилам дальней атаки.
 
 Не добавлять искусственные поля HQ вроде:
 
@@ -2340,9 +2815,37 @@ GameEngine
 
 Не уплотнять массив Platoon после уничтожения.
 
-Не реализовывать автоматическое завершение игры внутри Combat, если условие относится к Stage 13.
+### Ограничения Victory / Defeat
 
-## 27. Порядок работы над этапом
+Не создавать отдельную систему завершения игры внутри каждого Action.
+
+Условия окончания партии должны использовать единый:
+
+```
+GameEngine::FinishGame
+```
+
+Не дублировать формирование:
+
+```
+status
+result
+game_finished
+```
+
+в разных Actions и сервисах.
+
+Не выполнять Actions после:
+
+```ruby
+state["status"] == "finished"
+```
+
+Проверка выполняется централизованно в Engine.
+
+Не изменять исходный GameState при завершении игры.
+
+## 28. Порядок работы над этапом
 
 Для каждого этапа:
 
@@ -2367,89 +2870,24 @@ bin/rails test
 
 **Без явной команды пользователя не изменять файлы проекта.**
 
-## 28. Текущая контрольная точка
+## 29. Будущие этапы
 
-Stage 1–12 завершены.
-
-Следующий этап:
-
-**Stage 13 — Victory / Defeat**
-
-Актуальный полный зелёный прогон:
+План:
 
 ```
-244 tests
-677 assertions
-0 failures
-0 errors
-0 skips
+Stage 1–8   — завершены
+Stage 9     — PlayCard — завершён
+Stage 10    — Resources / Turns — завершён
+Stage 11    — Draw / Hand / Graveyard — завершён
+Stage 12    — Combat — завершён
+Stage 13    — Victory / Defeat — завершён
+Stage 14    — Заполнение проекта картами — следующий
+Stage 15    — UI
+Stage 16    — Human vs Human
+Stage 17    — Decision Provider
+Stage 18    — AI
+Stage 19    — Ollama / Qwen3 1.7B
+Stage 20    — AI testing
+Stage 21    — Deck Weight
+Stage 22    — дальнейшее развитие
 ```
-
-Отдельная проверка Combat:
-
-```
-48 tests
-153 assertions
-0 failures
-0 errors
-0 skips
-```
-
-для:
-
-```
-test/services/game_engine/actions/attack_test.rb
-```
-
-### Stage 12
-
-Основные боевые механики реализованы:
-
-- Attack;
-- обычный Technique → Technique;
-- counterattack;
-- `has_attacked`;
-- `has_counterattacked`;
-- PT-SAU;
-- SAU;
-- spotting через союзную Technique или наш штаб (штаб атакующего ирока);
-- SAU → HQ;
-- Technique → HQ;
-- HQ → HQ;
-- HQ → Technique;
-- дальняя атака HQ через spotting;
-- firepower Platoon;
-- урон Platoon после выстрела HQ;
-- Platoon Armor;
-- последовательное распределение урона по Platoon;
-- каскадный урон;
-- `armor = 0`;
-- отсутствие armor;
-- уничтожение Technique;
-- уничтожение Platoon;
-- graveyard;
-- сохранение слотов Platoon;
-- неизменность исходного GameState;
-- рефакторинг Attack.
-
-### Следующий шаг
-
-Следующий рабочий этап:
-
-**Stage 13 — Victory / Defeat.**
-
-Не переносить правила победы/поражения обратно в Combat без необходимости.
-
-Не считать старые сообщения чата источником истины, если они противоречат этим файлам.
-
-**Главный принцип:**
-
-```
-GAME_RULES.md = ЧТО
-AGENTS.md     = КАК
-```
-
-- Game Engine — арбитр.
-- Decision Provider — источник Action.
-- Game.state — текущее состояние партии.
-- Client/AI — только Action.

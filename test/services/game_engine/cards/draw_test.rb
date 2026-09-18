@@ -252,4 +252,186 @@ class GameEngine::Cards::DrawTest < ActiveSupport::TestCase
     refute result.success?
     assert_equal "Invalid draw count", result.error
   end
+  
+	test "finishes game when empty deck damage destroys headquarters" do
+		player_id = 1
+		opponent_id = 2
+
+		state = {
+		  "status" => "started",
+		  "players" => {
+		    player_id.to_s => {
+		      "hand" => [],
+		      "deck" => [],
+		      "graveyard" => [],
+		      "empty_deck_draw_attempts" => 0
+		    },
+		    opponent_id.to_s => {
+		      "hand" => [],
+		      "deck" => [],
+		      "graveyard" => [],
+		      "empty_deck_draw_attempts" => 0
+		    }
+		  },
+		  "field" => [
+		    [
+		      {
+		        "type" => "headquarters",
+		        "player_id" => player_id,
+		        "hp" => 1
+		      },
+		      nil,
+		      nil,
+		      nil,
+		      {
+		        "type" => "headquarters",
+		        "player_id" => opponent_id,
+		        "hp" => 20
+		      }
+		    ]
+		  ]
+		}
+
+		result = GameEngine::Cards::Draw.call(
+		  state: state,
+		  player_id: player_id,
+		  count: 1
+		)
+
+		assert result.success?, result.error
+
+		assert_equal 0, result.state["field"][0][0]["hp"]
+		assert_equal "finished", result.state["status"]
+
+		assert_equal(
+		  {
+				"winner_id" => opponent_id.to_s,
+				"loser_id" => player_id.to_s,
+				"reason" => "empty_deck_damage"
+		  },
+		  result.state["result"]
+		)
+
+		assert_equal(
+		  {
+		    type: "empty_deck_draw_attempt",
+		    player_id: player_id.to_s,
+		    damage: 1
+		  },
+		  result.events[0]
+		)
+
+		assert_equal(
+		  {
+		    type: "game_finished",
+				winner_id: opponent_id.to_s,
+				loser_id: player_id.to_s,
+		    reason: "empty_deck_damage"
+		  },
+		  result.events[1]
+		)
+	end
+
+	test "empty deck game finish does not modify original state" do
+		player_id = 1
+		opponent_id = 2
+
+		state = {
+		  "status" => "started",
+		  "players" => {
+		    player_id.to_s => {
+		      "hand" => [],
+		      "deck" => [],
+		      "graveyard" => [],
+		      "empty_deck_draw_attempts" => 0
+		    },
+		    opponent_id.to_s => {
+		      "hand" => [],
+		      "deck" => [],
+		      "graveyard" => [],
+		      "empty_deck_draw_attempts" => 0
+		    }
+		  },
+		  "field" => [
+		    [
+		      {
+		        "type" => "headquarters",
+		        "player_id" => player_id,
+		        "hp" => 1
+		      },
+		      nil,
+		      nil,
+		      nil,
+		      {
+		        "type" => "headquarters",
+		        "player_id" => opponent_id,
+		        "hp" => 20
+		      }
+		    ]
+		  ]
+		}
+
+		original_state = state.deep_dup
+
+		result = GameEngine::Cards::Draw.call(
+		  state: state,
+		  player_id: player_id,
+		  count: 1
+		)
+
+		assert result.success?, result.error
+		assert_equal original_state, state
+	end
+
+	test "empty deck damage does not finish game while headquarters survives" do
+		player_id = 1
+		opponent_id = 2
+
+		state = {
+		  "status" => "started",
+		  "players" => {
+		    player_id.to_s => {
+		      "hand" => [],
+		      "deck" => [],
+		      "graveyard" => [],
+		      "empty_deck_draw_attempts" => 0
+		    },
+		    opponent_id.to_s => {
+		      "hand" => [],
+		      "deck" => [],
+		      "graveyard" => [],
+		      "empty_deck_draw_attempts" => 0
+		    }
+		  },
+		  "field" => [
+		    [
+		      {
+		        "type" => "headquarters",
+		        "player_id" => player_id,
+		        "hp" => 10
+		      },
+		      nil,
+		      nil,
+		      nil,
+		      {
+		        "type" => "headquarters",
+		        "player_id" => opponent_id,
+		        "hp" => 20
+		      }
+		    ]
+		  ]
+		}
+
+		result = GameEngine::Cards::Draw.call(
+		  state: state,
+		  player_id: player_id,
+		  count: 1
+		)
+
+		assert result.success?, result.error
+
+		assert_equal 9, result.state["field"][0][0]["hp"]
+		assert_equal "started", result.state["status"]
+		assert_nil result.state["result"]
+	end
 end

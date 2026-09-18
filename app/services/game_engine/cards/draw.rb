@@ -56,20 +56,36 @@ module GameEngine
         }
       end
 
-      def apply_empty_deck_damage(state, player, events)
-        player["empty_deck_draw_attempts"] += 1
+			def apply_empty_deck_damage(state, player, events)
+				player["empty_deck_draw_attempts"] += 1
+				damage = player["empty_deck_draw_attempts"]
 
-        damage = player["empty_deck_draw_attempts"]
-        headquarters = headquarters_for(state)
+				headquarters = headquarters_for(state)
+				headquarters["hp"] = [headquarters["hp"] - damage, 0].max
 
-        headquarters["hp"] = [headquarters["hp"] - damage, 0].max
+				events << {
+					type: "empty_deck_draw_attempt",
+					player_id: @player_id,
+					damage: damage
+				}
 
-        events << {
-          type: "empty_deck_draw_attempt",
-          player_id: @player_id,
-          damage: damage
-        }
-      end
+				return unless headquarters["hp"] <= 0
+
+				opponent_id = opponent_id_for(state)
+
+				finish_result = GameEngine::FinishGame.call(
+					state: state,
+					winner_id: opponent_id,
+					loser_id: @player_id,
+					reason: "empty_deck_damage"
+				)
+
+				raise finish_result.error unless finish_result.success?
+
+				state.replace(finish_result.state)
+
+				events.concat(finish_result.events)
+			end
 
       def headquarters_for(state)
         headquarters = state["field"].flatten.find do |object|
@@ -82,6 +98,12 @@ module GameEngine
 
         headquarters
       end
+      
+			def opponent_id_for(state)
+				state.fetch("players").keys.find do |player_id|
+					player_id != @player_id
+				end || raise("Opponent not found")
+			end
 
       def failure(error)
         Result.new(

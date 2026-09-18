@@ -150,28 +150,51 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     assert_equal 42, technique["player_id"]
   end
   
-  test "rejects action when current player's time has expired" do
-    started_at = Time.iso8601(@state["turn_started_at"])
-    current_time = started_at + 600
+	test "finishes game when current player's time expires" do
+		started_at = Time.iso8601(@state["turn_started_at"])
+		current_time = started_at + 600
 
-    action = GameEngine::Action.new(
-      player_id: 42,
-      type: "move",
-      payload: {
-        from: [1, 1],
-        to: [0, 2]
-      }
-    )
+		action = GameEngine::Action.new(
+		  player_id: 42,
+		  type: "move",
+		  payload: {
+		    from: [1, 1],
+		    to: [0, 2]
+		  }
+		)
 
-    result = GameEngine::Engine.new(
-      @state,
-      current_time: current_time
-    ).call(action)
+		result = GameEngine::Engine.new(
+		  @state,
+		  current_time: current_time
+		).call(action)
 
-    refute_predicate result, :success?
-    assert_equal "Time expired", result.error
-    assert_equal "technique", @state["field"][1][1]["type"]
-  end
+		assert_predicate result, :success?
+
+		assert_equal "finished", result.state["status"]
+
+		assert_equal(
+		  {
+		    "winner_id" => "57",
+		    "loser_id" => "42",
+		    "reason" => "time_expired"
+		  },
+		  result.state["result"]
+		)
+
+		assert_equal(
+		  [
+		    {
+		      type: "game_finished",
+		      winner_id: "57",
+		      loser_id: "42",
+		      reason: "time_expired"
+		    }
+		  ],
+		  result.events
+		)
+
+		assert_equal "technique", @state["field"][1][1]["type"]
+	end
 
   test "allows action when current player's time has not expired" do
     started_at = Time.iso8601(@state["turn_started_at"])
@@ -195,4 +218,23 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     assert_nil result.state["field"][1][1]
     assert_equal "technique", result.state["field"][0][2]["type"]
   end
+  
+	test "rejects every action when game is finished" do
+		@state["status"] = "finished"
+
+		actions = %w[move attack play_card end_turn].map do |type|
+		  GameEngine::Action.new(
+		    player_id: 42,
+		    type: type
+		  )
+		end
+
+		actions.each do |action|
+		  result = GameEngine::Engine.new(@state).call(action)
+
+		  refute result.success?
+		  assert_equal "Game is already finished", result.error
+		  assert_nil result.state
+		end
+	end
 end

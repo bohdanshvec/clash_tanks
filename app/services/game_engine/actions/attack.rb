@@ -165,55 +165,63 @@ module GameEngine
       # - only SAU;
       # - friendly Technique must provide spotting near the enemy HQ;
       # - HQ does not counterattack.
-      def attack_headquarters_target_from_technique(
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        return failure("Technique cannot attack headquarters at this range") unless
-          valid_technique_to_headquarters_attack?(
-            attacker,
-            attacker_position,
-            target_position
-          )
+			def attack_headquarters_target_from_technique(
+				attacker,
+				target,
+				attacker_position,
+				target_position
+			)
+				return failure("Technique cannot attack headquarters at this range") unless
+					valid_technique_to_headquarters_attack?(
+						attacker,
+						attacker_position,
+						target_position
+					)
 
-        new_state = @state.deep_dup
+				new_state = @state.deep_dup
 
-        new_attacker = object_at_in_state(
-          new_state,
-          attacker_position
-        )
+				new_attacker = object_at_in_state(
+					new_state,
+					attacker_position
+				)
 
-        new_target = object_at_in_state(
-          new_state,
-          target_position
-        )
+				new_target = object_at_in_state(
+					new_state,
+					target_position
+				)
 
-        new_attacker["has_attacked"] = true
+				new_attacker["has_attacked"] = true
 
-        perform_shot(
-          new_state,
-          new_attacker,
-          new_target,
-          target_position
-        )
+				perform_shot(
+					new_state,
+					new_attacker,
+					new_target,
+					target_position
+				)
 
-        if new_target["hp"] > 0 &&
-            adjacent?(attacker_position, target_position)
-          counterattack(
-            new_state,
-            attacker_position,
-            target_position
-          )
-        end
+				if new_target["hp"] <= 0
+					return finish_game_after_headquarters_destruction(
+						new_state,
+						new_attacker,
+						new_target,
+						"headquarters_attacked"
+					)
+				end
 
-        Result.new(
-          success: true,
-          state: new_state,
-          events: [{ type: "headquarters_attacked" }]
-        )
-      end
+				if adjacent?(attacker_position, target_position)
+					counterattack(
+						new_state,
+						attacker_position,
+						target_position
+					)
+				end
+
+				Result.new(
+					success: true,
+					state: new_state,
+					events: [{ type: "headquarters_attacked" }]
+				)
+			end
 
       def valid_technique_to_headquarters_attack?(
         attacker,
@@ -265,39 +273,48 @@ module GameEngine
       #
       # Headquarters may attack the enemy Headquarters at any distance.
       # The defending HQ never counterattacks.
-      def attack_headquarters_target(
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        new_state = @state.deep_dup
+			def attack_headquarters_target(
+				attacker,
+				target,
+				attacker_position,
+				target_position
+			)
+				new_state = @state.deep_dup
 
-        new_attacker = object_at_in_state(
-          new_state,
-          attacker_position
-        )
+				new_attacker = object_at_in_state(
+					new_state,
+					attacker_position
+				)
 
-        new_target = object_at_in_state(
-          new_state,
-          target_position
-        )
+				new_target = object_at_in_state(
+					new_state,
+					target_position
+				)
 
-        new_attacker["has_attacked"] = true
+				new_attacker["has_attacked"] = true
 
-        perform_shot(
-          new_state,
-          new_attacker,
-          new_target,
-          target_position
-        )
+				perform_shot(
+					new_state,
+					new_attacker,
+					new_target,
+					target_position
+				)
 
-        Result.new(
-          success: true,
-          state: new_state,
-          events: [{ type: "headquarters_attacked" }]
-        )
-      end
+				if new_target["hp"] <= 0
+					return finish_game_after_headquarters_destruction(
+						new_state,
+						new_attacker,
+						new_target,
+						"headquarters_attacked"
+					)
+				end
+
+				Result.new(
+					success: true,
+					state: new_state,
+					events: [{ type: "headquarters_attacked" }]
+				)
+			end
 
       # HQ -> Technique
       #
@@ -580,6 +597,31 @@ module GameEngine
       # ------------------------------------------------------------------
       # Destruction / graveyard
       # ------------------------------------------------------------------
+
+			def finish_game_after_headquarters_destruction(
+				state,
+				attacker,
+				destroyed_headquarters,
+				attack_event_type
+			)
+				finish_result = GameEngine::FinishGame.call(
+					state: state,
+					winner_id: attacker["player_id"],
+					loser_id: destroyed_headquarters["player_id"],
+					reason: "headquarters_destroyed"
+				)
+
+				return finish_result unless finish_result.success?
+
+				Result.new(
+					success: true,
+					state: finish_result.state,
+					events: [
+						{ type: attack_event_type },
+						*finish_result.events
+					]
+				)
+			end
 
       def destroy_technique(
         state,

@@ -11,6 +11,7 @@ module GameEngine
 
     def self.initial(current_player_id:, participants:)
       {
+      	"status" => "started",
         "turn_number" => 1,
         "current_player_id" => current_player_id,
         "turn_started_at" => Time.current.change(usec: 0).iso8601,

@@ -39,6 +39,9 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       current_player_id: 42,
       participants: PARTICIPANTS
     )
+    
+    assert_equal "started", state["status"]
+  	assert_nil state["result"]
 
     assert_equal 1, state["turn_number"]
     assert_equal 42, state["current_player_id"]

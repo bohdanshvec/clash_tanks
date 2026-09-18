@@ -1569,4 +1569,83 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
 		assert result.state["field"][0][0]["has_attacked"]
 		assert_equal false, result.state["field"][2][1]["has_counterattacked"]
 	end
+	
+	# Окончание игры
+	
+	test "finishes game when headquarters is destroyed by headquarters" do
+		@state["field"][0][4]["hp"] = 4
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [2, 0],
+		    target: [0, 4]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(@state, action).call
+
+		assert result.success?, result.error
+
+		assert_equal "finished", result.state["status"]
+
+		assert_equal(
+		  {
+		    "winner_id" => PLAYER_ID,
+		    "loser_id" => OPPONENT_ID,
+		    "reason" => "headquarters_destroyed"
+		  },
+		  result.state["result"]
+		)
+
+		assert_equal(
+		  [{ type: "headquarters_attacked" },
+		   {
+		     type: "game_finished",
+		     winner_id: PLAYER_ID,
+		     loser_id: OPPONENT_ID,
+		     reason: "headquarters_destroyed"
+		   }],
+		  result.events
+		)
+	end
+
+	test "headquarters destruction does not modify original state" do
+		@state["field"][0][4]["hp"] = 4
+
+		original_state = Marshal.load(Marshal.dump(@state))
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [2, 0],
+		    target: [0, 4]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(@state, action).call
+
+		assert result.success?, result.error
+		assert_equal original_state, @state
+	end
+
+	test "does not finish game when headquarters survives attack" do
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [2, 0],
+		    target: [0, 4]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(@state, action).call
+
+		assert result.success?, result.error
+
+		assert_equal "started", result.state["status"]
+		assert_nil result.state["result"]
+	end
 end
