@@ -1521,4 +1521,52 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
     # Дальняя атака HQ не вызывает counterattack.
     assert_equal false, result.state["field"][0][3]["has_counterattacked"]
   end
+  
+	test "SAU attacks distant technique through our headquarters spotting" do
+		@state["field"][0][0] = {
+		  "type" => "technique",
+		  "card_id" => 39,
+		  "player_id" => PLAYER_ID,
+		  "technique_type" => "artillery",
+		  "hp" => 10,
+		  "firepower" => 4,
+		  "fuel" => 2,
+		  "attack_range" => 1,
+		  "movement_count" => 1,
+		  "movement_type" => "orthogonal",
+		  "has_attacked" => false,
+		  "has_counterattacked" => false
+		}
+
+		@state["field"][2][1] = {
+		  "type" => "technique",
+		  "card_id" => 40,
+		  "player_id" => OPPONENT_ID,
+		  "technique_type" => "medium_tank",
+		  "hp" => 10,
+		  "firepower" => 3,
+		  "fuel" => 2,
+		  "attack_range" => 1,
+		  "movement_count" => 1,
+		  "movement_type" => "diagonal",
+		  "has_attacked" => false,
+		  "has_counterattacked" => false
+		}
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [0, 0],
+		    target: [2, 1]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(@state, action).call
+
+		assert result.success?, result.error
+		assert_equal 6, result.state["field"][2][1]["hp"]
+		assert result.state["field"][0][0]["has_attacked"]
+		assert_equal false, result.state["field"][2][1]["has_counterattacked"]
+	end
 end

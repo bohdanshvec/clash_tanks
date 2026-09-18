@@ -1831,10 +1831,10 @@ PT-SAU → обычная Technique
 Для дальней атаки SAU:
 
 - цель может находиться дальше обычной дальности;
-- рядом с целью должна находиться союзная Technique;
+- рядом с целью должна находиться союзная Technique или наш штаб (штаб атакующего игрока);
 - союзная Technique является источником spotting;
-- союзный HQ не считается источником spotting;
-- без союзной Technique дальнейшая атака невозможна.
+- наш HQ также считается источником spotting;
+- без союзной Technique или нашего штаба дальнейшая атака невозможна.
 
 Дальний удар SAU не вызывает counterattack.
 
@@ -1852,7 +1852,7 @@ allied Technique
      target
 ```
 
-Союзный HQ не используется как источник spotting.
+Наш HQ также используется как источник spotting.
 
 Не создавать отдельный механизм `allied_unit_near?` для включения HQ в spotting.
 
@@ -2135,12 +2135,13 @@ test/services/game_engine/actions/attack_test.rb
 
 ### SAU и spotting
 
-- SAU атакует дальнюю Technique через союзную Technique;
+- SAU атакует дальнюю Technique через союзную Technique или наш штаб (штаб атакующего игрока);
 - SAU не может атаковать дальнюю Technique без spotting;
 - дальняя атака SAU не вызывает counterattack;
 - SAU может атаковать HQ на расстоянии через spotting;
 - SAU может атаковать HQ рядом как обычную атаку;
-- SAU не может атаковать HQ на расстоянии без spotting.
+- SAU не может атаковать HQ на расстоянии без spotting;
+- Наш штаб (штаб атакующего игрока) также может предоставлять SAU данные разведки для дальней атаки.
 
 ### HQ
 
@@ -2411,7 +2412,7 @@ test/services/game_engine/actions/attack_test.rb
 - `has_counterattacked`;
 - PT-SAU;
 - SAU;
-- spotting через союзную Technique;
+- spotting через союзную Technique или наш штаб (штаб атакующего ирока);
 - SAU → HQ;
 - Technique → HQ;
 - HQ → HQ;
@@ -2432,11 +2433,6 @@ test/services/game_engine/actions/attack_test.rb
 - рефакторинг Attack.
 
 ### Следующий шаг
-
-Перед началом Stage 13 необходимо снова сверить актуальные:
-
-- AGENTS.md;
-- GAME_RULES.md.
 
 Следующий рабочий этап:
 

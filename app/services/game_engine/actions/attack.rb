@@ -113,7 +113,7 @@ module GameEngine
 				return true if valid_attack_range?(attacker, attacker_position, target_position)
 
 				attacker["technique_type"] == "artillery" &&
-					allied_technique_near?(target_position, attacker["player_id"])
+					allied_unit_near?(target_position, attacker["player_id"])
 			end
 
       # PT-SAU special combat:
