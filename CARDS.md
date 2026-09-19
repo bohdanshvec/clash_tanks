@@ -959,3 +959,43 @@ CardAbilities: 6
 ```text
 33 карты
 ```
+
+| Nation | Card | Code | Type | Weight | Price | HP | Firepower | Fuel |
+|---|---|---|---|---:|---:|---:|---:|---:|
+| Германия | Штаб Германии | `germany_headquarters` | headquarters | 1 | — | 16 | 2 | 4 |
+| США | Штаб США | `usa_headquarters` | headquarters | 1 | — | 17 | 1 | 6 |
+| СССР | Штаб СССР | `ussr_headquarters` | headquarters | 1 | — | 19 | 1 | 5 |
+
+
+| Nation | Card | Code | Type | Weight | Price | HP | Firepower | Armor | Fuel | Ability |
+|---|---|---|---|---:|---:|---:|---:|---:|---:|---|
+| Германия | Pz.II Ausf. L «Luchs» | `germany_pz_ii_l_luchs` | technique / LT | 1 | 2 | 4 | 2 | — | 2 | — |
+| Германия | Pz.III Ausf. J | `germany_pz_iii_j` | technique / ST | 1 | 3 | 6 | 3 | — | 1 | — |
+| Германия | Pz.IV Ausf. H | `germany_pz_iv_h` | technique / ST | 2 | 4 | 8 | 4 | — | 1 | — |
+| Германия | Pz.VI Tiger I | `germany_tiger_i` | technique / TT | 4 | 6 | 12 | 5 | — | 1 | — |
+| Германия | Jagdpanther | `germany_jagdpanther` | technique / PT-SAU | 3 | 5 | 8 | 4 | — | 1 | Первый выстрел |
+| Германия | Hummel | `germany_hummel` | technique / SAU | 2 | 4 | 5 | 3 | — | 2 | Spotting / дальняя атака |
+| Германия | «Точный выстрел» | `germany_tocnyj_vystrel` | order | 3 | 4 | — | — | — | — | `damage_technique: 4` |
+| Германия | «Радиоперехват» | `germany_radioperekhvat` | order | 2 | 3 | — | — | — | — | `draw_cards: 2` |
+| Германия | Гренадёрский взвод | `germany_grenaderskij_vzvod` | platoon | 2 | 3 | 6 | 2 | 0 | 0 | — |
+| Германия | Расчёт Flak 88 | `germany_flak_88` | platoon | 3 | 3 | 5 | 0 | 2 | 0 | — |
+| США | M3 Stuart | `usa_m3_stuart` | technique / LT | 1 | 2 | 4 | 2 | — | 2 | — |
+| США | M4 Sherman | `usa_m4_sherman` | technique / ST | 2 | 4 | 6 | 2 | — | 2 | — |
+| США | M4A3E8 «Easy Eight» | `usa_m4a3e8_easy_eight` | technique / ST | 3 | 5 | 8 | 4 | — | 1 | — |
+| США | M26 Pershing | `usa_m26_pershing` | technique / TT | 3 | 6 | 11 | 4 | — | 1 | — |
+| США | M18 Hellcat | `usa_m18_hellcat` | technique / PT-SAU | 2 | 6 | 5 | 4 | — | 2 | Первый выстрел |
+| США | M7 Priest | `usa_m7_priest` | technique / SAU | 2 | 4 | 5 | 2 | — | 1 | Spotting / дальняя атака |
+| США | «Ленд-лиз» | `usa_lend_liz` | order | 1 | 2 | — | — | — | — | `draw_cards: 2` |
+| США | «Огневой налёт» | `usa_ognevoj_nalyot` | order | 1 | 2 | — | — | — | — | `damage_technique: 2` |
+| США | Инженерный взвод | `usa_inzhenernyj_vzvod` | platoon | 3 | 4 | 5 | 0 | 3 | 0 | — |
+| США | Взвод базукометчиков | `usa_vzvod_bazukometchikov` | platoon | 3 | 4 | 4 | 2 | 0 | 1 | — |
+| СССР | Т-70 | `ussr_t_70` | technique / LT | 1 | 2 | 5 | 1 | — | 2 | — |
+| СССР | Т-34 | `ussr_t_34` | technique / ST | 2 | 4 | 7 | 2 | — | 2 | — |
+| СССР | Т-34-85 | `ussr_t_34_85` | technique / ST | 3 | 6 | 8 | 3 | — | 1 | — |
+| СССР | ИС-2 | `ussr_is_2` | technique / TT | 3 | 6 | 12 | 3 | — | 1 | — |
+| СССР | СУ-100 | `ussr_su_100` | technique / PT-SAU | 3 | 5 | 6 | 3 | — | 1 | Первый выстрел |
+| СССР | СУ-26 | `ussr_su_26` | technique / SAU | 2 | 6 | 7 | 2 | — | 2 | Spotting / дальняя атака |
+| СССР | «Залп „Катюши“» | `ussr_zalp_katyushi` | order | 2 | 3 | — | — | — | — | `damage_technique: 3` |
+| СССР | «Пополнение» | `ussr_popolnenie` | order | 2 | 2 | — | — | — | — | `draw_cards: 1` |
+| СССР | Стрелковый взвод | `ussr_strelkovyj_vzvod` | platoon | 2 | 3 | 5 | 1 | 0 | 0 | — |
+| СССР | Взвод ПТР | `ussr_vzvod_ptr` | platoon | 3 | 4 | 6 | 1 | 2 | 0 | — |
