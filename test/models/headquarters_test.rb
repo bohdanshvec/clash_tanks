@@ -8,6 +8,7 @@ class HeadquartersTest < ActiveSupport::TestCase
     )
 
     @card = Card.create!(
+      code: "test_hq",
       nation: @nation,
       name: "Test HQ",
       card_type: "headquarters",

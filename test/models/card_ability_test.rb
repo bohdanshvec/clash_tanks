@@ -8,6 +8,7 @@ class CardAbilityTest < ActiveSupport::TestCase
     )
 
     @card = Card.create!(
+      code: "test_artillery_order",
       nation: @nation,
       name: "Артиллерия",
       card_type: "order",
@@ -69,6 +70,7 @@ class CardAbilityTest < ActiveSupport::TestCase
 
   test "allows the same ability for different cards" do
     second_card = Card.create!(
+      code: "test_t34",
       nation: @nation,
       name: "Т-34",
       card_type: "technique",

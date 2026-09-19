@@ -12,6 +12,7 @@ class DeckCardTest < ActiveSupport::TestCase
     )
 
     @card = Card.create!(
+      code: "test_t34",
       nation: @nation,
       name: "Т-34",
       card_type: "technique",
@@ -106,6 +107,7 @@ class DeckCardTest < ActiveSupport::TestCase
     )
 
     other_card = Card.create!(
+      code: "test_panzer_iv",
       nation: other_nation,
       name: "Panzer IV",
       card_type: "technique",

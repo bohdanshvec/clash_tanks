@@ -9,6 +9,7 @@ class Card < ApplicationRecord
   has_many :abilities, through: :card_abilities
 
 	validates :name, presence: true
+	validates :code, presence: true, uniqueness: true
 	validates :card_type, presence: true, inclusion: { in: %w[headquarters technique order platoon] }
 	validates :weight, presence: true, numericality: { only_integer: true, greater_than: 0 }
 

@@ -226,6 +226,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
     10.times do |index|
       card1 = Card.create!(
+        code: "nation_1_card_#{index}",
         nation: nation1,
         name: "Nation 1 Card #{index}",
         card_type: "order",
@@ -234,6 +235,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       )
 
       card2 = Card.create!(
+        code: "nation_2_card_#{index}",
         nation: nation2,
         name: "Nation 2 Card #{index}",
         card_type: "order",
@@ -322,6 +324,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
     10.times do |index|
       card1 = Card.create!(
+        code: "nation_1_card_#{index}",
         nation: nation1,
         name: "Nation 1 Card #{index}",
         card_type: "order",
@@ -330,6 +333,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       )
 
       card2 = Card.create!(
+        code: "nation_2_card_#{index}",
         nation: nation2,
         name: "Nation 2 Card #{index}",
         card_type: "order",
@@ -581,6 +585,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
     10.times do |index|
       card1 = Card.create!(
+        code: "nation_1_card_#{index}",
         nation: nation1,
         name: "Nation 1 Card #{index}",
         card_type: "order",
@@ -589,6 +594,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       )
 
       card2 = Card.create!(
+        code: "nation_2_card_#{index}",
         nation: nation2,
         name: "Nation 2 Card #{index}",
         card_type: "order",
@@ -643,6 +649,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
   def create_headquarters_card(nation:, name: "Test HQ")
     card = Card.create!(
+      code: "#{nation.code}_#{name.parameterize(separator: "_")}",
       nation: nation,
       name: name,
       card_type: "headquarters",

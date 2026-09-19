@@ -39,9 +39,9 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       current_player_id: 42,
       participants: PARTICIPANTS
     )
-    
+
     assert_equal "started", state["status"]
-  	assert_nil state["result"]
+    assert_nil state["result"]
 
     assert_equal 1, state["turn_number"]
     assert_equal 42, state["current_player_id"]
@@ -414,6 +414,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     )
 
     card = Card.create!(
+      code: "test_t34",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -478,6 +479,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     )
 
     card = Card.create!(
+      code: "test_t34_quantity",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -522,6 +524,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     )
 
     card = Card.create!(
+      code: "test_order",
       nation: nation,
       name: "Приказ",
       card_type: "order",
@@ -567,6 +570,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     )
 
     card = Card.create!(
+      code: "test_artillery_order",
       nation: nation,
       name: "Артиллерия",
       card_type: "order",
@@ -611,6 +615,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     )
 
     card = Card.create!(
+      code: "test_platoon",
       nation: nation,
       name: "Test Platoon",
       card_type: "platoon",

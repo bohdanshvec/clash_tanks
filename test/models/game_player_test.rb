@@ -105,6 +105,7 @@ class GamePlayerTest < ActiveSupport::TestCase
 
   def create_headquarters_card(nation:)
     card = Card.create!(
+      code: "test_hq",
       nation: nation,
       name: "Test HQ",
       card_type: "headquarters",
@@ -122,5 +123,3 @@ class GamePlayerTest < ActiveSupport::TestCase
     card
   end
 end
-
-

@@ -8,6 +8,7 @@ class PlatoonTest < ActiveSupport::TestCase
     )
 
     @card = Card.create!(
+      code: "test_platoon",
       nation: @nation,
       name: "Test Platoon",
       card_type: "platoon",
@@ -40,9 +41,16 @@ class PlatoonTest < ActiveSupport::TestCase
     assert_includes platoon.errors[:card], "must exist"
   end
 
-  test "requires positive firepower" do
+  test "allows zero firepower" do
     platoon = valid_platoon
     platoon.firepower = 0
+
+    assert platoon.valid?
+  end
+
+  test "does not allow negative firepower" do
+    platoon = valid_platoon
+    platoon.firepower = -1
 
     assert_not platoon.valid?
   end

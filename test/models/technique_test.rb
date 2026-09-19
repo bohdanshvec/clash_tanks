@@ -4,6 +4,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "belongs to card" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_technique",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -25,44 +26,46 @@ class TechniqueTest < ActiveSupport::TestCase
     assert_equal card, technique.card
   end
 
-	test "has many abilities through card abilities" do
-		nation = Nation.create!(name: "СССР", code: "ussr")
+  test "has many abilities through card abilities" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
 
-		card = Card.create!(
-		  nation: nation,
-		  name: "Т-34",
-		  card_type: "technique",
-		  weight: 1,
-		  price: 2
-		)
+    card = Card.create!(
+      code: "test_technique_abilities",
+      nation: nation,
+      name: "Т-34",
+      card_type: "technique",
+      weight: 1,
+      price: 2
+    )
 
-		technique = Technique.create!(
-		  card: card,
-		  technique_type: "medium_tank",
-		  attack_range: 1,
-		  movement_count: 1,
-		  movement_type: "diagonal",
-		  firepower: 3,
-		  hp: 5,
-		  fuel: 1
-		)
+    technique = Technique.create!(
+      card: card,
+      technique_type: "medium_tank",
+      attack_range: 1,
+      movement_count: 1,
+      movement_type: "diagonal",
+      firepower: 3,
+      hp: 5,
+      fuel: 1
+    )
 
-		ability = Ability.create!(
-		  name: "Диагональное перемещение",
-		  code: "diagonal_movement"
-		)
+    ability = Ability.create!(
+      name: "Диагональное перемещение",
+      code: "diagonal_movement"
+    )
 
-		CardAbility.create!(
-		  card: card,
-		  ability: ability
-		)
+    CardAbility.create!(
+      card: card,
+      ability: ability
+    )
 
-		assert_includes technique.card.abilities, ability
-	end
+    assert_includes technique.card.abilities, ability
+  end
 
   test "validates technique type" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_technique_type",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -88,6 +91,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "accepts all technique types" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_all_technique_types",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -114,6 +118,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "rejects invalid movement type" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_movement_type",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -139,6 +144,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "accepts orthogonal and diagonal movement types" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_movement_types",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -165,6 +171,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "attack range must be a positive integer" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_attack_range",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -213,6 +220,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "movement count must be a positive integer" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_movement_count",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -261,6 +269,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "firepower must be a positive integer" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_firepower",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -309,6 +318,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "hp must be a positive integer" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_hp",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -357,6 +367,7 @@ class TechniqueTest < ActiveSupport::TestCase
   test "fuel must be a non-negative integer" do
     nation = Nation.create!(name: "СССР", code: "ussr")
     card = Card.create!(
+      code: "test_fuel",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -421,6 +432,7 @@ class TechniqueTest < ActiveSupport::TestCase
       )
 
       card = Card.create!(
+        code: "test_#{technique_type}",
         nation: nation,
         name: technique_type,
         card_type: "technique",

@@ -38,6 +38,7 @@ class DeckTest < ActiveSupport::TestCase
     )
 
     card = Card.create!(
+      code: "test_t34",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -65,6 +66,7 @@ class DeckTest < ActiveSupport::TestCase
     )
 
     card = Card.create!(
+      code: "test_t34_through_deck",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -92,6 +94,7 @@ class DeckTest < ActiveSupport::TestCase
     )
 
     card_one = Card.create!(
+      code: "test_t34_count",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -100,6 +103,7 @@ class DeckTest < ActiveSupport::TestCase
     )
 
     card_two = Card.create!(
+      code: "test_is2_count",
       nation: nation,
       name: "ИС-2",
       card_type: "technique",

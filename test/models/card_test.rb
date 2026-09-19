@@ -5,6 +5,7 @@ class CardTest < ActiveSupport::TestCase
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     card = Card.create!(
+      code: "test_card",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -19,6 +20,7 @@ class CardTest < ActiveSupport::TestCase
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     card = Card.create!(
+      code: "test_card",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
@@ -40,30 +42,31 @@ class CardTest < ActiveSupport::TestCase
     assert_equal technique, card.technique
   end
 
-	test "has many abilities through card abilities" do
-		nation = Nation.create!(name: "СССР", code: "ussr")
+  test "has many abilities through card abilities" do
+    nation = Nation.create!(name: "СССР", code: "ussr")
 
-		card = Card.create!(
-		  nation: nation,
-		  name: "Артиллерия",
-		  card_type: "order",
-		  weight: 1,
-		  price: 2
-		)
+    card = Card.create!(
+      code: "test_card",
+      nation: nation,
+      name: "Артиллерия",
+      card_type: "order",
+      weight: 1,
+      price: 2
+    )
 
-		ability = Ability.create!(
-		  name: "Нанесение урона",
-		  code: "damage_technique"
-		)
+    ability = Ability.create!(
+      name: "Нанесение урона",
+      code: "damage_technique"
+    )
 
-		CardAbility.create!(
-		  card: card,
-		  ability: ability,
-		  parameters: { "damage" => 3 }
-		)
+    CardAbility.create!(
+      card: card,
+      ability: ability,
+      parameters: { "damage" => 3 }
+    )
 
-		assert_includes card.abilities, ability
-	end
+    assert_includes card.abilities, ability
+  end
 
   test "requires name" do
     nation = Nation.create!(name: "СССР", code: "ussr")
@@ -136,21 +139,62 @@ class CardTest < ActiveSupport::TestCase
     assert_not card.valid?
     assert card.errors[:price].any?
   end
-  
-	test "headquarters can have no price" do
-		nation = Nation.create!(
-		  name: "СССР",
-		  code: "ussr"
-		)
 
-		card = Card.new(
-		  nation: nation,
-		  name: "Test HQ",
-		  card_type: "headquarters",
-		  weight: 1,
-		  price: nil
-		)
+  test "headquarters can have no price" do
+    nation = Nation.create!(
+      name: "СССР",
+      code: "ussr"
+    )
 
-		assert_predicate card, :valid?
-	end
+    card = Card.new(
+      code: "test_hq",
+      nation: nation,
+      name: "Test HQ",
+      card_type: "headquarters",
+      weight: 1,
+      price: nil
+    )
+
+    assert_predicate card, :valid?
+  end
+
+  test "requires code" do
+    nation = Nation.create!(name: "Германия", code: "germany")
+
+    card = Card.new(
+      name: "Test Card",
+      card_type: "order",
+      weight: 1,
+      price: 1,
+      nation: nation
+    )
+
+    assert_not card.valid?
+    assert_includes card.errors[:code], "can't be blank"
+  end
+
+  test "requires unique code" do
+    nation = Nation.create!(name: "Германия", code: "germany")
+
+    Card.create!(
+      code: "test_card",
+      name: "Existing Card",
+      card_type: "order",
+      weight: 1,
+      price: 1,
+      nation: nation
+    )
+
+    card = Card.new(
+      code: "test_card",
+      name: "Another Card",
+      card_type: "order",
+      weight: 1,
+      price: 1,
+      nation: nation
+    )
+
+    assert_not card.valid?
+    assert_includes card.errors[:code], "has already been taken"
+  end
 end

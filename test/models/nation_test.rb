@@ -5,6 +5,7 @@ class NationTest < ActiveSupport::TestCase
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     card = Card.create!(
+      code: "test_t34",
       nation: nation,
       name: "Т-34",
       card_type: "technique",
