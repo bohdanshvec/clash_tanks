@@ -1,7 +1,14 @@
 class ApplicationController < ActionController::Base
-  # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
-
-  # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
+
+  private
+
+  def current_player_id
+    params[:player_id]
+  end
+
+  def player_in_game?(game)
+    game.game_players.exists?(player_id: current_player_id)
+  end
 end

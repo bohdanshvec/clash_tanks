@@ -1,10 +1,6 @@
 module GameEngine
   module Actions
-    class Move
-      def initialize(state, action)
-        @state = state
-        @action = action
-      end
+    class Move < Base
 
       def call
         return failure("Player does not exist") unless player_exists?
@@ -42,14 +38,6 @@ module GameEngine
 
       private
 
-      def player_exists?
-        @state["players"].key?(@action.player_id.to_s)
-      end
-
-      def current_player?
-        @state["current_player_id"].to_s == @action.player_id.to_s
-      end
-
       def valid_coordinates?(coordinates)
         coordinates.is_a?(Array) &&
           coordinates.length == 2 &&
@@ -79,10 +67,6 @@ module GameEngine
         else
           false
         end
-      end
-
-      def failure(error)
-        Result.new(success: false, error: error)
       end
     end
   end

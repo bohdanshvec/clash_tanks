@@ -1,11 +1,10 @@
 module GameEngine
   module Actions
-    class EndTurn
-      def initialize(state, action, current_time: Time.current)
-        @state = state
-        @action = action
-        @current_time = current_time
-      end
+    class EndTurn < Base
+			def initialize(state, action, current_time: Time.current)
+				super(state, action)
+				@current_time = current_time
+			end
 
       def call
         return failure("Player does not exist") unless player_exists?
@@ -43,14 +42,6 @@ module GameEngine
 
       private
 
-      def player_exists?
-        @state["players"].key?(@action.player_id.to_s)
-      end
-
-      def current_player?
-        @state["current_player_id"].to_s == @action.player_id.to_s
-      end
-
       def next_player_id
         player_ids = @state["players"].keys
         next_player = player_ids.find do |player_id|
@@ -58,10 +49,6 @@ module GameEngine
         end
 
         next_player.to_i
-      end
-
-      def failure(error)
-        Result.new(success: false, error: error)
       end
       
 			def finish_game_by_timeout

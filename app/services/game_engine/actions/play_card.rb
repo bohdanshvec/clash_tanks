@@ -1,10 +1,6 @@
 module GameEngine
   module Actions
-    class PlayCard
-      def initialize(state, action)
-        @state = state
-        @action = action
-      end
+    class PlayCard < Base
 
       def call
         return failure("Player does not exist") unless player_exists?
@@ -122,18 +118,6 @@ module GameEngine
         )
       end
 
-      def player_exists?
-        @state["players"].key?(@action.player_id.to_s)
-      end
-
-      def current_player?
-        @state["current_player_id"].to_s == @action.player_id.to_s
-      end
-
-      def player
-        @state["players"][@action.player_id.to_s]
-      end
-
       def player_resources
         player["resources"].to_i
       end
@@ -183,27 +167,27 @@ module GameEngine
         end
       end
 
-      def technique_object(card)
-        technique = card["technique"]
+			def technique_object(card)
+				technique = card["technique"]
 
-        {
-          "type" => "technique",
-          "card_id" => card["card_id"],
-          "player_id" => @action.player_id,
-          "nation_id" => card["nation_id"],
-          "name" => card["name"],
-          "technique_type" => technique["technique_type"],
-          "hp" => technique["hp"],
-          "firepower" => technique["firepower"],
-          "fuel" => technique["fuel"],
-          "attack_range" => technique["attack_range"],
-          "movement_count" => technique["movement_count"],
-          "movement_limit" => technique["movement_count"],
-          "movement_type" => technique["movement_type"],
-          "has_attacked" => false,
-          "has_counterattacked" => false
-        }
-      end
+				{
+					"type" => "technique",
+					"card_id" => card["card_id"],
+					"player_id" => @action.player_id,
+					"nation_id" => card["nation_id"],
+					"name" => card["name"],
+					"technique_type" => technique["technique_type"],
+					"hp" => technique["hp"],
+					"firepower" => technique["firepower"],
+					"fuel" => technique["fuel"],
+					"attack_range" => technique["attack_range"],
+					"movement_count" => 0,
+					"movement_limit" => technique["movement_count"],
+					"movement_type" => technique["movement_type"],
+					"has_attacked" => false,
+					"has_counterattacked" => false
+				}
+			end
 
       def platoon_object(card)
         platoon = card["platoon"]
@@ -219,10 +203,6 @@ module GameEngine
           "armor" => platoon["armor"],
           "fuel" => platoon["fuel"]
         }
-      end
-
-      def failure(error)
-        Result.new(success: false, error: error)
       end
     end
   end

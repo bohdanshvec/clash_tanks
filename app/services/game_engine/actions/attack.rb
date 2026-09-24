@@ -1,10 +1,6 @@
 module GameEngine
   module Actions
-    class Attack
-      def initialize(state, action)
-        @state = state
-        @action = action
-      end
+    class Attack < Base
 
       def call
         return failure("Player does not exist") unless player_exists?
@@ -721,17 +717,6 @@ module GameEngine
       # State helpers
       # ------------------------------------------------------------------
 
-      def player_exists?
-        @state["players"].key?(
-          @action.player_id.to_s
-        )
-      end
-
-      def current_player?
-        @state["current_player_id"].to_s ==
-          @action.player_id.to_s
-      end
-
       def own_object?(object)
         object["player_id"].to_s ==
           @action.player_id.to_s
@@ -769,13 +754,6 @@ module GameEngine
         distance = [row_delta, column_delta].max
 
         distance <= attacker["attack_range"]
-      end
-
-      def failure(error)
-        Result.new(
-          success: false,
-          error: error
-        )
       end
     end
   end

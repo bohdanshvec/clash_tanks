@@ -63,11 +63,45 @@ class GameEngine::Actions::PlayCardTest < ActiveSupport::TestCase
     assert_equal 4, technique["firepower"]
     assert_equal 2, technique["fuel"]
     assert_equal 1, technique["attack_range"]
-    assert_equal 1, technique["movement_count"]
+    assert_equal 0, technique["movement_count"]
+		assert_equal 1, technique["movement_limit"]
     assert_equal "diagonal", technique["movement_type"]
     assert_equal false, technique["has_attacked"]
     assert_equal false, technique["has_counterattacked"]
   end
+  
+	test "newly played technique cannot move during the same turn" do
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "play_card",
+		  payload: {
+		    card_id: 15,
+		    row: 1,
+		    column: 0
+		  }
+		)
+
+		play_result = GameEngine::Actions::PlayCard.new(@state, action).call
+
+		assert play_result.success?
+
+		move_action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "move",
+		  payload: {
+		    from: [1, 0],
+		    to: [0, 1]
+		  }
+		)
+
+		move_result = GameEngine::Actions::Move.new(
+		  play_result.state,
+		  move_action
+		).call
+
+		assert_not move_result.success?
+		assert_equal "No movement remaining", move_result.error
+	end
 
   test "removes played card from hand" do
     action = GameEngine::Action.new(
