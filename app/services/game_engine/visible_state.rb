@@ -31,17 +31,18 @@ module GameEngine
       end
     end
 
-    def visible_own_player(player_state)
-      {
-        "nation_id" => player_state["nation_id"],
-        "hand" => player_state["hand"].deep_dup,
-        "deck_count" => player_state["deck"].length,
-        "platoons" => player_state["platoons"].deep_dup,
-        "resources" => player_state["resources"],
-        "remaining_time" => player_state["remaining_time"],
-        "empty_deck_draw_attempts" => player_state["empty_deck_draw_attempts"]
-      }
-    end
+		def visible_own_player(player_state)
+			{
+				"nation_id" => player_state["nation_id"],
+				"hand" => player_state["hand"].deep_dup,
+				"deck_count" => player_state["deck"].length,
+				"platoons" => player_state["platoons"].deep_dup,
+				"resources" => player_state["resources"],
+				"remaining_time" => player_state["remaining_time"],
+				"empty_deck_draw_attempts" => player_state["empty_deck_draw_attempts"],
+				"graveyard_count" => player_state["graveyard"].length
+			}
+		end
 
 		def visible_opponent_player(player_state)
 			{
@@ -49,7 +50,8 @@ module GameEngine
 				"hand_count" => player_state["hand"].length,
 				"deck_count" => player_state["deck"].length,
 				"remaining_time" => player_state["remaining_time"],
-				"platoons" => player_state["platoons"].deep_dup
+				"platoons" => player_state["platoons"].deep_dup,
+				"graveyard_count" => player_state["graveyard"].length
 			}
 		end
   end
