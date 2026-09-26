@@ -637,8 +637,6 @@ Abilities::DrawCards → Cards::Draw
 - уникальность `deck_id + card_id`;
 - карта и колода принадлежат одной Nation.
 
-Persistent Deck не изменяется во время партии.
-
 ### StartGame
 
 При старте:
@@ -1179,7 +1177,8 @@ Stage 15 — функциональный browser vertical slice (браузер
 - UI не содержит игровых правил;
 - основные Actions доступны через браузер;
 - визуальная полировка выполняется отдельными этапами;
-- Turbo и Stimulus подключаются после завершения базового HTML UI.
+- Turbo используется для обновления экрана;
+- Stimulus подключается для интерактивной визуальной обратной связи.
 
 ### 17.1 План Stage 15
 
@@ -1194,11 +1193,13 @@ Stage 15 — функциональный browser vertical slice (браузер
 - [x] 15.9 Move Technique → cell
 - [x] 15.10 Attack Technique → target
 - [x] 15.11 рефакторинг show, базовая геометрия и отображение характеристик
-- [x] 15.16 Order / Platoon UI, единое интерактивное управление и финальная проверка
-- [ ] 15.12 Turbo
+- [x] 15.12 Turbo / real-time обновление
 - [ ] 15.13 Stimulus-подсветка
 - [ ] 15.14 Timer
 - [ ] 15.15 waiting / started / finished
+- [x] 15.16 Order / Platoon UI, единое интерактивное управление и финальная проверка
+
+15.16 был выполнен до Turbo, чтобы завершить базовый HTML vertical slice.
 
 Практический порядок дальнейшей работы:
 
@@ -1212,7 +1213,7 @@ Stage 15 — функциональный browser vertical slice (браузер
 15.15 waiting / started / finished
 ```
 
-15.16 был выполнен до Turbo, чтобы завершить базовый HTML vertical slice.
+15.12 теперь завершён.
 
 ### 17.2 Временная dev-идентификация
 
@@ -1270,6 +1271,8 @@ post "games/:id/end_turn",  to: "games#end_turn",  as: :end_turn
 post "games/:id/play_card", to: "games#play_card", as: :play_card
 post "games/:id/move",      to: "games#move",      as: :move
 post "games/:id/attack",    to: "games#attack",    as: :attack
+
+mount ActionCable.server => "/cable"
 ```
 
 Общий Controller flow:
@@ -1289,7 +1292,7 @@ Result
     ↓
 Game.update!(state: result.state)
     ↓
-redirect
+Turbo broadcast / redirect
 ```
 
 Controller не содержит игровых правил.
@@ -1314,6 +1317,20 @@ Controller не содержит игровых правил.
 403 Forbidden
 ```
 
+`show.html.erb` подключает Turbo Stream для конкретного игрока:
+
+```erb
+<%= turbo_stream_from [@game, current_player_id] %>
+```
+
+Основной контейнер игрового интерфейса:
+
+```erb
+<div id="game-content">
+  ...
+</div>
+```
+
 ### 17.5 End Turn
 
 `GamesController#end_turn` передаёт:
@@ -1331,17 +1348,17 @@ GameEngine::Action.new(
 @game.update!(state: result.state)
 ```
 
-и redirect обратно на игру с тем же `player_id`.
+После сохранения вызывается общий broadcast обновления игры.
 
-Браузерная проверка показала:
+Для обычного HTML-запроса сохраняется redirect.
 
-- смену текущего игрока;
-- изменение номера хода;
-- сохранение времени;
-- PreparePlayer для нового игрока;
-- обязательный Draw.
+Для Turbo-запроса Controller возвращает:
 
-До Turbo две открытые вкладки не обновляются автоматически.
+```
+204 No Content
+```
+
+Обновление интерфейса выполняется через Turbo Stream broadcast.
 
 ### 17.6 PlayCard через браузер
 
@@ -1534,36 +1551,47 @@ GameEngine::Actions::Attack
 - нижнее информационное окно;
 - нижняя рука.
 
-Верхняя и нижняя области используют увеличенную ширину:
+Верхняя и нижняя области используют увеличенную ширину.
 
-```css
-width: min(1400px, calc(100% - 40px));
-```
+Большая рука переносится на несколько строк через `flex-wrap`.
 
-и центрируются относительно экрана.
-
-`hand` поддерживает `flex-wrap`, поэтому большое количество карт может занимать несколько строк.
-
-Информационное окно центрировано и находится в одну строку с горизонтальным overflow при необходимости.
+Информационное окно центрировано и размещается в одну строку с горизонтальным overflow при необходимости.
 
 #### Поле
 
-Центральное поле реализовано через CSS Grid:
+Текущая принятая геометрия поля:
 
 ```css
+.game-board {
+  width: calc(100% - 20px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr) 100px;
+  align-items: stretch;
+  gap: 10px;
+}
+
 .battlefield {
   width: 100%;
+  height: 540px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: repeat(3, minmax(0, 1fr));
 }
 
 .battlefield__cell {
-  aspect-ratio: 1 / 1;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #000;
 }
 ```
 
-Игровое поле находится между боковыми планками Platoon.
+Прямоугольные клетки приняты и сохраняются.
+
+Центральное поле занимает широкую область экрана, боковые планки Platoon имеют ширину около 100px.
 
 Основная геометрия экрана считается достаточной для текущего функционального UI. Финальная визуальная полировка не является задачей 15.11.
 
@@ -1697,37 +1725,320 @@ Platoon остаётся компактным из-за небольшой ши�
 
 Не добавлять новые характеристики Attack / Counterattack без необходимости.
 
-### 17.10 Stage 15.12 — следующий этап
+### 17.10 Stage 15.12 — Turbo — завершён
 
-Следующая задача: **Turbo**
+15.12 завершён.
 
-Цель:
+Цель этапа:
 
 - убрать необходимость полного ручного refresh после Actions;
-- подготовить автоматическое обновление игрового экрана;
-- сохранить текущую архитектуру Controller → Action → Engine → GameState;
+- автоматически обновлять игровой экран;
+- обновлять состояние второго открытого браузера;
+- сохранить архитектуру Controller → Action → Engine → GameState;
 - не переносить игровые правила в Turbo.
 
-Turbo не должен:
+#### Turbo / Action Cable
 
-- изменять GameState;
-- выполнять игровые правила;
-- заменять Engine;
-- раскрывать скрытый GameState.
+В `application.js` подключён Turbo:
 
-Перед началом 15.12 необходимо проверить текущую реализацию show, routes и Controller flow, после чего вносить только необходимые изменения.
+```js
+import "@hotwired/turbo-rails"
+import "controllers"
+```
 
-### 17.11 Stage 15.13 — Stimulus
+В `config/importmap.rb`:
 
-Планируется после Turbo.
+```ruby
+pin "application"
+pin "@hotwired/turbo-rails", to: "turbo.min.js"
+pin "@hotwired/stimulus", to: "stimulus.min.js"
+pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
+pin_all_from "app/javascript/controllers", under: "controllers"
+```
 
-Цель:
+Action Cable подключён через:
 
-- подсветка доступных элементов;
-- более удобное взаимодействие с полем;
-- постепенный переход от ручного выбора координат к интерактивному UI.
+```ruby
+mount ActionCable.server => "/cable"
+```
+
+Development:
+
+```yaml
+development:
+  adapter: async
+```
+
+Test:
+
+```yaml
+test:
+  adapter: test
+```
+
+Production:
+
+```yaml
+production:
+  adapter: solid_cable
+  connects_to:
+    database: cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day
+```
+
+#### Turbo Stream для конкретного игрока
+
+`show.html.erb` подключает отдельный stream для каждого игрока:
+
+```erb
+<%= turbo_stream_from [@game, current_player_id] %>
+
+<div id="game-content">
+  <%= render "game",
+             game: @game,
+             visible_state: @visible_state,
+             current_player_id: current_player_id %>
+</div>
+```
+
+Поток имеет форму:
+
+```
+Game/<game_id>:<player_id>
+```
+
+Это позволяет каждому браузеру получать только свой VisibleState.
+
+#### Broadcast
+
+После успешного Action Controller вызывает общий метод обновления:
+
+```ruby
+def broadcast_game_update
+  @game.state["players"].keys.each do |player_id|
+    visible_state = GameEngine::VisibleState.call(
+      state: @game.state,
+      player_id: player_id
+    )
+
+    Turbo::StreamsChannel.broadcast_update_to(
+      [@game, player_id],
+      target: "game-content",
+      partial: "games/game",
+      locals: {
+        game: @game,
+        visible_state: visible_state,
+        current_player_id: player_id
+      }
+    )
+  end
+end
+```
+
+Для каждого игрока:
+
+- строится отдельный VisibleState;
+- рендерится `_game.html.erb`;
+- обновляется только содержимое `#game-content`.
+
+Используется именно:
+
+```ruby
+Turbo::StreamsChannel.broadcast_update_to
+```
+
+а не `broadcast_replace_to`.
+
+Причина: `update` заменяет внутреннее содержимое `#game-content`, сохраняя сам контейнер. Это необходимо для последующих Turbo Stream обновлений.
+
+#### Важное правило partial
+
+`_game.html.erb` не должен получать `player_id` через:
+
+```ruby
+params[:player_id]
+```
+
+Action Cable rendering не имеет обычных HTTP params.
+
+`current_player_id` передаётся явно через locals:
+
+```ruby
+locals: {
+  game: @game,
+  visible_state: visible_state,
+  current_player_id: player_id
+}
+```
+
+#### Controller response
+
+После успешного Action:
+
+```ruby
+def respond_after_success
+  respond_to do |format|
+    format.turbo_stream { head :no_content }
+
+    format.html do
+      redirect_to game_path(
+        @game,
+        player_id: current_player_id
+      )
+    end
+  end
+end
+```
+
+Для Turbo-запроса Controller не делает redirect.
+
+Браузер получает `204 No Content`, а интерфейс обновляется через Action Cable / Turbo Stream.
+
+Для обычного HTML-запроса сохраняется redirect.
+
+#### Проверенные Actions
+
+Turbo обновление проверено для:
+
+- End Turn;
+- PlayCard;
+- Move;
+- Attack.
+
+Проверено в двух браузерах.
+
+Изменения одного игрока автоматически появляются у второго игрока без ручной перезагрузки страницы.
+
+#### Проверенная архитектура
+
+После Action:
+
+```
+Browser
+   ↓
+HTTP POST
+   ↓
+GamesController
+   ↓
+GameEngine::Action
+   ↓
+GameEngine::Engine
+   ↓
+Result
+   ↓
+Game.update!(state: result.state)
+   ↓
+VisibleState отдельно для каждого игрока
+   ↓
+Turbo Stream / Action Cable
+   ↓
+обновление #game-content
+```
+
+Turbo:
+
+- не изменяет GameState;
+- не выполняет игровые правила;
+- не заменяет Engine;
+- не получает полный скрытый GameState;
+- не определяет победителя;
+- не является источником истины.
+
+#### Ошибочные Actions
+
+Ошибочные Actions по-прежнему отклоняются Engine и возвращают HTTP 422.
+
+Это не считается ошибкой Turbo.
+
+Например, End Turn игроком, которому ход уже не принадлежит, отклоняется Engine.
+
+#### Проверка Stage 15.12
+
+Выполнен полный тестовый прогон:
+
+```
+287 runs, 819 assertions, 0 failures, 0 errors, 0 skips
+```
+
+Дополнительно Turbo проверен вручную в двух браузерах.
+
+Stage 15.12 считается завершённым.
+
+### 17.11 Stage 15.13 — Stimulus — следующая задача
+
+Следующая задача: **Stimulus**.
+
+Цель — добавить визуальную обратную связь (visual feedback) и постепенно перейти от ручного выбора координат к более интерактивному UI.
 
 Stimulus не является источником игровых правил.
+
+Планируемые реакции:
+
+#### Недостаточно ресурсов
+
+При попытке действия с недостаточным количеством ресурсов:
+
+- визуально подсветить/мигнуть блок ресурсов;
+- не изменять GameState через JavaScript;
+- результат проверки остаётся за Engine.
+
+#### Неверное перемещение
+
+При невозможности Move:
+
+- визуально подсветить допустимые клетки назначения;
+- UI может помогать выбрать цель;
+- Engine всё равно повторно проверяет координаты и правила движения.
+
+#### Неверная атака
+
+При невозможности Attack:
+
+- визуально подсветить возможные цели;
+- Engine остаётся единственным источником истины.
+
+#### Не ваш ход
+
+Когда ход принадлежит другому игроку:
+
+- затемнять/ослаблять отображение недоступных элементов;
+- визуально отличать активного игрока от неактивного;
+- не блокировать игровую безопасность только через CSS/Stimulus.
+
+Планируется визуально учитывать:
+
+- Technique;
+- HQ;
+- Platoon;
+- карты соответствующего игрока.
+
+#### Визуализация атаки
+
+Планируется показывать:
+
+- источник атаки;
+- цель атаки.
+
+Визуализация не должна сама определять, была ли атака допустима или успешна.
+
+#### Визуальная реакция PlayCard
+
+Позже можно добавить:
+
+- визуальную реакцию на размещение Technique;
+- визуальную реакцию на Order;
+- визуальную реакцию на размещение Platoon.
+
+Эти эффекты относятся только к UI.
+
+Stimulus не должен:
+
+- менять GameState;
+- выполнять Action вместо Controller;
+- рассчитывать игровые правила;
+- самостоятельно определять допустимые действия;
+- обходить Engine.
 
 ### 17.12 Stage 15.14 — Timer
 
@@ -1751,7 +2062,11 @@ UI должен различать:
 - `started`;
 - `finished`.
 
-Для `finished` должны отображаться данные `GameState["result"]`.
+Для `finished` должны отображаться данные:
+
+```
+GameState["result"]
+```
 
 Не создавать отдельную систему определения победителя в UI.
 
@@ -1796,14 +2111,16 @@ UI должен различать:
 
 #### Единое интерактивное управление
 
-На текущем HTML-этапе Actions выполняются через обычные формы:
+На текущем HTML/Turbo-этапе Actions выполняются через формы:
 
-- PlayCard
-- Move
-- Attack
-- EndTurn
+- PlayCard;
+- Move;
+- Attack;
+- EndTurn.
 
-Turbo/Stimulus пока не используются.
+Turbo отвечает за обновление интерфейса.
+
+Stimulus пока не реализует игровые правила.
 
 #### Финальная проверка 15.16
 
@@ -1818,7 +2135,8 @@ Turbo/Stimulus пока не используются.
 - ошибочные Actions;
 - запрет действий неучастника;
 - сохранение state только после успешного Action;
-- скрытие информации противника.
+- скрытие информации противника;
+- обновление второго браузера через Turbo.
 
 Полный тестовый прогон:
 
@@ -1838,7 +2156,8 @@ Controller может:
 - передать Action в Engine;
 - обработать Result;
 - сохранить новый GameState;
-- выполнить redirect.
+- выполнить redirect или Turbo response;
+- инициировать Turbo broadcast.
 
 Controller не должен:
 
@@ -1850,7 +2169,7 @@ Controller не должен:
 - менять GameState напрямую;
 - обходить Engine.
 
-UI и Stimulus не должны быть источником игровых правил.
+UI, Turbo и Stimulus не должны быть источником игровых правил.
 
 Клиентским параметрам нельзя доверять без проверки Engine.
 
@@ -1947,11 +2266,12 @@ AI:
 
 Не переносить игровую логику в:
 
-- Controllers
-- Stimulus
-- ActiveRecord models
-- UI
-- AI
+- Controllers;
+- Stimulus;
+- ActiveRecord models;
+- UI;
+- AI;
+- Turbo / Action Cable.
 
 Запрещено:
 
@@ -1978,13 +2298,16 @@ AI:
 
 Не:
 
-- делать Controller или Stimulus источником правил;
+- делать Controller, Turbo или Stimulus источником правил;
 - доверять клиентским параметрам без проверки Engine;
 - передавать полный скрытый GameState в браузер;
 - изменять `Game.state` из JavaScript;
 - считать координаты постоянным ID Technique;
 - использовать `movement_count` как характеристику Counterattack;
-- придумывать UI-характеристики, которых нет в правилах или runtime state.
+- придумывать UI-характеристики, которых нет в правилах или runtime state;
+- использовать Turbo broadcast для передачи полного GameState;
+- использовать один общий VisibleState для разных игроков;
+- возвращаться к `broadcast_replace_to` для `game-content`, если это удаляет сам target-контейнер.
 
 ## 20. Порядок работы
 
@@ -2034,22 +2357,22 @@ bin/rails test
   - [x] 15.9 Move Technique → cell
   - [x] 15.10 Attack Technique → target
   - [x] 15.11 рефакторинг show, базовая геометрия и характеристики
-  - [x] 15.16 Order / Platoon UI, единое интерактивное управление и финальная проверка
-  - [ ] 15.12 Turbo
+  - [x] 15.12 Turbo / real-time
   - [ ] 15.13 Stimulus-подсветка
   - [ ] 15.14 Timer
   - [ ] 15.15 waiting / started / finished
+  - [x] 15.16 Order / Platoon UI, единое интерактивное управление и финальная проверка
 
 ### Следующая точка продолжения
 
-**Stage 15.12 — Turbo.**
+**Stage 15.13 — Stimulus.**
 
 На момент этой контрольной точки:
 
 - Stage 14 завершён;
-- Stage 15.1–15.11 завершены;
+- Stage 15.1–15.12 завершены;
 - Stage 15.16 завершён;
-- базовый HTML vertical slice полностью функционален;
+- базовый HTML/Turbo vertical slice полностью функционален;
 - `show.html.erb` отображает:
   - верхнюю и нижнюю руку;
   - информационные окна;
@@ -2060,15 +2383,16 @@ bin/rails test
   - Platoon;
   - HQ;
   - характеристики карт и объектов;
-  - временные формы PlayCard;
-  - временные формы Move;
-  - временные формы Attack;
+  - формы PlayCard;
+  - формы Move;
+  - формы Attack;
   - Attack UI для HQ;
 - VisibleState скрывает информацию противника;
 - Controller передаёт действия в Engine;
 - Engine остаётся единственным арбитром;
 - Order и Platoon доступны через браузер;
 - новая Technique не может двигаться в ход выставления, но может атаковать;
+- Turbo автоматически обновляет оба браузера;
 - полный тестовый прогон зелёный:
 
 ```
@@ -2077,33 +2401,38 @@ bin/rails test
 
 ### Следующая задача
 
-Начать **Stage 15.12 — Turbo**.
+Начать **Stage 15.13 — Stimulus**.
 
 Основная цель:
 
 ```
-HTML forms
-    ↓
-Controller
-    ↓
-Action
-    ↓
-Engine
-    ↓
-GameState
-    ↓
-Turbo response
-    ↓
-обновление игрового экрана
+пользовательское действие
+        ↓
+Controller / Engine
+        ↓
+результат
+        ↓
+Turbo обновляет VisibleState
+        ↓
+Stimulus реагирует визуально
 ```
+
+На этапе Stimulus планируется:
+
+- визуальная реакция на недостаток ресурсов;
+- подсветка допустимых клеток при неверном Move;
+- подсветка возможных целей при неверном Attack;
+- визуальное затемнение недоступных элементов при чужом ходе;
+- визуализация источника и цели атаки;
+- последующая визуальная реакция на PlayCard.
 
 При этом:
 
 - Engine остаётся единственным источником игровых правил;
 - `Game.state` остаётся authoritative snapshot;
-- скрытая информация не должна попасть в браузер;
-- Turbo не должен содержать игровую логику;
-- Stimulus пока не внедрять без необходимости;
+- VisibleState остаётся границей скрытой информации;
+- Turbo отвечает за доставку/обновление состояния;
+- Stimulus отвечает только за визуальное поведение;
 - Timer пока не реализовывать;
 - состояния waiting / started / finished пока не расширять.
 
@@ -2115,8 +2444,7 @@ bin/rails test
 
 ### Следующие крупные этапы
 
-- Stage 15.12 — Turbo
-- Stage 15.13 — Stimulus-подсветка
+- Stage 15.13 — Stimulus
 - Stage 15.14 — Timer
 - Stage 15.15 — waiting / started / finished
 - Stage 16 — Human vs Human
@@ -2133,9 +2461,9 @@ bin/rails test
 
 ```
 Stage 1–14     завершены
-Stage 15.1–11  завершены
+Stage 15.1–12  завершены
 Stage 15.16    завершён
-Stage 15.12    следующая задача
+Stage 15.13    следующая задача
 ```
 
 Браузерный vertical slice позволяет:
@@ -2152,7 +2480,8 @@ Stage 15.12    следующая задача
 - разыграть Platoon;
 - переместить Technique;
 - атаковать Technique;
-- атаковать через HQ UI.
+- атаковать через HQ UI;
+- автоматически видеть изменения во втором браузере через Turbo.
 
 Последний полный тестовый прогон:
 

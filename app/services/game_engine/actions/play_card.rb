@@ -50,7 +50,15 @@ module GameEngine
         Result.new(
           success: true,
           state: new_state,
-          events: [{ type: "technique_played" }]
+          events: [
+            {
+              type: "technique_played",
+              player_id: @action.player_id,
+              card_id: card["card_id"],
+              name: card["name"],
+              position: position
+            }
+          ]
         )
       end
 
@@ -90,7 +98,15 @@ module GameEngine
         Result.new(
           success: true,
           state: new_state,
-          events: [{ type: "order_played" }]
+          events: [
+            {
+              type: "order_played",
+              player_id: @action.player_id,
+              card_id: card["card_id"],
+              name: card["name"],
+              targets: targets
+            }
+          ]
         )
       end
 
@@ -114,7 +130,15 @@ module GameEngine
         Result.new(
           success: true,
           state: new_state,
-          events: [{ type: "platoon_played" }]
+          events: [
+            {
+              type: "platoon_played",
+              player_id: @action.player_id,
+              card_id: card["card_id"],
+              name: card["name"],
+              slot: slot
+            }
+          ]
         )
       end
 
@@ -167,27 +191,27 @@ module GameEngine
         end
       end
 
-			def technique_object(card)
-				technique = card["technique"]
+      def technique_object(card)
+        technique = card["technique"]
 
-				{
-					"type" => "technique",
-					"card_id" => card["card_id"],
-					"player_id" => @action.player_id,
-					"nation_id" => card["nation_id"],
-					"name" => card["name"],
-					"technique_type" => technique["technique_type"],
-					"hp" => technique["hp"],
-					"firepower" => technique["firepower"],
-					"fuel" => technique["fuel"],
-					"attack_range" => technique["attack_range"],
-					"movement_count" => 0,
-					"movement_limit" => technique["movement_count"],
-					"movement_type" => technique["movement_type"],
-					"has_attacked" => false,
-					"has_counterattacked" => false
-				}
-			end
+        {
+          "type" => "technique",
+          "card_id" => card["card_id"],
+          "player_id" => @action.player_id,
+          "nation_id" => card["nation_id"],
+          "name" => card["name"],
+          "technique_type" => technique["technique_type"],
+          "hp" => technique["hp"],
+          "firepower" => technique["firepower"],
+          "fuel" => technique["fuel"],
+          "attack_range" => technique["attack_range"],
+          "movement_count" => 0,
+          "movement_limit" => technique["movement_count"],
+          "movement_type" => technique["movement_type"],
+          "has_attacked" => false,
+          "has_counterattacked" => false
+        }
+      end
 
       def platoon_object(card)
         platoon = card["platoon"]

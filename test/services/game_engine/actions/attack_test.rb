@@ -1600,13 +1600,31 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
 		)
 
 		assert_equal(
-		  [{ type: "headquarters_attacked" },
-		   {
-		     type: "game_finished",
-		     winner_id: PLAYER_ID,
-		     loser_id: OPPONENT_ID,
-		     reason: "headquarters_destroyed"
-		   }],
+		  [
+		    {
+		      type: "headquarters_attacked",
+		      attacker: {
+		        type: "headquarters",
+		        player_id: PLAYER_ID,
+		        card_id: 1,
+		        name: "Test HQ",
+		        position: [2, 0]
+		      },
+		      target: {
+		        type: "headquarters",
+		        player_id: OPPONENT_ID,
+		        card_id: 2,
+		        name: "Test HQ",
+		        position: [0, 4]
+		      }
+		    },
+		    {
+		      type: "game_finished",
+		      winner_id: PLAYER_ID,
+		      loser_id: OPPONENT_ID,
+		      reason: "headquarters_destroyed"
+		    }
+		  ],
 		  result.events
 		)
 	end

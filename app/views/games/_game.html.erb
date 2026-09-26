@@ -1,0 +1,757 @@
+<%
+  top_hq = visible_state["field"][0][4]
+  bottom_hq = visible_state["field"][2][0]
+
+  top_player_id = top_hq&.dig("player_id")&.to_s
+  bottom_player_id = bottom_hq&.dig("player_id")&.to_s
+
+  top_player = top_player_id ? visible_state["players"][top_player_id] : nil
+  bottom_player = bottom_player_id ? visible_state["players"][bottom_player_id] : nil
+%>
+
+<main class="game">
+
+  <header class="game-header">
+    <h3>Clash Tanks</h3>
+
+    <p>Status: <%= visible_state["status"] %></p>
+    <p>Turn: <%= visible_state["turn_number"] %></p>
+    <p>Current player: <%= visible_state["current_player_id"] %></p>
+  </header>
+
+
+  <section class="game-top">
+
+    <div class="game-top__hand">
+
+      <% if top_player %>
+
+        <% if top_player_id == current_player_id %>
+
+          <div class="hand hand--top">
+
+            <% top_player["hand"].each do |card| %>
+
+              <article class="card">
+
+                <header class="card__header">
+                  <strong><%= card["name"] %></strong>
+                </header>
+
+                <div class="card__stats">
+
+                  <% if card["card_type"] == "technique" %>
+
+                    <p>Type: <%= card["card_type"] %></p>
+
+                    <p>
+                      Technique type:
+                      <%= card.dig("technique", "technique_type") %>
+                    </p>
+
+                    <p>Price: <%= card["price"] %></p>
+
+                    <p>HP: <%= card.dig("technique", "hp") %></p>
+
+                    <p>
+                      Firepower:
+                      <%= card.dig("technique", "firepower") %>
+                    </p>
+
+                    <p>Fuel: <%= card.dig("technique", "fuel") %></p>
+
+                    <%= form_with(
+                          url: play_card_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post
+                        ) do |form| %>
+
+                      <%= form.hidden_field :card_id, value: card["card_id"] %>
+
+                      <label>
+                        Row:
+                        <%= form.select :row, [0, 1, 2] %>
+                      </label>
+
+                      <label>
+                        Column:
+                        <%= form.select :column, [0, 1, 2, 3, 4] %>
+                      </label>
+
+                      <%= form.submit "Play Technique" %>
+
+                    <% end %>
+
+
+                  <% elsif card["card_type"] == "order" %>
+
+                    <p>Type: <%= card["card_type"] %></p>
+
+                    <p>Price: <%= card["price"] %></p>
+
+                    <% abilities = card["abilities"] || [] %>
+
+                    <div class="card__abilities">
+                      <p>Abilities:</p>
+
+                      <% if abilities.any? %>
+                        <ul>
+                          <% abilities.each do |ability| %>
+                            <li>
+                              <%= ability["code"] %>
+
+                              <% if ability["code"] == "damage_technique" %>
+                                — Damage: <%= ability["damage"] %>
+                              <% elsif ability["code"] == "draw_cards" %>
+                                — Cards: <%= ability["count"] %>
+                              <% end %>
+                            </li>
+                          <% end %>
+                        </ul>
+                      <% else %>
+                        <p>none</p>
+                      <% end %>
+                    </div>
+
+                    <%= form_with(
+                          url: play_card_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post
+                        ) do |form| %>
+
+                      <%= form.hidden_field :card_id, value: card["card_id"] %>
+
+                      <% if abilities.any? { |ability| ability["code"] == "damage_technique" } %>
+                        <label>
+                          Target:
+                          <%= select_tag(
+                                "target",
+                                options_for_select(
+                                  visible_state["field"].each_with_index.flat_map do |row, row_index|
+                                    row.each_with_index.filter_map do |object, column_index|
+                                      next unless object
+                                      next unless object["type"] == "technique"
+                                      next if object["player_id"].to_s == current_player_id
+
+                                      [
+                                        "#{object["name"]} [#{row_index},#{column_index}]",
+                                        "#{row_index},#{column_index}"
+                                      ]
+                                    end
+                                  end
+                                )
+                              ) %>
+                        </label>
+                      <% end %>
+
+                      <%= form.submit "Play Order" %>
+
+                    <% end %>
+
+
+                  <% elsif card["card_type"] == "platoon" %>
+
+                    <p>Type: <%= card["card_type"] %></p>
+
+                    <p>Price: <%= card["price"] %></p>
+
+                    <p>HP: <%= card.dig("platoon", "hp") %></p>
+
+                    <p>
+                      Firepower:
+                      <%= card.dig("platoon", "firepower") %>
+                    </p>
+
+                    <p>Armor: <%= card.dig("platoon", "armor") %></p>
+
+                    <p>Fuel: <%= card.dig("platoon", "fuel") %></p>
+
+                    <%= form_with(
+                          url: play_card_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post
+                        ) do |form| %>
+
+                      <%= form.hidden_field :card_id, value: card["card_id"] %>
+
+                      <%= form.submit "Play Platoon" %>
+
+                    <% end %>
+
+                  <% end %>
+
+                </div>
+
+              </article>
+
+            <% end %>
+
+          </div>
+
+        <% else %>
+
+          <p class="opponent-hand-count">
+            Opponent hand: <%= top_player["hand_count"] %> cards
+          </p>
+
+        <% end %>
+
+      <% end %>
+
+    </div>
+
+
+    <aside class="game-top__info info-window">
+
+      <% if top_player %>
+
+        <p>
+          Remaining time:
+          <%= top_player["remaining_time"] %>
+        </p>
+
+        <p>
+          Resources:
+          <%= top_player["resources"] %>
+        </p>
+
+        <p>
+          Deck:
+          <%= top_player["deck_count"] %> cards
+        </p>
+
+        <p>
+          Graveyard:
+          <%= top_player["graveyard_count"] %> cards
+        </p>
+
+        <% if top_player_id == current_player_id %>
+          <%= button_to "End Turn",
+                        end_turn_path(
+                          game,
+                          player_id: current_player_id
+                        ),
+                        method: :post %>
+        <% end %>
+
+      <% end %>
+
+    </aside>
+
+  </section>
+
+
+  <section class="game-board">
+
+    <aside class="game-board__left platoon-bar">
+
+      <% if bottom_player %>
+
+        <% bottom_player["platoons"].each_with_index do |platoon, index| %>
+
+          <article class="platoon-slot">
+
+            <span>Slot <%= index %></span>
+
+            <% if platoon %>
+
+              <strong><%= platoon["name"] %></strong>
+
+              <p>HP: <%= platoon["hp"] %></p>
+              <p>Firepower: <%= platoon["firepower"] %></p>
+              <p>Armor: <%= platoon["armor"] %></p>
+              <p>Fuel: <%= platoon["fuel"] %></p>
+
+            <% else %>
+
+              <span>Empty</span>
+
+            <% end %>
+
+          </article>
+
+        <% end %>
+
+      <% end %>
+
+    </aside>
+
+
+    <section class="game-board__field">
+
+      <div class="battlefield">
+
+        <% visible_state["field"].each_with_index do |row, row_index| %>
+
+          <% row.each_with_index do |cell, column_index| %>
+
+            <div class="battlefield__cell">
+
+              <div class="cell-coordinate">
+                [<%= row_index %>, <%= column_index %>]
+              </div>
+
+              <% if cell %>
+
+                <div class="cell-object">
+
+                  <strong>
+                    <%= cell["name"] %>
+                  </strong>
+
+
+                  <% if cell["type"] == "technique" %>
+
+                    <p>
+                      Technique:
+                      <%= cell["technique_type"] %>
+                    </p>
+
+                    <p>
+                      HP:
+                      <%= cell["hp"] %>
+                    </p>
+
+                    <p>
+                      Firepower:
+                      <%= cell["firepower"] %>
+                    </p>
+
+                    <p>
+                      Fuel:
+                      <%= cell["fuel"] %>
+                    </p>
+
+                    <p>
+                      Attacked:
+                      <%= cell["has_attacked"] ? "Yes" : "No" %>
+                    </p>
+
+                    <p>
+                      Counterattacked:
+                      <%= cell["has_counterattacked"] ? "Yes" : "No" %>
+                    </p>
+
+                    <p>
+                      Moves:
+                      <%= cell["movement_count"] %>/<%= cell["movement_limit"] %>
+                    </p>
+
+
+                    <% if cell["player_id"].to_s == current_player_id %>
+
+                      <%= form_with(
+                            url: move_path(
+                              game,
+                              player_id: current_player_id
+                            ),
+                            method: :post
+                          ) do |form| %>
+
+                        <%= form.hidden_field :from_row, value: row_index %>
+                        <%= form.hidden_field :from_column, value: column_index %>
+
+                        <label>
+                          Row:
+                          <%= form.select :to_row, [0, 1, 2] %>
+                        </label>
+
+                        <label>
+                          Col:
+                          <%= form.select :to_column, [0, 1, 2, 3, 4] %>
+                        </label>
+
+                        <%= form.submit "Move" %>
+
+                      <% end %>
+
+
+                      <%= form_with(
+                            url: attack_path(
+                              game,
+                              player_id: current_player_id
+                            ),
+                            method: :post
+                          ) do |form| %>
+
+                        <%= form.hidden_field :attacker_row, value: row_index %>
+                        <%= form.hidden_field :attacker_column, value: column_index %>
+
+                        <label>
+                          Row:
+                          <%= form.select :target_row, [0, 1, 2] %>
+                        </label>
+
+                        <label>
+                          Col:
+                          <%= form.select :target_column, [0, 1, 2, 3, 4] %>
+                        </label>
+
+                        <%= form.submit "Attack" %>
+
+                      <% end %>
+
+                    <% end %>
+
+
+                  <% elsif cell["type"] == "platoon" %>
+
+                    <p>HP: <%= cell["hp"] %></p>
+                    <p>Firepower: <%= cell["firepower"] %></p>
+                    <p>Armor: <%= cell["armor"] %></p>
+                    <p>Fuel: <%= cell["fuel"] %></p>
+
+
+                  <% elsif cell["type"] == "headquarters" %>
+
+                    <p>HP: <%= cell["hp"] %></p>
+                    <p>Firepower: <%= cell["firepower"] %></p>
+                    <p>Fuel: <%= cell["fuel"] %></p>
+
+                    <p>
+                      Attacked:
+                      <%= cell["has_attacked"] ? "Yes" : "No" %>
+                    </p>
+
+                    <p>
+                      Counterattacked:
+                      <%= cell["has_counterattacked"] ? "Yes" : "No" %>
+                    </p>
+
+
+                    <% if cell["player_id"].to_s == current_player_id %>
+
+                      <%= form_with(
+                            url: attack_path(
+                              game,
+                              player_id: current_player_id
+                            ),
+                            method: :post
+                          ) do |form| %>
+
+                        <%= form.hidden_field :attacker_row, value: row_index %>
+                        <%= form.hidden_field :attacker_column, value: column_index %>
+
+                        <label>
+                          Row:
+                          <%= form.select :target_row, [0, 1, 2] %>
+                        </label>
+
+                        <label>
+                          Col:
+                          <%= form.select :target_column, [0, 1, 2, 3, 4] %>
+                        </label>
+
+                        <%= form.submit "Attack" %>
+
+                      <% end %>
+
+                    <% end %>
+
+                  <% end %>
+
+                </div>
+
+              <% else %>
+
+                <span>Empty</span>
+
+              <% end %>
+
+            </div>
+
+          <% end %>
+
+        <% end %>
+
+      </div>
+
+    </section>
+
+
+    <aside class="game-board__right platoon-bar">
+
+      <% if top_player %>
+
+        <% top_player["platoons"].each_with_index do |platoon, index| %>
+
+          <article class="platoon-slot">
+
+            <span>Slot <%= index %></span>
+
+            <% if platoon %>
+
+              <strong><%= platoon["name"] %></strong>
+
+              <p>HP: <%= platoon["hp"] %></p>
+              <p>Firepower: <%= platoon["firepower"] %></p>
+              <p>Armor: <%= platoon["armor"] %></p>
+              <p>Fuel: <%= platoon["fuel"] %></p>
+
+            <% else %>
+
+              <span>Empty</span>
+
+            <% end %>
+
+          </article>
+
+        <% end %>
+
+      <% end %>
+
+    </aside>
+
+  </section>
+
+
+  <section class="game-bottom">
+
+    <aside class="game-bottom__info info-window">
+
+      <% if bottom_player %>
+
+        <p>
+          Remaining time:
+          <%= bottom_player["remaining_time"] %>
+        </p>
+
+        <p>
+          Resources:
+          <%= bottom_player["resources"] %>
+        </p>
+
+        <p>
+          Deck:
+          <%= bottom_player["deck_count"] %> cards
+        </p>
+
+        <p>
+          Graveyard:
+          <%= bottom_player["graveyard_count"] %> cards
+        </p>
+
+        <% if bottom_player_id == current_player_id %>
+          <%= button_to "End Turn",
+                        end_turn_path(
+                          game,
+                          player_id: current_player_id
+                        ),
+                        method: :post %>
+        <% end %>
+
+      <% end %>
+
+    </aside>
+
+
+    <div class="game-bottom__hand">
+
+      <% if bottom_player %>
+
+        <% if bottom_player_id == current_player_id %>
+
+          <div class="hand hand--bottom">
+
+            <% bottom_player["hand"].each do |card| %>
+
+              <article class="card">
+
+                <header class="card__header">
+                  <strong><%= card["name"] %></strong>
+                </header>
+
+                <div class="card__stats">
+
+                  <% if card["card_type"] == "technique" %>
+
+                    <p>Type: <%= card["card_type"] %></p>
+
+                    <p>
+                      Technique type:
+                      <%= card.dig("technique", "technique_type") %>
+                    </p>
+
+                    <p>Price: <%= card["price"] %></p>
+
+                    <p>HP: <%= card.dig("technique", "hp") %></p>
+
+                    <p>
+                      Firepower:
+                      <%= card.dig("technique", "firepower") %>
+                    </p>
+
+                    <p>Fuel: <%= card.dig("technique", "fuel") %></p>
+
+
+                    <%= form_with(
+                          url: play_card_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post
+                        ) do |form| %>
+
+                      <%= form.hidden_field :card_id, value: card["card_id"] %>
+
+                      <label>
+                        Row:
+                        <%= form.select :row, [0, 1, 2] %>
+                      </label>
+
+                      <label>
+                        Column:
+                        <%= form.select :column, [0, 1, 2, 3, 4] %>
+                      </label>
+
+                      <%= form.submit "Play Technique" %>
+
+                    <% end %>
+
+
+                  <% elsif card["card_type"] == "order" %>
+
+                    <p>Type: <%= card["card_type"] %></p>
+                    <p>Price: <%= card["price"] %></p>
+
+                    <% abilities = card["abilities"] || [] %>
+
+                    <div class="card__abilities">
+
+                      <p>Abilities:</p>
+
+                      <% if abilities.any? %>
+
+                        <ul>
+
+                          <% abilities.each do |ability| %>
+
+                            <li>
+                              <%= ability["code"] %>
+
+                              <% if ability["code"] == "damage_technique" %>
+                                — Damage: <%= ability["damage"] %>
+                              <% elsif ability["code"] == "draw_cards" %>
+                                — Cards: <%= ability["count"] %>
+                              <% end %>
+                            </li>
+
+                          <% end %>
+
+                        </ul>
+
+                      <% else %>
+
+                        <p>none</p>
+
+                      <% end %>
+
+                    </div>
+
+
+                    <%= form_with(
+                          url: play_card_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post
+                        ) do |form| %>
+
+                      <%= form.hidden_field :card_id, value: card["card_id"] %>
+
+                      <% if abilities.any? { |ability| ability["code"] == "damage_technique" } %>
+
+                        <label>
+                          Target:
+
+                          <%= select_tag(
+                                "target",
+                                options_for_select(
+                                  visible_state["field"].each_with_index.flat_map do |row, row_index|
+
+                                    row.each_with_index.filter_map do |object, column_index|
+
+                                      next unless object
+                                      next unless object["type"] == "technique"
+                                      next if object["player_id"].to_s == current_player_id
+
+                                      [
+                                        "#{object["name"]} [#{row_index},#{column_index}]",
+                                        "#{row_index},#{column_index}"
+                                      ]
+
+                                    end
+
+                                  end
+                                )
+                              ) %>
+
+                        </label>
+
+                      <% end %>
+
+                      <%= form.submit "Play Order" %>
+
+                    <% end %>
+
+
+                  <% elsif card["card_type"] == "platoon" %>
+
+                    <p>Type: <%= card["card_type"] %></p>
+
+                    <p>Price: <%= card["price"] %></p>
+
+                    <p>HP: <%= card.dig("platoon", "hp") %></p>
+
+                    <p>Firepower: <%= card.dig("platoon", "firepower") %></p>
+
+                    <p>Armor: <%= card.dig("platoon", "armor") %></p>
+
+                    <p>Fuel: <%= card.dig("platoon", "fuel") %></p>
+
+
+                    <%= form_with(
+                          url: play_card_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post
+                        ) do |form| %>
+
+                      <%= form.hidden_field :card_id, value: card["card_id"] %>
+
+                      <%= form.submit "Play Platoon" %>
+
+                    <% end %>
+
+                  <% end %>
+
+                </div>
+
+              </article>
+
+            <% end %>
+
+          </div>
+
+        <% else %>
+
+          <p class="opponent-hand-count">
+            Opponent hand: <%= bottom_player["hand_count"] %> cards
+          </p>
+
+        <% end %>
+
+      <% end %>
+
+    </div>
+
+  </section>
+
+</main>

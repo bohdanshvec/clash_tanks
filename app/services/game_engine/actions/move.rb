@@ -12,6 +12,7 @@ module GameEngine
         return failure("Invalid coordinates") unless valid_coordinates?(from) && valid_coordinates?(to)
 
         technique = object_at(from)
+
         return failure("Source cell does not contain a technique") unless technique
         return failure("Source cell does not contain a technique") unless technique["type"] == "technique"
         return failure("Technique does not belong to player") unless technique["player_id"] == @action.player_id
@@ -32,7 +33,16 @@ module GameEngine
         Result.new(
           success: true,
           state: new_state,
-          events: [{ type: "technique_moved" }]
+          events: [
+            {
+              type: "technique_moved",
+              player_id: @action.player_id,
+              card_id: technique["card_id"],
+              name: technique["name"],
+              from: from,
+              to: to
+            }
+          ]
         )
       end
 

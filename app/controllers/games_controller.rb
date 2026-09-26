@@ -35,10 +35,9 @@ class GamesController < ApplicationController
 
     @game.update!(state: result.state)
 
-    redirect_to game_path(
-      @game,
-      player_id: current_player_id
-    )
+    broadcast_game_update
+
+    respond_after_success
   end
 
   def play_card
@@ -52,12 +51,12 @@ class GamesController < ApplicationController
     action = GameEngine::Action.new(
       player_id: current_player_id,
       type: "play_card",
-			payload: {
-				card_id: params[:card_id],
-				row: params[:row]&.to_i,
-				column: params[:column]&.to_i,
-				targets: build_targets
-			}
+      payload: {
+        card_id: params[:card_id],
+        row: params[:row]&.to_i,
+        column: params[:column]&.to_i,
+        targets: build_targets
+      }
     )
 
     result = GameEngine::Engine.new(@game.state).call(action)
@@ -69,82 +68,85 @@ class GamesController < ApplicationController
 
     @game.update!(state: result.state)
 
-    redirect_to game_path(
-      @game,
-      player_id: current_player_id
-    )
+    broadcast_game_update
+
+    respond_after_success
   end
-  
-	def move
-		@game = Game.find(params[:id])
 
-		unless player_in_game?(@game)
-		  head :forbidden
-		  return
-		end
+  def move
+    @game = Game.find(params[:id])
 
-		action = GameEngine::Action.new(
-		  player_id: current_player_id,
-		  type: "move",
-		  payload: {
-		    from: [params[:from_row].to_i, params[:from_column].to_i],
-		    to: [params[:to_row].to_i, params[:to_column].to_i]
-		  }
-		)
+    unless player_in_game?(@game)
+      head :forbidden
+      return
+    end
 
-		result = GameEngine::Engine.new(@game.state).call(action)
+    action = GameEngine::Action.new(
+      player_id: current_player_id,
+      type: "move",
+      payload: {
+        from: [
+          params[:from_row].to_i,
+          params[:from_column].to_i
+        ],
+        to: [
+          params[:to_row].to_i,
+          params[:to_column].to_i
+        ]
+      }
+    )
 
-		unless result.success?
-		  render plain: result.error, status: :unprocessable_entity
-		  return
-		end
+    result = GameEngine::Engine.new(@game.state).call(action)
 
-		@game.update!(state: result.state)
+    unless result.success?
+      render plain: result.error, status: :unprocessable_entity
+      return
+    end
 
-		redirect_to game_path(
-		  @game,
-		  player_id: current_player_id
-		)
-	end
-	
-	def attack
-		@game = Game.find(params[:id])
+    @game.update!(state: result.state)
 
-		unless player_in_game?(@game)
-		  head :forbidden
-		  return
-		end
+    broadcast_game_update
 
-		action = GameEngine::Action.new(
-		  player_id: current_player_id,
-		  type: "attack",
-		  payload: {
-		    attacker: [
-		      params[:attacker_row].to_i,
-		      params[:attacker_column].to_i
-		    ],
-		    target: [
-		      params[:target_row].to_i,
-		      params[:target_column].to_i
-		    ]
-		  }
-		)
+    respond_after_success
+  end
 
-		result = GameEngine::Engine.new(@game.state).call(action)
+  def attack
+    @game = Game.find(params[:id])
 
-		unless result.success?
-		  render plain: result.error, status: :unprocessable_entity
-		  return
-		end
+    unless player_in_game?(@game)
+      head :forbidden
+      return
+    end
 
-		@game.update!(state: result.state)
+    action = GameEngine::Action.new(
+      player_id: current_player_id,
+      type: "attack",
+      payload: {
+        attacker: [
+          params[:attacker_row].to_i,
+          params[:attacker_column].to_i
+        ],
+        target: [
+          params[:target_row].to_i,
+          params[:target_column].to_i
+        ]
+      }
+    )
 
-		redirect_to game_path(
-		  @game,
-		  player_id: current_player_id
-		)
-	end
-  
+    result = GameEngine::Engine.new(@game.state).call(action)
+
+    unless result.success?
+      render plain: result.error, status: :unprocessable_entity
+      return
+    end
+
+    @game.update!(state: result.state)
+
+    broadcast_game_update
+
+    respond_after_success
+  end
+
   private
 
   def build_targets
@@ -158,5 +160,38 @@ class GamesController < ApplicationController
         column: column
       }
     ]
+  end
+
+  def broadcast_game_update
+    @game.state["players"].keys.each do |player_id|
+      visible_state = GameEngine::VisibleState.call(
+        state: @game.state,
+        player_id: player_id
+      )
+
+      Turbo::StreamsChannel.broadcast_update_to(
+        [@game, player_id],
+        target: "game-content",
+        partial: "games/game",
+        locals: {
+          game: @game,
+          visible_state: visible_state,
+          current_player_id: player_id
+        }
+      )
+    end
+  end
+
+  def respond_after_success
+    respond_to do |format|
+      format.turbo_stream { head :no_content }
+
+      format.html do
+        redirect_to game_path(
+          @game,
+          player_id: current_player_id
+        )
+      end
+    end
   end
 end
