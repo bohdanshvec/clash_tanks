@@ -92,7 +92,12 @@ module GameEngine
 
         new_attacker["has_attacked"] = true
 
-        if ptsau_shoots_first?(new_attacker, new_target, attacker_position, target_position)
+        if ptsau_shoots_first?(
+          new_attacker,
+          new_target,
+          attacker_position,
+          target_position
+        )
           return attack_with_ptsau_first(
             new_state,
             new_attacker,
@@ -102,10 +107,23 @@ module GameEngine
           )
         end
 
-        perform_shot(new_state, new_attacker, new_target, target_position)
+        perform_shot(
+          new_state,
+          new_attacker,
+          new_target,
+          target_position
+        )
 
-        if new_target["hp"] > 0 && adjacent?(attacker_position, target_position)
-          counterattack(new_state, attacker_position, target_position)
+        if new_target["hp"] > 0 &&
+            GameEngine::Rules::Position.adjacent?(
+              attacker_position,
+              target_position
+            )
+          counterattack(
+            new_state,
+            attacker_position,
+            target_position
+          )
         end
 
         Result.new(
@@ -123,11 +141,23 @@ module GameEngine
         )
       end
 
-      def valid_technique_to_technique_attack?(attacker, attacker_position, target_position)
-        return true if valid_attack_range?(attacker, attacker_position, target_position)
+      def valid_technique_to_technique_attack?(
+        attacker,
+        attacker_position,
+        target_position
+      )
+        return true if GameEngine::Rules::AttackRange.valid?(
+          attacker,
+          attacker_position,
+          target_position
+        )
 
         attacker["technique_type"] == "artillery" &&
-          allied_unit_near?(target_position, attacker["player_id"])
+          GameEngine::Rules::Spotting.allied_unit_near?(
+            @state,
+            target_position,
+            attacker["player_id"]
+          )
       end
 
       # PT-SAU special combat:
@@ -240,7 +270,10 @@ module GameEngine
           )
         end
 
-        if adjacent?(attacker_position, target_position)
+        if GameEngine::Rules::Position.adjacent?(
+          attacker_position,
+          target_position
+        )
           counterattack(
             new_state,
             attacker_position,
@@ -268,10 +301,14 @@ module GameEngine
         attacker_position,
         target_position
       )
-        return true if adjacent?(attacker_position, target_position)
+        return true if GameEngine::Rules::Position.adjacent?(
+          attacker_position,
+          target_position
+        )
 
         attacker["technique_type"] == "artillery" &&
-          allied_technique_near?(
+          GameEngine::Rules::Spotting.allied_technique_near?(
+            @state,
             target_position,
             attacker["player_id"]
           )
@@ -373,7 +410,7 @@ module GameEngine
       # - Technique may counterattack.
       #
       # Long-range:
-      # - friendly Technique or HQ must be adjacent to target;
+      # - friendly Technique must be adjacent to target;
       # - no counterattack.
       def attack_technique_target_from_headquarters(
         attacker,
@@ -410,7 +447,10 @@ module GameEngine
         )
 
         if new_target["hp"] > 0 &&
-            adjacent?(attacker_position, target_position)
+            GameEngine::Rules::Position.adjacent?(
+              attacker_position,
+              target_position
+            )
           counterattack(
             new_state,
             attacker_position,
@@ -438,9 +478,16 @@ module GameEngine
         attacker_position,
         target_position
       )
-        return true if adjacent?(attacker_position, target_position)
+        return true if GameEngine::Rules::Position.adjacent?(
+          attacker_position,
+          target_position
+        )
 
-        allied_technique_near?(target_position, attacker["player_id"])
+        GameEngine::Rules::Spotting.allied_technique_near?(
+          @state,
+          target_position,
+          attacker["player_id"]
+        )
       end
 
       # ------------------------------------------------------------------
@@ -474,7 +521,10 @@ module GameEngine
         )
       end
 
-      def firepower_for_shot(state, attacker)
+      def firepower_for_shot(
+        state,
+        attacker
+      )
         if attacker["type"] == "headquarters"
           fire_with_headquarters(
             state,
@@ -530,7 +580,7 @@ module GameEngine
         return unless defender
         return if defender["has_counterattacked"]
 
-        return unless adjacent?(
+        return unless GameEngine::Rules::Position.adjacent?(
           attacker_position,
           target_position
         )
@@ -563,7 +613,7 @@ module GameEngine
           heavy_tank
         ].include?(attacker["technique_type"])
 
-        adjacent?(
+        GameEngine::Rules::Position.adjacent?(
           attacker_position,
           target_position
         )
@@ -627,7 +677,11 @@ module GameEngine
       #
       # Each Platoon can absorb up to its armor value.
       # Remaining damage continues to the next Platoon and then to HQ.
-      def apply_damage_to_headquarters(state, headquarters, damage)
+      def apply_damage_to_headquarters(
+        state,
+        headquarters,
+        damage
+      )
         return if damage <= 0
 
         player = state["players"][headquarters["player_id"].to_s]
@@ -726,68 +780,6 @@ module GameEngine
       end
 
       # ------------------------------------------------------------------
-      # Position / spotting
-      # ------------------------------------------------------------------
-
-      def adjacent?(
-        first_position,
-        second_position
-      )
-        row_delta = (
-          first_position[0] - second_position[0]
-        ).abs
-
-        column_delta = (
-          first_position[1] - second_position[1]
-        ).abs
-
-        [row_delta, column_delta].max == 1
-      end
-
-      def allied_technique_near?(
-        position,
-        player_id
-      )
-        neighbor_objects(position).any? do |object|
-          object &&
-            object["type"] == "technique" &&
-            object["player_id"].to_s == player_id.to_s
-        end
-      end
-
-      def allied_unit_near?(
-        position,
-        player_id
-      )
-        neighbor_objects(position).any? do |object|
-          object &&
-            %w[technique headquarters].include?(object["type"]) &&
-            object["player_id"].to_s == player_id.to_s
-        end
-      end
-
-      def neighbor_objects(position)
-        row = position[0]
-        column = position[1]
-
-        (-1..1).flat_map do |row_offset|
-          (-1..1).filter_map do |column_offset|
-            next if row_offset.zero? && column_offset.zero?
-
-            neighbor_row = row + row_offset
-            neighbor_column = column + column_offset
-
-            next unless GameState.valid_coordinates?(
-              row: neighbor_row,
-              column: neighbor_column
-            )
-
-            @state["field"][neighbor_row][neighbor_column]
-          end
-        end
-      end
-
-      # ------------------------------------------------------------------
       # Events
       # ------------------------------------------------------------------
 
@@ -845,19 +837,6 @@ module GameEngine
         coordinates
       )
         state["field"][coordinates[0]][coordinates[1]]
-      end
-
-      def valid_attack_range?(
-        attacker,
-        from,
-        to
-      )
-        row_delta = (to[0] - from[0]).abs
-        column_delta = (to[1] - from[1]).abs
-
-        distance = [row_delta, column_delta].max
-
-        distance <= attacker["attack_range"]
       end
     end
   end

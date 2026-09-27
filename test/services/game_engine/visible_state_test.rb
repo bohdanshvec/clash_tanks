@@ -136,4 +136,41 @@ class GameEngine::VisibleStateTest < ActiveSupport::TestCase
 
     assert_equal original_state, @state
   end
+  
+	test "includes available actions for current player" do
+		visible_state = GameEngine::VisibleState.call(
+		  state: @state,
+		  player_id: 1
+		)
+
+		assert visible_state.key?("available_actions")
+
+		assert_equal(
+			{
+				"field" => {},
+				"hand" => {
+				  "101" => {},
+				  "102" => {}
+				}
+			},
+			visible_state["available_actions"]
+		)
+	end
+
+	test "available actions are calculated for requested player" do
+		@state["current_player_id"] = 2
+
+		visible_state = GameEngine::VisibleState.call(
+		  state: @state,
+		  player_id: 1
+		)
+
+		assert_equal(
+		  {
+		    "field" => {},
+		    "hand" => {}
+		  },
+		  visible_state["available_actions"]
+		)
+	end
 end

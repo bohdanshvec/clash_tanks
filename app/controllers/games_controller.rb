@@ -35,7 +35,7 @@ class GamesController < ApplicationController
 
     @game.update!(state: result.state)
 
-    broadcast_game_update
+    broadcast_game_update(result.events)
 
     respond_after_success
   end
@@ -68,7 +68,7 @@ class GamesController < ApplicationController
 
     @game.update!(state: result.state)
 
-    broadcast_game_update
+    broadcast_game_update(result.events)
 
     respond_after_success
   end
@@ -105,7 +105,7 @@ class GamesController < ApplicationController
 
     @game.update!(state: result.state)
 
-    broadcast_game_update
+    broadcast_game_update(result.events)
 
     respond_after_success
   end
@@ -142,7 +142,7 @@ class GamesController < ApplicationController
 
     @game.update!(state: result.state)
 
-    broadcast_game_update
+    broadcast_game_update(result.events)
 
     respond_after_success
   end
@@ -162,25 +162,26 @@ class GamesController < ApplicationController
     ]
   end
 
-  def broadcast_game_update
-    @game.state["players"].keys.each do |player_id|
-      visible_state = GameEngine::VisibleState.call(
-        state: @game.state,
-        player_id: player_id
-      )
+	def broadcast_game_update(events)
+		@game.state["players"].keys.each do |player_id|
+		  visible_state = GameEngine::VisibleState.call(
+		    state: @game.state,
+		    player_id: player_id
+		  )
 
-      Turbo::StreamsChannel.broadcast_update_to(
-        [@game, player_id],
-        target: "game-content",
-        partial: "games/game",
-        locals: {
-          game: @game,
-          visible_state: visible_state,
-          current_player_id: player_id
-        }
-      )
-    end
-  end
+		  Turbo::StreamsChannel.broadcast_update_to(
+		    [@game, player_id],
+		    target: "game-content",
+		    partial: "games/game",
+		    locals: {
+		      game: @game,
+		      visible_state: visible_state,
+		      current_player_id: player_id,
+		      events: events
+		    }
+		  )
+		end
+	end
 
   def respond_after_success
     respond_to do |format|

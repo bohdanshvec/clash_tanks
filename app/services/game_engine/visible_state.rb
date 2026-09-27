@@ -9,17 +9,25 @@ module GameEngine
       @player_id = player_id.to_s
     end
 
-    def call
-      {
-        "status" => @state["status"],
-        "turn_number" => @state["turn_number"],
-        "current_player_id" => @state["current_player_id"],
-        "field" => @state["field"].deep_dup,
-        "players" => visible_players
-      }
-    end
+		def call
+			{
+				"status" => @state["status"],
+				"turn_number" => @state["turn_number"],
+				"current_player_id" => @state["current_player_id"],
+				"field" => @state["field"].deep_dup,
+				"players" => visible_players,
+				"available_actions" => available_actions
+			}
+		end
 
     private
+    
+		def available_actions
+			GameEngine::AvailableActions.call(
+				state: @state,
+				player_id: @player_id
+			)
+		end
 
     def visible_players
       @state.fetch("players").to_h do |player_id, player_state|

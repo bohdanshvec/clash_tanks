@@ -9,9 +9,13 @@
   bottom_player = bottom_player_id ? visible_state["players"][bottom_player_id] : nil
 %>
 
-<main class="game">
+<main class="game"
+      data-controller="game-events"
+      data-game-events-events-value="<%= events.to_json %>"
+      data-game-events-available-actions-value="<%= visible_state["available_actions"].to_json %>">
 
   <header class="game-header">
+
     <h3>Clash Tanks</h3>
 
     <p>Status: <%= visible_state["status"] %></p>
@@ -28,11 +32,16 @@
 
         <% if top_player_id == current_player_id %>
 
-          <div class="hand hand--top">
+          <div class="hand hand--top"
+     				style="--hand-count: <%= top_player["hand"].length %>;">
 
             <% top_player["hand"].each do |card| %>
 
-              <article class="card">
+						<article class="card"
+         			data-action="click->game-events#select"
+         			data-card-id="<%= card["card_id"] %>"
+         			data-player-id="<%= current_player_id %>"
+         			data-card-type="<%= card["card_type"] %>">
 
                 <header class="card__header">
                   <strong><%= card["name"] %></strong>
@@ -231,14 +240,15 @@
           <%= top_player["graveyard_count"] %> cards
         </p>
 
-        <% if top_player_id == current_player_id %>
-          <%= button_to "End Turn",
-                        end_turn_path(
-                          game,
-                          player_id: current_player_id
-                        ),
-                        method: :post %>
-        <% end %>
+				<% if top_player_id == current_player_id &&
+							visible_state["current_player_id"].to_s == current_player_id.to_s %>
+					<%= button_to "End Turn",
+								        end_turn_path(
+								          game,
+								          player_id: current_player_id
+								        ),
+								        method: :post %>
+				<% end %>
 
       <% end %>
 
@@ -255,7 +265,9 @@
 
         <% bottom_player["platoons"].each_with_index do |platoon, index| %>
 
-          <article class="platoon-slot">
+					<article class="platoon-slot"
+				    data-platoon-slot="<%= index %>"
+				    data-player-id="<%= bottom_player_id %>">
 
             <span>Slot <%= index %></span>
 
@@ -291,7 +303,14 @@
 
           <% row.each_with_index do |cell, column_index| %>
 
-            <div class="battlefield__cell">
+						<div class="battlefield__cell"
+						  data-position="<%= row_index %>,<%= column_index %>"
+						  <% if cell &&
+								    cell["player_id"].to_s == current_player_id.to_s &&
+								    ["technique", "headquarters"].include?(cell["type"]) %>
+							  data-action="click->game-events#select"
+							  data-object-type="<%= cell["type"] %>"
+						  <% end %>>
 
               <div class="cell-coordinate">
                 [<%= row_index %>, <%= column_index %>]
@@ -299,7 +318,7 @@
 
               <% if cell %>
 
-                <div class="cell-object">
+								<div class="cell-object">
 
                   <strong>
                     <%= cell["name"] %>
@@ -481,7 +500,9 @@
 
         <% top_player["platoons"].each_with_index do |platoon, index| %>
 
-          <article class="platoon-slot">
+					<article class="platoon-slot"
+          	data-platoon-slot="<%= index %>"
+          	data-player-id="<%= top_player_id %>">
 
             <span>Slot <%= index %></span>
 
@@ -537,14 +558,15 @@
           <%= bottom_player["graveyard_count"] %> cards
         </p>
 
-        <% if bottom_player_id == current_player_id %>
-          <%= button_to "End Turn",
-                        end_turn_path(
-                          game,
-                          player_id: current_player_id
-                        ),
-                        method: :post %>
-        <% end %>
+				<% if bottom_player_id == current_player_id &&
+							visible_state["current_player_id"].to_s == current_player_id.to_s %>
+					<%= button_to "End Turn",
+								        end_turn_path(
+								          game,
+								          player_id: current_player_id
+								        ),
+								        method: :post %>
+				<% end %>
 
       <% end %>
 
@@ -557,11 +579,16 @@
 
         <% if bottom_player_id == current_player_id %>
 
-          <div class="hand hand--bottom">
+          <div class="hand hand--bottom"
+     				style="--hand-count: <%= bottom_player["hand"].length %>;">
 
             <% bottom_player["hand"].each do |card| %>
 
-              <article class="card">
+						<article class="card"
+         			data-action="click->game-events#select"
+         			data-card-id="<%= card["card_id"] %>"
+         			data-player-id="<%= current_player_id %>"
+         			data-card-type="<%= card["card_type"] %>">
 
                 <header class="card__header">
                   <strong><%= card["name"] %></strong>

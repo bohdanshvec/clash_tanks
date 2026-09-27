@@ -19,7 +19,11 @@ module GameEngine
 
         return failure("No movement remaining") unless technique["movement_count"].to_i > 0
         return failure("Destination cell is occupied") if object_at(to)
-        return failure("Invalid movement") unless valid_movement?(technique, from, to)
+        return failure("Invalid movement") unless GameEngine::Rules::TechniqueMovement.valid?(
+					technique,
+					from,
+					to
+				)
 
         new_state = @state.deep_dup
         field = new_state["field"]
@@ -60,23 +64,6 @@ module GameEngine
 
       def object_at(coordinates)
         @state["field"][coordinates[0]][coordinates[1]]
-      end
-
-      def valid_movement?(technique, from, to)
-        row_delta = (to[0] - from[0]).abs
-        column_delta = (to[1] - from[1]).abs
-
-        return false if row_delta > 1 || column_delta > 1
-        return false if row_delta.zero? && column_delta.zero?
-
-        case technique["movement_type"]
-        when "orthogonal"
-          row_delta + column_delta == 1
-        when "diagonal"
-          true
-        else
-          false
-        end
       end
     end
   end
