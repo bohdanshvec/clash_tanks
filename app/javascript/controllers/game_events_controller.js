@@ -8,11 +8,16 @@ export default class extends Controller {
 
   connect() {
     this.selectedElement = null
+    this.draggedCard = null
 
     this.eventsValue.forEach((event) => {
       this.handleEvent(event)
     })
   }
+
+  // --------------------------------------------------
+  // Events from Game Engine
+  // --------------------------------------------------
 
   handleEvent(event) {
     switch (event.type) {
@@ -26,9 +31,6 @@ export default class extends Controller {
         break
 
       case "technique_played":
-        this.highlightPlayedCard(event)
-        break
-
       case "order_played":
         this.highlightPlayedCard(event)
         break
@@ -46,6 +48,10 @@ export default class extends Controller {
     }
   }
 
+  // --------------------------------------------------
+  // Selection
+  // --------------------------------------------------
+
   select(event) {
     const element = event.currentTarget
 
@@ -54,6 +60,10 @@ export default class extends Controller {
       return
     }
 
+    this.selectElement(element)
+  }
+
+  selectElement(element) {
     this.clearSelection()
 
     this.selectedElement = element
@@ -74,6 +84,47 @@ export default class extends Controller {
 
     this.clearAvailableActions()
   }
+
+  // --------------------------------------------------
+  // Click on available action
+  // --------------------------------------------------
+
+  handleActionClick(event) {
+    const element = event.target.closest(
+      ".game-action--move, " +
+      ".game-action--attack, " +
+      ".game-action--card, " +
+      ".game-action--card-target, " +
+      ".game-action--drop-zone"
+    )
+
+    if (!element || !this.element.contains(element)) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    if (element.classList.contains("game-action--move")) {
+      this.executeMove(element)
+      return
+    }
+
+    if (element.classList.contains("game-action--attack")) {
+      this.executeAttack(element)
+      return
+    }
+
+    if (
+      element.classList.contains("game-action--card") ||
+      element.classList.contains("game-action--card-target") ||
+      element.classList.contains("game-action--drop-zone")
+    ) {
+      this.executeCardAction(element)
+    }
+  }
+
+  // --------------------------------------------------
+  // Field selection
+  // --------------------------------------------------
 
   showFieldAvailableActions(element) {
     const position = element.dataset.position
@@ -96,46 +147,54 @@ export default class extends Controller {
     )
   }
 
-	showHandAvailableActions(element) {
-		const cardId = element.dataset.cardId
+  // --------------------------------------------------
+  // Hand selection
+  // --------------------------------------------------
 
-		if (!cardId) return
+  showHandAvailableActions(element) {
+    const cardId = element.dataset.cardId
 
-		const handActions = this.availableActionsValue?.hand || {}
-		const actions = handActions[cardId]
+    if (!cardId) return
 
-		if (!actions) return
+    const handActions = this.availableActionsValue?.hand || {}
+    const actions = handActions[cardId]
 
-		switch (actions.type) {
-		  case "technique":
-		    this.highlightPositions(
-		      actions.positions,
-		      "game-action--card"
-		    )
-		    break
+    if (!actions) return
 
-		  case "platoon":
-		    this.highlightPlatoonSlots(
-		      actions.slots,
-		      element.dataset.playerId
-		    )
-		    break
+    switch (actions.type) {
+      case "technique":
+        this.highlightPositions(
+          actions.positions,
+          "game-action--card"
+        )
+        break
 
-		  case "order":
-		    if (actions.targets) {
-		      this.highlightPositions(
-		        actions.targets,
-		        "game-action--card-target"
-		      )
-		    } else if (actions.drop_zone === "field") {
-		      this.highlightFieldDropZone()
-		    }
-		    break
+      case "platoon":
+        this.highlightPlatoonSlots(
+          actions.slots,
+          element.dataset.playerId
+        )
+        break
 
-		  default:
-		    break
-		}
-	}
+      case "order":
+        if (actions.targets) {
+          this.highlightPositions(
+            actions.targets,
+            "game-action--card-target"
+          )
+        } else if (actions.drop_zone === "field") {
+          this.highlightFieldDropZone()
+        }
+        break
+
+      default:
+        break
+    }
+  }
+
+  // --------------------------------------------------
+  // Highlighting
+  // --------------------------------------------------
 
   highlightPositions(positions, className) {
     if (!positions) return
@@ -149,19 +208,27 @@ export default class extends Controller {
     })
   }
 
-	highlightPlatoonSlots(slots, playerId) {
-		if (!slots || !playerId) return
+  highlightPlatoonSlots(slots, playerId) {
+    if (!slots || !playerId || slots.length === 0) return
 
-		slots.forEach((slot) => {
-		  const element = this.element.querySelector(
-		    `[data-platoon-slot="${slot}"][data-player-id="${playerId}"]`
-		  )
+    slots.forEach((slot) => {
+      const element = this.element.querySelector(
+        `[data-platoon-slot="${slot}"][data-player-id="${playerId}"]`
+      )
 
-		  if (element) {
-		    element.classList.add("game-action--card")
-		  }
-		})
-	}
+      if (element) {
+        element.classList.add("game-action--card")
+      }
+    })
+
+    const platoonBar = this.element.querySelector(
+      `[data-platoon-bar][data-player-id="${playerId}"]`
+    )
+
+    if (platoonBar) {
+      platoonBar.classList.add("game-action--drop-zone")
+    }
+  }
 
   highlightFieldDropZone() {
     const field = this.element.querySelector(".game-board__field")
@@ -191,6 +258,240 @@ export default class extends Controller {
       })
   }
 
+  // --------------------------------------------------
+  // Click actions
+  // --------------------------------------------------
+
+  executeMove(target) {
+    const from = this.positionFromElement(this.selectedElement)
+    const to = this.positionFromElement(target)
+
+    if (!from || !to) return
+
+    this.clearSelection()
+
+    this.sendAction("move", {
+      from_row: from[0],
+      from_column: from[1],
+      to_row: to[0],
+      to_column: to[1]
+    })
+  }
+
+  executeAttack(target) {
+    const attacker = this.positionFromElement(this.selectedElement)
+    const targetPosition = this.positionFromElement(target)
+
+    if (!attacker || !targetPosition) return
+
+    this.clearSelection()
+
+    this.sendAction("attack", {
+      attacker_row: attacker[0],
+      attacker_column: attacker[1],
+      target_row: targetPosition[0],
+      target_column: targetPosition[1]
+    })
+  }
+
+  executeCardAction(target) {
+    const card = this.selectedElement
+
+    if (!card || !card.dataset.cardId) return
+
+    const cardId = card.dataset.cardId
+
+    // Technique → field
+    if (
+      target.dataset.position &&
+      target.classList.contains("game-action--card")
+    ) {
+      const position = this.positionFromElement(target)
+
+      this.clearSelection()
+
+      this.sendAction("play_card", {
+        card_id: cardId,
+        row: position[0],
+        column: position[1]
+      })
+
+      return
+    }
+
+    // Order → target
+    if (
+      target.dataset.position &&
+      target.classList.contains("game-action--card-target")
+    ) {
+      const position = this.positionFromElement(target)
+
+      this.clearSelection()
+
+      this.sendAction("play_card", {
+        card_id: cardId,
+        target: `${position[0]},${position[1]}`
+      })
+
+      return
+    }
+
+    // Order without target → field
+    if (
+      target.classList.contains("game-action--drop-zone") &&
+      target.classList.contains("game-board__field")
+    ) {
+      this.clearSelection()
+
+      this.sendAction("play_card", {
+        card_id: cardId
+      })
+
+      return
+    }
+
+    // Platoon → platoon bar
+    if (
+      target.hasAttribute("data-platoon-bar") ||
+      target.closest("[data-platoon-bar]")
+    ) {
+      this.clearSelection()
+
+      this.sendAction("play_card", {
+        card_id: cardId
+      })
+    }
+  }
+
+  // --------------------------------------------------
+  // Drag & Drop
+  // --------------------------------------------------
+
+  dragStart(event) {
+    const card = event.target.closest("[data-card-id]")
+
+    if (!card || !this.element.contains(card)) return
+
+    this.draggedCard = card
+
+    this.selectElement(card)
+
+    card.classList.add("game-object--dragging")
+
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move"
+      event.dataTransfer.setData(
+        "text/plain",
+        card.dataset.cardId
+      )
+    }
+  }
+
+  dragOver(event) {
+    const target = this.dropTarget(event)
+
+    if (!target) return
+
+    if (!this.draggedCard) return
+
+    event.preventDefault()
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "move"
+    }
+  }
+
+  drop(event) {
+    const target = this.dropTarget(event)
+
+    if (!target || !this.draggedCard) return
+
+    event.preventDefault()
+
+    this.executeCardAction(target)
+    this.finishDrag()
+  }
+
+  dragEnd() {
+    this.finishDrag()
+  }
+
+  finishDrag() {
+    if (this.draggedCard) {
+      this.draggedCard.classList.remove("game-object--dragging")
+    }
+
+    this.draggedCard = null
+  }
+
+  dropTarget(event) {
+    const target = event.target.closest(
+      ".game-action--card, " +
+      ".game-action--card-target, " +
+      ".game-action--drop-zone"
+    )
+
+    if (!target || !this.element.contains(target)) {
+      return null
+    }
+
+    return target
+  }
+
+  // --------------------------------------------------
+  // Rails actions
+  // --------------------------------------------------
+
+  sendAction(type, parameters) {
+    const urls = {
+      move: this.element.dataset.moveUrl,
+      attack: this.element.dataset.attackUrl,
+      play_card: this.element.dataset.playCardUrl
+    }
+
+    const url = urls[type]
+
+    if (!url) {
+      console.error(`Missing URL for action: ${type}`)
+      return
+    }
+
+    const body = new URLSearchParams()
+
+    body.append(
+      "player_id",
+      this.element.dataset.playerId
+    )
+
+    Object.entries(parameters).forEach(([key, value]) => {
+      body.append(key, value)
+    })
+
+    const csrfToken = document.querySelector(
+      'meta[name="csrf-token"]'
+    )?.content
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "X-CSRF-Token": csrfToken,
+        "Accept": "text/vnd.turbo-stream.html"
+      },
+      body
+    }).then(async (response) => {
+      if (!response.ok) {
+        const message = await response.text()
+        console.error(message)
+      }
+    }).catch((error) => {
+      console.error(error)
+    })
+  }
+
+  // --------------------------------------------------
+  // Game events
+  // --------------------------------------------------
+
   highlightMove(event) {
     const from = this.findPosition(event.from)
     const to = this.findPosition(event.to)
@@ -199,29 +500,29 @@ export default class extends Controller {
     this.flash(to)
   }
 
-	highlightAttack(event) {
-		const attacker = this.findPosition(event.attacker.position)
-		const target = this.findPosition(event.target.position)
+  highlightAttack(event) {
+    const attacker = this.findPosition(event.attacker.position)
+    const target = this.findPosition(event.target.position)
 
-		this.flash(attacker)
-		this.flash(target)
+    this.flash(attacker)
+    this.flash(target)
 
-		if (event.type !== "headquarters_attacked") return
+    if (event.type !== "headquarters_attacked") return
 
-		if (event.attacker.type === "headquarters") {
-			this.flashPlatoonsByAttribute(
-			  event.attacker.player_id,
-			  "data-firepower"
-			)
-		}
+    if (event.attacker.type === "headquarters") {
+      this.flashPlatoonsByAttribute(
+        event.attacker.player_id,
+        "data-firepower"
+      )
+    }
 
-		if (event.target.type === "headquarters") {
-			this.flashPlatoonsByAttribute(
-			  event.target.player_id,
-			  "data-armor"
-			)
-		}
-	}
+    if (event.target.type === "headquarters") {
+      this.flashPlatoonsByAttribute(
+        event.target.player_id,
+        "data-armor"
+      )
+    }
+  }
 
   highlightPlayedCard(event) {
     if (event.position) {
@@ -250,6 +551,38 @@ export default class extends Controller {
     }, 500)
   }
 
+  highlightPlatoon(event) {
+    const target = this.element.querySelector(
+      `[data-platoon-slot="${event.slot}"][data-player-id="${event.player_id}"]`
+    )
+
+    this.flash(target)
+  }
+
+  flashPlatoonsByAttribute(playerId, attribute) {
+    if (!playerId) return
+
+    this.element
+      .querySelectorAll(
+        `[data-player-id="${playerId}"][${attribute}]`
+      )
+      .forEach((element) => {
+        const value = Number(
+          element.dataset[
+            attribute.replace("data-", "")
+          ]
+        )
+
+        if (value > 0) {
+          this.flash(element)
+        }
+      })
+  }
+
+  // --------------------------------------------------
+  // Helpers
+  // --------------------------------------------------
+
   findPosition(position) {
     if (!position) return null
 
@@ -258,6 +591,14 @@ export default class extends Controller {
     return this.element.querySelector(
       `[data-position="${row},${column}"]`
     )
+  }
+
+  positionFromElement(element) {
+    if (!element?.dataset.position) return null
+
+    return element.dataset.position
+      .split(",")
+      .map(Number)
   }
 
   flash(element) {
@@ -273,28 +614,4 @@ export default class extends Controller {
       element.classList.remove("game-event--flash")
     }, 500)
   }
-
-	highlightPlatoon(event) {
-		const target = this.element.querySelector(
-		  `[data-platoon-slot="${event.slot}"][data-player-id="${event.player_id}"]`
-		)
-
-		this.flash(target)
-	}
-	
-	flashPlatoonsByAttribute(playerId, attribute) {
-		if (!playerId) return
-
-		this.element
-		  .querySelectorAll(
-		    `[data-player-id="${playerId}"][${attribute}]`
-		  )
-		  .forEach((element) => {
-		    const value = Number(element.dataset[attribute.replace("data-", "")])
-
-		    if (value > 0) {
-		      this.flash(element)
-		    }
-		  })
-	}
 }

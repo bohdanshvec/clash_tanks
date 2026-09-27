@@ -701,3 +701,8 @@ Stage 15.13.3 — доступные действия
   outline: 4px dashed currentColor;
   outline-offset: -4px;
 }
+
+.game-object--dragging {
+  opacity: 0.6;
+  cursor: grabbing;
+}
