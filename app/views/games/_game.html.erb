@@ -266,8 +266,12 @@
         <% bottom_player["platoons"].each_with_index do |platoon, index| %>
 
 					<article class="platoon-slot"
-				    data-platoon-slot="<%= index %>"
-				    data-player-id="<%= bottom_player_id %>">
+						data-platoon-slot="<%= index %>"
+						data-player-id="<%= bottom_player_id %>"
+						<% if platoon %>
+							data-firepower="<%= platoon["firepower"].to_i %>"
+							data-armor="<%= platoon["armor"].to_i %>"
+						<% end %>>
 
             <span>Slot <%= index %></span>
 
@@ -501,8 +505,12 @@
         <% top_player["platoons"].each_with_index do |platoon, index| %>
 
 					<article class="platoon-slot"
-          	data-platoon-slot="<%= index %>"
-          	data-player-id="<%= top_player_id %>">
+						data-platoon-slot="<%= index %>"
+						data-player-id="<%= top_player_id %>"
+						<% if platoon %>
+							data-firepower="<%= platoon["firepower"].to_i %>"
+							data-armor="<%= platoon["armor"].to_i %>"
+						<% end %>>
 
             <span>Slot <%= index %></span>
 

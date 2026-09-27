@@ -199,13 +199,29 @@ export default class extends Controller {
     this.flash(to)
   }
 
-  highlightAttack(event) {
-    const attacker = this.findPosition(event.attacker.position)
-    const target = this.findPosition(event.target.position)
+	highlightAttack(event) {
+		const attacker = this.findPosition(event.attacker.position)
+		const target = this.findPosition(event.target.position)
 
-    this.flash(attacker)
-    this.flash(target)
-  }
+		this.flash(attacker)
+		this.flash(target)
+
+		if (event.type !== "headquarters_attacked") return
+
+		if (event.attacker.type === "headquarters") {
+			this.flashPlatoonsByAttribute(
+			  event.attacker.player_id,
+			  "data-firepower"
+			)
+		}
+
+		if (event.target.type === "headquarters") {
+			this.flashPlatoonsByAttribute(
+			  event.target.player_id,
+			  "data-armor"
+			)
+		}
+	}
 
   highlightPlayedCard(event) {
     if (event.position) {
@@ -264,5 +280,21 @@ export default class extends Controller {
 		)
 
 		this.flash(target)
+	}
+	
+	flashPlatoonsByAttribute(playerId, attribute) {
+		if (!playerId) return
+
+		this.element
+		  .querySelectorAll(
+		    `[data-player-id="${playerId}"][${attribute}]`
+		  )
+		  .forEach((element) => {
+		    const value = Number(element.dataset[attribute.replace("data-", "")])
+
+		    if (value > 0) {
+		      this.flash(element)
+		    }
+		  })
 	}
 }
