@@ -702,7 +702,21 @@ Stage 15.13.3 — доступные действия
   outline-offset: -4px;
 }
 
+.card {
+  cursor: grab;
+}
+
 .game-object--dragging {
   opacity: 0.6;
   cursor: grabbing;
+}
+
+.game-action--drag-over {
+  outline: 5px solid currentColor;
+  outline-offset: -5px;
+}
+
+.game-action--hover {
+  outline: 5px solid currentColor;
+  outline-offset: -5px;
 }

@@ -2,9 +2,11 @@
 
 Общаться со мною на русском языке.
 
+---
+
 ## 1. Проект
 
-`clash_tanks` — учебная браузерная пошаговая карточная стратегия про танки. Проект вдохновлён WoT: Generals, но использует собственные названия, правила, карты и материалы.
+**clash_tanks** — учебная браузерная пошаговая карточная стратегия про танки. Проект вдохновлён WoT: Generals, но использует собственные названия, правила, карты и материалы.
 
 ### Стек
 
@@ -17,21 +19,23 @@
 
 ### Запуск
 
-```
+```bash
 bin/dev
 ```
 
 ### Development PostgreSQL
 
-- `clash_tanks_development`
-- порт 5432
+- база: `clash_tanks_development`
+- порт: `5432`
 
 PostgreSQL 12 и 14 не изменять и не удалять без явного указания.
 
+---
+
 ## 2. Источники истины
 
-- **GAME_RULES.md** — правила и игровые механики.
-- **AGENTS.md** — архитектура, технические решения и текущее состояние.
+- `GAME_RULES.md` — правила и игровые механики.
+- `AGENTS.md` — архитектура, технические решения и текущее состояние.
 
 При противоречии старые чаты не имеют приоритета.
 
@@ -39,11 +43,13 @@ PostgreSQL 12 и 14 не изменять и не удалять без явно
 
 Новые игровые решения сначала фиксировать в `GAME_RULES.md`, архитектурные — в `AGENTS.md`.
 
+---
+
 ## 3. Главный архитектурный принцип
 
 Основной поток:
 
-```
+```text
 Decision Provider
       ↓
     Action
@@ -53,7 +59,7 @@ Decision Provider
   GameState
 ```
 
-Game Engine — единственный арбитр игровых правил.
+**Game Engine — единственный арбитр игровых правил.**
 
 Controllers, UI, JavaScript, Stimulus и AI:
 
@@ -83,6 +89,8 @@ Action описывает только намерение игрока.
 
 При ошибке новый state не сохраняется.
 
+---
+
 ## 4. Game и GameState
 
 `Game.state` — authoritative snapshot (основной снимок состояния) партии в PostgreSQL JSONB.
@@ -110,7 +118,7 @@ Player state может содержать:
 
 GameState не обращается к ActiveRecord.
 
-Игровые операции создают новый state, обычно:
+Игровые операции создают новый state:
 
 ```ruby
 state.deep_dup
@@ -118,21 +126,23 @@ state.deep_dup
 
 Persistent Deck во время партии не изменяется.
 
+---
+
 ## 5. VisibleState и скрытая информация
 
 Игрок и AI получают только разрешённую информацию.
 
 Нельзя раскрывать противнику:
 
-- содержимое hand;
-- содержимое и порядок deck;
-- содержимое graveyard;
-- resources;
+- содержимое `hand`;
+- содержимое и порядок `deck`;
+- содержимое `graveyard`;
+- `resources`;
 - другие запрещённые данные.
 
 `GameEngine::VisibleState`:
 
-```
+```text
 app/services/game_engine/visible_state.rb
 ```
 
@@ -157,11 +167,13 @@ UI получает VisibleState, а не полный `Game.state`.
 - graveyard count;
 - остальные разрешённые публичные данные.
 
+---
+
 ## 6. AvailableActions
 
 Реализован:
 
-```
+```text
 app/services/game_engine/available_actions.rb
 ```
 
@@ -173,7 +185,7 @@ Stimulus только отображает результат.
 
 Для текущего игрока:
 
-```
+```text
 Technique
  ├── moves
  └── attacks
@@ -207,46 +219,46 @@ AvailableActions учитывает:
 
 Для Platoon используется:
 
-```
+```text
 data-platoon-slot + data-player-id
 ```
 
 Одинаковые номера слотов разных игроков не должны конфликтовать.
 
+---
+
 ## 7. Игровое поле и runtime-объекты
 
-Поле:
-
-```
-3 × 5
-```
+Поле: **3 × 5**
 
 Координаты:
 
-```
+```text
 rows    0..2
 columns 0..4
 ```
 
 HQ:
 
-- Player 1 → `[2][0]`
-- Player 2 → `[0][4]`
+```text
+Player 1 → [2][0]
+Player 2 → [0][4]
+```
 
-В field находятся:
+В `field` находятся:
 
 - HQ;
 - Technique.
 
 Platoon хранится отдельно:
 
-```
+```ruby
 state["players"][player_id]["platoons"]
 ```
 
 У каждого игрока 4 слота:
 
-```
+```ruby
 [nil, nil, nil, nil]
 ```
 
@@ -271,7 +283,7 @@ state["players"][player_id]["platoons"]
 - `movement_type`
 - attack flags
 
-В runtime не хранятся:
+В runtime **не** хранятся:
 
 - `price`
 - `weight`
@@ -295,6 +307,8 @@ state["players"][player_id]["platoons"]
 `armor` может отсутствовать, быть `nil` или `0`; в боевой логике это `0`.
 
 `firepower >= 0`.
+
+---
 
 ## 8. ActiveRecord-модели
 
@@ -362,11 +376,11 @@ Game не содержит игровой логики.
 
 | Тип | Движение | Количество |
 |---|---|---|
-| light_tank | orthogonal | 2 |
-| medium_tank | diagonal | 1 |
-| heavy_tank | orthogonal | 1 |
-| tank_destroyer | orthogonal | 1 |
-| artillery | orthogonal | 1 |
+| `light_tank` | orthogonal | 2 |
+| `medium_tank` | diagonal | 1 |
+| `heavy_tank` | orthogonal | 1 |
+| `tank_destroyer` | orthogonal | 1 |
+| `artillery` | orthogonal | 1 |
 
 Technique не имеет Armor.
 
@@ -383,34 +397,32 @@ Technique не имеет Armor.
 
 Связывает:
 
-- Game
-- Player
-- Nation
-- Deck
+- `Game`
+- `Player`
+- `Nation`
+- `Deck`
 - выбранный HQ card
 
-Уникальность:
+Уникальность: `game_id + player_id`
 
-```
-game_id + player_id
-```
+---
 
 ## 9. Ability
 
 Единая система:
 
-```
+```text
 Card → CardAbility → Ability
 ```
 
 `TechniqueAbility` и `HeadquartersAbility` не создавать.
 
-`Ability`:
+**Ability:**
 
 - `code`
 - `name`
 
-`CardAbility`:
+**CardAbility:**
 
 - `card_id`
 - `ability_id`
@@ -423,17 +435,19 @@ Card → CardAbility → Ability
 
 Исполнитель:
 
-```
+```text
 GameEngine::Abilities::Executor
 ```
 
 Каждая новая способность добавляется отдельным handler (обработчиком).
 
+---
+
 ## 10. Deck / StartGame
 
-`Deck` — постоянная колода игрока.
+Deck — постоянная колода игрока.
 
-`DeckCard` хранит количество копий.
+DeckCard хранит количество копий.
 
 Ограничения:
 
@@ -456,13 +470,15 @@ GameEngine::Abilities::Executor
 
 Первый игрок не получает дополнительный Draw при StartGame.
 
+---
+
 ## 11. Draw / Turns / Resources
 
 ### Draw
 
 Реализован:
 
-```
+```text
 GameEngine::Cards::Draw
 ```
 
@@ -483,28 +499,28 @@ Draw не является отдельным Action.
 
 Счётчик:
 
-```
+```text
 empty_deck_draw_attempts
 ```
 
 При попытке Draw из пустой колоды:
 
-```
+```text
 counter += 1
 HQ HP -= counter
 ```
 
-При уничтожении HQ используется FinishGame.
+При уничтожении HQ используется `FinishGame`.
 
 ### Fuel
 
-```
+```text
 GameEngine::Resources::FuelCalculator
 ```
 
 Fuel текущего игрока рассчитывается из:
 
-```
+```text
 HQ + собственные Technique + собственные Platoon
 ```
 
@@ -514,7 +530,7 @@ HQ + собственные Technique + собственные Platoon
 
 В начале хода:
 
-```
+```text
 PreparePlayer
 ├── восстановление movement_count
 ├── сброс attack flags Technique
@@ -527,21 +543,23 @@ PreparePlayer
 
 `GameEngine::Actions::EndTurn`:
 
-1. проверяет игрока и ход;
-2. рассчитывает прошедшее время;
-3. сохраняет оставшееся время;
-4. увеличивает turn number;
-5. меняет current player;
-6. обновляет turn start;
-7. вызывает PreparePlayer.
+- проверяет игрока и ход;
+- рассчитывает прошедшее время;
+- сохраняет оставшееся время;
+- увеличивает turn number;
+- меняет current player;
+- обновляет turn start;
+- вызывает PreparePlayer.
 
 Создаёт `turn_ended`.
+
+---
 
 ## 12. Timer
 
 Реализован:
 
-```
+```text
 GameEngine::TurnTimer
 ```
 
@@ -562,11 +580,13 @@ Engine проверяет истечение времени до выполне�
 
 При истечении:
 
-```
+```ruby
 FinishGame(reason: "time_expired")
 ```
 
 UI не является источником истины времени.
+
+---
 
 ## 13. PlayCard
 
@@ -592,7 +612,7 @@ Stage 9 завершён.
 
 При успешном размещении:
 
-```
+```text
 movement_count = 0
 movement_limit = исходное значение
 has_attacked = false
@@ -604,7 +624,7 @@ Ability выполняются через Executor.
 
 Order атомарен: ошибка любой Ability откатывает весь Order.
 
-При успехе Order удаляется из hand и помещается в graveyard.
+При успехе Order удаляется из `hand` и помещается в `graveyard`.
 
 ### Platoon
 
@@ -613,7 +633,7 @@ Platoon занимает первый свободный слот.
 При успехе:
 
 - списывается `price`;
-- карта удаляется из hand;
+- карта удаляется из `hand`;
 - создаётся runtime Platoon;
 - создаётся `platoon_played`.
 
@@ -628,11 +648,13 @@ Platoon занимает первый свободный слот.
 
 При UI Drag & Drop `slot` не передаётся в Action. Engine сам выбирает первый свободный слот.
 
+---
+
 ## 14. Combat
 
 Основной Action:
 
-```
+```text
 GameEngine::Actions::Attack
 ```
 
@@ -658,7 +680,7 @@ Attack проверяет:
 
 После успешной атаки:
 
-```
+```text
 has_attacked = true
 ```
 
@@ -686,11 +708,11 @@ has_attacked = true
 
 HQ не контратакует HQ.
 
-#### HQ firepower
+### HQ firepower
 
 При атаке HQ:
 
-```
+```text
 HQ firepower
 +
 firepower всех активных Platoon этого игрока
@@ -700,16 +722,16 @@ firepower всех активных Platoon этого игрока
 
 Уничтоженный Platoon:
 
-- получает HP `0`;
-- помещается в graveyard;
+- получает HP 0;
+- помещается в `graveyard`;
 - его слот становится `nil`;
 - остальные слоты не сдвигаются.
 
-#### Защита HQ
+### Защита HQ
 
 Входящий урон проходит:
 
-```
+```text
 slot 0 → slot 1 → slot 2 → slot 3 → HQ
 ```
 
@@ -721,13 +743,15 @@ Armor Platoon поглощает:
 
 После уничтожения Platoon оставшийся урон идёт дальше.
 
+---
+
 ## 15. Victory / Defeat
 
 Stage 13 завершён.
 
 Единый сервис:
 
-```
+```text
 GameEngine::FinishGame
 ```
 
@@ -751,9 +775,11 @@ result = {
 
 Создаётся `game_finished`.
 
-Все способы окончания партии используют FinishGame.
+Все способы окончания партии используют `FinishGame`.
 
 Не создавать отдельную систему победы внутри Combat или Actions.
+
+---
 
 ## 16. Seed / базовый игровой контент
 
@@ -761,7 +787,7 @@ Stage 14 завершён.
 
 Структура:
 
-```
+```text
 db/
 ├── seeds.rb
 └── seeds/
@@ -781,7 +807,7 @@ Seed содержит только базовый игровой контент:
 - Headquarters
 - CardAbility
 
-Не изменять через seed:
+**Не изменять через seed:**
 
 - Player
 - Deck
@@ -795,14 +821,14 @@ Seed должен быть идемпотентным.
 
 Базовый контент:
 
-```
-Nations:       3
-Abilities:     2
-Cards:        33
-Techniques:   18
-Platoons:      6
-Headquarters:  3
-CardAbilities: 6
+```text
+Nations:        3
+Abilities:      2
+Cards:         33
+Techniques:    18
+Platoons:       6
+Headquarters:   3
+CardAbilities:  6
 ```
 
 Nations:
@@ -813,13 +839,15 @@ Nations:
 
 Seed является базовым контентом и может быть явно запущен в production. Это не означает автоматический запуск seed при каждом deploy.
 
+---
+
 ## 17. Stage 15 — Browser UI
 
 Stage 15 — функциональный browser vertical slice, а не финальный production UI.
 
 Основной поток:
 
-```
+```text
 Browser
    ↓
 Controller
@@ -843,7 +871,7 @@ UI не содержит игровых правил.
 
 - [x] 15.1 Visible State
 - [x] 15.2 временный dev player identity
-- [x] 15.3 GamesController + GET /games/:id
+- [x] 15.3 GamesController + `GET /games/:id`
 - [x] 15.4 минимальная игровая страница
 - [x] 15.5 поле 3×5
 - [x] 15.6 рука
@@ -857,17 +885,16 @@ UI не содержит игровых правил.
 - [x] 15.13.2 выбор карты / объекта
 - [x] 15.13.3 AvailableActions
 - [x] 15.13.4 mouse actions / click + drag & drop
+- [x] 15.13.5 Drag & Drop refinement + mouse hover/click interaction
 - [x] 15.16 Order / Platoon HTML vertical slice
 
-### В работе
+### Далее
 
-- [ ] 15.13.5 Drag & Drop refinement
-- [ ] 15.13.6 визуальная обработка недопустимых действий
-
-### После него
-
+- [ ] 15.13.6 визуальная обработка недоступных действий
 - [ ] 15.14 Timer
 - [ ] 15.15 waiting / started / finished
+
+---
 
 ## 18. Dev player identity
 
@@ -875,13 +902,13 @@ UI не содержит игровых правил.
 
 Временно используется:
 
-```
+```text
 ?player_id=1
 ```
 
 Например:
 
-```
+```text
 /games/7?player_id=1
 ```
 
@@ -889,11 +916,13 @@ Controller проверяет, что player является GamePlayer это�
 
 Это только dev-механизм, не authentication.
 
+---
+
 ## 19. GamesController / Routes
 
 Создан:
 
-```
+```text
 app/controllers/games_controller.rb
 ```
 
@@ -919,7 +948,7 @@ mount ActionCable.server => "/cable"
 
 Controller flow:
 
-```
+```text
 HTTP request
     ↓
 Game / player check
@@ -939,16 +968,18 @@ Controller не содержит игровых правил.
 
 Ошибка Action:
 
-```
+```text
 HTTP 422
 GameState не изменяется
 ```
+
+---
 
 ## 20. Stage 15.11 — UI geometry
 
 Игровая зона:
 
-```
+```text
 верхняя рука
       ↓
 планка / поле / планка
@@ -958,14 +989,14 @@ GameState не изменяется
 
 HQ определяет сторону:
 
-```
+```text
 [0,4] → верх
 [2,0] → низ
 ```
 
 Основная зона ориентирована примерно на:
 
-```
+```text
 100px + 10px + 900px + 10px + 100px
 ```
 
@@ -983,6 +1014,8 @@ HQ определяет сторону:
 
 `attack_range` отдельно в UI не отображается.
 
+---
+
 ## 21. Stage 15.12 — Turbo / real-time
 
 Turbo используется для обновления игры между браузерами.
@@ -999,17 +1032,19 @@ Turbo должен обновлять содержимое игры, не уда
 
 Полный ручной refresh для обычного игрового обновления не требуется.
 
+---
+
 ## 22. Stage 15.13 — Stimulus / mouse / visual interaction
 
 Controller:
 
-```
+```text
 app/javascript/controllers/game_events_controller.js
 ```
 
 Подключается через:
 
-```erb
+```html
 data-controller="game-events"
 ```
 
@@ -1035,14 +1070,14 @@ Stimulus не изменяет GameState и не рассчитывает игр
 - `platoon_played`
 - `turn_ended`
 
-**Move**
+#### Move
 
 `technique_moved` flash'ит:
 
 - исходную клетку;
 - конечную клетку.
 
-**Attack**
+#### Attack
 
 `technique_attacked` flash'ит:
 
@@ -1056,28 +1091,28 @@ Stimulus не изменяет GameState и не рассчитывает игр
 - при атакующем HQ flash'ятся активные Platoon этого игрока с `firepower > 0`;
 - при атакованном HQ flash'ятся активные Platoon этого игрока с `armor > 0`.
 
-**Technique / Order**
+#### Technique / Order
 
 `technique_played` flash'ит клетку.
 
 `order_played` flash'ит target или позиции из `targets`.
 
-**Platoon**
+#### Platoon
 
 `platoon_played` использует:
 
-```
+```text
 event.player_id
 event.slot
 ```
 
 чтобы выбрать правильный Platoon slot.
 
-**Turn**
+#### Turn
 
 `turn_ended` временно добавляет:
 
-```
+```text
 game--turn-changed
 ```
 
@@ -1101,7 +1136,7 @@ game--turn-changed
 
 Выбранный объект получает:
 
-```
+```text
 game-object--selected
 ```
 
@@ -1115,7 +1150,7 @@ game-object--selected
 
 После выбора объекта Stimulus подсвечивает данные из AvailableActions:
 
-```
+```text
 Technique card → placement cells
 Order          → targets / field
 Platoon card   → свободные slots
@@ -1131,13 +1166,13 @@ HQ             → Attack
 
 Обе Platoon-полосы используют одинаковые номера:
 
-```
+```text
 0, 1, 2, 3
 ```
 
 Поэтому используется:
 
-```
+```text
 data-platoon-slot
 data-player-id
 ```
@@ -1146,25 +1181,85 @@ data-player-id
 
 При `platoon_played` используются одновременно:
 
-```
+```text
 event.player_id
 event.slot
 ```
 
 Одинаковые номера слотов двух игроков не конфликтуют.
 
-### 22.5 Mouse interaction — завершено
+### 22.5 Mouse interaction
 
-Реализовано:
+Основной принцип:
+
+```text
+AvailableActions
+      ↓
+Stimulus показывает разрешённые цели
+      ↓
+клик / hover / Drag
+      ↓
+Controller
+      ↓
+GameEngine
+```
+
+#### Выбор карты кликом
+
+```text
+карта
+  ↓
+click
+  ↓
+карта выделена
+  ↓
+AvailableActions
+  ↓
+доступные цели подсвечены
+```
+
+Наведение мыши на допустимую цель добавляет временную подсветку:
+
+```text
+game-action--hover
+```
+
+При уходе мыши с цели `game-action--hover` удаляется.
+
+Клик по допустимой цели выполняет действие.
+
+Клик по любой области, которая не является допустимой целью, отменяет выбор.
+
+Повторный клик по самому выбранному объекту также отменяет выбор.
+
+#### Technique / HQ
+
+```text
+выбор объекта
+  ↓
+AvailableActions
+  ↓
+допустимые Move / Attack targets
+  ↓
+hover → game-action--hover
+  ↓
+click target → move / attack
+```
+
+Клик вне допустимой цели отменяет выбор.
+
+#### Drag & Drop
 
 **Technique card**
 
-```
+```text
 карта
   ↓
 drag
   ↓
 подсвеченная клетка
+  ↓
+drag-over
   ↓
 drop
   ↓
@@ -1173,12 +1268,14 @@ play_card(card_id, row, column)
 
 **Platoon card**
 
-```
+```text
 карта
   ↓
 drag
   ↓
 Platoon bar
+  ↓
+drag-over
   ↓
 drop
   ↓
@@ -1191,12 +1288,14 @@ Slot не передаётся клиентом.
 
 **Order без target**
 
-```
+```text
 карта
   ↓
 drag
   ↓
 field drop zone
+  ↓
+drag-over
   ↓
 drop
   ↓
@@ -1205,90 +1304,36 @@ play_card(card_id)
 
 **Order с target**
 
-```
+```text
 карта
   ↓
 drag
   ↓
 подсвеченный target
   ↓
+drag-over
+  ↓
 drop
   ↓
 play_card(card_id, target)
 ```
 
-**Technique / HQ**
+### 22.6 Drag & Drop refinement — завершено
 
-```
-выбор объекта
-  ↓
-AvailableActions
-  ↓
-подсветка
-  ↓
-click target
-  ↓
-move / attack
-```
+Реализованы:
 
-Все реальные действия проходят:
+- `game-object--dragging` для карты во время Drag;
+- `game-action--drag-over` для текущей допустимой цели;
+- очистка drag-over при уходе с цели;
+- полная очистка временного Drag-состояния при `drop` и `dragend`;
+- отмена Drag не изменяет GameState;
+- обычный click и Drag не мешают друг другу.
 
-```
-Stimulus
-   ↓
-GamesController
-   ↓
-GameEngine
-```
+Drag принимает только разрешённые AvailableActions targets.
 
-Временные HTML-формы для Move / Attack / PlayCard больше не используются как основной механизм взаимодействия.
+`dropTarget` использует:
 
-### 22.6 Текущий Drag & Drop
-
-Реализован в:
-
-```
-app/javascript/controllers/game_events_controller.js
-```
-
-Используются события:
-
-- `dragstart`
-- `dragover`
-- `drop`
-- `dragend`
-
-Карта получает:
-
-```
-draggable="true"
-```
-
-Во время перетаскивания используется:
-
-```css
-.game-object--dragging {
-  opacity: 0.6;
-  cursor: grabbing;
-}
-```
-
-`dragStart`:
-
-- запоминает карту;
-- выбирает её;
-- добавляет `game-object--dragging`;
-- передаёт `card_id` через `dataTransfer`.
-
-`dragOver` принимает только разрешённые AvailableActions targets.
-
-`drop` вызывает существующий `executeCardAction`.
-
-`dragEnd` очищает состояние Drag.
-
-Текущий dropTarget принимает:
-
-```
+```text
 .game-action--card
 .game-action--card-target
 .game-action--drop-zone
@@ -1296,102 +1341,126 @@ draggable="true"
 
 Platoon bar является drop zone; отдельный slot не передаётся в Action.
 
-### 22.7 Проверенное состояние
+### 22.7 Mouse hover для кликового управления — завершено
 
-После реализации 15.13.4:
+Для обычного кликового режима используется отдельное временное состояние:
+
+```text
+game-action--hover
+```
+
+Hover работает одинаково для:
+
+- Technique card → placement cell;
+- Platoon card → свободный slot;
+- Order → field drop zone;
+- Order → target;
+- Technique → Move target;
+- Technique → Attack target;
+- HQ → Attack target.
+
+Правило:
+
+```text
+выбранный объект
+      ↓
+AvailableActions
+      ↓
+мышь над допустимой целью
+      ↓
+game-action--hover
+      ↓
+мышь ушла
+      ↓
+game-action--hover удаляется
+```
+
+Hover не изменяет GameState и не определяет допустимость действия.
+
+### 22.8 Отмена выбора — завершено
+
+Если выбран объект:
+
+- повторный клик по нему отменяет выбор;
+- клик по другой карте или собственному объекту выбирает новый объект;
+- клик по недопустимой области отменяет текущий выбор;
+- hover сам по себе выбор не отменяет.
+
+При отмене очищаются:
+
+- `game-object--selected`;
+- AvailableActions-подсветка;
+- `game-action--hover`;
+- временные Drag-состояния.
+
+### 22.9 CSS-состояния
+
+Используются:
+
+```text
+.game-object--selected
+.game-action--move
+.game-action--attack
+.game-action--card
+.game-action--card-target
+.game-action--drop-zone
+.game-action--hover
+.game-action--drag-over
+.game-object--dragging
+```
+
+`game-action--hover` и `game-action--drag-over` являются только временными визуальными состояниями.
+
+Не использовать их как проверку безопасности или источник игровых правил.
+
+### 22.10 Проверенное состояние
+
+После завершения 15.13.5:
 
 - `bin/rails test` проходит;
-- пользователь полностью сыграл партию через браузер;
+- Drag & Drop работает;
 - Technique Drag & Drop работает;
 - Platoon Drag & Drop работает;
 - Order Drag & Drop работает;
 - Move через click работает;
 - Attack через click работает;
+- click + hover для карт работает;
+- click + hover для Technique/HQ работает;
+- клик по недопустимой области отменяет выбор;
+- повторный клик по выбранному объекту отменяет выбор;
 - Turbo обновления работают;
 - Engine остаётся источником игровых правил.
 
 Изображения и окончательное визуальное оформление откладываются на более поздний этап.
 
-## 23. Stage 15.13.5 — Drag & Drop refinement
+---
 
-Цель — улучшить уже работающий Drag & Drop, не меняя игровую механику и не перенося правила в JavaScript.
+## 23. Stage 15.13.6 — визуальная обработка недоступных действий
 
-### План
+**Следующая задача.**
 
-1. Добавить понятное состояние grab для карт.
-2. Сохранять `grabbing` во время Drag.
-3. Добавить отдельное визуальное состояние текущей цели под курсором:
-
-```
-game-action--drag-over
-```
-
-4. При `dragover` выделять текущую допустимую цель.
-5. При уходе курсора с цели удалять `game-action--drag-over`.
-6. При drop очищать все временные Drag-состояния.
-7. При отменённом Drag:
-   - карта остаётся в hand;
-   - GameState не изменяется;
-   - подсветка очищается;
-   - `game-object--dragging` удаляется.
-8. Проверить, что обычный click и Drag не мешают друг другу.
-9. Проверить отдельно:
-   - Technique → допустимая клетка;
-   - Technique → недопустимое место;
-   - Platoon → Platoon bar;
-   - Platoon → field;
-   - Order без target → field;
-   - Order с target → допустимый target;
-   - Order с target → недопустимое место.
-
-Принцип:
-
-```
-AvailableActions
-      ↓
-разрешённые Drag targets
-      ↓
-Stimulus показывает их
-      ↓
-drag-over показывает текущую цель
-      ↓
-drop
-      ↓
-Controller
-      ↓
-GameEngine
-```
-
-Stimulus не определяет, разрешено ли действие.
-
-Не добавлять на этом этапе:
-
-- новую игровую механику;
-- `slot` в payload `play_card`;
-- правила в JavaScript;
-- отдельную систему валидации;
-- изображения;
-- touch/mobile Drag & Drop;
-- сложную внешнюю Drag & Drop библиотеку.
-
-## 24. Stage 15.13.6 — недопустимые действия
-
-Позже добавить визуальное ослабление недоступных карт, например:
+Цель — визуально ослабить карты, которые сейчас недоступны для розыгрыша, например:
 
 - недостаточно ресурсов;
 - не ваш ход;
-- другой запрет Engine.
+- другое ограничение Engine.
 
-Даже недоступная карта должна:
+Недоступная карта при этом должна:
 
-- реагировать на hover;
+- сохранять возможность hover;
 - увеличиваться для просмотра характеристик.
 
 Не использовать CSS/Stimulus как защиту от запрещённого действия.
 
-## 25. Stage 15.14 — Timer
+Сначала проверить существующую структуру VisibleState / AvailableActions и определить, какие данные уже доступны UI для определения визуального состояния.
 
-Начинать только после основного Stage 15.13.
+Не придумывать клиентские правила для определения доступности карты.
+
+---
+
+## 24. Stage 15.14 — Timer
+
+Начинать после основного Stage 15.13.
 
 Цель:
 
@@ -1401,11 +1470,13 @@ Stimulus не определяет, разрешено ли действие.
 
 Источник истины:
 
-```
+```text
 GameEngine / GameState
 ```
 
-## 26. Stage 15.15 — waiting / started / finished
+---
+
+## 25. Stage 15.15 — waiting / started / finished
 
 После Timer.
 
@@ -1417,13 +1488,15 @@ UI должен различать:
 
 Для `finished` использовать:
 
-```
+```ruby
 GameState["result"]
 ```
 
 Не определять победителя отдельно в UI.
 
-## 27. Stage 15.16
+---
+
+## 26. Stage 15.16
 
 Stage 15.16 завершён как функциональный HTML vertical slice.
 
@@ -1443,11 +1516,13 @@ Stage 15.16 завершён как функциональный HTML vertical s
 
 Для Platoon отображаются характеристики и выполняется размещение в первый свободный слот.
 
-Временные HTML-формы для игровых действий заменены мышиным управлением в рамках Stage 15.13.4.
+Временные HTML-формы для игровых действий заменены мышиным управлением в рамках Stage 15.13.
 
-## 28. Controller / UI boundaries
+---
 
-Controller может:
+## 27. Controller / UI boundaries
+
+**Controller может:**
 
 - принять HTTP params;
 - проверить Game и player;
@@ -1457,7 +1532,7 @@ Controller может:
 - сохранить новый GameState;
 - выполнить Turbo response / redirect / broadcast.
 
-Controller не должен:
+**Controller не должен:**
 
 - менять HP;
 - менять hand;
@@ -1467,7 +1542,7 @@ Controller не должен:
 - менять GameState напрямую;
 - обходить Engine.
 
-UI / Turbo / Stimulus:
+**UI / Turbo / Stimulus:**
 
 - не являются источником правил;
 - не получают полный GameState;
@@ -1476,11 +1551,13 @@ UI / Turbo / Stimulus:
 - не определяют победу;
 - не являются защитой от запрещённых действий.
 
-## 29. AI / Decision Provider
+---
+
+## 28. AI / Decision Provider
 
 Архитектура:
 
-```
+```text
 Visible GameState
       ↓
 Decision Provider
@@ -1492,7 +1569,7 @@ GameEngine
 
 Планируемый локальный AI:
 
-```
+```text
 Ollama + Qwen3 1.7B
 ```
 
@@ -1503,7 +1580,9 @@ AI:
 - не обходит Engine;
 - не делает Engine зависимым от Ollama.
 
-## 30. Что запрещено
+---
+
+## 29. Что запрещено
 
 Не переносить игровую логику в:
 
@@ -1518,10 +1597,10 @@ AI:
 
 - мутировать исходный GameState;
 - изменять persistent Deck во время партии;
-- хранить runtime Platoon на основном field;
+- хранить runtime Platoon на основном `field`;
 - уплотнять Platoon slots;
-- создавать `TechniqueAbility`;
-- создавать `HeadquartersAbility`;
+- создавать TechniqueAbility;
+- создавать HeadquartersAbility;
 - создавать отдельный HQ level;
 - создавать отдельный `nation_id` внутри HQ runtime;
 - создавать отдельную систему spotting для HQ;
@@ -1538,27 +1617,29 @@ AI:
 - определять Platoon только по номеру slot;
 - рассчитывать доступные действия в Stimulus;
 - создавать отдельные JS-кнопки поверх существующей системы;
-- передавать `slot` Platoon из UI в `play_card`;
+- передавать slot Platoon из UI в `play_card`;
 - считать Drag & Drop самостоятельной системой правил.
 
-## 31. Порядок работы
+---
+
+## 30. Порядок работы
 
 Для каждого этапа:
 
-1. Прочитать актуальные AGENTS.md и GAME_RULES.md.
+1. Прочитать актуальные `AGENTS.md` и `GAME_RULES.md`.
 2. Проверить существующую реализацию.
 3. Обсудить существенные изменения до написания кода.
 4. Внести только необходимые изменения.
 5. Добавить или обновить тесты.
 6. Запустить:
 
-```
-bin/rails test
-```
+   ```bash
+   bin/rails test
+   ```
 
-7. Проверить соответствие GAME_RULES.md.
-8. Обновить AGENTS.md.
-9. При необходимости обновить GAME_RULES.md.
+7. Проверить соответствие `GAME_RULES.md`.
+8. Обновить `AGENTS.md`.
+9. При необходимости обновить `GAME_RULES.md`.
 10. После значимого этапа сделать отдельный Git commit.
 
 Для Stage 15 работать маленькими шагами.
@@ -1567,9 +1648,11 @@ bin/rails test
 
 Без явной команды пользователя не изменять файлы проекта.
 
-## 32. Текущая контрольная точка
+---
 
-```
+## 31. Текущая контрольная точка
+
+```text
 Stage 1–8        завершены
 Stage 9           завершён
 Stage 10          завершён
@@ -1594,8 +1677,8 @@ Stage 15.13.1     завершён
 Stage 15.13.2     завершён
 Stage 15.13.3     завершён
 Stage 15.13.4     завершён
-Stage 15.13.5     следующая задача
-Stage 15.13.6     далее
+Stage 15.13.5     завершён
+Stage 15.13.6     следующая задача
 Stage 15.14       после 15.13
 Stage 15.15       после 15.14
 Stage 15.16       завершён
@@ -1603,40 +1686,37 @@ Stage 15.16       завершён
 
 Последнее проверенное состояние:
 
-```
+```text
 bin/rails test
 → все тесты проходят
 
 Полная партия через браузер
 → проверена
-→ основные mouse actions работают
+→ click actions работают
+→ click + hover работают
 → Drag & Drop работает
 → Turbo работает
 ```
 
 Продолжать с:
 
-```
-Stage 15.13.5 — Drag & Drop refinement
+**Stage 15.13.6 — визуальная обработка недоступных действий**
+
+Следующий принцип:
+
+```text
+AvailableActions / данные VisibleState
+          ↓
+визуальное состояние карты
+          ↓
+hover остаётся доступным
+          ↓
+Engine остаётся источником истины
 ```
 
-Первый шаг 15.13.5:
+Архитектурная граница:
 
-```
-grab
-  ↓
-dragging
-  ↓
-drag-over
-  ↓
-drop / cancel
-  ↓
-полная очистка временного UI-состояния
-```
-
-Архитектурная граница остаётся:
-
-```
+```text
 мышь / UI
     ↓
 Stimulus
@@ -1655,5 +1735,3 @@ Turbo
     ↓
 Stimulus
 ```
-
-Engine остаётся единственным источником игровых правил.

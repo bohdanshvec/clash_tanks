@@ -6,14 +6,16 @@ export default class extends Controller {
     availableActions: Object
   }
 
-  connect() {
-    this.selectedElement = null
-    this.draggedCard = null
+	connect() {
+		this.selectedElement = null
+		this.draggedCard = null
+		this.dragOverTarget = null
+		this.hoverTarget = null
 
-    this.eventsValue.forEach((event) => {
-      this.handleEvent(event)
-    })
-  }
+		this.eventsValue.forEach((event) => {
+		  this.handleEvent(event)
+		})
+	}
 
   // --------------------------------------------------
   // Events from Game Engine
@@ -76,51 +78,135 @@ export default class extends Controller {
     }
   }
 
-  clearSelection() {
-    if (this.selectedElement) {
-      this.selectedElement.classList.remove("game-object--selected")
-      this.selectedElement = null
-    }
+	clearSelection() {
+		if (this.selectedElement) {
+		  this.selectedElement.classList.remove("game-object--selected")
+		  this.selectedElement = null
+		}
 
-    this.clearAvailableActions()
-  }
+		this.clearAvailableActions()
+		this.clearHover()
+	}
 
   // --------------------------------------------------
   // Click on available action
   // --------------------------------------------------
 
-  handleActionClick(event) {
-    const element = event.target.closest(
-      ".game-action--move, " +
-      ".game-action--attack, " +
-      ".game-action--card, " +
-      ".game-action--card-target, " +
-      ".game-action--drop-zone"
-    )
+	handleActionClick(event) {
+		const element = event.target.closest(
+		  ".game-action--move, " +
+		  ".game-action--attack, " +
+		  ".game-action--card, " +
+		  ".game-action--card-target, " +
+		  ".game-action--drop-zone"
+		)
 
-    if (!element || !this.element.contains(element)) return
+		if (element && this.element.contains(element)) {
+		  event.preventDefault()
+		  event.stopPropagation()
 
-    event.preventDefault()
-    event.stopPropagation()
+		  if (element.classList.contains("game-action--move")) {
+		    this.executeMove(element)
+		    return
+		  }
 
-    if (element.classList.contains("game-action--move")) {
-      this.executeMove(element)
-      return
-    }
+		  if (element.classList.contains("game-action--attack")) {
+		    this.executeAttack(element)
+		    return
+		  }
 
-    if (element.classList.contains("game-action--attack")) {
-      this.executeAttack(element)
-      return
-    }
+		  if (
+		    element.classList.contains("game-action--card") ||
+		    element.classList.contains("game-action--card-target") ||
+		    element.classList.contains("game-action--drop-zone")
+		  ) {
+		    this.executeCardAction(element)
+		    return
+		  }
+		}
 
-    if (
-      element.classList.contains("game-action--card") ||
-      element.classList.contains("game-action--card-target") ||
-      element.classList.contains("game-action--drop-zone")
-    ) {
-      this.executeCardAction(element)
-    }
-  }
+		if (!this.selectedElement) return
+
+		const selectable = event.target.closest(
+		  "[data-card-id], [data-object-type]"
+		)
+
+		if (selectable && this.element.contains(selectable)) {
+		  return
+		}
+
+		this.clearSelection()
+	}
+	
+	// --------------------------------------------------
+	// Mouse hover
+	// --------------------------------------------------
+
+	mouseOver(event) {
+		if (this.draggedCard) return
+		if (!this.selectedElement) return
+
+		const target = this.actionTarget(event)
+
+		if (!target) return
+
+		if (this.hoverTarget === target) return
+
+		this.clearHover()
+
+		this.hoverTarget = target
+		target.classList.add("game-action--hover")
+	}
+
+	mouseOut(event) {
+		if (this.draggedCard) return
+		if (!this.selectedElement) return
+
+		const target = this.actionTarget(event)
+
+		if (!target) return
+
+		// Переход внутри той же цели не считается выходом.
+		if (
+		  event.relatedTarget &&
+		  target.contains(event.relatedTarget)
+		) {
+		  return
+		}
+
+		if (this.hoverTarget === target) {
+		  this.clearHover()
+		}
+	}
+
+	clearHover() {
+		if (this.hoverTarget) {
+		  this.hoverTarget.classList.remove("game-action--hover")
+		  this.hoverTarget = null
+		}
+
+		this.element
+		  .querySelectorAll(".game-action--hover")
+		  .forEach((element) => {
+		    element.classList.remove("game-action--hover")
+		  })
+	}
+
+	actionTarget(event) {
+		const target = event.target.closest(
+		  ".game-action--move, " +
+		  ".game-action--attack, " +
+		  ".game-action--card, " +
+		  ".game-action--card-target, " +
+		  ".game-action--drop-zone"
+		)
+
+		if (!target || !this.element.contains(target)) {
+		  return null
+		}
+
+		return target
+	}
 
   // --------------------------------------------------
   // Field selection
@@ -373,6 +459,7 @@ export default class extends Controller {
     if (!card || !this.element.contains(card)) return
 
     this.draggedCard = card
+    this.dragOverTarget = null
 
     this.selectElement(card)
 
@@ -388,16 +475,44 @@ export default class extends Controller {
   }
 
   dragOver(event) {
+    if (!this.draggedCard) return
+
     const target = this.dropTarget(event)
 
     if (!target) return
-
-    if (!this.draggedCard) return
 
     event.preventDefault()
 
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = "move"
+    }
+
+    if (this.dragOverTarget === target) return
+
+    this.clearDragOver()
+
+    this.dragOverTarget = target
+    target.classList.add("game-action--drag-over")
+  }
+
+  dragLeave(event) {
+    if (!this.draggedCard) return
+
+    const target = this.dropTarget(event)
+
+    if (!target) return
+
+    // Не очищаем подсветку при переходе
+    // с родительского элемента на его дочерний.
+    if (
+      event.relatedTarget &&
+      target.contains(event.relatedTarget)
+    ) {
+      return
+    }
+
+    if (this.dragOverTarget === target) {
+      this.clearDragOver()
     }
   }
 
@@ -416,12 +531,31 @@ export default class extends Controller {
     this.finishDrag()
   }
 
-  finishDrag() {
-    if (this.draggedCard) {
-      this.draggedCard.classList.remove("game-object--dragging")
+	finishDrag() {
+		this.clearDragOver()
+		this.clearHover()
+
+		if (this.draggedCard) {
+		  this.draggedCard.classList.remove("game-object--dragging")
+		}
+
+		this.draggedCard = null
+	}
+
+  clearDragOver() {
+    if (this.dragOverTarget) {
+      this.dragOverTarget.classList.remove(
+        "game-action--drag-over"
+      )
+
+      this.dragOverTarget = null
     }
 
-    this.draggedCard = null
+    this.element
+      .querySelectorAll(".game-action--drag-over")
+      .forEach((element) => {
+        element.classList.remove("game-action--drag-over")
+      })
   }
 
   dropTarget(event) {

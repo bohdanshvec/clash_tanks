@@ -17,13 +17,16 @@
       data-move-url="<%= move_path(game, player_id: current_player_id) %>"
       data-attack-url="<%= attack_path(game, player_id: current_player_id) %>"
       data-play-card-url="<%= play_card_path(game, player_id: current_player_id) %>"
-      data-action="
-        click->game-events#handleActionClick
-        dragstart->game-events#dragStart
-        dragover->game-events#dragOver
-        drop->game-events#drop
-        dragend->game-events#dragEnd
-      ">
+			data-action="
+				click->game-events#handleActionClick
+				mouseover->game-events#mouseOver
+				mouseout->game-events#mouseOut
+				dragstart->game-events#dragStart
+				dragover->game-events#dragOver
+				dragleave->game-events#dragLeave
+				drop->game-events#drop
+				dragend->game-events#dragEnd
+			">
 
   <header class="game-header">
 
