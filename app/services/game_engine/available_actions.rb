@@ -215,19 +215,21 @@ module GameEngine
       end
     end
 
-    def available_technique_card_action(card)
-      return {
-        "type" => "technique",
-        "drop_zone" => "field",
-        "positions" => []
-      } unless enough_resources?(card)
+		def available_technique_card_action(card)
+			return {
+				"type" => "technique",
+				"drop_zone" => "field",
+				"resources_sufficient" => false,
+				"positions" => []
+			} unless enough_resources?(card)
 
-      {
-        "type" => "technique",
-        "drop_zone" => "field",
-        "positions" => available_technique_positions
-      }
-    end
+			{
+				"type" => "technique",
+				"drop_zone" => "field",
+				"resources_sufficient" => true,
+				"positions" => available_technique_positions
+			}
+		end
 
     def available_technique_positions
       positions = []
@@ -243,19 +245,21 @@ module GameEngine
       positions
     end
 
-    def available_platoon_card_action(card)
-      return {
-        "type" => "platoon",
-        "drop_zone" => "platoon_bar",
-        "slots" => []
-      } unless enough_resources?(card)
+		def available_platoon_card_action(card)
+			return {
+				"type" => "platoon",
+				"drop_zone" => "platoon_bar",
+				"resources_sufficient" => false,
+				"slots" => []
+			} unless enough_resources?(card)
 
-      {
-        "type" => "platoon",
-        "drop_zone" => "platoon_bar",
-        "slots" => available_platoon_slots
-      }
-    end
+			{
+				"type" => "platoon",
+				"drop_zone" => "platoon_bar",
+				"resources_sufficient" => true,
+				"slots" => available_platoon_slots
+			}
+		end
 
     def available_platoon_slots
       @player["platoons"].each_with_index.filter_map do |platoon, index|
@@ -263,24 +267,27 @@ module GameEngine
       end
     end
 
-    def available_order_card_action(card)
-      return {
-        "type" => "order",
-        "targets" => []
-      } unless enough_resources?(card)
+		def available_order_card_action(card)
+			return {
+				"type" => "order",
+				"targets" => [],
+				"resources_sufficient" => false
+			} unless enough_resources?(card)
 
-      abilities = card["abilities"] || []
+			abilities = card["abilities"] || []
 
-      return {
-        "type" => "order",
-        "drop_zone" => "field"
-      } if abilities.none? { |ability| targeted_ability?(ability) }
+			return {
+				"type" => "order",
+				"drop_zone" => "field",
+				"resources_sufficient" => true
+			} if abilities.none? { |ability| targeted_ability?(ability) }
 
-      {
-        "type" => "order",
-        "targets" => available_order_targets(card)
-      }
-    end
+			{
+				"type" => "order",
+				"targets" => available_order_targets(card),
+				"resources_sufficient" => true
+			}
+		end
 
 		def available_order_targets(card)
 			targets = []

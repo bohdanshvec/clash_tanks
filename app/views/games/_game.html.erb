@@ -52,7 +52,17 @@
 
             <% top_player["hand"].each do |card| %>
 
-              <article class="card"
+							<%
+								card_actions =
+									visible_state["available_actions"]
+										.dig("hand", card["card_id"].to_s)
+
+								card_muted =
+									visible_state["current_player_id"].to_s != current_player_id.to_s ||
+									card_actions&.dig("resources_sufficient") == false
+							%>
+
+							<article class="card <%= "game-object--muted" if card_muted %>"
                        draggable="true"
                        data-action="click->game-events#select"
                        data-card-id="<%= card["card_id"] %>"
@@ -465,7 +475,17 @@
 
             <% bottom_player["hand"].each do |card| %>
 
-              <article class="card"
+							<%
+								card_actions =
+									visible_state["available_actions"]
+										.dig("hand", card["card_id"].to_s)
+
+								card_muted =
+									visible_state["current_player_id"].to_s != current_player_id.to_s ||
+									card_actions&.dig("resources_sufficient") == false
+							%>
+
+							<article class="card <%= "game-object--muted" if card_muted %>"
                        draggable="true"
                        data-action="click->game-events#select"
                        data-card-id="<%= card["card_id"] %>"

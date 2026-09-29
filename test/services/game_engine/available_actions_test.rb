@@ -100,15 +100,15 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
     )
 
     assert_equal(
-			[
-				[0, 0],
-				[0, 1],
-				[0, 2],
-				[1, 0],
-				[1, 2],
-				[2, 1],
-				[2, 2]
-			],
+      [
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [1, 0],
+        [1, 2],
+        [2, 1],
+        [2, 2]
+      ],
       result["field"]["1,1"]["moves"]
     )
   end
@@ -316,6 +316,7 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
       {
         "type" => "technique",
         "drop_zone" => "field",
+        "resources_sufficient" => true,
         "positions" => [
           [1, 0],
           [1, 1],
@@ -342,6 +343,44 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
     result = GameEngine::AvailableActions.call(
       state: state,
       player_id: 1
+    )
+
+    assert_equal(
+      {
+        "type" => "technique",
+        "drop_zone" => "field",
+        "resources_sufficient" => false,
+        "positions" => []
+      },
+      result["hand"]["101"]
+    )
+  end
+
+  test "resources are sufficient even when no technique deployment positions are available" do
+    state = base_state
+
+    state["players"]["1"]["hand"] = [
+      card(
+        card_id: 101,
+        card_type: "technique",
+        price: 2
+      )
+    ]
+
+    state["players"]["1"]["resources"] = 3
+
+    state["field"][1][0] = technique(player_id: 2)
+    state["field"][1][1] = technique(player_id: 2)
+    state["field"][2][1] = technique(player_id: 2)
+
+    result = GameEngine::AvailableActions.call(
+      state: state,
+      player_id: 1
+    )
+
+    assert_equal(
+      true,
+      result["hand"]["101"]["resources_sufficient"]
     )
 
     assert_equal(
@@ -374,6 +413,11 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
       result["hand"]["101"]["positions"],
       [1, 1]
     )
+
+    assert_equal(
+      true,
+      result["hand"]["101"]["resources_sufficient"]
+    )
   end
 
   test "returns free platoon slots" do
@@ -403,6 +447,7 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
       {
         "type" => "platoon",
         "drop_zone" => "platoon_bar",
+        "resources_sufficient" => true,
         "slots" => [1, 3]
       },
       result["hand"]["102"]
@@ -435,6 +480,47 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
     )
 
     assert_equal(
+      {
+        "type" => "platoon",
+        "drop_zone" => "platoon_bar",
+        "resources_sufficient" => false,
+        "slots" => []
+      },
+      result["hand"]["102"]
+    )
+  end
+
+  test "resources are sufficient even when no platoon slots are available" do
+    state = base_state
+
+    state["players"]["1"]["platoons"] = [
+      platoon(player_id: 1),
+      platoon(player_id: 1),
+      platoon(player_id: 1),
+      platoon(player_id: 1)
+    ]
+
+    state["players"]["1"]["hand"] = [
+      card(
+        card_id: 102,
+        card_type: "platoon",
+        price: 2
+      )
+    ]
+
+    state["players"]["1"]["resources"] = 3
+
+    result = GameEngine::AvailableActions.call(
+      state: state,
+      player_id: 1
+    )
+
+    assert_equal(
+      true,
+      result["hand"]["102"]["resources_sufficient"]
+    )
+
+    assert_equal(
       [],
       result["hand"]["102"]["slots"]
     )
@@ -464,7 +550,8 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "order",
-        "drop_zone" => "field"
+        "drop_zone" => "field",
+        "resources_sufficient" => true
       },
       result["hand"]["103"]
     )
@@ -502,9 +589,44 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
     assert_equal(
       {
         "type" => "order",
-        "targets" => [[1, 2]]
+        "targets" => [[1, 2]],
+        "resources_sufficient" => true
       },
       result["hand"]["104"]
+    )
+  end
+
+  test "returns no order targets when resources are sufficient but no enemy techniques exist" do
+    state = base_state
+
+    state["players"]["1"]["hand"] = [
+      card(
+        card_id: 104,
+        card_type: "order",
+        price: 1,
+        abilities: [
+          {
+            "code" => "damage_technique"
+          }
+        ]
+      )
+    ]
+
+    state["players"]["1"]["resources"] = 3
+
+    result = GameEngine::AvailableActions.call(
+      state: state,
+      player_id: 1
+    )
+
+    assert_equal(
+      true,
+      result["hand"]["104"]["resources_sufficient"]
+    )
+
+    assert_equal(
+      [],
+      result["hand"]["104"]["targets"]
     )
   end
 
