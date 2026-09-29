@@ -237,4 +237,26 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
 		  assert_nil result.state
 		end
 	end
+	
+	test "allows end turn when the two-minute turn timer expires" do
+		started_at = Time.iso8601(@state["turn_started_at"])
+		current_time = started_at + 120
+
+		action = GameEngine::Action.new(
+		  player_id: 42,
+		  type: "end_turn"
+		)
+
+		result = GameEngine::Engine.new(
+		  @state,
+		  current_time: current_time
+		).call(action)
+
+		assert_predicate result, :success?
+
+		assert_equal 2, result.state["turn_number"]
+		assert_equal 57, result.state["current_player_id"]
+
+		assert_equal current_time.iso8601, result.state["turn_started_at"]
+	end
 end

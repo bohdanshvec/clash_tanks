@@ -1,8 +1,10 @@
 module GameEngine
   class GameState
-    FIELD_HEIGHT = 3
-    FIELD_WIDTH = 5
-    TURN_TIME = 10.minutes.to_i
+		FIELD_HEIGHT = 3
+		FIELD_WIDTH = 5
+
+		GAME_TIME = 10.minutes.to_i
+		TURN_TIME = 2.minutes.to_i
 
     HEADQUARTERS_POSITIONS = [
       { row: 2, column: 0 },
@@ -82,7 +84,7 @@ module GameEngine
             "graveyard" => [],
             "platoons" => [nil, nil, nil, nil],
             "resources" => 0,
-            "remaining_time" => TURN_TIME,
+            "remaining_time" => GAME_TIME,
             "empty_deck_draw_attempts" => 0
           }
         ]

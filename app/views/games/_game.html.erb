@@ -10,24 +10,31 @@
 %>
 
 <main class="game"
-      data-controller="game-events"
+      data-controller="game-events game-timer"
       data-game-events-events-value="<%= events.to_json %>"
       data-game-events-available-actions-value="<%= visible_state["available_actions"].to_json %>"
       data-player-id="<%= current_player_id %>"
       data-move-url="<%= move_path(game, player_id: current_player_id) %>"
       data-attack-url="<%= attack_path(game, player_id: current_player_id) %>"
       data-play-card-url="<%= play_card_path(game, player_id: current_player_id) %>"
-			data-action="
-				click->game-events#handleActionClick
-				mouseover->game-events#mouseOver
-				mouseout->game-events#mouseOut
-				dragstart->game-events#dragStart
-				dragover->game-events#dragOver
-				dragleave->game-events#dragLeave
-				drop->game-events#drop
-				dragend->game-events#dragEnd
-			">
-
+      data-game-timer-game-status-value="<%= visible_state["status"] %>"
+      data-game-timer-current-player-id-value="<%= visible_state["current_player_id"] %>"
+      data-game-timer-turn-started-at-value="<%= visible_state["turn_started_at"] %>"
+      data-game-timer-server-time-value="<%= visible_state["server_time"] %>"
+      data-game-timer-turn-duration-value="<%= GameEngine::GameState::TURN_TIME %>"
+      data-game-timer-end-turn-url-value="<%= end_turn_path(game) %>"
+      data-game-timer-player-id-value="<%= current_player_id %>"
+      data-action="
+        click->game-events#handleActionClick
+        mouseover->game-events#mouseOver
+        mouseout->game-events#mouseOut
+        dragstart->game-events#dragStart
+        dragover->game-events#dragOver
+        dragleave->game-events#dragLeave
+        drop->game-events#drop
+        dragend->game-events#dragEnd
+      ">
+      
   <header class="game-header">
 
     <h3>Clash Tanks</h3>
@@ -181,10 +188,23 @@
 
       <% if top_player %>
 
-        <p>
-          Remaining time:
-          <%= top_player["remaining_time"] %>
-        </p>
+				<p>
+					Time:
+					<span
+						data-game-timer-target="gameTime"
+						data-player-id="<%= top_player_id %>"
+						data-remaining-time="<%= top_player["remaining_time"] %>"
+					></span>
+				</p>
+
+				<% if visible_state["current_player_id"].to_s == top_player_id.to_s %>
+
+					<p>
+						Turn:
+						<span data-game-timer-target="turnTime"></span>
+					</p>
+
+				<% end %>
 
         <p>
           Resources:
@@ -427,10 +447,23 @@
 
       <% if bottom_player %>
 
-        <p>
-          Remaining time:
-          <%= bottom_player["remaining_time"] %>
-        </p>
+				<p>
+					Time:
+					<span
+						data-game-timer-target="gameTime"
+						data-player-id="<%= bottom_player_id %>"
+						data-remaining-time="<%= bottom_player["remaining_time"] %>"
+					></span>
+				</p>
+
+				<% if visible_state["current_player_id"].to_s == bottom_player_id.to_s %>
+
+					<p>
+						Turn:
+						<span data-game-timer-target="turnTime"></span>
+					</p>
+
+				<% end %>
 
         <p>
           Resources:

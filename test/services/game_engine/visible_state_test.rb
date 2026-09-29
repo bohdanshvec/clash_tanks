@@ -6,6 +6,7 @@ class GameEngine::VisibleStateTest < ActiveSupport::TestCase
       "status" => "started",
       "turn_number" => 3,
       "current_player_id" => 1,
+      "turn_started_at" => Time.current.change(usec: 0).iso8601,
       "players" => {
         "1" => {
           "nation_id" => 10,
@@ -95,21 +96,21 @@ class GameEngine::VisibleStateTest < ActiveSupport::TestCase
     end
   end
 
-  test "hides opponent resources but shows opponent remaining time" do
-    visible_state = GameEngine::VisibleState.call(
-      state: @state,
-      player_id: 1
-    )
+	test "shows resources for both players" do
+		visible_state = GameEngine::VisibleState.call(
+		  state: @state,
+		  player_id: 1
+		)
 
-    own_player = visible_state["players"]["1"]
-    opponent = visible_state["players"]["2"]
+		own_player = visible_state["players"]["1"]
+		opponent = visible_state["players"]["2"]
 
-    assert_equal 5, own_player["resources"]
-    assert_equal 500, own_player["remaining_time"]
+		assert_equal 5, own_player["resources"]
+		assert_equal 7, opponent["resources"]
 
-    refute opponent.key?("resources")
-    assert_equal 400, opponent["remaining_time"]
-  end
+		assert_equal 500, own_player["remaining_time"]
+		assert_equal 400, opponent["remaining_time"]
+	end
 
   test "keeps public game state visible" do
     visible_state = GameEngine::VisibleState.call(
@@ -172,5 +173,15 @@ class GameEngine::VisibleStateTest < ActiveSupport::TestCase
 		  },
 		  visible_state["available_actions"]
 		)
+	end
+	
+	test "exposes public timer information" do
+		visible_state = GameEngine::VisibleState.call(
+		  state: @state,
+		  player_id: 1
+		)
+
+		assert_equal @state["turn_started_at"], visible_state["turn_started_at"]
+		assert Time.iso8601(visible_state["server_time"])
 	end
 end

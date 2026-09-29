@@ -210,4 +210,55 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
 		assert result.success?
 		assert_equal 5, result.state["players"][OPPONENT_ID.to_s]["resources"]
 	end
+	
+	test "starts the next turn with a fresh two-minute timer" do
+		current_time = @started_at + 30
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "end_turn"
+		)
+
+		result = GameEngine::Actions::EndTurn.new(
+		  @state,
+		  action,
+		  current_time: current_time
+		).call
+
+		assert result.success?
+
+		timer = GameEngine::TurnTimerForTurn.new(
+		  result.state,
+		  current_time: current_time
+		)
+
+		assert_equal 120, timer.remaining_time
+		refute timer.expired?
+	end
+	
+	test "keeps total remaining time separate from the two-minute turn timer" do
+		current_time = @started_at + 30
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "end_turn"
+		)
+
+		result = GameEngine::Actions::EndTurn.new(
+		  @state,
+		  action,
+		  current_time: current_time
+		).call
+
+		assert result.success?
+
+		assert_equal 570, result.state["players"][PLAYER_ID.to_s]["remaining_time"]
+
+		turn_timer = GameEngine::TurnTimerForTurn.new(
+		  result.state,
+		  current_time: current_time
+		)
+
+		assert_equal 120, turn_timer.remaining_time
+	end
 end

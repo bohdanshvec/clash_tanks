@@ -14,6 +14,8 @@ module GameEngine
 				"status" => @state["status"],
 				"turn_number" => @state["turn_number"],
 				"current_player_id" => @state["current_player_id"],
+				"turn_started_at" => @state["turn_started_at"],
+				"server_time" => Time.current.iso8601,
 				"field" => @state["field"].deep_dup,
 				"players" => visible_players,
 				"available_actions" => available_actions
@@ -57,6 +59,7 @@ module GameEngine
 				"nation_id" => player_state["nation_id"],
 				"hand_count" => player_state["hand"].length,
 				"deck_count" => player_state["deck"].length,
+				"resources" => player_state["resources"],
 				"remaining_time" => player_state["remaining_time"],
 				"platoons" => player_state["platoons"].deep_dup,
 				"graveyard_count" => player_state["graveyard"].length

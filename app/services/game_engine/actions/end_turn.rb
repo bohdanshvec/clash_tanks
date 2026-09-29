@@ -17,6 +17,11 @@ module GameEngine
 
         return finish_game_by_timeout if timer.expired?
 
+				turn_timer = GameEngine::TurnTimerForTurn.new(
+					@state,
+					current_time: @current_time
+				)
+
         new_state = @state.deep_dup
         current_player = new_state["players"][@action.player_id.to_s]
 

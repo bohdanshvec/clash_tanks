@@ -26,7 +26,15 @@ module GameEngine
 				return finish_game_by_timeout(action) if timer.expired?
 			end
 
-      handler_class.new(@state, action).call
+			if action.type == "end_turn"
+				handler_class.new(
+					@state,
+					action,
+					current_time: @current_time
+				).call
+			else
+				handler_class.new(@state, action).call
+			end
     end
 
     private

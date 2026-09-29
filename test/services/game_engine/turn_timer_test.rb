@@ -73,4 +73,17 @@ class GameEngine::TurnTimerTest < ActiveSupport::TestCase
 
     assert timer.expired?
   end
+  
+	test "expires when rounded elapsed time reaches remaining time" do
+		@state["players"][PLAYER_ID.to_s]["remaining_time"] = 120
+
+		current_time = @started_at + 119.1
+
+		timer = GameEngine::TurnTimer.new(
+		  @state,
+		  current_time: current_time
+		)
+
+		assert timer.expired?
+	end
 end

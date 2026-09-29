@@ -5,9 +5,9 @@ module GameEngine
       @current_time = current_time
     end
 
-    def expired?
-      elapsed_seconds >= remaining_time
-    end
+		def expired?
+			elapsed_seconds.ceil >= remaining_time
+		end
 
 		def remaining_time_after_elapsed
 			[remaining_time - elapsed_seconds.ceil, 0].max
