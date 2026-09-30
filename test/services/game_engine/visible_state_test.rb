@@ -184,4 +184,49 @@ class GameEngine::VisibleStateTest < ActiveSupport::TestCase
 		assert_equal @state["turn_started_at"], visible_state["turn_started_at"]
 		assert Time.iso8601(visible_state["server_time"])
 	end
+	
+	test "exposes finished game result" do
+		@state["status"] = "finished"
+		@state["result"] = {
+		  "winner_id" => "1",
+		  "loser_id" => "2",
+		  "reason" => "surrender"
+		}
+
+		visible_state = GameEngine::VisibleState.call(
+		  state: @state,
+		  player_id: 1
+		)
+
+		assert_equal(
+		  {
+		    "winner_id" => "1",
+		    "loser_id" => "2",
+		    "reason" => "surrender"
+		  },
+		  visible_state["result"]
+		)
+	end
+	
+	test "has no available actions when game is finished" do
+		@state["status"] = "finished"
+		@state["result"] = {
+		  "winner_id" => "1",
+		  "loser_id" => "2",
+		  "reason" => "surrender"
+		}
+
+		visible_state = GameEngine::VisibleState.call(
+		  state: @state,
+		  player_id: 1
+		)
+
+		assert_equal(
+		  {
+		    "field" => {},
+		    "hand" => {}
+		  },
+		  visible_state["available_actions"]
+		)
+	end
 end

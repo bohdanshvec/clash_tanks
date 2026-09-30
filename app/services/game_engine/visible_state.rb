@@ -18,7 +18,8 @@ module GameEngine
 				"server_time" => Time.current.iso8601,
 				"field" => @state["field"].deep_dup,
 				"players" => visible_players,
-				"available_actions" => available_actions
+				"available_actions" => available_actions,
+				"result" => @state["result"]&.deep_dup
 			}
 		end
 

@@ -149,52 +149,52 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     assert_equal 15, technique["card_id"]
     assert_equal 42, technique["player_id"]
   end
-  
-	test "finishes game when current player's time expires" do
-		started_at = Time.iso8601(@state["turn_started_at"])
-		current_time = started_at + 600
 
-		action = GameEngine::Action.new(
-		  player_id: 42,
-		  type: "move",
-		  payload: {
-		    from: [1, 1],
-		    to: [0, 2]
-		  }
-		)
+  test "finishes game when current player's time expires" do
+    started_at = Time.iso8601(@state["turn_started_at"])
+    current_time = started_at + 600
 
-		result = GameEngine::Engine.new(
-		  @state,
-		  current_time: current_time
-		).call(action)
+    action = GameEngine::Action.new(
+      player_id: 42,
+      type: "move",
+      payload: {
+        from: [1, 1],
+        to: [0, 2]
+      }
+    )
 
-		assert_predicate result, :success?
+    result = GameEngine::Engine.new(
+      @state,
+      current_time: current_time
+    ).call(action)
 
-		assert_equal "finished", result.state["status"]
+    assert_predicate result, :success?
 
-		assert_equal(
-		  {
-		    "winner_id" => "57",
-		    "loser_id" => "42",
-		    "reason" => "time_expired"
-		  },
-		  result.state["result"]
-		)
+    assert_equal "finished", result.state["status"]
 
-		assert_equal(
-		  [
-		    {
-		      type: "game_finished",
-		      winner_id: "57",
-		      loser_id: "42",
-		      reason: "time_expired"
-		    }
-		  ],
-		  result.events
-		)
+    assert_equal(
+      {
+        "winner_id" => "57",
+        "loser_id" => "42",
+        "reason" => "time_expired"
+      },
+      result.state["result"]
+    )
 
-		assert_equal "technique", @state["field"][1][1]["type"]
-	end
+    assert_equal(
+      [
+        {
+          type: "game_finished",
+          winner_id: "57",
+          loser_id: "42",
+          reason: "time_expired"
+        }
+      ],
+      result.events
+    )
+
+    assert_equal "technique", @state["field"][1][1]["type"]
+  end
 
   test "allows action when current player's time has not expired" do
     started_at = Time.iso8601(@state["turn_started_at"])
@@ -218,45 +218,101 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     assert_nil result.state["field"][1][1]
     assert_equal "technique", result.state["field"][0][2]["type"]
   end
-  
-	test "rejects every action when game is finished" do
-		@state["status"] = "finished"
 
-		actions = %w[move attack play_card end_turn].map do |type|
-		  GameEngine::Action.new(
-		    player_id: 42,
-		    type: type
-		  )
-		end
+  test "rejects every action when game is finished" do
+    @state["status"] = "finished"
 
-		actions.each do |action|
-		  result = GameEngine::Engine.new(@state).call(action)
+    actions = %w[move attack play_card end_turn surrender].map do |type|
+      GameEngine::Action.new(
+        player_id: 42,
+        type: type
+      )
+    end
 
-		  refute result.success?
-		  assert_equal "Game is already finished", result.error
-		  assert_nil result.state
-		end
-	end
-	
-	test "allows end turn when the two-minute turn timer expires" do
-		started_at = Time.iso8601(@state["turn_started_at"])
-		current_time = started_at + 120
+    actions.each do |action|
+      result = GameEngine::Engine.new(@state).call(action)
 
-		action = GameEngine::Action.new(
-		  player_id: 42,
-		  type: "end_turn"
-		)
+      refute result.success?
+      assert_equal "Game is already finished", result.error
+      assert_nil result.state
+    end
+  end
 
-		result = GameEngine::Engine.new(
-		  @state,
-		  current_time: current_time
-		).call(action)
+  test "allows end turn when the two-minute turn timer expires" do
+    started_at = Time.iso8601(@state["turn_started_at"])
+    current_time = started_at + 120
 
-		assert_predicate result, :success?
+    action = GameEngine::Action.new(
+      player_id: 42,
+      type: "end_turn"
+    )
 
-		assert_equal 2, result.state["turn_number"]
-		assert_equal 57, result.state["current_player_id"]
+    result = GameEngine::Engine.new(
+      @state,
+      current_time: current_time
+    ).call(action)
 
-		assert_equal current_time.iso8601, result.state["turn_started_at"]
-	end
+    assert_predicate result, :success?
+
+    assert_equal 2, result.state["turn_number"]
+    assert_equal 57, result.state["current_player_id"]
+
+    assert_equal current_time.iso8601, result.state["turn_started_at"]
+  end
+
+  test "surrenders current player's game" do
+    action = GameEngine::Action.new(
+      player_id: 42,
+      type: "surrender"
+    )
+
+    result = GameEngine::Engine.new(@state).call(action)
+
+    assert_predicate result, :success?
+    assert_equal "finished", result.state["status"]
+
+    assert_equal(
+      {
+        "winner_id" => "57",
+        "loser_id" => 42,
+        "reason" => "surrender"
+      },
+      result.state["result"]
+    )
+
+    assert_equal(
+      [
+        {
+          type: "game_finished",
+          winner_id: "57",
+          loser_id: 42,
+          reason: "surrender"
+        }
+      ],
+      result.events
+    )
+
+    assert_equal "started", @state["status"]
+  end
+
+  test "allows surrender when it is opponent's turn" do
+    action = GameEngine::Action.new(
+      player_id: 57,
+      type: "surrender"
+    )
+
+    result = GameEngine::Engine.new(@state).call(action)
+
+    assert_predicate result, :success?
+    assert_equal "finished", result.state["status"]
+
+    assert_equal(
+      {
+        "winner_id" => "42",
+        "loser_id" => 57,
+        "reason" => "surrender"
+      },
+      result.state["result"]
+    )
+  end
 end

@@ -803,4 +803,35 @@ class GameEngine::AvailableActionsTest < ActiveSupport::TestCase
       "abilities" => abilities
     }
   end
+  
+	test "returns empty result when game is finished" do
+		state = base_state
+		state["status"] = "finished"
+		state["result"] = {
+		  "winner_id" => "1",
+		  "loser_id" => "2",
+		  "reason" => "surrender"
+		}
+
+		state["players"]["1"]["hand"] = [
+		  card(
+		    card_id: 101,
+		    card_type: "technique",
+		    price: 1
+		  )
+		]
+
+		result = GameEngine::AvailableActions.call(
+		  state: state,
+		  player_id: 1
+		)
+
+		assert_equal(
+		  {
+		    "field" => {},
+		    "hand" => {}
+		  },
+		  result
+		)
+	end
 end

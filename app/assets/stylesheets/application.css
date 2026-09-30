@@ -728,3 +728,34 @@ Stage 15.13.6 — приглушённый игровой объект
 .game-object--muted {
   opacity: 0.65;
 }
+
+/* ---------------------------------------------------------
+Stage 15.15 — завершённая игра
+--------------------------------------------------------- */
+
+.game-result {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin: 20px auto;
+  padding: 16px 24px;
+
+  border: 2px solid currentColor;
+  border-radius: 10px;
+
+  background: #fff;
+}
+
+.game-result h2 {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------
+Stage 15.15 — приглушённая завершённая игра
+--------------------------------------------------------- */
+
+.game-content--muted {
+  opacity: 0.5;
+  pointer-events: none;
+}

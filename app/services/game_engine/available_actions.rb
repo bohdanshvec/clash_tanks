@@ -10,17 +10,22 @@ module GameEngine
       @player = @state["players"][@player_id]
     end
 
-    def call
-      return empty_result unless @player
-      return empty_result unless current_player?
+		def call
+			return empty_result unless @player
+			return empty_result if finished?
+			return empty_result unless current_player?
 
-      {
-        "field" => field_actions,
-        "hand" => hand_actions
-      }
-    end
+			{
+				"field" => field_actions,
+				"hand" => hand_actions
+			}
+		end
 
     private
+    
+		def finished?
+			@state["status"] == "finished"
+		end
 
     def empty_result
       {

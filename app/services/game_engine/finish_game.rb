@@ -4,6 +4,7 @@ module GameEngine
       headquarters_destroyed
       time_expired
       empty_deck_damage
+      surrender
     ].freeze
 
     def self.call(state:, winner_id:, loser_id:, reason:)

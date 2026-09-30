@@ -39,6 +39,33 @@ class GamesController < ApplicationController
 
     respond_after_success
   end
+  
+  def surrender
+	 @game = Game.find(params[:id])
+ 
+	 unless player_in_game?(@game)
+	   head :forbidden
+	   return
+	 end
+
+	 action = GameEngine::Action.new(
+	   player_id: current_player_id,
+	   type: "surrender"
+	 )
+
+	 result = GameEngine::Engine.new(@game.state).call(action)
+
+	 unless result.success?
+	   render plain: result.error, status: :unprocessable_entity
+	   return
+	 end
+
+	 @game.update!(state: result.state)
+
+	 broadcast_game_update(result.events)
+
+	 respond_after_success
+  end
 
   def play_card
     @game = Game.find(params[:id])

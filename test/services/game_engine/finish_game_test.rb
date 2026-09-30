@@ -130,4 +130,25 @@ class GameEngine::FinishGameTest < ActiveSupport::TestCase
     refute_predicate result, :success?
     assert_equal "Invalid finish reason", result.error
   end
+  
+	test "accepts surrender as finish reason" do
+		result = GameEngine::FinishGame.call(
+		  state: @state,
+		  winner_id: PLAYER_ID,
+		  loser_id: OPPONENT_ID,
+		  reason: "surrender"
+		)
+
+		assert_predicate result, :success?
+		assert_equal "finished", result.state["status"]
+
+		assert_equal(
+		  {
+		    "winner_id" => PLAYER_ID,
+		    "loser_id" => OPPONENT_ID,
+		    "reason" => "surrender"
+		  },
+		  result.state["result"]
+		)
+	end
 end

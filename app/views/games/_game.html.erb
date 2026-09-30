@@ -7,9 +7,11 @@
 
   top_player = top_player_id ? visible_state["players"][top_player_id] : nil
   bottom_player = bottom_player_id ? visible_state["players"][bottom_player_id] : nil
+
+  game_finished = visible_state["status"] == "finished"
 %>
 
-<main class="game"
+<main class="game <%= "game--finished" if game_finished %>"
       data-controller="game-events game-timer"
       data-game-events-events-value="<%= events.to_json %>"
       data-game-events-available-actions-value="<%= visible_state["available_actions"].to_json %>"
@@ -34,7 +36,7 @@
         drop->game-events#drop
         dragend->game-events#dragEnd
       ">
-      
+
   <header class="game-header">
 
     <h3>Clash Tanks</h3>
@@ -46,339 +48,251 @@
   </header>
 
 
-  <section class="game-top">
+  <% if game_finished && visible_state["result"] %>
+    <%
+      winner_id = visible_state["result"]["winner_id"].to_s
+      player_won = winner_id == current_player_id.to_s
+    %>
 
-    <div class="game-top__hand">
-
-      <% if top_player %>
-
-        <% if top_player_id == current_player_id %>
-
-          <div class="hand hand--top"
-               style="--hand-count: <%= top_player["hand"].length %>;">
-
-            <% top_player["hand"].each do |card| %>
-
-							<%
-								card_actions =
-									visible_state["available_actions"]
-										.dig("hand", card["card_id"].to_s)
-
-								card_muted =
-									visible_state["current_player_id"].to_s != current_player_id.to_s ||
-									card_actions&.dig("resources_sufficient") == false
-							%>
-
-							<article class="card <%= "game-object--muted" if card_muted %>"
-                       draggable="true"
-                       data-action="click->game-events#select"
-                       data-card-id="<%= card["card_id"] %>"
-                       data-player-id="<%= current_player_id %>"
-                       data-card-type="<%= card["card_type"] %>">
-
-                <header class="card__header">
-                  <strong><%= card["name"] %></strong>
-                </header>
-
-                <div class="card__stats">
-
-                  <% if card["card_type"] == "technique" %>
-
-                    <p>Type: <%= card["card_type"] %></p>
-
-                    <p>
-                      Technique type:
-                      <%= card.dig("technique", "technique_type") %>
-                    </p>
-
-                    <p>Price: <%= card["price"] %></p>
-
-                    <p>HP: <%= card.dig("technique", "hp") %></p>
-
-                    <p>
-                      Firepower:
-                      <%= card.dig("technique", "firepower") %>
-                    </p>
-
-                    <p>Fuel: <%= card.dig("technique", "fuel") %></p>
+    <div class="game-result">
+      <h2><%= player_won ? "Победа" : "Вы проиграли" %></h2>
+    </div>
+  <% end %>
 
 
-                  <% elsif card["card_type"] == "order" %>
+  <div class="<%= "game-content game-content--muted" if game_finished %>">
 
-                    <p>Type: <%= card["card_type"] %></p>
+    <section class="game-top">
 
-                    <p>Price: <%= card["price"] %></p>
+      <div class="game-top__hand">
 
-                    <% abilities = card["abilities"] || [] %>
+        <% if top_player %>
 
-                    <div class="card__abilities">
+          <% if top_player_id == current_player_id %>
 
-                      <p>Abilities:</p>
+            <div class="hand hand--top"
+                 style="--hand-count: <%= top_player["hand"].length %>;">
 
-                      <% if abilities.any? %>
+              <% top_player["hand"].each do |card| %>
 
-                        <ul>
+                <%
+                  card_actions =
+                    visible_state["available_actions"]
+                      .dig("hand", card["card_id"].to_s)
 
-                          <% abilities.each do |ability| %>
+                  card_muted =
+                    visible_state["current_player_id"].to_s != current_player_id.to_s ||
+                    card_actions&.dig("resources_sufficient") == false
+                %>
 
-                            <li>
-                              <%= ability["code"] %>
+                <article class="card <%= "game-object--muted" if card_muted %>"
+                         draggable="true"
+                         data-action="click->game-events#select"
+                         data-card-id="<%= card["card_id"] %>"
+                         data-player-id="<%= current_player_id %>"
+                         data-card-type="<%= card["card_type"] %>">
 
-                              <% if ability["code"] == "damage_technique" %>
-                                — Damage: <%= ability["damage"] %>
-                              <% elsif ability["code"] == "draw_cards" %>
-                                — Cards: <%= ability["count"] %>
-                              <% end %>
-                            </li>
+                  <header class="card__header">
+                    <strong><%= card["name"] %></strong>
+                  </header>
 
-                          <% end %>
+                  <div class="card__stats">
 
-                        </ul>
+                    <% if card["card_type"] == "technique" %>
 
-                      <% else %>
+                      <p>Type: <%= card["card_type"] %></p>
 
-                        <p>none</p>
+                      <p>
+                        Technique type:
+                        <%= card.dig("technique", "technique_type") %>
+                      </p>
 
-                      <% end %>
+                      <p>Price: <%= card["price"] %></p>
 
-                    </div>
+                      <p>HP: <%= card.dig("technique", "hp") %></p>
+
+                      <p>
+                        Firepower:
+                        <%= card.dig("technique", "firepower") %>
+                      </p>
+
+                      <p>Fuel: <%= card.dig("technique", "fuel") %></p>
 
 
-                  <% elsif card["card_type"] == "platoon" %>
+                    <% elsif card["card_type"] == "order" %>
 
-                    <p>Type: <%= card["card_type"] %></p>
+                      <p>Type: <%= card["card_type"] %></p>
 
-                    <p>Price: <%= card["price"] %></p>
+                      <p>Price: <%= card["price"] %></p>
 
-                    <p>HP: <%= card.dig("platoon", "hp") %></p>
+                      <% abilities = card["abilities"] || [] %>
 
-                    <p>
-                      Firepower:
-                      <%= card.dig("platoon", "firepower") %>
-                    </p>
+                      <div class="card__abilities">
 
-                    <p>Armor: <%= card.dig("platoon", "armor") %></p>
+                        <p>Abilities:</p>
 
-                    <p>Fuel: <%= card.dig("platoon", "fuel") %></p>
+                        <% if abilities.any? %>
 
-                  <% end %>
+                          <ul>
 
-                </div>
+                            <% abilities.each do |ability| %>
 
-              </article>
+                              <li>
+                                <%= ability["code"] %>
 
-            <% end %>
+                                <% if ability["code"] == "damage_technique" %>
+                                  — Damage: <%= ability["damage"] %>
+                                <% elsif ability["code"] == "draw_cards" %>
+                                  — Cards: <%= ability["count"] %>
+                                <% end %>
+                              </li>
 
-          </div>
+                            <% end %>
 
-        <% else %>
+                          </ul>
 
-          <p class="opponent-hand-count">
-            Opponent hand: <%= top_player["hand_count"] %> cards
+                        <% else %>
+
+                          <p>none</p>
+
+                        <% end %>
+
+                      </div>
+
+
+                    <% elsif card["card_type"] == "platoon" %>
+
+                      <p>Type: <%= card["card_type"] %></p>
+
+                      <p>Price: <%= card["price"] %></p>
+
+                      <p>HP: <%= card.dig("platoon", "hp") %></p>
+
+                      <p>
+                        Firepower:
+                        <%= card.dig("platoon", "firepower") %>
+                      </p>
+
+                      <p>Armor: <%= card.dig("platoon", "armor") %></p>
+
+                      <p>Fuel: <%= card.dig("platoon", "fuel") %></p>
+
+                    <% end %>
+
+                  </div>
+
+                </article>
+
+              <% end %>
+
+            </div>
+
+          <% else %>
+
+            <p class="opponent-hand-count">
+              Opponent hand: <%= top_player["hand_count"] %> cards
+            </p>
+
+          <% end %>
+
+        <% end %>
+
+      </div>
+
+
+      <aside class="game-top__info info-window">
+
+        <% if top_player %>
+
+          <% if top_player_id == current_player_id.to_s %>
+            <%= button_to "Сдаться",
+                          surrender_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post %>
+          <% end %>
+
+          <p>
+            Time:
+            <span
+              data-game-timer-target="gameTime"
+              data-player-id="<%= top_player_id %>"
+              data-remaining-time="<%= top_player["remaining_time"] %>"
+            ></span>
           </p>
 
-        <% end %>
+          <% if visible_state["current_player_id"].to_s == top_player_id.to_s %>
 
-      <% end %>
+            <p>
+              Turn:
+              <span data-game-timer-target="turnTime"></span>
+            </p>
 
-    </div>
+          <% end %>
 
+          <p>
+            Resources:
+            <%= top_player["resources"] %>
+          </p>
 
-    <aside class="game-top__info info-window">
+          <p>
+            Deck:
+            <%= top_player["deck_count"] %> cards
+          </p>
 
-      <% if top_player %>
+          <p>
+            Graveyard:
+            <%= top_player["graveyard_count"] %> cards
+          </p>
 
-				<p>
-					Time:
-					<span
-						data-game-timer-target="gameTime"
-						data-player-id="<%= top_player_id %>"
-						data-remaining-time="<%= top_player["remaining_time"] %>"
-					></span>
-				</p>
+          <% if top_player_id == current_player_id &&
+                visible_state["current_player_id"].to_s == current_player_id.to_s %>
 
-				<% if visible_state["current_player_id"].to_s == top_player_id.to_s %>
+            <%= button_to "End Turn",
+                          end_turn_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post %>
 
-					<p>
-						Turn:
-						<span data-game-timer-target="turnTime"></span>
-					</p>
-
-				<% end %>
-
-        <p>
-          Resources:
-          <%= top_player["resources"] %>
-        </p>
-
-        <p>
-          Deck:
-          <%= top_player["deck_count"] %> cards
-        </p>
-
-        <p>
-          Graveyard:
-          <%= top_player["graveyard_count"] %> cards
-        </p>
-
-        <% if top_player_id == current_player_id &&
-              visible_state["current_player_id"].to_s == current_player_id.to_s %>
-
-          <%= button_to "End Turn",
-                        end_turn_path(
-                          game,
-                          player_id: current_player_id
-                        ),
-                        method: :post %>
+          <% end %>
 
         <% end %>
 
-      <% end %>
+      </aside>
 
-    </aside>
-
-  </section>
+    </section>
 
 
-  <section class="game-board">
+    <section class="game-board">
 
-    <aside class="game-board__left platoon-bar"
-           data-platoon-bar
-           data-player-id="<%= bottom_player_id %>">
+      <aside class="game-board__left platoon-bar"
+             data-platoon-bar
+             data-player-id="<%= bottom_player_id %>">
 
-      <% if bottom_player %>
+        <% if bottom_player %>
 
-        <% bottom_player["platoons"].each_with_index do |platoon, index| %>
+          <% bottom_player["platoons"].each_with_index do |platoon, index| %>
 
-          <article class="platoon-slot"
-                   data-platoon-slot="<%= index %>"
-                   data-player-id="<%= bottom_player_id %>"
-                   <% if platoon %>
-                     data-firepower="<%= platoon["firepower"].to_i %>"
-                     data-armor="<%= platoon["armor"].to_i %>"
-                   <% end %>>
+            <article class="platoon-slot"
+                     data-platoon-slot="<%= index %>"
+                     data-player-id="<%= bottom_player_id %>"
+                     <% if platoon %>
+                       data-firepower="<%= platoon["firepower"].to_i %>"
+                       data-armor="<%= platoon["armor"].to_i %>"
+                     <% end %>>
 
-            <span>Slot <%= index %></span>
+              <span>Slot <%= index %></span>
 
-            <% if platoon %>
+              <% if platoon %>
 
-              <strong><%= platoon["name"] %></strong>
+                <strong><%= platoon["name"] %></strong>
 
-              <p>HP: <%= platoon["hp"] %></p>
-              <p>Firepower: <%= platoon["firepower"] %></p>
-              <p>Armor: <%= platoon["armor"] %></p>
-              <p>Fuel: <%= platoon["fuel"] %></p>
-
-            <% else %>
-
-              <span>Empty</span>
-
-            <% end %>
-
-          </article>
-
-        <% end %>
-
-      <% end %>
-
-    </aside>
-
-
-    <section class="game-board__field">
-
-      <div class="battlefield">
-
-        <% visible_state["field"].each_with_index do |row, row_index| %>
-
-          <% row.each_with_index do |cell, column_index| %>
-
-            <div class="battlefield__cell"
-                 data-position="<%= row_index %>,<%= column_index %>"
-                 <% if cell &&
-                       cell["player_id"].to_s == current_player_id.to_s &&
-                       ["technique", "headquarters"].include?(cell["type"]) %>
-                   data-action="click->game-events#select"
-                   data-object-type="<%= cell["type"] %>"
-                 <% end %>>
-
-              <div class="cell-coordinate">
-                [<%= row_index %>, <%= column_index %>]
-              </div>
-
-              <% if cell %>
-
-                <div class="cell-object">
-
-                  <strong>
-                    <%= cell["name"] %>
-                  </strong>
-
-
-                  <% if cell["type"] == "technique" %>
-
-                    <p>
-                      Technique:
-                      <%= cell["technique_type"] %>
-                    </p>
-
-                    <p>
-                      HP:
-                      <%= cell["hp"] %>
-                    </p>
-
-                    <p>
-                      Firepower:
-                      <%= cell["firepower"] %>
-                    </p>
-
-                    <p>
-                      Fuel:
-                      <%= cell["fuel"] %>
-                    </p>
-
-                    <p>
-                      Attacked:
-                      <%= cell["has_attacked"] ? "Yes" : "No" %>
-                    </p>
-
-                    <p>
-                      Counterattacked:
-                      <%= cell["has_counterattacked"] ? "Yes" : "No" %>
-                    </p>
-
-                    <p>
-                      Moves:
-                      <%= cell["movement_count"] %>/<%= cell["movement_limit"] %>
-                    </p>
-
-
-                  <% elsif cell["type"] == "platoon" %>
-
-                    <p>HP: <%= cell["hp"] %></p>
-                    <p>Firepower: <%= cell["firepower"] %></p>
-                    <p>Armor: <%= cell["armor"] %></p>
-                    <p>Fuel: <%= cell["fuel"] %></p>
-
-
-                  <% elsif cell["type"] == "headquarters" %>
-
-                    <p>HP: <%= cell["hp"] %></p>
-                    <p>Firepower: <%= cell["firepower"] %></p>
-                    <p>Fuel: <%= cell["fuel"] %></p>
-
-                    <p>
-                      Attacked:
-                      <%= cell["has_attacked"] ? "Yes" : "No" %>
-                    </p>
-
-                    <p>
-                      Counterattacked:
-                      <%= cell["has_counterattacked"] ? "Yes" : "No" %>
-                    </p>
-
-                  <% end %>
-
-                </div>
+                <p>HP: <%= platoon["hp"] %></p>
+                <p>Firepower: <%= platoon["firepower"] %></p>
+                <p>Armor: <%= platoon["armor"] %></p>
+                <p>Fuel: <%= platoon["fuel"] %></p>
 
               <% else %>
 
@@ -386,7 +300,364 @@
 
               <% end %>
 
+            </article>
+
+          <% end %>
+
+        <% end %>
+
+      </aside>
+
+
+      <section class="game-board__field">
+
+        <div class="battlefield">
+
+          <% visible_state["field"].each_with_index do |row, row_index| %>
+
+            <% row.each_with_index do |cell, column_index| %>
+
+              <div class="battlefield__cell"
+                   data-position="<%= row_index %>,<%= column_index %>"
+                   <% if cell &&
+                         cell["player_id"].to_s == current_player_id.to_s &&
+                         ["technique", "headquarters"].include?(cell["type"]) %>
+                     data-action="click->game-events#select"
+                     data-object-type="<%= cell["type"] %>"
+                   <% end %>>
+
+                <div class="cell-coordinate">
+                  [<%= row_index %>, <%= column_index %>]
+                </div>
+
+                <% if cell %>
+
+                  <div class="cell-object">
+
+                    <strong>
+                      <%= cell["name"] %>
+                    </strong>
+
+
+                    <% if cell["type"] == "technique" %>
+
+                      <p>
+                        Technique:
+                        <%= cell["technique_type"] %>
+                      </p>
+
+                      <p>
+                        HP:
+                        <%= cell["hp"] %>
+                      </p>
+
+                      <p>
+                        Firepower:
+                        <%= cell["firepower"] %>
+                      </p>
+
+                      <p>
+                        Fuel:
+                        <%= cell["fuel"] %>
+                      </p>
+
+                      <p>
+                        Attacked:
+                        <%= cell["has_attacked"] ? "Yes" : "No" %>
+                      </p>
+
+                      <p>
+                        Counterattacked:
+                        <%= cell["has_counterattacked"] ? "Yes" : "No" %>
+                      </p>
+
+                      <p>
+                        Moves:
+                        <%= cell["movement_count"] %>/<%= cell["movement_limit"] %>
+                      </p>
+
+
+                    <% elsif cell["type"] == "platoon" %>
+
+                      <p>HP: <%= cell["hp"] %></p>
+                      <p>Firepower: <%= cell["firepower"] %></p>
+                      <p>Armor: <%= cell["armor"] %></p>
+                      <p>Fuel: <%= cell["fuel"] %></p>
+
+
+                    <% elsif cell["type"] == "headquarters" %>
+
+                      <p>HP: <%= cell["hp"] %></p>
+                      <p>Firepower: <%= cell["firepower"] %></p>
+                      <p>Fuel: <%= cell["fuel"] %></p>
+
+                      <p>
+                        Attacked:
+                        <%= cell["has_attacked"] ? "Yes" : "No" %>
+                      </p>
+
+                      <p>
+                        Counterattacked:
+                        <%= cell["has_counterattacked"] ? "Yes" : "No" %>
+                      </p>
+
+                    <% end %>
+
+                  </div>
+
+                <% else %>
+
+                  <span>Empty</span>
+
+                <% end %>
+
+              </div>
+
+            <% end %>
+
+          <% end %>
+
+        </div>
+
+      </section>
+
+
+      <aside class="game-board__right platoon-bar"
+             data-platoon-bar
+             data-player-id="<%= top_player_id %>">
+
+        <% if top_player %>
+
+          <% top_player["platoons"].each_with_index do |platoon, index| %>
+
+            <article class="platoon-slot"
+                     data-platoon-slot="<%= index %>"
+                     data-player-id="<%= top_player_id %>"
+                     <% if platoon %>
+                       data-firepower="<%= platoon["firepower"].to_i %>"
+                       data-armor="<%= platoon["armor"].to_i %>"
+                     <% end %>>
+
+              <span>Slot <%= index %></span>
+
+              <% if platoon %>
+
+                <strong><%= platoon["name"] %></strong>
+
+                <p>HP: <%= platoon["hp"] %></p>
+                <p>Firepower: <%= platoon["firepower"] %></p>
+                <p>Armor: <%= platoon["armor"] %></p>
+                <p>Fuel: <%= platoon["fuel"] %></p>
+
+              <% else %>
+
+                <span>Empty</span>
+
+              <% end %>
+
+            </article>
+
+          <% end %>
+
+        <% end %>
+
+      </aside>
+
+    </section>
+
+
+    <section class="game-bottom">
+
+      <aside class="game-bottom__info info-window">
+
+        <% if bottom_player %>
+
+          <% if bottom_player_id == current_player_id.to_s %>
+            <%= button_to "Сдаться",
+                          surrender_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post %>
+          <% end %>
+
+          <p>
+            Time:
+            <span
+              data-game-timer-target="gameTime"
+              data-player-id="<%= bottom_player_id %>"
+              data-remaining-time="<%= bottom_player["remaining_time"] %>"
+            ></span>
+          </p>
+
+          <% if visible_state["current_player_id"].to_s == bottom_player_id.to_s %>
+
+            <p>
+              Turn:
+              <span data-game-timer-target="turnTime"></span>
+            </p>
+
+          <% end %>
+
+          <p>
+            Resources:
+            <%= bottom_player["resources"] %>
+          </p>
+
+          <p>
+            Deck:
+            <%= bottom_player["deck_count"] %> cards
+          </p>
+
+          <p>
+            Graveyard:
+            <%= bottom_player["graveyard_count"] %> cards
+          </p>
+
+          <% if bottom_player_id == current_player_id &&
+                visible_state["current_player_id"].to_s == current_player_id.to_s %>
+
+            <%= button_to "End Turn",
+                          end_turn_path(
+                            game,
+                            player_id: current_player_id
+                          ),
+                          method: :post %>
+
+          <% end %>
+
+        <% end %>
+
+      </aside>
+
+
+      <div class="game-bottom__hand">
+
+        <% if bottom_player %>
+
+          <% if bottom_player_id == current_player_id %>
+
+            <div class="hand hand--bottom"
+                 style="--hand-count: <%= bottom_player["hand"].length %>;">
+
+              <% bottom_player["hand"].each do |card| %>
+
+                <%
+                  card_actions =
+                    visible_state["available_actions"]
+                      .dig("hand", card["card_id"].to_s)
+
+                  card_muted =
+                    visible_state["current_player_id"].to_s != current_player_id.to_s ||
+                    card_actions&.dig("resources_sufficient") == false
+                %>
+
+                <article class="card <%= "game-object--muted" if card_muted %>"
+                         draggable="true"
+                         data-action="click->game-events#select"
+                         data-card-id="<%= card["card_id"] %>"
+                         data-player-id="<%= current_player_id %>"
+                         data-card-type="<%= card["card_type"] %>">
+
+                  <header class="card__header">
+                    <strong><%= card["name"] %></strong>
+                  </header>
+
+                  <div class="card__stats">
+
+                    <% if card["card_type"] == "technique" %>
+
+                      <p>Type: <%= card["card_type"] %></p>
+
+                      <p>
+                        Technique type:
+                        <%= card.dig("technique", "technique_type") %>
+                      </p>
+
+                      <p>Price: <%= card["price"] %></p>
+
+                      <p>HP: <%= card.dig("technique", "hp") %></p>
+
+                      <p>
+                        Firepower:
+                        <%= card.dig("technique", "firepower") %>
+                      </p>
+
+                      <p>Fuel: <%= card.dig("technique", "fuel") %></p>
+
+
+                    <% elsif card["card_type"] == "order" %>
+
+                      <p>Type: <%= card["card_type"] %></p>
+                      <p>Price: <%= card["price"] %></p>
+
+                      <% abilities = card["abilities"] || [] %>
+
+                      <div class="card__abilities">
+
+                        <p>Abilities:</p>
+
+                        <% if abilities.any? %>
+
+                          <ul>
+
+                            <% abilities.each do |ability| %>
+
+                              <li>
+                                <%= ability["code"] %>
+
+                                <% if ability["code"] == "damage_technique" %>
+                                  — Damage: <%= ability["damage"] %>
+                                <% elsif ability["code"] == "draw_cards" %>
+                                  — Cards: <%= ability["count"] %>
+                                <% end %>
+                              </li>
+
+                            <% end %>
+
+                          </ul>
+
+                        <% else %>
+
+                          <p>none</p>
+
+                        <% end %>
+
+                      </div>
+
+
+                    <% elsif card["card_type"] == "platoon" %>
+
+                      <p>Type: <%= card["card_type"] %></p>
+
+                      <p>Price: <%= card["price"] %></p>
+
+                      <p>HP: <%= card.dig("platoon", "hp") %></p>
+
+                      <p>
+                        Firepower:
+                        <%= card.dig("platoon", "firepower") %>
+                      </p>
+
+                      <p>Armor: <%= card.dig("platoon", "armor") %></p>
+
+                      <p>Fuel: <%= card.dig("platoon", "fuel") %></p>
+
+                    <% end %>
+
+                  </div>
+
+                </article>
+
+              <% end %>
+
             </div>
+
+          <% else %>
+
+            <p class="opponent-hand-count">
+              Opponent hand: <%= bottom_player["hand_count"] %> cards
+            </p>
 
           <% end %>
 
@@ -396,241 +667,6 @@
 
     </section>
 
-
-    <aside class="game-board__right platoon-bar"
-           data-platoon-bar
-           data-player-id="<%= top_player_id %>">
-
-      <% if top_player %>
-
-        <% top_player["platoons"].each_with_index do |platoon, index| %>
-
-          <article class="platoon-slot"
-                   data-platoon-slot="<%= index %>"
-                   data-player-id="<%= top_player_id %>"
-                   <% if platoon %>
-                     data-firepower="<%= platoon["firepower"].to_i %>"
-                     data-armor="<%= platoon["armor"].to_i %>"
-                   <% end %>>
-
-            <span>Slot <%= index %></span>
-
-            <% if platoon %>
-
-              <strong><%= platoon["name"] %></strong>
-
-              <p>HP: <%= platoon["hp"] %></p>
-              <p>Firepower: <%= platoon["firepower"] %></p>
-              <p>Armor: <%= platoon["armor"] %></p>
-              <p>Fuel: <%= platoon["fuel"] %></p>
-
-            <% else %>
-
-              <span>Empty</span>
-
-            <% end %>
-
-          </article>
-
-        <% end %>
-
-      <% end %>
-
-    </aside>
-
-  </section>
-
-
-  <section class="game-bottom">
-
-    <aside class="game-bottom__info info-window">
-
-      <% if bottom_player %>
-
-				<p>
-					Time:
-					<span
-						data-game-timer-target="gameTime"
-						data-player-id="<%= bottom_player_id %>"
-						data-remaining-time="<%= bottom_player["remaining_time"] %>"
-					></span>
-				</p>
-
-				<% if visible_state["current_player_id"].to_s == bottom_player_id.to_s %>
-
-					<p>
-						Turn:
-						<span data-game-timer-target="turnTime"></span>
-					</p>
-
-				<% end %>
-
-        <p>
-          Resources:
-          <%= bottom_player["resources"] %>
-        </p>
-
-        <p>
-          Deck:
-          <%= bottom_player["deck_count"] %> cards
-        </p>
-
-        <p>
-          Graveyard:
-          <%= bottom_player["graveyard_count"] %> cards
-        </p>
-
-        <% if bottom_player_id == current_player_id &&
-              visible_state["current_player_id"].to_s == current_player_id.to_s %>
-
-          <%= button_to "End Turn",
-                        end_turn_path(
-                          game,
-                          player_id: current_player_id
-                        ),
-                        method: :post %>
-
-        <% end %>
-
-      <% end %>
-
-    </aside>
-
-
-    <div class="game-bottom__hand">
-
-      <% if bottom_player %>
-
-        <% if bottom_player_id == current_player_id %>
-
-          <div class="hand hand--bottom"
-               style="--hand-count: <%= bottom_player["hand"].length %>;">
-
-            <% bottom_player["hand"].each do |card| %>
-
-							<%
-								card_actions =
-									visible_state["available_actions"]
-										.dig("hand", card["card_id"].to_s)
-
-								card_muted =
-									visible_state["current_player_id"].to_s != current_player_id.to_s ||
-									card_actions&.dig("resources_sufficient") == false
-							%>
-
-							<article class="card <%= "game-object--muted" if card_muted %>"
-                       draggable="true"
-                       data-action="click->game-events#select"
-                       data-card-id="<%= card["card_id"] %>"
-                       data-player-id="<%= current_player_id %>"
-                       data-card-type="<%= card["card_type"] %>">
-
-                <header class="card__header">
-                  <strong><%= card["name"] %></strong>
-                </header>
-
-                <div class="card__stats">
-
-                  <% if card["card_type"] == "technique" %>
-
-                    <p>Type: <%= card["card_type"] %></p>
-
-                    <p>
-                      Technique type:
-                      <%= card.dig("technique", "technique_type") %>
-                    </p>
-
-                    <p>Price: <%= card["price"] %></p>
-
-                    <p>HP: <%= card.dig("technique", "hp") %></p>
-
-                    <p>
-                      Firepower:
-                      <%= card.dig("technique", "firepower") %>
-                    </p>
-
-                    <p>Fuel: <%= card.dig("technique", "fuel") %></p>
-
-
-                  <% elsif card["card_type"] == "order" %>
-
-                    <p>Type: <%= card["card_type"] %></p>
-                    <p>Price: <%= card["price"] %></p>
-
-                    <% abilities = card["abilities"] || [] %>
-
-                    <div class="card__abilities">
-
-                      <p>Abilities:</p>
-
-                      <% if abilities.any? %>
-
-                        <ul>
-
-                          <% abilities.each do |ability| %>
-
-                            <li>
-                              <%= ability["code"] %>
-
-                              <% if ability["code"] == "damage_technique" %>
-                                — Damage: <%= ability["damage"] %>
-                              <% elsif ability["code"] == "draw_cards" %>
-                                — Cards: <%= ability["count"] %>
-                              <% end %>
-                            </li>
-
-                          <% end %>
-
-                        </ul>
-
-                      <% else %>
-
-                        <p>none</p>
-
-                      <% end %>
-
-                    </div>
-
-
-                  <% elsif card["card_type"] == "platoon" %>
-
-                    <p>Type: <%= card["card_type"] %></p>
-
-                    <p>Price: <%= card["price"] %></p>
-
-                    <p>HP: <%= card.dig("platoon", "hp") %></p>
-
-                    <p>
-                      Firepower:
-                      <%= card.dig("platoon", "firepower") %>
-                    </p>
-
-                    <p>Armor: <%= card.dig("platoon", "armor") %></p>
-
-                    <p>Fuel: <%= card.dig("platoon", "fuel") %></p>
-
-                  <% end %>
-
-                </div>
-
-              </article>
-
-            <% end %>
-
-          </div>
-
-        <% else %>
-
-          <p class="opponent-hand-count">
-            Opponent hand: <%= bottom_player["hand_count"] %> cards
-          </p>
-
-        <% end %>
-
-      <% end %>
-
-    </div>
-
-  </section>
+  </div>
 
 </main>

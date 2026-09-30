@@ -4,7 +4,8 @@ module GameEngine
       "move" => Actions::Move,
       "attack" => Actions::Attack,
       "play_card" => Actions::PlayCard,
-      "end_turn" => Actions::EndTurn
+      "end_turn" => Actions::EndTurn,
+      "surrender" => Actions::Surrender
     }.freeze
 
     def initialize(state, current_time: Time.current)
@@ -12,15 +13,17 @@ module GameEngine
       @current_time = current_time
     end
 
-    def call(action)
-      handler_class = ACTIONS[action.type]
-      return failure("Unknown action type") unless handler_class
-      return failure("Game is already finished") if @state["status"] == "finished"
+		def call(action)
+			handler_class = ACTIONS[action.type]
+			return failure("Unknown action type") unless handler_class
+			return failure("Game is already finished") if @state["status"] == "finished"
+
+			return handler_class.new(@state, action).call if action.type == "surrender"
 
 			if current_player?(action)
 				timer = GameEngine::TurnTimer.new(
-					@state,
-					current_time: @current_time
+				  @state,
+				  current_time: @current_time
 				)
 
 				return finish_game_by_timeout(action) if timer.expired?
@@ -28,14 +31,14 @@ module GameEngine
 
 			if action.type == "end_turn"
 				handler_class.new(
-					@state,
-					action,
-					current_time: @current_time
+				  @state,
+				  action,
+				  current_time: @current_time
 				).call
 			else
 				handler_class.new(@state, action).call
 			end
-    end
+		end
 
     private
 

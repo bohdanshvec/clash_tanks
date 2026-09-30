@@ -635,4 +635,118 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :forbidden
   end
+  
+  test "surrenders game through controller" do
+    game = Game.create!
+    player = Player.create!
+    enemy = Player.create!
+
+    nation = Nation.create!(
+      name: "Surrender Test Nation",
+      code: "surrender_test_nation"
+    )
+
+    enemy_nation = Nation.create!(
+      name: "Enemy Surrender Test Nation",
+      code: "enemy_surrender_test_nation"
+    )
+
+    headquarters_card = Card.create!(
+      nation: nation,
+      name: "Surrender Test HQ",
+      code: "surrender_test_hq",
+      card_type: "headquarters",
+      weight: 1,
+      price: nil
+    )
+
+    enemy_headquarters_card = Card.create!(
+      nation: enemy_nation,
+      name: "Enemy Surrender Test HQ",
+      code: "enemy_surrender_test_hq",
+      card_type: "headquarters",
+      weight: 1,
+      price: nil
+    )
+
+    deck = Deck.create!(
+      player: player,
+      nation: nation,
+      name: "Surrender Test Deck"
+    )
+
+    enemy_deck = Deck.create!(
+      player: enemy,
+      nation: enemy_nation,
+      name: "Enemy Surrender Test Deck"
+    )
+
+    GamePlayer.create!(
+      game: game,
+      player: player,
+      nation: nation,
+      deck: deck,
+      headquarters_card: headquarters_card
+    )
+
+    GamePlayer.create!(
+      game: game,
+      player: enemy,
+      nation: enemy_nation,
+      deck: enemy_deck,
+      headquarters_card: enemy_headquarters_card
+    )
+
+    game.update!(
+      state: {
+        "status" => "started",
+        "turn_number" => 1,
+        "current_player_id" => enemy.id,
+        "turn_started_at" => Time.current.iso8601,
+        "players" => {
+          player.id.to_s => {
+            "nation_id" => nation.id,
+            "hand" => [],
+            "deck" => [],
+            "graveyard" => [],
+            "platoons" => [nil, nil, nil, nil],
+            "resources" => 0,
+            "remaining_time" => 600,
+            "empty_deck_draw_attempts" => 0
+          },
+          enemy.id.to_s => {
+            "nation_id" => enemy_nation.id,
+            "hand" => [],
+            "deck" => [],
+            "graveyard" => [],
+            "platoons" => [nil, nil, nil, nil],
+            "resources" => 0,
+            "remaining_time" => 600,
+            "empty_deck_draw_attempts" => 0
+          }
+        },
+        "field" => GameEngine::GameState.empty_field
+      }
+    )
+
+    post surrender_path(
+      game,
+      player_id: player.id
+    )
+
+    assert_response :redirect
+
+    game.reload
+
+    assert_equal "finished", game.state["status"]
+
+		assert_equal(
+			{
+				"winner_id" => enemy.id.to_s,
+				"loser_id" => player.id.to_s,
+				"reason" => "surrender"
+			},
+			game.state["result"]
+		)
+  end
 end
