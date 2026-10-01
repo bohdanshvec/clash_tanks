@@ -1,0 +1,39 @@
+<h1>Регистрация</h1>
+
+<%= form_with model: @player, url: register_path do |form| %>
+  <% if @player.errors.any? %>
+    <div>
+      <h2>Не удалось зарегистрироваться:</h2>
+
+      <ul>
+        <% @player.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :email, "Email" %>
+    <%= form.email_field :email, required: true, autofocus: true %>
+  </div>
+
+  <div>
+    <%= form.label :name, "Имя" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :password, "Пароль" %>
+    <%= form.password_field :password, required: true %>
+  </div>
+
+  <div>
+    <%= form.label :password_confirmation, "Подтверждение пароля" %>
+    <%= form.password_field :password_confirmation, required: true %>
+  </div>
+
+  <div>
+    <%= form.submit "Зарегистрироваться" %>
+  </div>
+<% end %>

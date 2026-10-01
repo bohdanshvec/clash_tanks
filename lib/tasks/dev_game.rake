@@ -1,8 +1,15 @@
 namespace :dev do
-  desc "Create a development game for Stage 15 UI"
+  desc "Create a development game"
   task create_game: :environment do
-    player_one = Player.find(1)
-    player_two = Player.find(2)
+    player_one = Player.find_or_create_by!(email: "dev.player1@example.com") do |player|
+      player.name = "Dev Player 1"
+      player.password = "password"
+    end
+
+    player_two = Player.find_or_create_by!(email: "dev.player2@example.com") do |player|
+      player.name = "Dev Player 2"
+      player.password = "password"
+    end
 
     germany = Nation.find_by!(code: "germany")
     ussr = Nation.find_by!(code: "ussr")
@@ -39,13 +46,13 @@ namespace :dev do
     germany_deck = Deck.create!(
       player: player_one,
       nation: germany,
-      name: "Stage 15 Germany"
+      name: "Development Germany"
     )
 
     ussr_deck = Deck.create!(
       player: player_two,
       nation: ussr,
-      name: "Stage 15 USSR"
+      name: "Development USSR"
     )
 
     germany_codes.each do |code|
@@ -87,11 +94,18 @@ namespace :dev do
     puts
     puts "Development game created."
     puts "Game ID: #{game.id}"
-    puts "Player 1 ID: #{player_one.id}"
-    puts "Player 2 ID: #{player_two.id}"
+    puts
+    puts "Player 1:"
+    puts "  Email: dev.player1@example.com"
+    puts "  Password: password"
+    puts
+    puts "Player 2:"
+    puts "  Email: dev.player2@example.com"
+    puts "  Password: password"
     puts
     puts "Open:"
-    puts "http://localhost:3000/games/#{game.id}?player_id=#{player_one.id}"
-    puts "http://localhost:3000/games/#{game.id}?player_id=#{player_two.id}"
+    puts "http://localhost:3000/games/#{game.id}"
+    puts
+    puts "To test both players, log in as the corresponding player in separate browser sessions."
   end
 end

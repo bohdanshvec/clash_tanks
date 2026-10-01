@@ -23,5 +23,15 @@ module ActiveSupport
         }
       }
     end
+
+    def create_player(email: nil, name: nil, password: "password")
+      email ||= "player#{Player.maximum(:id).to_i + 1}@example.com"
+
+      Player.create!(
+        email: email,
+        name: name,
+        password: password
+      )
+    end
   end
 end

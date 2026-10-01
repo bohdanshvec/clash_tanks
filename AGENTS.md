@@ -178,6 +178,7 @@ UI получает `VisibleState`, а не полный `Game.state`.
 Реализован: `app/services/game_engine/available_actions.rb`
 
 `AvailableActions` вычисляется сервером и входит в `VisibleState`.
+
 Stimulus только отображает результат.
 
 Для текущего игрока:
@@ -345,6 +346,36 @@ View может менять только визуальный порядок к
 - `Deck`
 - `DeckCard`
 
+### Player
+
+`Player` использует `has_secure_password`.
+
+Текущая модель:
+
+```ruby
+class Player < ApplicationRecord
+  has_secure_password
+
+  has_many :game_players
+  has_many :games, through: :game_players
+  has_many :decks, dependent: :destroy
+
+  validates :email, presence: true, uniqueness: true
+
+  def display_name
+    name.presence || email.split("@").first
+  end
+end
+```
+
+Поля:
+
+- `email`
+- `name`
+- `password_digest`
+
+`name` необязателен.
+
 ### Game
 
 Статусы:
@@ -444,6 +475,7 @@ Card → CardAbility → Ability
 ## 10. Deck / StartGame
 
 `Deck` — постоянная колода игрока.
+
 `DeckCard` хранит количество копий.
 
 Ограничения:
@@ -930,7 +962,7 @@ UI не содержит игровых правил.
 
 Первоначально Stage 15.15 должен был включать:
 
-- waiting / started / finished
+- waiting / started
 
 Но waiting и пользовательский lifecycle игры отложены на Stage 18.
 
@@ -962,6 +994,7 @@ Stage 15.15 завершён.
 ```
 
 UI не вычисляет победителя по игровым объектам.
+
 Используется `result["winner_id"]`.
 
 ### Finished screen
@@ -980,16 +1013,7 @@ UI не вычисляет победителя по игровым объект
 
 Результат остаётся неприглушённым.
 
-Используется отдельная обёртка `.game-content--muted`
-
-CSS:
-
-```css
-.game-content--muted {
-  opacity: 0.65;
-  pointer-events: none;
-}
-```
+Используется отдельная обёртка `.game-content--muted`.
 
 `pointer-events: none` — только UI-механизм. Сервер всё равно проверяет состояние игры.
 
@@ -1018,12 +1042,12 @@ CSS:
 
 Также уже реализовано завершение через:
 
-- `time_expired`
-- `headquarters_destroyed`
-- `empty_deck_damage`
-- `surrender`
+- `time_expired`;
+- `headquarters_destroyed`;
+- `empty_deck_damage`;
+- `surrender`.
 
-и все варианты используют общий finished UI.
+Все варианты используют общий finished UI.
 
 ---
 
@@ -1055,6 +1079,7 @@ CSS:
 `100vw` не использовать как основу расчёта ширины руки.
 
 Отображаются необходимые характеристики Technique, Order, Platoon и HQ.
+
 `attack_range` отдельно в UI не отображается.
 
 ### Текущая визуальная перспектива
@@ -1062,24 +1087,6 @@ CSS:
 После Stage 15.17 верх/низ больше не привязаны к конкретному Player ID.
 
 Для любого игрока, открывшего игру:
-
-```text
-верх:
-  соперник
-  рука соперника
-  информация соперника
-
-центр:
-  свои Platoon слева
-  поле
-  Platoon соперника справа
-
-низ:
-  информация текущего игрока
-  собственная рука
-```
-
-То есть:
 
 ```text
               СОПЕРНИК
@@ -1117,7 +1124,7 @@ HQ соперника визуально всегда находится в ве
 [0][4] [0][3] [0][2] [0][1] [0][0]
 ```
 
-При этом каждая DOM-клетка сохраняет настоящую логическую координату:
+Каждая DOM-клетка сохраняет настоящую логическую координату:
 
 ```html
 data-position="row,column"
@@ -1133,7 +1140,7 @@ Stimulus продолжает работать с логическими коо�
 
 ### Важно
 
-Не использовать CSS:
+Не использовать:
 
 ```css
 transform: rotate(180deg);
@@ -1141,7 +1148,7 @@ transform: rotate(180deg);
 
 для разворота игрового поля.
 
-Разворот выполняется изменением порядка вывода строк и колонок в View, чтобы текст, карты, характеристики и интерактивные элементы не переворачивались.
+Разворот выполняется изменением порядка вывода строк и колонок в View.
 
 Не менять порядок Platoon slots внутри боковых панелей без отдельного требования.
 
@@ -1245,11 +1252,9 @@ data-position="реальная_строка,реальная_колонка"
 
 а не с визуальным индексом клетки.
 
-Порядок отображения клеток может изменяться View, но `data-position` всегда содержит логические координаты `GameState`.
+Не добавлять в Stimulus отдельную систему преобразования координат для перспективы.
 
-Не добавлять в Stimulus отдельную систему преобразования координат для перспективы, если это не требуется существующей архитектурой.
-
-### 22.1 Выбор объектов
+### Выбор объектов
 
 Можно выбрать:
 
@@ -1263,7 +1268,7 @@ data-position="реальная_строка,реальная_колонка"
 
 Выбор не изменяет `GameState`.
 
-### 22.2 AvailableActions в Stimulus
+### AvailableActions в Stimulus
 
 После выбора объекта Stimulus подсвечивает данные из `AvailableActions`:
 
@@ -1277,7 +1282,7 @@ data-position="реальная_строка,реальная_колонка"
 
 Не копировать правила Engine в JavaScript.
 
-### 22.3 Mouse interaction
+### Mouse interaction
 
 Основной принцип:
 
@@ -1304,7 +1309,7 @@ Hover:
 - по недопустимой области отменяет выбор;
 - повторный клик по выбранному объекту отменяет выбор.
 
-### 22.4 Drag & Drop
+### Drag & Drop
 
 Реализованы:
 
@@ -1323,9 +1328,10 @@ Drag принимает только разрешённые `AvailableActions` t
 - `.game-action--drop-zone`
 
 Platoon bar является drop zone.
+
 Отдельный slot не передаётся в Action.
 
-### 22.5 Отмена выбора
+### Отмена выбора
 
 Если выбран объект:
 
@@ -1341,7 +1347,7 @@ Platoon bar является drop zone.
 - `game-action--hover`;
 - временные Drag-состояния.
 
-### 22.6 CSS-состояния
+### CSS-состояния
 
 Используются:
 
@@ -1365,14 +1371,12 @@ Platoon bar является drop zone.
 
 CSS/Stimulus не являются проверкой безопасности.
 
-### 22.7 Stage 15.13.6 — визуальная обработка недоступных действий
+### Визуальная обработка недоступных действий
 
-На текущем этапе приглушаются карты в руке:
+Приглушаются карты в руке:
 
 - неактивного игрока;
 - активного игрока при недостатке ресурсов.
-
-Для этого используется `game-object--muted`.
 
 Если карта имеет достаточные ресурсы, но нет подходящей позиции/слота/цели, она не приглушается.
 
@@ -1407,8 +1411,8 @@ Stage 15.17 завершён.
 
 View определяет:
 
-- `current_player`
-- `opponent_player`
+- `current_player`;
+- `opponent_player`;
 
 по `current_player_id`.
 
@@ -1488,6 +1492,7 @@ Player Perspective является только presentation/UI logic.
 - корректная работа существующих действий и визуальных реакций.
 
 CSS для отдельного разворота сцены не добавлялся.
+
 `transform: rotate(180deg)` не используется.
 
 ---
@@ -1507,17 +1512,333 @@ View отображает Resources обоих игроков.
 
 ---
 
-## 25. Dev player identity
+## 25. Stage 16 — Players
 
-Полной авторизации пока нет.
+Stage 16 завершён.
 
-Временно используется `?player_id=1`
+Цель Stage 16:
 
-Например: `/games/7?player_id=1`
+- перейти от временного `player_id` к реальному `Player`;
+- добавить базовую authentication (аутентификацию);
+- определить `current_player` через Rails session;
+- убрать `?player_id=` из пользовательского игрового flow;
+- добавить базовые публичные страницы;
+- подготовить основу для Stage 17 Deck;
+- сохранить архитектурную границу `Game → GamePlayer → Player`.
 
-Controller проверяет, что `Player` является `GamePlayer` этой партии.
+### 25.1 Player authentication
 
-Это только dev-механизм, не authentication.
+Используется:
+
+```ruby
+has_secure_password
+```
+
+Для паролей используется `bcrypt`.
+
+`Player` имеет:
+
+- `email`;
+- `name`;
+- `password_digest`.
+
+Email уникален.
+
+### 25.2 Registration
+
+Создан: `RegistrationsController`
+
+Поддерживаются:
+
+- форма регистрации;
+- email;
+- name;
+- password;
+- password confirmation;
+- валидация;
+- создание `Player`.
+
+После успешной регистрации выполняется redirect на `root_path`.
+
+### 25.3 Login
+
+Создан: `SessionsController`
+
+Поддерживаются:
+
+- форма входа;
+- email;
+- password;
+- authenticate;
+- сохранение `session[:player_id]`;
+- redirect на `root_path`;
+- сообщение об ошибке при неверных данных.
+
+### 25.4 Logout
+
+Поддерживается: `DELETE /logout`
+
+Используется:
+
+```ruby
+reset_session
+```
+
+После выхода выполняется redirect на `root_path`.
+
+### 25.5 current_player
+
+`ApplicationController` содержит:
+
+```ruby
+helper_method :current_player
+```
+
+Текущий игрок определяется только через `session[:player_id]`.
+
+Игровой URL больше не определяет пользователя через query parameter.
+
+Используется:
+
+```ruby
+def current_player
+  @current_player ||= Player.find_by(id: session[:player_id])
+end
+```
+
+### 25.6 GamesController authentication
+
+Игровые endpoints больше не используют `?player_id=` как способ идентификации игрока.
+
+`GamesController` получает текущего игрока из `current_player`.
+
+Перед игровым действием проверяется:
+
+```text
+current_player
+      ↓
+player_in_game?(game)
+      ↓
+GamePlayer
+```
+
+Игрок может работать только с игрой, участником которой он является.
+
+Игровой `player_id` в `GameState` не изменяется authentication-механизмом.
+
+### 25.7 Routes
+
+Добавлены:
+
+```ruby
+get "login", to: "sessions#new", as: :login
+post "login", to: "sessions#create"
+delete "logout", to: "sessions#destroy", as: :logout
+
+get "register", to: "registrations#new", as: :register
+post "register", to: "registrations#create", as: :registrations
+
+get "rules", to: "pages#rules", as: :rules
+get "play", to: "pages#play", as: :play
+get "decks", to: "pages#decks", as: :decks
+get "statistics", to: "pages#statistics", as: :statistics
+```
+
+Существующий:
+
+```ruby
+root "pages#home"
+```
+
+Игровые routes:
+
+```ruby
+get  "games/:id",           to: "games#show",      as: :game
+post "games/:id/end_turn",  to: "games#end_turn",  as: :end_turn
+post "games/:id/play_card", to: "games#play_card", as: :play_card
+post "games/:id/move",      to: "games#move",      as: :move
+post "games/:id/attack",    to: "games#attack",    as: :attack
+post "games/:id/surrender", to: "games#surrender", as: :surrender
+```
+
+### 25.8 Header
+
+Layout содержит общий header.
+
+Гость видит:
+
+- Clash Tanks;
+- Гость;
+- Войти;
+- Регистрация.
+
+Авторизованный игрок видит:
+
+- Clash Tanks;
+- `display_name`;
+- Выйти.
+
+### 25.9 Основные страницы
+
+Главная страница содержит:
+
+- Правила игры;
+- Играть;
+- Колоды;
+- Статистика — только для авторизованного игрока.
+
+Публичные страницы:
+
+```text
+/
+/rules
+/play
+/decks
+```
+
+`/statistics` доступна только авторизованному игроку.
+
+Для гостя:
+
+```text
+GET /statistics
+        ↓
+redirect /
+```
+
+Пока это базовая навигационная основа.
+
+Реальный выбор Deck, создание waiting game и пользовательский запуск партии относятся к следующим этапам.
+
+### 25.10 Guest mode
+
+Гость может открыть:
+
+- `/`;
+- `/rules`;
+- `/play`;
+- `/decks`.
+
+Гость не может открыть: `/statistics`.
+
+Для `/statistics` выполняется redirect на `root_path`.
+
+Авторизованный игрок может открыть все перечисленные страницы.
+
+### 25.11 Development test games
+
+Создание тестовой игры сохранено как development-only механизм:
+
+```bash
+bin/rails dev:create_game
+```
+
+Development task автоматически создаёт или находит двух специальных development-пользователей:
+
+```text
+dev.player1@example.com
+dev.player2@example.com
+```
+
+Пароль:
+
+```text
+password
+```
+
+Для каждого запуска создаются новые тестовые Deck и новая Game.
+
+После создания task выводит Game ID и данные development-пользователей.
+
+Игровой URL больше не содержит `?player_id=...`
+
+Пример:
+
+```text
+http://localhost:3000/games/61
+```
+
+Для тестирования двух игроков используются разные browser sessions:
+
+- разные браузеры;
+- разные browser profiles;
+- либо обычное и приватное окно.
+
+#### Важно
+
+Одна обычная browser session содержит одного текущего `session[:player_id]`.
+
+Поэтому для одновременного тестирования двух игроков в разных авторизациях нельзя использовать два окна одного и того же browser profile.
+
+Это не является игровой ошибкой.
+
+`dev:create_game` не является пользовательским lifecycle и не заменяет будущие waiting / started механики.
+
+### 25.12 Тесты Stage 16
+
+Добавлены и обновлены тесты:
+
+- Player authentication;
+- registration;
+- login;
+- logout;
+- `current_player`;
+- доступ к игре через авторизацию;
+- отсутствие зависимости от `?player_id=`;
+- доступ к публичным страницам;
+- ограничение `/statistics` для гостя;
+- доступ авторизованного игрока к `/statistics`.
+
+Последняя полная проверка Stage 16:
+
+```bash
+bin/rails test
+```
+
+Результат:
+
+```text
+346 runs, 947 assertions, 0 failures, 0 errors, 0 skips
+```
+
+Отдельно:
+
+```bash
+bin/rails test test/controllers/pages_controller_test.rb
+```
+
+Результат:
+
+```text
+6 runs, 8 assertions, 0 failures, 0 errors, 0 skips
+```
+
+### 25.13 Итог Stage 16
+
+Stage 16 полностью завершён.
+
+Реализовано:
+
+- `Player`;
+- email;
+- password authentication;
+- registration;
+- login;
+- logout;
+- `current_player`;
+- session-based identity;
+- удаление пользовательской зависимости от `?player_id=`;
+- проверка участия в Game через `GamePlayer`;
+- общий header;
+- главная страница;
+- Rules;
+- Play;
+- Decks;
+- Statistics;
+- Guest mode;
+- development test users;
+- development test game без `?player_id=`;
+- тесты.
 
 ---
 
@@ -1534,22 +1855,12 @@ Actions:
 - `attack`
 - `surrender`
 
-Routes:
-
-```ruby
-get  "games/:id",           to: "games#show",      as: :game
-post "games/:id/end_turn",  to: "games#end_turn",  as: :end_turn
-post "games/:id/play_card", to: "games#play_card", as: :play_card
-post "games/:id/move",      to: "games#move",      as: :move
-post "games/:id/attack",    to: "games#attack",    as: :attack
-post "games/:id/surrender", to: "games#surrender", as: :surrender
-mount ActionCable.server => "/cable"
-```
-
 Controller flow:
 
 ```text
 HTTP request
+ ↓
+current_player
  ↓
 Game / player check
  ↓
@@ -1573,6 +1884,26 @@ Controller не содержит игровых правил.
 
 Surrender также не завершает игру напрямую из Controller.
 
+### Authentication boundary
+
+```text
+browser session
+      ↓
+current_player
+      ↓
+GamePlayer membership
+      ↓
+Action.player_id
+      ↓
+GameEngine
+```
+
+Session определяет личность пользователя.
+
+Она не является источником игрового состояния.
+
+`Game.state` остаётся единственным authoritative snapshot игровой партии.
+
 ---
 
 ## 27. Controller / UI boundaries
@@ -1580,6 +1911,7 @@ Surrender также не завершает игру напрямую из Cont
 ### Controller может
 
 - принять HTTP params;
+- определить `current_player`;
 - проверить Game и player;
 - создать Action;
 - вызвать Engine;
@@ -1638,12 +1970,12 @@ Stage 15.16 завершён как функциональный HTML vertical s
 
 ## 29. Что отложено на Stage 18
 
-Пользовательский lifecycle партии сознательно не реализуется в Stage 15.
+Пользовательский lifecycle партии сознательно не реализуется в Stage 16–17.
 
 На Stage 18 планируется:
 
 ```text
-player identifies/authenticates
+player authenticated
         ↓
 видит свои Deck
         ↓
@@ -1668,8 +2000,6 @@ Game.status = started
 игровая страница
 ```
 
-Важно:
-
 ### Waiting
 
 `Game.status == "waiting"` и `Game.state == nil` до вызова `StartGame`.
@@ -1684,17 +2014,18 @@ Waiting должен быть отдельной страницей ожидан
 
 ### Player identity
 
-Текущий `?player_id=...` является временным dev-механизмом.
+Полноценная базовая authentication уже реализована на Stage 16.
 
-На Stage 18 потребуется полноценный механизм идентификации игрока.
+На Stage 18 она будет использоваться для пользовательского lifecycle.
 
 ### Deck selection
 
-Игрок должен:
+На Stage 17 игрок должен:
 
 - видеть собственные Deck;
-- выбрать Deck;
-- начать поиск/вход в бой.
+- просматривать Deck;
+- выбирать Deck;
+- подготавливать его к будущему входу в бой.
 
 `bin/rails dev:create_game` остаётся только development/test механизмом и не является будущим пользовательским flow.
 
@@ -1754,6 +2085,7 @@ AI:
 - использовать cookies как основное хранилище `GameState`;
 - сохранять каждое промежуточное изменение `GameState`;
 - использовать dev `player_id` как постоянную authentication;
+- использовать `?player_id=` для пользовательской идентификации;
 - считать координаты постоянным ID Technique;
 - использовать `movement_count` как Counterattack;
 - придумывать игровые механики;
@@ -1769,7 +2101,9 @@ AI:
 - преобразовывать координаты игрового поля внутри `VisibleState`;
 - использовать CSS `transform: rotate(180deg)` для разворота игрового поля;
 - дублировать правила перспективы в Stimulus;
-- использовать визуальный порядок клеток как источник их логических координат.
+- использовать визуальный порядок клеток как источник их логических координат;
+- считать browser session источником игрового состояния;
+- использовать одну browser session для одновременной авторизации двух разных игроков при browser-тестировании.
 
 ---
 
@@ -1821,84 +2155,116 @@ Stage 25+     дальнейшее развитие
 15.17 Player Perspective
 ```
 
-### Stage 15.15 итог
+### Stage 16
+
+Завершён:
+
+```text
+16.1  Player model
+16.2  Player authentication foundation
+16.3  Registration
+16.4  Login
+16.5  Logout
+16.6  current_player
+16.7  remove ?player_id=
+16.8  Header
+16.9  Main pages
+16.10 Guest mode
+16.11 Development test users / create_game
+```
+
+### Stage 16 итог
 
 Реализовано:
 
-- `FinishGame` для surrender;
-- `Surrender` Action;
-- Controller endpoint;
-- route;
-- `result` в `VisibleState`;
-- пустые `AvailableActions` после finish;
-- «Победа» / «Вы проиграли»;
-- приглушение всего игрового контента;
-- Turbo update;
-- корректное завершение после surrender;
-- корректное отображение результата после уничтожения HQ;
-- корректное отображение результата после timeout.
+- реальный `Player`;
+- session-based authentication;
+- Registration;
+- Login;
+- Logout;
+- `current_player`;
+- защита игровых endpoints через `GamePlayer`;
+- публичные Rules / Play / Decks;
+- Statistics для авторизованного игрока;
+- Guest mode;
+- development test game через `bin/rails dev:create_game`;
+- отсутствие `?player_id=` в игровом URL;
+- тесты.
 
-### Stage 15.17 итог
+Последняя полная проверка:
 
-Реализовано:
+```bash
+bin/rails test
+```
 
-- текущий игрок всегда отображается снизу;
-- соперник всегда отображается сверху;
-- собственные Platoon всегда слева;
-- Platoon соперника всегда справа;
-- собственная рука всегда снизу;
-- рука соперника показывается сверху только как количество карт;
-- собственный HQ визуально всегда снизу слева;
-- HQ соперника визуально всегда сверху справа;
-- поле визуально разворачивается для второго игрока;
-- логические координаты `GameState` не изменяются;
-- `data-position` содержит настоящие логические координаты;
-- `VisibleState` не изменён;
-- `game_events_controller.js` не изменён;
-- `game_timer_controller.js` не изменён;
-- отдельные CSS-трансформации для разворота поля не используются.
+```text
+346 runs, 947 assertions, 0 failures, 0 errors, 0 skips
+```
 
 ### Следующий этап
 
-**Stage 16 — Players.**
+**Stage 17 — Deck**
 
-Не возвращаться к waiting / started UI сейчас.
-Он сознательно отложен на Stage 18.
+Основная задача:
+
+```text
+Player
+  ↓
+свои Deck
+  ↓
+просмотр Deck
+  ↓
+создание / редактирование Deck
+  ↓
+подготовка выбора Deck
+  ↓
+Stage 18
+```
+
+Не реализовывать waiting / started lifecycle раньше Stage 18.
 
 ---
 
-## 33. Stage 16 — Players
-
-Предварительная задача:
-
-- перейти от временного `player_id` к модели реального игрока;
-- определить необходимый механизм идентификации игрока;
-- подготовить основу для выбора собственных Deck;
-- сохранить существующую архитектурную границу `Game → GamePlayer → Player`.
-
-Не реализовывать matchmaking и waiting lifecycle раньше Stage 18, если это не потребуется для архитектурной основы Stage 16.
-
----
-
-## 34. Stage 17 — Deck
+## 33. Stage 17 — Deck
 
 План:
 
 - UI собственных Deck;
 - просмотр состава Deck;
-- выбор Deck;
-- отображение допустимых ограничений Deck;
+- создание Deck;
+- редактирование Deck;
+- добавление/удаление Card;
+- изменение количества копий;
+- отображение Nation Deck;
+- отображение текущего размера Deck;
+- отображение существующих ограничений Deck;
 - подготовка выбора Deck для будущего входа в бой.
+
+Guest:
+
+- может просматривать подготовленные тестовые/готовые Deck;
+- не может изменять их;
+- не может сохранять изменения.
+
+Authenticated Player:
+
+- видит собственные Deck;
+- может работать со своими Deck;
+- не получает доступа к чужим Deck.
 
 Persistent Deck не изменять во время партии.
 
+Правила Deck должны проверяться сервером.
+
+UI не должен самостоятельно определять допустимость Deck.
+
 ---
 
-## 35. Stage 18 — Waiting / Started Game Lifecycle
+## 34. Stage 18 — Waiting / Started Game Lifecycle
 
 План:
 
-1. Игрок идентифицирован.
+1. Игрок идентифицирован через authentication.
 2. Игрок видит свои Deck.
 3. Игрок выбирает Deck.
 4. Нажимает «В бой».
@@ -1915,7 +2281,7 @@ Persistent Deck не изменять во время партии.
 
 ---
 
-## 36. Stage 19 — Human vs Human
+## 35. Stage 19 — Human vs Human
 
 План:
 
@@ -1929,15 +2295,15 @@ Persistent Deck не изменять во время партии.
 
 ---
 
-## 37. Stage 20 — Decision Provider
+## 36. Stage 20 — Decision Provider
 
 Создать абстракцию Decision Provider:
 
-- Human
-- AI
-- External API
-- Local model
-- Other provider
+- Human;
+- AI;
+- External API;
+- Local model;
+- Other provider.
 
 Decision Provider должен выдавать только Action.
 
@@ -1945,7 +2311,7 @@ Decision Provider должен выдавать только Action.
 
 ---
 
-## 38. Stage 21 — AI
+## 37. Stage 21 — AI
 
 Создать первого AI Decision Provider.
 
@@ -1971,12 +2337,12 @@ AI не должен:
 
 ---
 
-## 39. Stage 22 — Ollama / Qwen3 1.7B
+## 38. Stage 22 — Ollama / Qwen3 1.7B
 
 Планируемая локальная модель:
 
-- Ollama
-- Qwen3 1.7B
+- Ollama;
+- Qwen3 1.7B.
 
 Интеграция должна находиться на уровне Decision Provider.
 
@@ -1984,7 +2350,7 @@ Game Engine не должен зависеть от Ollama.
 
 ---
 
-## 40. Stage 23 — AI testing
+## 39. Stage 23 — AI testing
 
 План:
 
@@ -1997,7 +2363,7 @@ Game Engine не должен зависеть от Ollama.
 
 ---
 
-## 41. Stage 24 — Deck Weight
+## 40. Stage 24 — Deck Weight
 
 После базового AI/testing:
 
@@ -2008,7 +2374,7 @@ Game Engine не должен зависеть от Ollama.
 
 ---
 
-## 42. Порядок работы
+## 41. Порядок работы
 
 Для каждого этапа:
 
@@ -2028,7 +2394,7 @@ Game Engine не должен зависеть от Ollama.
 9. При необходимости обновить `GAME_RULES.md`.
 10. После значимого этапа сделать отдельный Git commit.
 
-Для Stage 15 работать маленькими шагами.
+Для UI работать маленькими шагами.
 
 После существенных изменений UI обязательно проверять результат непосредственно в браузере.
 
@@ -2036,7 +2402,7 @@ Game Engine не должен зависеть от Ollama.
 
 ---
 
-## 43. Текущая контрольная точка
+## 42. Текущая контрольная точка
 
 Завершено:
 
@@ -2069,55 +2435,70 @@ Game Engine не должен зависеть от Ollama.
 - Stage 15.15
 - Stage 15.16
 - Stage 15.17
+- Stage 16.1
+- Stage 16.2
+- Stage 16.3
+- Stage 16.4
+- Stage 16.5
+- Stage 16.6
+- Stage 16.7
+- Stage 16.8
+- Stage 16.9
+- Stage 16.10
+- Stage 16.11
 
-Последняя зафиксированная проверка:
+Последняя полная проверка:
 
 ```bash
 bin/rails test
 ```
 
-→ 327 runs, 896 assertions, 0 failures, 0 errors, 0 skips.
+Результат:
 
-После этого была дополнительно реализована и проверена через браузер визуальная перспектива игрока.
+```text
+346 runs, 947 assertions, 0 failures, 0 errors, 0 skips
+```
 
-Проверено:
+Дополнительно проверено через браузер:
 
-- полноценный игровой flow;
-- click actions;
-- hover;
-- Drag & Drop;
-- `AvailableActions`;
-- визуальное приглушение недоступных карт;
+- регистрация;
+- login;
+- logout;
+- header;
+- Guest mode;
+- доступ к Rules;
+- доступ к Play;
+- доступ к Decks;
+- ограничение Statistics для гостя;
+- доступ Statistics для авторизованного игрока;
+- создание development game;
+- вход первым development player;
+- вход вторым development player;
+- игра двумя игроками через разные browser sessions;
+- End Turn;
+- смена игрока;
+- PlayCard;
+- Move;
+- Attack;
 - Timer;
 - Turbo;
+- Finished UI;
 - surrender;
-- завершение при уничтожении HQ;
-- finished UI;
-- «Победа»;
-- «Вы проиграли»;
-- приглушение всего игрового контента;
-- `game_finished` broadcast;
-- визуальная перспектива обоих игроков;
-- собственная рука снизу;
-- рука соперника сверху;
-- собственные Platoon слева;
-- Platoon соперника справа;
-- собственный HQ визуально снизу слева;
-- HQ соперника визуально сверху справа;
-- сохранение логических `data-position`;
-- корректная работа игровых действий после визуального разворота.
+- завершение по уничтожению HQ.
 
 ### Текущее состояние
 
 **Stage 15 — ЗАВЕРШЁН**
 
+**Stage 16 — ЗАВЕРШЁН**
+
 waiting / started UI сознательно отложены на Stage 18.
 
 ### Продолжать с
 
-**Stage 16 — Players**
+**Stage 17 — Deck**
 
-Следующий крупный пользовательский lifecycle:
+Следующий крупный lifecycle:
 
 ```text
 Stage 16 — Players
@@ -2159,6 +2540,20 @@ VisibleState
 Turbo
     ↓
 Stimulus
+```
+
+Authentication:
+
+```text
+browser session
+      ↓
+current_player
+      ↓
+GamePlayer
+      ↓
+Action
+      ↓
+GameEngine
 ```
 
 Для AI:

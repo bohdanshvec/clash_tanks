@@ -1,10 +1,17 @@
 require "test_helper"
 
 class GamesControllerTest < ActionDispatch::IntegrationTest
+  def log_in(player)
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+  end
+
   test "returns forbidden when player does not belong to game" do
     game = Game.create!
-    player_one = Player.create!
-    player_two = Player.create!
+    player_one = create_player
+    player_two = create_player
 
     nation = Nation.create!(
       name: "Test Nation",
@@ -34,7 +41,9 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       headquarters_card: headquarters_card
     )
 
-    get game_path(game, player_id: player_two.id)
+    log_in(player_two)
+
+    get game_path(game)
 
     assert_response :forbidden
   end
@@ -49,7 +58,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
   test "allows a player who belongs to the game" do
     game = Game.create!
-    player = Player.create!
+    player = create_player
 
     nation = Nation.create!(
       name: "Test Nation",
@@ -100,14 +109,16 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       }
     )
 
-    get game_path(game, player_id: player.id)
+    log_in(player)
+
+    get game_path(game)
 
     assert_not_equal 403, response.status
   end
 
   test "moves player's technique through controller" do
     game = Game.create!
-    player = Player.create!
+    player = create_player
 
     nation = Nation.create!(
       name: "Move Test Nation",
@@ -176,9 +187,10 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       }
     )
 
+    log_in(player)
+
     post move_path(
       game,
-      player_id: player.id,
       from_row: 1,
       from_column: 1,
       to_row: 0,
@@ -197,7 +209,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
   test "returns unprocessable entity when move is invalid" do
     game = Game.create!
-    player = Player.create!
+    player = create_player
 
     nation = Nation.create!(
       name: "Invalid Move Nation",
@@ -268,9 +280,10 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       }
     )
 
+    log_in(player)
+
     post move_path(
       game,
-      player_id: player.id,
       from_row: 1,
       from_column: 1,
       to_row: 0,
@@ -284,11 +297,11 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal original_field, game.state["field"]
   end
-  
+
   test "attacks player's technique through controller" do
     game = Game.create!
-    player = Player.create!
-    enemy = Player.create!
+    player = create_player
+    enemy = create_player
 
     nation = Nation.create!(
       name: "Attack Test Nation",
@@ -410,9 +423,10 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       }
     )
 
+    log_in(player)
+
     post attack_path(
       game,
-      player_id: player.id,
       attacker_row: 1,
       attacker_column: 1,
       target_row: 1,
@@ -432,169 +446,170 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, target["has_counterattacked"]
   end
 
-	test "returns unprocessable entity when attack is invalid" do
-		game = Game.create!
-		player = Player.create!
-		enemy = Player.create!
+  test "returns unprocessable entity when attack is invalid" do
+    game = Game.create!
+    player = create_player
+    enemy = create_player
 
-		nation = Nation.create!(
-		  name: "Invalid Attack Nation",
-		  code: "invalid_attack_nation"
-		)
+    nation = Nation.create!(
+      name: "Invalid Attack Nation",
+      code: "invalid_attack_nation"
+    )
 
-		enemy_nation = Nation.create!(
-		  name: "Invalid Enemy Attack Nation",
-		  code: "invalid_enemy_attack_nation"
-		)
+    enemy_nation = Nation.create!(
+      name: "Invalid Enemy Attack Nation",
+      code: "invalid_enemy_attack_nation"
+    )
 
-		headquarters_card = Card.create!(
-		  nation: nation,
-		  name: "Invalid Attack HQ",
-		  code: "invalid_attack_hq",
-		  card_type: "headquarters",
-		  weight: 1,
-		  price: nil
-		)
+    headquarters_card = Card.create!(
+      nation: nation,
+      name: "Invalid Attack HQ",
+      code: "invalid_attack_hq",
+      card_type: "headquarters",
+      weight: 1,
+      price: nil
+    )
 
-		enemy_headquarters_card = Card.create!(
-		  nation: enemy_nation,
-		  name: "Invalid Enemy Attack HQ",
-		  code: "invalid_enemy_attack_hq",
-		  card_type: "headquarters",
-		  weight: 1,
-		  price: nil
-		)
+    enemy_headquarters_card = Card.create!(
+      nation: enemy_nation,
+      name: "Invalid Enemy Attack HQ",
+      code: "invalid_enemy_attack_hq",
+      card_type: "headquarters",
+      weight: 1,
+      price: nil
+    )
 
-		deck = Deck.create!(
-		  player: player,
-		  nation: nation,
-		  name: "Invalid Attack Deck"
-		)
+    deck = Deck.create!(
+      player: player,
+      nation: nation,
+      name: "Invalid Attack Deck"
+    )
 
-		enemy_deck = Deck.create!(
-		  player: enemy,
-		  nation: enemy_nation,
-		  name: "Invalid Enemy Attack Deck"
-		)
+    enemy_deck = Deck.create!(
+      player: enemy,
+      nation: enemy_nation,
+      name: "Invalid Enemy Attack Deck"
+    )
 
-		GamePlayer.create!(
-		  game: game,
-		  player: player,
-		  nation: nation,
-		  deck: deck,
-		  headquarters_card: headquarters_card
-		)
+    GamePlayer.create!(
+      game: game,
+      player: player,
+      nation: nation,
+      deck: deck,
+      headquarters_card: headquarters_card
+    )
 
-		GamePlayer.create!(
-		  game: game,
-		  player: enemy,
-		  nation: enemy_nation,
-		  deck: enemy_deck,
-		  headquarters_card: enemy_headquarters_card
-		)
+    GamePlayer.create!(
+      game: game,
+      player: enemy,
+      nation: enemy_nation,
+      deck: enemy_deck,
+      headquarters_card: enemy_headquarters_card
+    )
 
-		field = GameEngine::GameState.empty_field
+    field = GameEngine::GameState.empty_field
 
-		field[1][1] = {
-		  "type" => "technique",
-		  "card_id" => 15,
-		  "player_id" => player.id.to_s,
-		  "technique_type" => "medium_tank",
-		  "hp" => 10,
-		  "firepower" => 4,
-		  "fuel" => 2,
-		  "attack_range" => 1,
-		  "movement_count" => 1,
-		  "movement_type" => "diagonal",
-		  "has_attacked" => false,
-		  "has_counterattacked" => false
-		}
+    field[1][1] = {
+      "type" => "technique",
+      "card_id" => 15,
+      "player_id" => player.id.to_s,
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 4,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
 
-		field[1][2] = {
-		  "type" => "technique",
-		  "card_id" => 16,
-		  "player_id" => enemy.id.to_s,
-		  "technique_type" => "medium_tank",
-		  "hp" => 10,
-		  "firepower" => 3,
-		  "fuel" => 2,
-		  "attack_range" => 1,
-		  "movement_count" => 1,
-		  "movement_type" => "diagonal",
-		  "has_attacked" => false,
-		  "has_counterattacked" => false
-		}
+    field[1][2] = {
+      "type" => "technique",
+      "card_id" => 16,
+      "player_id" => enemy.id.to_s,
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 3,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
 
-		field[0][4] = {
-		  "type" => "technique",
-		  "card_id" => 17,
-		  "player_id" => enemy.id.to_s,
-		  "technique_type" => "medium_tank",
-		  "hp" => 10,
-		  "firepower" => 3,
-		  "fuel" => 2,
-		  "attack_range" => 1,
-		  "movement_count" => 1,
-		  "movement_type" => "diagonal",
-		  "has_attacked" => false,
-		  "has_counterattacked" => false
-		}
+    field[0][4] = {
+      "type" => "technique",
+      "card_id" => 17,
+      "player_id" => enemy.id.to_s,
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 3,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
 
-		original_field = field.deep_dup
+    original_field = field.deep_dup
 
-		game.update!(
-		  state: {
-		    "status" => "started",
-		    "turn_number" => 1,
-		    "current_player_id" => player.id,
-		    "turn_started_at" => Time.current.iso8601,
-		    "players" => {
-		      player.id.to_s => {
-		        "nation_id" => nation.id,
-		        "hand" => [],
-		        "deck" => [],
-		        "graveyard" => [],
-		        "platoons" => [nil, nil, nil, nil],
-		        "resources" => 0,
-		        "remaining_time" => 600,
-		        "empty_deck_draw_attempts" => 0
-		      },
-		      enemy.id.to_s => {
-		        "nation_id" => enemy_nation.id,
-		        "hand" => [],
-		        "deck" => [],
-		        "graveyard" => [],
-		        "platoons" => [nil, nil, nil, nil],
-		        "resources" => 0,
-		        "remaining_time" => 600,
-		        "empty_deck_draw_attempts" => 0
-		      }
-		    },
-		    "field" => field
-		  }
-		)
+    game.update!(
+      state: {
+        "status" => "started",
+        "turn_number" => 1,
+        "current_player_id" => player.id,
+        "turn_started_at" => Time.current.iso8601,
+        "players" => {
+          player.id.to_s => {
+            "nation_id" => nation.id,
+            "hand" => [],
+            "deck" => [],
+            "graveyard" => [],
+            "platoons" => [nil, nil, nil, nil],
+            "resources" => 0,
+            "remaining_time" => 600,
+            "empty_deck_draw_attempts" => 0
+          },
+          enemy.id.to_s => {
+            "nation_id" => enemy_nation.id,
+            "hand" => [],
+            "deck" => [],
+            "graveyard" => [],
+            "platoons" => [nil, nil, nil, nil],
+            "resources" => 0,
+            "remaining_time" => 600,
+            "empty_deck_draw_attempts" => 0
+          }
+        },
+        "field" => field
+      }
+    )
 
-		post attack_path(
-		  game,
-		  player_id: player.id,
-		  attacker_row: 1,
-		  attacker_column: 1,
-		  target_row: 0,
-		  target_column: 4
-		)
+    log_in(player)
 
-		assert_response :unprocessable_entity
-		assert_equal "Invalid attack range", response.body
+    post attack_path(
+      game,
+      attacker_row: 1,
+      attacker_column: 1,
+      target_row: 0,
+      target_column: 4
+    )
 
-		game.reload
+    assert_response :unprocessable_entity
+    assert_equal "Invalid attack range", response.body
 
-		assert_equal original_field, game.state["field"]
-	end
+    game.reload
+
+    assert_equal original_field, game.state["field"]
+  end
 
   test "returns forbidden when player does not belong to game during attack" do
     game = Game.create!
-    player = Player.create!
-    outsider = Player.create!
+    player = create_player
+    outsider = create_player
 
     nation = Nation.create!(
       name: "Forbidden Attack Nation",
@@ -624,9 +639,10 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       headquarters_card: headquarters_card
     )
 
+    log_in(outsider)
+
     post attack_path(
       game,
-      player_id: outsider.id,
       attacker_row: 1,
       attacker_column: 1,
       target_row: 1,
@@ -635,11 +651,11 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :forbidden
   end
-  
+
   test "surrenders game through controller" do
     game = Game.create!
-    player = Player.create!
-    enemy = Player.create!
+    player = create_player
+    enemy = create_player
 
     nation = Nation.create!(
       name: "Surrender Test Nation",
@@ -729,10 +745,9 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       }
     )
 
-    post surrender_path(
-      game,
-      player_id: player.id
-    )
+    log_in(player)
+
+    post surrender_path(game)
 
     assert_response :redirect
 
@@ -740,13 +755,13 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal "finished", game.state["status"]
 
-		assert_equal(
-			{
-				"winner_id" => enemy.id.to_s,
-				"loser_id" => player.id.to_s,
-				"reason" => "surrender"
-			},
-			game.state["result"]
-		)
+    assert_equal(
+      {
+        "winner_id" => enemy.id.to_s,
+        "loser_id" => player.id.to_s,
+        "reason" => "surrender"
+      },
+      game.state["result"]
+    )
   end
 end

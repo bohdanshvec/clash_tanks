@@ -759,3 +759,34 @@ Stage 15.15 — приглушённая завершённая игра
   opacity: 0.5;
   pointer-events: none;
 }
+
+/* ---------------------------------------------------------
+Stage 16.7 — основной header
+--------------------------------------------------------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 20px;
+  margin-bottom: 20px;
+
+  border-bottom: 1px solid #ccc;
+}
+
+.app-header__title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.app-header__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-header__player {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}

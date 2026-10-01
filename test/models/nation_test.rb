@@ -17,7 +17,7 @@ class NationTest < ActiveSupport::TestCase
   end
 
   test "has many decks" do
-    player = Player.create!
+    player = create_player
 
     nation = Nation.create!(
       name: "СССР",

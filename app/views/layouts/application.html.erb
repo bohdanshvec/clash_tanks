@@ -24,6 +24,23 @@
   </head>
 
   <body>
+    <header class="app-header">
+      <div class="app-header__title">
+        <%= link_to "Clash Tanks", root_path %>
+      </div>
+
+      <div class="app-header__player">
+				<% if current_player %>
+					<span><%= current_player.display_name %></span>
+					<%= button_to "Выйти", logout_path, method: :delete %>
+				<% else %>
+					<span>Гость</span>
+					<%= link_to "Войти", login_path %>
+					<%= link_to "Регистрация", register_path %>
+				<% end %>
+      </div>
+    </header>
+
     <%= yield %>
   </body>
 </html>

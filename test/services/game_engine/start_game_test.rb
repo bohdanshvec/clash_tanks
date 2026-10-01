@@ -3,8 +3,8 @@ require "test_helper"
 class GameEngine::StartGameTest < ActiveSupport::TestCase
   test "starts a waiting game with two players" do
     game = Game.create!
-    player1 = Player.create!
-    player2 = Player.create!
+    player1 = create_player
+    player2 = create_player
 
     nation1 = Nation.create!(
       name: "Nation 1",
@@ -107,7 +107,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
   test "does not start a game with one player" do
     game = Game.create!
-    player = Player.create!
+    player = create_player
 
     nation = Nation.create!(
       name: "Nation 1",
@@ -142,8 +142,8 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
   test "does not start a game that has already started" do
     game = Game.create!
-    player1 = Player.create!
-    player2 = Player.create!
+    player1 = create_player
+    player2 = create_player
 
     nation1 = Nation.create!(
       name: "Nation 1",
@@ -196,8 +196,8 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
   test "starts a game with six cards in hand and remaining cards in deck" do
     game = Game.create!
 
-    player1 = Player.create!
-    player2 = Player.create!
+    player1 = create_player
+    player2 = create_player
 
     nation1 = Nation.create!(
       name: "Nation 1",
@@ -294,8 +294,8 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
   test "does not modify saved decks when starting a game" do
     game = Game.create!
 
-    player1 = Player.create!
-    player2 = Player.create!
+    player1 = create_player
+    player2 = create_player
 
     nation1 = Nation.create!(
       name: "Nation 1",
@@ -383,8 +383,8 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
   test "serializes headquarters abilities without ability names" do
     game = Game.create!
-    player1 = Player.create!
-    player2 = Player.create!
+    player1 = create_player
+    player2 = create_player
     nation1 = Nation.create!(name: "Nation 1", code: "nation_1")
     nation2 = Nation.create!(name: "Nation 2", code: "nation_2")
     deck1 = Deck.create!(player: player1, nation: nation1, name: "Deck 1")
@@ -425,8 +425,8 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
   test "calculates fuel for the first player's turn" do
     game = Game.create!
 
-    player1 = Player.create!
-    player2 = Player.create!
+    player1 = create_player
+    player2 = create_player
 
     nation1 = Nation.create!(
       name: "Nation 1",
@@ -493,8 +493,8 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
   test "initializes empty deck draw attempt counter" do
     game = Game.create!
 
-    player1 = Player.create!
-    player2 = Player.create!
+    player1 = create_player
+    player2 = create_player
 
     nation1 = Nation.create!(
       name: "Nation 1",
@@ -555,8 +555,8 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
   test "does not draw an extra card at game start" do
     game = Game.create!
 
-    player1 = Player.create!
-    player2 = Player.create!
+    player1 = create_player
+    player2 = create_player
 
     nation1 = Nation.create!(
       name: "Nation 1",

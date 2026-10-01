@@ -7,9 +7,11 @@ class GamesController < ApplicationController
       return
     end
 
+    @current_player_id = current_player_id
+
     @visible_state = GameEngine::VisibleState.call(
       state: @game.state,
-      player_id: current_player_id
+      player_id: @current_player_id
     )
   end
 
@@ -39,32 +41,32 @@ class GamesController < ApplicationController
 
     respond_after_success
   end
-  
+
   def surrender
-	 @game = Game.find(params[:id])
- 
-	 unless player_in_game?(@game)
-	   head :forbidden
-	   return
-	 end
+    @game = Game.find(params[:id])
 
-	 action = GameEngine::Action.new(
-	   player_id: current_player_id,
-	   type: "surrender"
-	 )
+    unless player_in_game?(@game)
+      head :forbidden
+      return
+    end
 
-	 result = GameEngine::Engine.new(@game.state).call(action)
+    action = GameEngine::Action.new(
+      player_id: current_player_id,
+      type: "surrender"
+    )
 
-	 unless result.success?
-	   render plain: result.error, status: :unprocessable_entity
-	   return
-	 end
+    result = GameEngine::Engine.new(@game.state).call(action)
 
-	 @game.update!(state: result.state)
+    unless result.success?
+      render plain: result.error, status: :unprocessable_entity
+      return
+    end
 
-	 broadcast_game_update(result.events)
+    @game.update!(state: result.state)
 
-	 respond_after_success
+    broadcast_game_update(result.events)
+
+    respond_after_success
   end
 
   def play_card
@@ -189,36 +191,33 @@ class GamesController < ApplicationController
     ]
   end
 
-	def broadcast_game_update(events)
-		@game.state["players"].keys.each do |player_id|
-		  visible_state = GameEngine::VisibleState.call(
-		    state: @game.state,
-		    player_id: player_id
-		  )
+  def broadcast_game_update(events)
+    @game.state["players"].keys.each do |player_id|
+      visible_state = GameEngine::VisibleState.call(
+        state: @game.state,
+        player_id: player_id
+      )
 
-		  Turbo::StreamsChannel.broadcast_update_to(
-		    [@game, player_id],
-		    target: "game-content",
-		    partial: "games/game",
-		    locals: {
-		      game: @game,
-		      visible_state: visible_state,
-		      current_player_id: player_id,
-		      events: events
-		    }
-		  )
-		end
-	end
+      Turbo::StreamsChannel.broadcast_update_to(
+        [@game, player_id],
+        target: "game-content",
+        partial: "games/game",
+        locals: {
+          game: @game,
+          visible_state: visible_state,
+          current_player_id: player_id,
+          events: events
+        }
+      )
+    end
+  end
 
   def respond_after_success
     respond_to do |format|
       format.turbo_stream { head :no_content }
 
       format.html do
-        redirect_to game_path(
-          @game,
-          player_id: current_player_id
-        )
+        redirect_to game_path(@game)
       end
     end
   end

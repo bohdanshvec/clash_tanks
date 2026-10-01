@@ -11,11 +11,6 @@
   opponent_player =
     opponent_player_id ? visible_state["players"][opponent_player_id] : nil
 
-  # Если текущий игрок владеет штабом в логической клетке [2, 0],
-  # его визуальная перспектива совпадает с исходной ориентацией поля.
-  #
-  # Если текущий игрок владеет штабом в [0, 4],
-  # поле показывается в обратном направлении.
   current_player_starts_at_bottom_left =
     visible_state["field"][2][0]&.dig("player_id")&.to_s == current_player_id
 
@@ -27,9 +22,9 @@
       data-game-events-events-value="<%= events.to_json %>"
       data-game-events-available-actions-value="<%= visible_state["available_actions"].to_json %>"
       data-player-id="<%= current_player_id %>"
-      data-move-url="<%= move_path(game, player_id: current_player_id) %>"
-      data-attack-url="<%= attack_path(game, player_id: current_player_id) %>"
-      data-play-card-url="<%= play_card_path(game, player_id: current_player_id) %>"
+      data-move-url="<%= move_path(game) %>"
+      data-attack-url="<%= attack_path(game) %>"
+      data-play-card-url="<%= play_card_path(game) %>"
       data-game-timer-game-status-value="<%= visible_state["status"] %>"
       data-game-timer-current-player-id-value="<%= visible_state["current_player_id"] %>"
       data-game-timer-turn-started-at-value="<%= visible_state["turn_started_at"] %>"
@@ -58,7 +53,6 @@
 
   </header>
 
-
   <% if game_finished && visible_state["result"] %>
     <%
       winner_id = visible_state["result"]["winner_id"].to_s
@@ -70,13 +64,7 @@
     </div>
   <% end %>
 
-
   <div class="<%= "game-content game-content--muted" if game_finished %>">
-
-    <!-- =====================================================
-         ВЕРХ: всегда соперник
-         Порядок: рука соперника -> информация -> поле
-         ===================================================== -->
 
     <section class="game-top">
 
@@ -92,7 +80,6 @@
 
       </div>
 
-
       <aside class="game-top__info info-window">
 
         <% if opponent_player %>
@@ -107,12 +94,10 @@
           </p>
 
           <% if visible_state["current_player_id"].to_s == opponent_player_id %>
-
             <p>
               Turn:
               <span data-game-timer-target="turnTime"></span>
             </p>
-
           <% end %>
 
           <p>
@@ -136,17 +121,7 @@
 
     </section>
 
-
-    <!-- =====================================================
-         ЦЕНТР: взводы + поле + взводы
-
-         Слева всегда свои взводы.
-         Справа всегда взводы соперника.
-         ===================================================== -->
-
     <section class="game-board">
-
-      <!-- Свои взводы: всегда слева -->
 
       <aside class="game-board__left platoon-bar"
              data-platoon-bar
@@ -188,9 +163,6 @@
         <% end %>
 
       </aside>
-
-
-      <!-- Поле -->
 
       <section class="game-board__field">
 
@@ -245,28 +217,12 @@
                       <%= cell["name"] %>
                     </strong>
 
-
                     <% if cell["type"] == "technique" %>
 
-                      <p>
-                        Technique:
-                        <%= cell["technique_type"] %>
-                      </p>
-
-                      <p>
-                        HP:
-                        <%= cell["hp"] %>
-                      </p>
-
-                      <p>
-                        Firepower:
-                        <%= cell["firepower"] %>
-                      </p>
-
-                      <p>
-                        Fuel:
-                        <%= cell["fuel"] %>
-                      </p>
+                      <p>Technique: <%= cell["technique_type"] %></p>
+                      <p>HP: <%= cell["hp"] %></p>
+                      <p>Firepower: <%= cell["firepower"] %></p>
+                      <p>Fuel: <%= cell["fuel"] %></p>
 
                       <p>
                         Attacked:
@@ -283,14 +239,12 @@
                         <%= cell["movement_count"] %>/<%= cell["movement_limit"] %>
                       </p>
 
-
                     <% elsif cell["type"] == "platoon" %>
 
                       <p>HP: <%= cell["hp"] %></p>
                       <p>Firepower: <%= cell["firepower"] %></p>
                       <p>Armor: <%= cell["armor"] %></p>
                       <p>Fuel: <%= cell["fuel"] %></p>
-
 
                     <% elsif cell["type"] == "headquarters" %>
 
@@ -327,9 +281,6 @@
         </div>
 
       </section>
-
-
-      <!-- Взводы соперника: всегда справа -->
 
       <aside class="game-board__right platoon-bar"
              data-platoon-bar
@@ -374,12 +325,6 @@
 
     </section>
 
-
-    <!-- =====================================================
-         НИЗ: всегда текущий игрок
-         Порядок: информация -> своя рука
-         ===================================================== -->
-
     <section class="game-bottom">
 
       <aside class="game-bottom__info info-window">
@@ -387,10 +332,7 @@
         <% if current_player %>
 
           <%= button_to "Сдаться",
-                        surrender_path(
-                          game,
-                          player_id: current_player_id
-                        ),
+                        surrender_path(game),
                         method: :post %>
 
           <p>
@@ -429,10 +371,7 @@
           <% if visible_state["current_player_id"].to_s == current_player_id %>
 
             <%= button_to "End Turn",
-                          end_turn_path(
-                            game,
-                            player_id: current_player_id
-                          ),
+                          end_turn_path(game),
                           method: :post %>
 
           <% end %>
@@ -440,9 +379,6 @@
         <% end %>
 
       </aside>
-
-
-      <!-- Своя рука: всегда снизу -->
 
       <div class="game-bottom__hand">
 
@@ -486,7 +422,6 @@
                     </p>
 
                     <p>Price: <%= card["price"] %></p>
-
                     <p>HP: <%= card.dig("technique", "hp") %></p>
 
                     <p>
@@ -495,7 +430,6 @@
                     </p>
 
                     <p>Fuel: <%= card.dig("technique", "fuel") %></p>
-
 
                   <% elsif card["card_type"] == "order" %>
 
@@ -536,13 +470,10 @@
 
                     </div>
 
-
                   <% elsif card["card_type"] == "platoon" %>
 
                     <p>Type: <%= card["card_type"] %></p>
-
                     <p>Price: <%= card["price"] %></p>
-
                     <p>HP: <%= card.dig("platoon", "hp") %></p>
 
                     <p>
@@ -551,7 +482,6 @@
                     </p>
 
                     <p>Armor: <%= card.dig("platoon", "armor") %></p>
-
                     <p>Fuel: <%= card.dig("platoon", "fuel") %></p>
 
                   <% end %>

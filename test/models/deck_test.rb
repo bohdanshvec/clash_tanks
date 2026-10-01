@@ -2,7 +2,7 @@ require "test_helper"
 
 class DeckTest < ActiveSupport::TestCase
   test "belongs to player" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     deck = Deck.create!(
@@ -15,7 +15,7 @@ class DeckTest < ActiveSupport::TestCase
   end
 
   test "belongs to nation" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     deck = Deck.create!(
@@ -28,7 +28,7 @@ class DeckTest < ActiveSupport::TestCase
   end
 
   test "has many deck cards" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     deck = Deck.create!(
@@ -56,7 +56,7 @@ class DeckTest < ActiveSupport::TestCase
   end
 
   test "has many cards through deck cards" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     deck = Deck.create!(
@@ -84,7 +84,7 @@ class DeckTest < ActiveSupport::TestCase
   end
 
   test "counts cards using quantities" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     deck = Deck.create!(
@@ -127,7 +127,7 @@ class DeckTest < ActiveSupport::TestCase
   end
 
   test "requires name" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
 
     deck = Deck.new(

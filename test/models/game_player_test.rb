@@ -3,7 +3,7 @@ require "test_helper"
 class GamePlayerTest < ActiveSupport::TestCase
   test "belongs to game" do
     game = Game.create!
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(
       name: "СССР",
       code: "ussr"
@@ -28,7 +28,7 @@ class GamePlayerTest < ActiveSupport::TestCase
 
   test "belongs to player" do
     game = Game.create!
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(
       name: "СССР",
       code: "ussr"
@@ -53,7 +53,7 @@ class GamePlayerTest < ActiveSupport::TestCase
 
   test "belongs to nation" do
     game = Game.create!
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(
       name: "СССР",
       code: "ussr"
@@ -78,7 +78,7 @@ class GamePlayerTest < ActiveSupport::TestCase
 
   test "belongs to deck" do
     game = Game.create!
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(
       name: "СССР",
       code: "ussr"

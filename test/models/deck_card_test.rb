@@ -2,7 +2,7 @@ require "test_helper"
 
 class DeckCardTest < ActiveSupport::TestCase
   setup do
-    @player = Player.create!
+    @player = create_player
     @nation = Nation.create!(name: "СССР", code: "ussr")
 
     @deck = Deck.create!(

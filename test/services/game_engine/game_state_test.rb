@@ -401,7 +401,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
   end
 
   test "builds full card objects from deck cards" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(
       name: "СССР",
       code: "ussr"
@@ -466,7 +466,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
   end
 
   test "expands deck card quantity into separate card objects" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(
       name: "СССР",
       code: "ussr"
@@ -511,7 +511,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
   end
 
   test "builds card object without technique data for non-technique card" do
-    player = Player.create!
+    player = create_player
     nation = Nation.create!(
       name: "СССР",
       code: "ussr"
@@ -556,7 +556,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
   end
 
   test "builds card object with abilities from deck card" do
-    player = Player.create!
+    player = create_player
 
     nation = Nation.create!(
       name: "СССР",
@@ -632,7 +632,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     )
 
     deck = Deck.create!(
-      player: Player.create!,
+      player: create_player,
       nation: nation,
       name: "Test Deck"
     )

@@ -1,13 +1,9 @@
-<%
-  current_player_id = params[:player_id].to_s
-%>
-
-<%= turbo_stream_from [@game, current_player_id] %>
+<%= turbo_stream_from [@game, @current_player_id] %>
 
 <div id="game-content">
   <%= render "game",
              game: @game,
              visible_state: @visible_state,
-             current_player_id: current_player_id,
+             current_player_id: @current_player_id,
              events: [] %>
 </div>
