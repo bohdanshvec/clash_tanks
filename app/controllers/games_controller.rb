@@ -1,9 +1,12 @@
 class GamesController < ApplicationController
+
+	layout "game"
+	
   def show
     @game = Game.find(params[:id])
 
     unless player_in_game?(@game)
-      head :forbidden
+      render_forbidden
       return
     end
 
@@ -19,7 +22,7 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
 
     unless player_in_game?(@game)
-      head :forbidden
+      render_forbidden
       return
     end
 
@@ -46,7 +49,7 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
 
     unless player_in_game?(@game)
-      head :forbidden
+      render_forbidden
       return
     end
 
@@ -73,7 +76,7 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
 
     unless player_in_game?(@game)
-      head :forbidden
+      render_forbidden
       return
     end
 
@@ -106,7 +109,7 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
 
     unless player_in_game?(@game)
-      head :forbidden
+      render_forbidden
       return
     end
 
@@ -143,7 +146,7 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
 
     unless player_in_game?(@game)
-      head :forbidden
+      render_forbidden
       return
     end
 

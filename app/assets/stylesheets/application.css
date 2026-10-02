@@ -790,3 +790,32 @@ Stage 16.7 — основной header
   align-items: center;
   gap: 16px;
 }
+
+.game-result {
+  position: relative;
+}
+
+.game-result__exit {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  display: inline-block;
+  padding: 12px 24px;
+
+  background-color: #2e7d32;
+  color: white;
+  border: 1px solid #256528;
+  border-radius: 6px;
+
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.game-result__exit:hover {
+  background-color: #256528;
+}

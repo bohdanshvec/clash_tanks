@@ -8,7 +8,7 @@ headquarters = [
   {
     code: "germany_headquarters",
     nation: nations[:germany],
-    name: "Штаб Германии",
+    name: "Operation „Weiß“",
     weight: 1,
     firepower: 2,
     hp: 16,
@@ -17,7 +17,7 @@ headquarters = [
   {
     code: "usa_headquarters",
     nation: nations[:usa],
-    name: "Штаб США",
+    name: "Second front",
     weight: 1,
     firepower: 1,
     hp: 17,
@@ -26,7 +26,7 @@ headquarters = [
   {
     code: "ussr_headquarters",
     nation: nations[:ussr],
-    name: "Штаб СССР",
+    name: "Западный фронт",
     weight: 1,
     firepower: 1,
     hp: 19,
@@ -119,6 +119,34 @@ techniques = [
     hp: 5,
     fuel: 2
   },
+	{
+		code: "germany_sdkfz_221",
+		nation: nations[:germany],
+		name: "Sd.Kfz. 221 «Ausklärer»",
+		weight: 1,
+		price: 1,
+		technique_type: "light_tank",
+		attack_range: 1,
+		movement_count: 2,
+		movement_type: "orthogonal",
+		firepower: 1,
+		hp: 2,
+		fuel: 1
+	},
+	{
+		code: "germany_sdkfz_234_2_puma",
+		nation: nations[:germany],
+		name: "Sd.Kfz. 234/2 «Puma»",
+		weight: 2,
+		price: 2,
+		technique_type: "light_tank",
+		attack_range: 1,
+		movement_count: 2,
+		movement_type: "orthogonal",
+		firepower: 2,
+		hp: 2,
+		fuel: 1
+	},
 
   {
     code: "usa_m3_stuart",
@@ -203,7 +231,35 @@ techniques = [
     firepower: 2,
     hp: 5,
     fuel: 1
-  },
+  },  
+	{
+		code: "usa_m8_greyhound",
+		nation: nations[:usa],
+		name: "M8 Greyhound",
+		weight: 1,
+		price: 2,
+		technique_type: "light_tank",
+		attack_range: 1,
+		movement_count: 2,
+		movement_type: "orthogonal",
+		firepower: 1,
+		hp: 2,
+		fuel: 1
+	},
+	{
+		code: "usa_m24_chaffee",
+		nation: nations[:usa],
+		name: "M24 Chaffee",
+		weight: 2,
+		price: 3,
+		technique_type: "light_tank",
+		attack_range: 1,
+		movement_count: 2,
+		movement_type: "orthogonal",
+		firepower: 1,
+		hp: 3,
+		fuel: 1
+	},
 
   {
     code: "ussr_t_70",
@@ -288,7 +344,35 @@ techniques = [
     firepower: 2,
     hp: 7,
     fuel: 2
-  }
+  },
+	{
+		code: "ussr_ba_64",
+		nation: nations[:ussr],
+		name: "БА-64",
+		weight: 1,
+		price: 2,
+		technique_type: "light_tank",
+		attack_range: 1,
+		movement_count: 2,
+		movement_type: "orthogonal",
+		firepower: 1,
+		hp: 2,
+		fuel: 1
+	},
+	{
+		code: "ussr_t_60",
+		nation: nations[:ussr],
+		name: "Т-60",
+		weight: 2,
+		price: 2,
+		technique_type: "light_tank",
+		attack_range: 1,
+		movement_count: 2,
+		movement_type: "orthogonal",
+		firepower: 2,
+		hp: 2,
+		fuel: 1
+	}
 ]
 
 orders = [

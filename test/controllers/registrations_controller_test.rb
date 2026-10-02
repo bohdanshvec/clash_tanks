@@ -31,7 +31,25 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "does not create a player with invalid data" do
+  test "normalizes email during registration" do
+    assert_difference("Player.count", 1) do
+      post register_path, params: {
+        player: {
+          email: "  New-Player@Example.COM  ",
+          name: "New Player",
+          password: "password",
+          password_confirmation: "password"
+        }
+      }
+    end
+
+    player = Player.find_by!(email: "new-player@example.com")
+
+    assert_equal "new-player@example.com", player.email
+    assert_redirected_to root_path
+  end
+
+  test "does not create a player with empty email" do
     assert_no_difference("Player.count") do
       post register_path, params: {
         player: {
@@ -39,6 +57,36 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
           name: "New Player",
           password: "password",
           password_confirmation: "password"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "does not create a player with invalid email" do
+    assert_no_difference("Player.count") do
+      post register_path, params: {
+        player: {
+          email: "invalid-email",
+          name: "New Player",
+          password: "password",
+          password_confirmation: "password"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "does not create a player with short password" do
+    assert_no_difference("Player.count") do
+      post register_path, params: {
+        player: {
+          email: "new-player@example.com",
+          name: "New Player",
+          password: "1234567",
+          password_confirmation: "1234567"
         }
       }
     end

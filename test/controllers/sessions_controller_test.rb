@@ -25,6 +25,21 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
+  test "logs in player with normalized email" do
+    player = create_player(
+      email: "player@example.com",
+      password: "password"
+    )
+
+    post login_path, params: {
+      email: "  PLAYER@EXAMPLE.COM  ",
+      password: "password"
+    }
+
+    assert_equal player.id, session[:player_id]
+    assert_redirected_to root_path
+  end
+
   test "does not log in player with invalid password" do
     player = create_player(
       email: "player@example.com",

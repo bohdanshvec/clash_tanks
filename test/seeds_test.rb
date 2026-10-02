@@ -8,8 +8,8 @@ class SeedsTest < ActiveSupport::TestCase
   test "creates base game content" do
     assert_equal 3, Nation.count
     assert_equal 2, Ability.count
-    assert_equal 33, Card.count
-    assert_equal 18, Technique.count
+    assert_equal 39, Card.count
+    assert_equal 24, Technique.count
     assert_equal 6, Platoon.count
     assert_equal 3, Headquarters.count
     assert_equal 6, CardAbility.count
@@ -29,8 +29,8 @@ class SeedsTest < ActiveSupport::TestCase
   end
 
   test "creates eighteen techniques" do
-    assert_equal 18, Card.where(card_type: "technique").count
-    assert_equal 18, Technique.count
+    assert_equal 24, Card.where(card_type: "technique").count
+    assert_equal 24, Technique.count
   end
 
   test "creates six orders" do
@@ -53,8 +53,8 @@ class SeedsTest < ActiveSupport::TestCase
 
     assert_equal 3, Nation.count
     assert_equal 2, Ability.count
-    assert_equal 33, Card.count
-    assert_equal 18, Technique.count
+    assert_equal 39, Card.count
+    assert_equal 24, Technique.count
     assert_equal 6, Platoon.count
     assert_equal 3, Headquarters.count
     assert_equal 6, CardAbility.count

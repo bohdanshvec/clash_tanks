@@ -53,16 +53,20 @@
 
   </header>
 
-  <% if game_finished && visible_state["result"] %>
-    <%
-      winner_id = visible_state["result"]["winner_id"].to_s
-      player_won = winner_id == current_player_id
-    %>
+	<% if game_finished && visible_state["result"] %>
+		<%
+		  winner_id = visible_state["result"]["winner_id"].to_s
+		  player_won = winner_id == current_player_id
+		%>
 
-    <div class="game-result">
-      <h2><%= player_won ? "Победа" : "Вы проиграли" %></h2>
-    </div>
-  <% end %>
+		<div class="game-result">
+			<h2><%= player_won ? "Победа" : "Вы проиграли" %></h2>
+
+			<%= link_to "Выйти из партии",
+				          root_path,
+				          class: "game-result__exit" %>
+		</div>
+	<% end %>
 
   <div class="<%= "game-content game-content--muted" if game_finished %>">
 
