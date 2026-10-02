@@ -78,8 +78,10 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
       player_id: PLAYER_ID
     )
 
-    assert_equal 1, result["field"][1][1]["movement_count"]
-    assert_equal 2, result["field"][1][2]["movement_count"]
+    state = result.state
+
+    assert_equal 1, state["field"][1][1]["movement_count"]
+    assert_equal 2, state["field"][1][2]["movement_count"]
   end
 
   test "resets attack flags for player's techniques" do
@@ -88,11 +90,13 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
       player_id: PLAYER_ID
     )
 
-    assert_not result["field"][1][1]["has_attacked"]
-    assert_not result["field"][1][1]["has_counterattacked"]
+    state = result.state
 
-    assert_not result["field"][1][2]["has_attacked"]
-    assert_not result["field"][1][2]["has_counterattacked"]
+    assert_not state["field"][1][1]["has_attacked"]
+    assert_not state["field"][1][1]["has_counterattacked"]
+
+    assert_not state["field"][1][2]["has_attacked"]
+    assert_not state["field"][1][2]["has_counterattacked"]
   end
 
   test "does not reset opponent's techniques" do
@@ -101,7 +105,7 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
       player_id: PLAYER_ID
     )
 
-    opponent_technique = result["field"][0][3]
+    opponent_technique = result.state["field"][0][3]
 
     assert_equal 0, opponent_technique["movement_count"]
     assert opponent_technique["has_attacked"]
@@ -115,8 +119,22 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
     )
 
     # HQ 5 + Technique 2 + Technique 3 + Platoon 3
-    assert_equal 13, result["players"][PLAYER_ID.to_s]["resources"]
+    assert_equal 13, result.state["players"][PLAYER_ID.to_s]["resources"]
   end
+
+	test "passes draw events through result" do
+		result = GameEngine::Turns::PreparePlayer.call(
+		  state: @state,
+		  player_id: PLAYER_ID
+		)
+
+		assert_equal(
+		  [
+		    { type: "empty_deck_draw_attempt", player_id: PLAYER_ID.to_s, damage: 1 }
+		  ],
+		  result.events
+		)
+	end
 
   test "does not modify original state" do
     original_state = Marshal.load(Marshal.dump(@state))
@@ -127,6 +145,6 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
     )
 
     assert_equal original_state, @state
-    refute_same @state, result
+    refute_same @state, result.state
   end
 end

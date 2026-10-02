@@ -6,16 +6,16 @@ export default class extends Controller {
     availableActions: Object
   }
 
-	connect() {
-		this.selectedElement = null
-		this.draggedCard = null
-		this.dragOverTarget = null
-		this.hoverTarget = null
+  connect() {
+    this.selectedElement = null
+    this.draggedCard = null
+    this.dragOverTarget = null
+    this.hoverTarget = null
 
-		this.eventsValue.forEach((event) => {
-		  this.handleEvent(event)
-		})
-	}
+    this.eventsValue.forEach((event) => {
+      this.handleEvent(event)
+    })
+  }
 
   // --------------------------------------------------
   // Events from Game Engine
@@ -43,6 +43,10 @@ export default class extends Controller {
 
       case "turn_ended":
         this.highlightTurnEnded()
+        break
+
+      case "empty_deck_draw_attempt":
+        this.highlightEmptyDeckDamage(event)
         break
 
       default:
@@ -78,135 +82,134 @@ export default class extends Controller {
     }
   }
 
-	clearSelection() {
-		if (this.selectedElement) {
-		  this.selectedElement.classList.remove("game-object--selected")
-		  this.selectedElement = null
-		}
+  clearSelection() {
+    if (this.selectedElement) {
+      this.selectedElement.classList.remove("game-object--selected")
+      this.selectedElement = null
+    }
 
-		this.clearAvailableActions()
-		this.clearHover()
-	}
+    this.clearAvailableActions()
+    this.clearHover()
+  }
 
   // --------------------------------------------------
   // Click on available action
   // --------------------------------------------------
 
-	handleActionClick(event) {
-		const element = event.target.closest(
-		  ".game-action--move, " +
-		  ".game-action--attack, " +
-		  ".game-action--card, " +
-		  ".game-action--card-target, " +
-		  ".game-action--drop-zone"
-		)
+  handleActionClick(event) {
+    const element = event.target.closest(
+      ".game-action--move, " +
+      ".game-action--attack, " +
+      ".game-action--card, " +
+      ".game-action--card-target, " +
+      ".game-action--drop-zone"
+    )
 
-		if (element && this.element.contains(element)) {
-		  event.preventDefault()
-		  event.stopPropagation()
+    if (element && this.element.contains(element)) {
+      event.preventDefault()
+      event.stopPropagation()
 
-		  if (element.classList.contains("game-action--move")) {
-		    this.executeMove(element)
-		    return
-		  }
+      if (element.classList.contains("game-action--move")) {
+        this.executeMove(element)
+        return
+      }
 
-		  if (element.classList.contains("game-action--attack")) {
-		    this.executeAttack(element)
-		    return
-		  }
+      if (element.classList.contains("game-action--attack")) {
+        this.executeAttack(element)
+        return
+      }
 
-		  if (
-		    element.classList.contains("game-action--card") ||
-		    element.classList.contains("game-action--card-target") ||
-		    element.classList.contains("game-action--drop-zone")
-		  ) {
-		    this.executeCardAction(element)
-		    return
-		  }
-		}
+      if (
+        element.classList.contains("game-action--card") ||
+        element.classList.contains("game-action--card-target") ||
+        element.classList.contains("game-action--drop-zone")
+      ) {
+        this.executeCardAction(element)
+        return
+      }
+    }
 
-		if (!this.selectedElement) return
+    if (!this.selectedElement) return
 
-		const selectable = event.target.closest(
-		  "[data-card-id], [data-object-type]"
-		)
+    const selectable = event.target.closest(
+      "[data-card-id], [data-object-type]"
+    )
 
-		if (selectable && this.element.contains(selectable)) {
-		  return
-		}
+    if (selectable && this.element.contains(selectable)) {
+      return
+    }
 
-		this.clearSelection()
-	}
-	
-	// --------------------------------------------------
-	// Mouse hover
-	// --------------------------------------------------
+    this.clearSelection()
+  }
 
-	mouseOver(event) {
-		if (this.draggedCard) return
-		if (!this.selectedElement) return
+  // --------------------------------------------------
+  // Mouse hover
+  // --------------------------------------------------
 
-		const target = this.actionTarget(event)
+  mouseOver(event) {
+    if (this.draggedCard) return
+    if (!this.selectedElement) return
 
-		if (!target) return
+    const target = this.actionTarget(event)
 
-		if (this.hoverTarget === target) return
+    if (!target) return
 
-		this.clearHover()
+    if (this.hoverTarget === target) return
 
-		this.hoverTarget = target
-		target.classList.add("game-action--hover")
-	}
+    this.clearHover()
 
-	mouseOut(event) {
-		if (this.draggedCard) return
-		if (!this.selectedElement) return
+    this.hoverTarget = target
+    target.classList.add("game-action--hover")
+  }
 
-		const target = this.actionTarget(event)
+  mouseOut(event) {
+    if (this.draggedCard) return
+    if (!this.selectedElement) return
 
-		if (!target) return
+    const target = this.actionTarget(event)
 
-		// Переход внутри той же цели не считается выходом.
-		if (
-		  event.relatedTarget &&
-		  target.contains(event.relatedTarget)
-		) {
-		  return
-		}
+    if (!target) return
 
-		if (this.hoverTarget === target) {
-		  this.clearHover()
-		}
-	}
+    if (
+      event.relatedTarget &&
+      target.contains(event.relatedTarget)
+    ) {
+      return
+    }
 
-	clearHover() {
-		if (this.hoverTarget) {
-		  this.hoverTarget.classList.remove("game-action--hover")
-		  this.hoverTarget = null
-		}
+    if (this.hoverTarget === target) {
+      this.clearHover()
+    }
+  }
 
-		this.element
-		  .querySelectorAll(".game-action--hover")
-		  .forEach((element) => {
-		    element.classList.remove("game-action--hover")
-		  })
-	}
+  clearHover() {
+    if (this.hoverTarget) {
+      this.hoverTarget.classList.remove("game-action--hover")
+      this.hoverTarget = null
+    }
 
-	actionTarget(event) {
-		const target = event.target.closest(
-		  ".game-action--move, " +
-		  ".game-action--attack, " +
-		  ".game-action--card, " +
-		  ".game-action--card-target, " +
-		  ".game-action--drop-zone"
-		)
+    this.element
+      .querySelectorAll(".game-action--hover")
+      .forEach((element) => {
+        element.classList.remove("game-action--hover")
+      })
+  }
 
-		if (!target || !this.element.contains(target)) {
-		  return null
-		}
+  actionTarget(event) {
+    const target = event.target.closest(
+      ".game-action--move, " +
+      ".game-action--attack, " +
+      ".game-action--card, " +
+      ".game-action--card-target, " +
+      ".game-action--drop-zone"
+    )
 
-		return target
-	}
+    if (!target || !this.element.contains(target)) {
+      return null
+    }
+
+    return target
+  }
 
   // --------------------------------------------------
   // Field selection
@@ -502,8 +505,6 @@ export default class extends Controller {
 
     if (!target) return
 
-    // Не очищаем подсветку при переходе
-    // с родительского элемента на его дочерний.
     if (
       event.relatedTarget &&
       target.contains(event.relatedTarget)
@@ -531,16 +532,16 @@ export default class extends Controller {
     this.finishDrag()
   }
 
-	finishDrag() {
-		this.clearDragOver()
-		this.clearHover()
+  finishDrag() {
+    this.clearDragOver()
+    this.clearHover()
 
-		if (this.draggedCard) {
-		  this.draggedCard.classList.remove("game-object--dragging")
-		}
+    if (this.draggedCard) {
+      this.draggedCard.classList.remove("game-object--dragging")
+    }
 
-		this.draggedCard = null
-	}
+    this.draggedCard = null
+  }
 
   clearDragOver() {
     if (this.dragOverTarget) {
@@ -657,6 +658,16 @@ export default class extends Controller {
       )
     }
   }
+
+	highlightEmptyDeckDamage(event) {
+		if (!event.player_id) return
+
+		const headquarters = this.element.querySelector(
+			`[data-headquarters-player-id="${event.player_id}"]`
+		)
+
+		this.flash(headquarters)
+	}
 
   highlightPlayedCard(event) {
     if (event.position) {

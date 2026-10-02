@@ -30,7 +30,11 @@ module GameEngine
 
         raise draw_result.error unless draw_result.success?
 
-        draw_result.state
+        Result.new(
+          success: true,
+          state: draw_result.state,
+          events: draw_result.events
+        )
       end
 
       private

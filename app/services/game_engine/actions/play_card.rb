@@ -1,7 +1,6 @@
 module GameEngine
   module Actions
     class PlayCard < Base
-
       def call
         return failure("Player does not exist") unless player_exists?
         return failure("It is not player's turn") unless current_player?
@@ -70,6 +69,7 @@ module GameEngine
         return failure("Order has no abilities") if abilities.empty?
 
         current_state = @state
+        events = []
         targets = @action.payload[:targets] || []
 
         abilities.each do |ability|
@@ -83,6 +83,7 @@ module GameEngine
           return failure(result.error) unless result.success?
 
           current_state = result.state
+          events.concat(result.events)
         end
 
         new_state = current_state.deep_dup
@@ -95,18 +96,18 @@ module GameEngine
         player["resources"] -= card["price"].to_i
         player["graveyard"] << card
 
+        events << {
+          type: "order_played",
+          player_id: @action.player_id,
+          card_id: card["card_id"],
+          name: card["name"],
+          targets: targets
+        }
+
         Result.new(
           success: true,
           state: new_state,
-          events: [
-            {
-              type: "order_played",
-              player_id: @action.player_id,
-              card_id: card["card_id"],
-              name: card["name"],
-              targets: targets
-            }
-          ]
+          events: events
         )
       end
 

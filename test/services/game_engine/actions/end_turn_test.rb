@@ -18,7 +18,7 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     @state["turn_started_at"] = @started_at.iso8601
   end
 
-  test "ends current player's turn" do
+  test "ends current player's turn and passes draw events" do
     action = GameEngine::Action.new(
       player_id: PLAYER_ID,
       type: "end_turn"
@@ -29,7 +29,14 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     assert result.success?
     assert_equal 2, result.state["turn_number"]
     assert_equal OPPONENT_ID, result.state["current_player_id"]
-    assert_equal [{ type: "turn_ended" }], result.events
+
+    assert_equal(
+      [
+        { type: "turn_ended" },
+        { type: "empty_deck_draw_attempt", player_id: OPPONENT_ID.to_s, damage: 1 }
+      ],
+      result.events
+    )
   end
 
   test "does not allow ending opponent's turn" do
@@ -116,126 +123,126 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     assert_equal OPPONENT_ID, result.state["current_player_id"]
   end
 
-	test "finishes game when ending turn after time expires" do
-		current_time = @started_at + 600
+  test "finishes game when ending turn after time expires" do
+    current_time = @started_at + 600
 
-		action = GameEngine::Action.new(
-		  player_id: PLAYER_ID,
-		  type: "end_turn"
-		)
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "end_turn"
+    )
 
-		result = GameEngine::Actions::EndTurn.new(
-		  @state,
-		  action,
-		  current_time: current_time
-		).call
+    result = GameEngine::Actions::EndTurn.new(
+      @state,
+      action,
+      current_time: current_time
+    ).call
 
-		assert result.success?
+    assert result.success?
 
-		assert_equal "finished", result.state["status"]
+    assert_equal "finished", result.state["status"]
 
-		assert_equal(
-		  {
-		    "winner_id" => OPPONENT_ID.to_s,
-		    "loser_id" => PLAYER_ID.to_s,
-		    "reason" => "time_expired"
-		  },
-		  result.state["result"]
-		)
+    assert_equal(
+      {
+        "winner_id" => OPPONENT_ID.to_s,
+        "loser_id" => PLAYER_ID.to_s,
+        "reason" => "time_expired"
+      },
+      result.state["result"]
+    )
 
-		assert_equal(
-		  [
-		    {
-		      type: "game_finished",
-		      winner_id: OPPONENT_ID.to_s,
-		      loser_id: PLAYER_ID.to_s,
-		      reason: "time_expired"
-		    }
-		  ],
-		  result.events
-		)
-	end
-  
-	test "calculates fuel for the player whose turn starts" do
-		@state["field"][1][0] = {
-		  "type" => "technique",
-		  "card_id" => 100,
-		  "player_id" => OPPONENT_ID,
-		  "nation_id" => 20,
-		  "name" => "Enemy Technique",
-		  "technique_type" => "medium_tank",
-		  "hp" => 10,
-		  "firepower" => 4,
-		  "fuel" => 2,
-		  "attack_range" => 1,
-		  "movement_count" => 1,
-		  "movement_type" => "diagonal",
-		  "has_attacked" => false,
-		  "has_counterattacked" => false
-		}
+    assert_equal(
+      [
+        {
+          type: "game_finished",
+          winner_id: OPPONENT_ID.to_s,
+          loser_id: PLAYER_ID.to_s,
+          reason: "time_expired"
+        }
+      ],
+      result.events
+    )
+  end
 
-		@state["players"][OPPONENT_ID.to_s]["platoons"][0] = {
-		  "type" => "platoon",
-		  "card_id" => 200,
-		  "player_id" => OPPONENT_ID,
-		  "nation_id" => 20,
-		  "name" => "Enemy Platoon",
-		  "firepower" => 5,
-		  "hp" => 10,
-		  "armor" => 3,
-		  "fuel" => 3
-		}
+  test "calculates fuel for the player whose turn starts" do
+    @state["field"][1][0] = {
+      "type" => "technique",
+      "card_id" => 100,
+      "player_id" => OPPONENT_ID,
+      "nation_id" => 20,
+      "name" => "Enemy Technique",
+      "technique_type" => "medium_tank",
+      "hp" => 10,
+      "firepower" => 4,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
 
-		action = GameEngine::Action.new(
-		  player_id: PLAYER_ID,
-		  type: "end_turn"
-		)
+    @state["players"][OPPONENT_ID.to_s]["platoons"][0] = {
+      "type" => "platoon",
+      "card_id" => 200,
+      "player_id" => OPPONENT_ID,
+      "nation_id" => 20,
+      "name" => "Enemy Platoon",
+      "firepower" => 5,
+      "hp" => 10,
+      "armor" => 3,
+      "fuel" => 3
+    }
 
-		result = GameEngine::Actions::EndTurn.new(@state, action).call
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "end_turn"
+    )
 
-		assert result.success?
-		assert_equal 10, result.state["players"][OPPONENT_ID.to_s]["resources"]
-	end
+    result = GameEngine::Actions::EndTurn.new(@state, action).call
 
-	test "replaces new player's resources with calculated fuel" do
-		@state["players"][OPPONENT_ID.to_s]["resources"] = 99
+    assert result.success?
+    assert_equal 10, result.state["players"][OPPONENT_ID.to_s]["resources"]
+  end
 
-		action = GameEngine::Action.new(
-		  player_id: PLAYER_ID,
-		  type: "end_turn"
-		)
+  test "replaces new player's resources with calculated fuel" do
+    @state["players"][OPPONENT_ID.to_s]["resources"] = 99
 
-		result = GameEngine::Actions::EndTurn.new(@state, action).call
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "end_turn"
+    )
 
-		assert result.success?
-		assert_equal 5, result.state["players"][OPPONENT_ID.to_s]["resources"]
-	end
-	
-	test "starts the next turn with a fresh two-minute timer" do
-		current_time = @started_at + 30
+    result = GameEngine::Actions::EndTurn.new(@state, action).call
 
-		action = GameEngine::Action.new(
-		  player_id: PLAYER_ID,
-		  type: "end_turn"
-		)
+    assert result.success?
+    assert_equal 5, result.state["players"][OPPONENT_ID.to_s]["resources"]
+  end
 
-		result = GameEngine::Actions::EndTurn.new(
-		  @state,
-		  action,
-		  current_time: current_time
-		).call
+  test "starts the next turn with a fresh two-minute timer" do
+    current_time = @started_at + 30
 
-		assert result.success?
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "end_turn"
+    )
 
-		timer = GameEngine::TurnTimerForTurn.new(
-		  result.state,
-		  current_time: current_time
-		)
+    result = GameEngine::Actions::EndTurn.new(
+      @state,
+      action,
+      current_time: current_time
+    ).call
 
-		assert_equal 120, timer.remaining_time
-		refute timer.expired?
-	end
-	
+    assert result.success?
+
+    timer = GameEngine::TurnTimerForTurn.new(
+      result.state,
+      current_time: current_time
+    )
+
+    assert_equal 120, timer.remaining_time
+    refute timer.expired?
+  end
+
 	test "keeps total remaining time separate from the two-minute turn timer" do
 		current_time = @started_at + 30
 

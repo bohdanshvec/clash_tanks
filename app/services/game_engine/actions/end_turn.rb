@@ -1,10 +1,10 @@
 module GameEngine
   module Actions
     class EndTurn < Base
-			def initialize(state, action, current_time: Time.current)
-				super(state, action)
-				@current_time = current_time
-			end
+      def initialize(state, action, current_time: Time.current)
+        super(state, action)
+        @current_time = current_time
+      end
 
       def call
         return failure("Player does not exist") unless player_exists?
@@ -17,10 +17,10 @@ module GameEngine
 
         return finish_game_by_timeout if timer.expired?
 
-				turn_timer = GameEngine::TurnTimerForTurn.new(
-					@state,
-					current_time: @current_time
-				)
+        turn_timer = GameEngine::TurnTimerForTurn.new(
+          @state,
+          current_time: @current_time
+        )
 
         new_state = @state.deep_dup
         current_player = new_state["players"][@action.player_id.to_s]
@@ -31,16 +31,19 @@ module GameEngine
         new_state["current_player_id"] = next_player_id
         new_state["turn_started_at"] = @current_time.change(usec: 0).iso8601
 
-        new_state = GameEngine::Turns::PreparePlayer.call(
+        prepare_result = GameEngine::Turns::PreparePlayer.call(
           state: new_state,
           player_id: new_state["current_player_id"]
         )
 
+        raise prepare_result.error unless prepare_result.success?
+
         Result.new(
           success: true,
-          state: new_state,
+          state: prepare_result.state,
           events: [
-            { type: "turn_ended" }
+            { type: "turn_ended" },
+            *prepare_result.events
           ]
         )
       end
@@ -49,29 +52,30 @@ module GameEngine
 
       def next_player_id
         player_ids = @state["players"].keys
+
         next_player = player_ids.find do |player_id|
           player_id != @action.player_id.to_s
         end
 
         next_player.to_i
       end
-      
-			def finish_game_by_timeout
-				loser_id = @action.player_id.to_s
 
-				winner_id = @state["players"].keys.find do |player_id|
-					player_id != loser_id
-				end
+      def finish_game_by_timeout
+        loser_id = @action.player_id.to_s
 
-				return failure("Opponent does not exist") unless winner_id
+        winner_id = @state["players"].keys.find do |player_id|
+          player_id != loser_id
+        end
 
-				GameEngine::FinishGame.call(
-					state: @state,
-					winner_id: winner_id,
-					loser_id: loser_id,
-					reason: "time_expired"
-				)
-			end
+        return failure("Opponent does not exist") unless winner_id
+
+        GameEngine::FinishGame.call(
+          state: @state,
+          winner_id: winner_id,
+          loser_id: loser_id,
+          reason: "time_expired"
+        )
+      end
     end
   end
 end

@@ -196,14 +196,17 @@
                 cell = row[column_index]
               %>
 
-              <div class="battlefield__cell"
-                   data-position="<%= row_index %>,<%= column_index %>"
-                   <% if cell &&
-                         cell["player_id"].to_s == current_player_id &&
-                         ["technique", "headquarters"].include?(cell["type"]) %>
-                     data-action="click->game-events#select"
-                     data-object-type="<%= cell["type"] %>"
-                   <% end %>>
+							<div class="battlefield__cell"
+									 data-position="<%= row_index %>,<%= column_index %>"
+									 <% if cell && cell["type"] == "headquarters" %>
+										 data-headquarters-player-id="<%= cell["player_id"] %>"
+									 <% end %>
+									 <% if cell &&
+												 cell["player_id"].to_s == current_player_id &&
+												 ["technique", "headquarters"].include?(cell["type"]) %>
+										 data-action="click->game-events#select"
+										 data-object-type="<%= cell["type"] %>"
+									 <% end %>>
 
                 <div class="cell-coordinate">
                   [<%= row_index %>, <%= column_index %>]

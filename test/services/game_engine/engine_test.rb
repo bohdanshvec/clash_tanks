@@ -76,7 +76,7 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     assert_nil result.state
   end
 
-  test "returns turn ended event" do
+  test "returns turn ended and draw events" do
     action = GameEngine::Action.new(
       player_id: 42,
       type: "end_turn"
@@ -84,7 +84,13 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
 
     result = GameEngine::Engine.new(@state).call(action)
 
-    assert_equal [{ type: "turn_ended" }], result.events
+    assert_equal(
+      [
+        { type: "turn_ended" },
+        { type: "empty_deck_draw_attempt", player_id: "57", damage: 1 }
+      ],
+      result.events
+    )
   end
 
   test "executes move for current player" do
