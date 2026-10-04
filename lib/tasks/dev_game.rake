@@ -1,75 +1,65 @@
 namespace :dev do
   desc "Create a development game"
   task create_game: :environment do
-    player_one = Player.find_or_create_by!(email: "dev.player1@example.com") do |player|
-      player.name = "Dev Player 1"
-      player.password = "password"
+    development_emails = [
+      "dev.player1@example.com",
+      "dev.player2@example.com"
+    ]
+
+    old_player_ids = Player
+      .where(email: development_emails)
+      .pluck(:id)
+
+    unless old_player_ids.empty?
+      development_game_ids = GamePlayer
+        .where(player_id: old_player_ids)
+        .distinct
+        .pluck(:game_id)
+
+      GamePlayer.where(game_id: development_game_ids).destroy_all
+      Game.where(id: development_game_ids).destroy_all
+
+      Player.where(id: old_player_ids).destroy_all
     end
 
-    player_two = Player.find_or_create_by!(email: "dev.player2@example.com") do |player|
-      player.name = "Dev Player 2"
-      player.password = "password"
+    player_one = nil
+    player_two = nil
+
+    Player.transaction do
+      player_one = Player.create!(
+        email: "dev.player1@example.com",
+        name: "Dev Player 1",
+        password: "password"
+      )
+
+      player_two = Player.create!(
+        email: "dev.player2@example.com",
+        name: "Dev Player 2",
+        password: "password"
+      )
+
+      StarterDecks::Create.call(player_one)
+      StarterDecks::Create.call(player_two)
     end
 
     germany = Nation.find_by!(code: "germany")
     ussr = Nation.find_by!(code: "ussr")
 
-    germany_hq = Card.find_by!(code: "germany_headquarters")
-    ussr_hq = Card.find_by!(code: "ussr_headquarters")
-
-    germany_codes = %w[
-      germany_pz_ii_l_luchs
-      germany_pz_iii_j
-      germany_pz_iv_h
-      germany_tiger_i
-      germany_jagdpanther
-      germany_hummel
-      germany_tocnyj_vystrel
-      germany_radioperekhvat
-      germany_grenaderskij_vzvod
-      germany_flak_88
-    ]
-
-    ussr_codes = %w[
-      ussr_t_70
-      ussr_t_34
-      ussr_t_34_85
-      ussr_is_2
-      ussr_su_100
-      ussr_su_26
-      ussr_zalp_katyushi
-      ussr_popolnenie
-      ussr_strelkovyj_vzvod
-      ussr_vzvod_ptr
-    ]
-
-    germany_deck = Deck.create!(
-      player: player_one,
-      nation: germany,
-      name: "Development Germany"
+    germany_hq = Card.find_by!(
+      code: "germany_headquarters_operation_weiß"
     )
 
-    ussr_deck = Deck.create!(
-      player: player_two,
-      nation: ussr,
-      name: "Development USSR"
+    ussr_hq = Card.find_by!(
+      code: "ussr_headquarters_west_front"
     )
 
-    germany_codes.each do |code|
-      DeckCard.create!(
-        deck: germany_deck,
-        card: Card.find_by!(code: code),
-        quantity: 1
-      )
-    end
+    germany_deck = player_one.decks.find_by!(
+      headquarters_card: germany_hq
+    )
 
-    ussr_codes.each do |code|
-      DeckCard.create!(
-        deck: ussr_deck,
-        card: Card.find_by!(code: code),
-        quantity: 1
-      )
-    end
+    ussr_deck = player_two.decks.find_by!(
+      headquarters_card: ussr_hq
+    )
 
     game = Game.create!
 

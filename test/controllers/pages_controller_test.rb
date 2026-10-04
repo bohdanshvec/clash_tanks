@@ -1,6 +1,10 @@
 require "test_helper"
 
 class PagesControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    Rails.application.load_seed
+  end
+
   test "guest can access home" do
     get root_path
 
@@ -25,10 +29,49 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "guest is redirected from statistics" do
-    get statistics_path
+  test "guest sees three starter decks" do
+    get decks_path
 
-    assert_redirected_to root_path
+    assert_response :success
+
+    assert_select ".deck-card", count: 3
+
+    assert_select ".deck-card", text: /Operation „Weiß“/
+    assert_select ".deck-card", text: /Second front/
+    assert_select ".deck-card", text: /Западный фронт/
+  end
+
+  test "guest does not create any players or decks" do
+    assert_no_difference("Player.count") do
+      assert_no_difference("Deck.count") do
+        get decks_path
+      end
+    end
+
+    assert_response :success
+  end
+
+  test "logged in player sees only their decks" do
+    player = create_player(email: "player@example.com")
+    StarterDecks::Create.call(player)
+
+    other_player = create_player(email: "other@example.com")
+    StarterDecks::Create.call(other_player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    get decks_path
+
+    assert_response :success
+
+    assert_select ".deck-card", count: 3
+
+    assert_select ".deck-card", text: /Operation „Weiß“/
+    assert_select ".deck-card", text: /Second front/
+    assert_select ".deck-card", text: /Западный фронт/
   end
 
   test "logged in player can access statistics" do

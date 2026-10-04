@@ -1,0 +1,52 @@
+<main class="cards-page">
+
+  <header class="cards-page__header">
+
+    <h1>Карты</h1>
+
+    <p>
+      Все доступные карты игры.
+    </p>
+
+  </header>
+
+  <% @cards.group_by(&:nation).sort_by { |nation, _| nation.name }.each do |nation, nation_cards| %>
+
+    <section class="cards-section">
+
+      <h2>
+        <%= nation.name %>
+      </h2>
+
+      <% headquarters_cards = nation_cards.select { |card| card.card_type == "headquarters" } %>
+      <% other_cards = nation_cards.reject { |card| card.card_type == "headquarters" } %>
+
+      <% headquarters_cards.each do |card| %>
+
+        <%= render "cards/card", card: card %>
+
+      <% end %>
+
+      <% if other_cards.any? %>
+
+        <div class="cards-grid">
+
+          <% other_cards.each do |card| %>
+
+            <%= render "cards/card", card: card %>
+
+          <% end %>
+
+        </div>
+
+      <% end %>
+
+    </section>
+
+  <% end %>
+
+  <p>
+    <%= link_to "На главную", root_path %>
+  </p>
+
+</main>

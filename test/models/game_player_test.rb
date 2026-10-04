@@ -8,12 +8,14 @@ class GamePlayerTest < ActiveSupport::TestCase
       name: "СССР",
       code: "ussr"
     )
+    headquarters_card = create_headquarters_card(nation: nation)
+
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Основная колода"
+      name: "Основная колода",
+      headquarters_card: headquarters_card
     )
-    headquarters_card = create_headquarters_card(nation: nation)
 
     game_player = GamePlayer.create!(
       game: game,
@@ -33,12 +35,14 @@ class GamePlayerTest < ActiveSupport::TestCase
       name: "СССР",
       code: "ussr"
     )
+    headquarters_card = create_headquarters_card(nation: nation)
+
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Основная колода"
+      name: "Основная колода",
+      headquarters_card: headquarters_card
     )
-    headquarters_card = create_headquarters_card(nation: nation)
 
     game_player = GamePlayer.create!(
       game: game,
@@ -58,12 +62,14 @@ class GamePlayerTest < ActiveSupport::TestCase
       name: "СССР",
       code: "ussr"
     )
+    headquarters_card = create_headquarters_card(nation: nation)
+
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Основная колода"
+      name: "Основная колода",
+      headquarters_card: headquarters_card
     )
-    headquarters_card = create_headquarters_card(nation: nation)
 
     game_player = GamePlayer.create!(
       game: game,
@@ -83,12 +89,14 @@ class GamePlayerTest < ActiveSupport::TestCase
       name: "СССР",
       code: "ussr"
     )
+    headquarters_card = create_headquarters_card(nation: nation)
+
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Основная колода"
+      name: "Основная колода",
+      headquarters_card: headquarters_card
     )
-    headquarters_card = create_headquarters_card(nation: nation)
 
     game_player = GamePlayer.create!(
       game: game,
@@ -105,7 +113,7 @@ class GamePlayerTest < ActiveSupport::TestCase
 
   def create_headquarters_card(nation:)
     card = Card.create!(
-      code: "test_hq",
+      code: "test_hq_#{SecureRandom.hex(4)}",
       nation: nation,
       name: "Test HQ",
       card_type: "headquarters",

@@ -1,0 +1,198 @@
+<%= form_with model: deck,
+      class: "deck-editor",
+      data: {
+        controller: "deck-editor",
+        current_nation_id: deck.nation_id
+      } do |form| %>
+
+  <% if deck.errors.any? %>
+
+    <div class="deck-editor__errors">
+
+      <h2>
+        Не удалось сохранить колоду:
+      </h2>
+
+      <ul>
+
+        <% deck.errors.full_messages.each do |message| %>
+
+          <li>
+            <%= message %>
+          </li>
+
+        <% end %>
+
+      </ul>
+
+    </div>
+
+  <% end %>
+
+  <section class="deck-editor__general">
+
+    <div class="deck-editor__field">
+
+      <%= form.label :name, "Название колоды" %>
+
+      <%= form.text_field :name,
+            required: true,
+            autocomplete: "off" %>
+
+    </div>
+
+    <div class="deck-editor__field">
+
+      <%= form.label :headquarters_card_id, "Штаб" %>
+
+      <% if deck.persisted? %>
+
+        <div class="deck-editor__selected-headquarters">
+
+          <strong>
+            <%= deck.headquarters_card.name %>
+          </strong>
+
+          <span>
+            <%= deck.nation.name %>
+          </span>
+
+          <small>
+            Штаб нельзя изменить после создания колоды.
+          </small>
+
+        </div>
+
+      <% else %>
+
+        <%= form.select :headquarters_card_id,
+              headquarters_cards.map { |card|
+                [
+                  "#{card.nation.name} — #{card.name}",
+                  card.id,
+                  {
+                    data: {
+                      nation_id: card.nation_id
+                    }
+                  }
+                ]
+              },
+              { prompt: "Выберите штаб" },
+              {
+                data: {
+                  deck_editor_target: "headquarters",
+                  action: "change->deck-editor#update"
+                }
+              } %>
+
+      <% end %>
+
+    </div>
+
+  </section>
+
+  <section class="deck-editor__summary">
+
+    <strong>
+      Нация:
+      <span data-deck-editor-target="nation">
+        <%= deck.nation&.name || "не выбрана" %>
+      </span>
+    </strong>
+
+    <strong>
+      Карт:
+      <span data-deck-editor-target="count">0</span>
+      / <%= Deck::DECK_SIZE %>
+    </strong>
+
+    <strong>
+      Weight:
+      <span data-deck-editor-target="weight">0</span>
+    </strong>
+
+  </section>
+
+  <section class="deck-editor__cards">
+
+    <% cards_by_nation.each do |nation_id, cards| %>
+
+      <% nation = cards.first.nation %>
+
+      <div
+        class="deck-editor__nation"
+        data-deck-editor-target="nationSection"
+        data-nation-id="<%= nation_id %>"
+      >
+
+        <h2>
+          <%= nation.name %>
+        </h2>
+
+        <div class="deck-editor__card-list">
+
+          <% cards.each do |card| %>
+
+            <% quantity = selected_quantities[card.id] || 0 %>
+
+            <div
+              class="deck-editor__card"
+              data-card-weight="<%= card.weight %>"
+            >
+
+              <%= render "cards/card", card: card %>
+
+              <div class="deck-editor__quantity">
+
+                <button
+                  type="button"
+                  data-action="click->deck-editor#decrease"
+                  data-card-id="<%= card.id %>"
+                >
+                  −
+                </button>
+
+                <span class="deck-editor__quantity-value">
+                  <%= quantity %>
+                </span>
+
+                <%= hidden_field_tag(
+                  "deck[card_quantities][#{card.id}]",
+                  quantity,
+                  id: "deck_card_quantities_#{card.id}",
+                  data: {
+                    deck_editor_target: "quantity"
+                  }
+                ) %>
+
+                <button
+                  type="button"
+                  data-action="click->deck-editor#increase"
+                  data-card-id="<%= card.id %>"
+                >
+                  +
+                </button>
+
+              </div>
+
+            </div>
+
+          <% end %>
+
+        </div>
+
+      </div>
+
+    <% end %>
+
+  </section>
+
+  <div class="deck-editor__actions">
+
+    <%= form.submit "Сохранить колоду" %>
+
+    <%= link_to "Отмена", decks_path %>
+
+  </div>
+
+<% end %>

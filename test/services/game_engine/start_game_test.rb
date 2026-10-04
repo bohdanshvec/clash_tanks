@@ -16,20 +16,22 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       code: "nation_2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1, name: "HQ 1")
+    headquarters2 = create_headquarters_card(nation: nation2, name: "HQ 2")
+
     deck1 = Deck.create!(
       player: player1,
       nation: nation1,
-      name: "Deck 1"
+      name: "Deck 1",
+      headquarters_card: headquarters1
     )
 
     deck2 = Deck.create!(
       player: player2,
       nation: nation2,
-      name: "Deck 2"
+      name: "Deck 2",
+      headquarters_card: headquarters2
     )
-
-    headquarters1 = create_headquarters_card(nation: nation1, name: "HQ 1")
-    headquarters2 = create_headquarters_card(nation: nation2, name: "HQ 2")
 
     GamePlayer.create!(
       game: game,
@@ -114,13 +116,14 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       code: "nation_1"
     )
 
+    headquarters = create_headquarters_card(nation: nation)
+
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Deck 1"
+      name: "Deck 1",
+      headquarters_card: headquarters
     )
-
-    headquarters = create_headquarters_card(nation: nation)
 
     GamePlayer.create!(
       game: game,
@@ -155,20 +158,22 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       code: "nation_2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+
     deck1 = Deck.create!(
       player: player1,
       nation: nation1,
-      name: "Deck 1"
+      name: "Deck 1",
+      headquarters_card: headquarters1
     )
 
     deck2 = Deck.create!(
       player: player2,
       nation: nation2,
-      name: "Deck 2"
+      name: "Deck 2",
+      headquarters_card: headquarters2
     )
-
-    headquarters1 = create_headquarters_card(nation: nation1)
-    headquarters2 = create_headquarters_card(nation: nation2)
 
     GamePlayer.create!(
       game: game,
@@ -209,20 +214,22 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       code: "nation_2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+
     deck1 = Deck.create!(
       player: player1,
       nation: nation1,
-      name: "Deck 1"
+      name: "Deck 1",
+      headquarters_card: headquarters1
     )
 
     deck2 = Deck.create!(
       player: player2,
       nation: nation2,
-      name: "Deck 2"
+      name: "Deck 2",
+      headquarters_card: headquarters2
     )
-
-    headquarters1 = create_headquarters_card(nation: nation1)
-    headquarters2 = create_headquarters_card(nation: nation2)
 
     10.times do |index|
       card1 = Card.create!(
@@ -307,20 +314,22 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       code: "nation_2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+
     deck1 = Deck.create!(
       player: player1,
       nation: nation1,
-      name: "Deck 1"
+      name: "Deck 1",
+      headquarters_card: headquarters1
     )
 
     deck2 = Deck.create!(
       player: player2,
       nation: nation2,
-      name: "Deck 2"
+      name: "Deck 2",
+      headquarters_card: headquarters2
     )
-
-    headquarters1 = create_headquarters_card(nation: nation1)
-    headquarters2 = create_headquarters_card(nation: nation2)
 
     10.times do |index|
       card1 = Card.create!(
@@ -387,11 +396,28 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
     player2 = create_player
     nation1 = Nation.create!(name: "Nation 1", code: "nation_1")
     nation2 = Nation.create!(name: "Nation 2", code: "nation_2")
-    deck1 = Deck.create!(player: player1, nation: nation1, name: "Deck 1")
-    deck2 = Deck.create!(player: player2, nation: nation2, name: "Deck 2")
+
     headquarters1 = create_headquarters_card(nation: nation1)
     headquarters2 = create_headquarters_card(nation: nation2)
-    ability = Ability.create!(name: "Test ability", code: "test_headquarters_ability")
+
+    deck1 = Deck.create!(
+      player: player1,
+      nation: nation1,
+      name: "Deck 1",
+      headquarters_card: headquarters1
+    )
+
+    deck2 = Deck.create!(
+      player: player2,
+      nation: nation2,
+      name: "Deck 2",
+      headquarters_card: headquarters2
+    )
+
+    ability = Ability.create!(
+      name: "Test ability",
+      code: "test_headquarters_ability"
+    )
 
     CardAbility.create!(
       card: headquarters1,
@@ -438,18 +464,6 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       code: "nation_2"
     )
 
-    deck1 = Deck.create!(
-      player: player1,
-      nation: nation1,
-      name: "Deck 1"
-    )
-
-    deck2 = Deck.create!(
-      player: player2,
-      nation: nation2,
-      name: "Deck 2"
-    )
-
     headquarters1 = create_headquarters_card(
       nation: nation1,
       name: "HQ 1"
@@ -458,6 +472,20 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
     headquarters2 = create_headquarters_card(
       nation: nation2,
       name: "HQ 2"
+    )
+
+    deck1 = Deck.create!(
+      player: player1,
+      nation: nation1,
+      name: "Deck 1",
+      headquarters_card: headquarters1
+    )
+
+    deck2 = Deck.create!(
+      player: player2,
+      nation: nation2,
+      name: "Deck 2",
+      headquarters_card: headquarters2
     )
 
     GamePlayer.create!(
@@ -506,20 +534,22 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       code: "nation_2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+
     deck1 = Deck.create!(
       player: player1,
       nation: nation1,
-      name: "Deck 1"
+      name: "Deck 1",
+      headquarters_card: headquarters1
     )
 
     deck2 = Deck.create!(
       player: player2,
       nation: nation2,
-      name: "Deck 2"
+      name: "Deck 2",
+      headquarters_card: headquarters2
     )
-
-    headquarters1 = create_headquarters_card(nation: nation1)
-    headquarters2 = create_headquarters_card(nation: nation2)
 
     GamePlayer.create!(
       game: game,
@@ -568,20 +598,22 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       code: "nation_2"
     )
 
+    headquarters1 = create_headquarters_card(nation: nation1)
+    headquarters2 = create_headquarters_card(nation: nation2)
+
     deck1 = Deck.create!(
       player: player1,
       nation: nation1,
-      name: "Deck 1"
+      name: "Deck 1",
+      headquarters_card: headquarters1
     )
 
     deck2 = Deck.create!(
       player: player2,
       nation: nation2,
-      name: "Deck 2"
+      name: "Deck 2",
+      headquarters_card: headquarters2
     )
-
-    headquarters1 = create_headquarters_card(nation: nation1)
-    headquarters2 = create_headquarters_card(nation: nation2)
 
     10.times do |index|
       card1 = Card.create!(
@@ -649,7 +681,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
 
   def create_headquarters_card(nation:, name: "Test HQ")
     card = Card.create!(
-      code: "#{nation.code}_#{name.parameterize(separator: "_")}",
+      code: "#{nation.code}_#{name.parameterize(separator: "_")}_#{SecureRandom.hex(4)}",
       nation: nation,
       name: name,
       card_type: "headquarters",

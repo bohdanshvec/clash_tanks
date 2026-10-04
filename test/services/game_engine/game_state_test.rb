@@ -46,31 +46,31 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
     assert_equal 1, state["turn_number"]
     assert_equal 42, state["current_player_id"]
 
-		assert_equal(
-			{
-				"42" => {
-				  "nation_id" => 10,
-				  "hand" => [],
-				  "deck" => [],
-				  "graveyard" => [],
-				  "platoons" => [nil, nil, nil, nil],
-				  "resources" => 0,
-				  "remaining_time" => GameEngine::GameState::GAME_TIME,
-				  "empty_deck_draw_attempts" => 0
-				},
-				"57" => {
-				  "nation_id" => 20,
-				  "hand" => [],
-				  "deck" => [],
-				  "graveyard" => [],
-				  "platoons" => [nil, nil, nil, nil],
-				  "resources" => 0,
-				  "remaining_time" => GameEngine::GameState::GAME_TIME,
-				  "empty_deck_draw_attempts" => 0
-				}
-			},
-			state["players"]
-		)
+    assert_equal(
+      {
+        "42" => {
+          "nation_id" => 10,
+          "hand" => [],
+          "deck" => [],
+          "graveyard" => [],
+          "platoons" => [nil, nil, nil, nil],
+          "resources" => 0,
+          "remaining_time" => GameEngine::GameState::GAME_TIME,
+          "empty_deck_draw_attempts" => 0
+        },
+        "57" => {
+          "nation_id" => 20,
+          "hand" => [],
+          "deck" => [],
+          "graveyard" => [],
+          "platoons" => [nil, nil, nil, nil],
+          "resources" => 0,
+          "remaining_time" => GameEngine::GameState::GAME_TIME,
+          "empty_deck_draw_attempts" => 0
+        }
+      },
+      state["players"]
+    )
 
     assert_equal(
       {
@@ -407,7 +407,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       code: "ussr"
     )
 
-    deck = Deck.create!(
+    deck = create_deck(
       player: player,
       nation: nation,
       name: "Основная колода"
@@ -472,7 +472,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       code: "ussr"
     )
 
-    deck = Deck.create!(
+    deck = create_deck(
       player: player,
       nation: nation,
       name: "Основная колода"
@@ -517,7 +517,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       code: "ussr"
     )
 
-    deck = Deck.create!(
+    deck = create_deck(
       player: player,
       nation: nation,
       name: "Основная колода"
@@ -563,7 +563,7 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       code: "ussr"
     )
 
-    deck = Deck.create!(
+    deck = create_deck(
       player: player,
       nation: nation,
       name: "Основная колода"
@@ -631,8 +631,10 @@ class GameEngine::GameStateTest < ActiveSupport::TestCase
       fuel: 2
     )
 
-    deck = Deck.create!(
-      player: create_player,
+    player = create_player
+
+    deck = create_deck(
+      player: player,
       nation: nation,
       name: "Test Deck"
     )

@@ -21,7 +21,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     headquarters_card = Card.create!(
       nation: nation,
       name: "Test HQ",
-      code: "test_hq",
+      code: "test_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -30,7 +30,8 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     deck = Deck.create!(
       player: player_one,
       nation: nation,
-      name: "Test Deck"
+      name: "Test Deck",
+      headquarters_card: headquarters_card
     )
 
     GamePlayer.create!(
@@ -68,7 +69,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     headquarters_card = Card.create!(
       nation: nation,
       name: "Test HQ",
-      code: "test_hq",
+      code: "test_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -77,7 +78,8 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Test Deck"
+      name: "Test Deck",
+      headquarters_card: headquarters_card
     )
 
     GamePlayer.create!(
@@ -128,7 +130,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     headquarters_card = Card.create!(
       nation: nation,
       name: "Move Test HQ",
-      code: "move_test_hq",
+      code: "move_test_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -137,7 +139,8 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Move Test Deck"
+      name: "Move Test Deck",
+      headquarters_card: headquarters_card
     )
 
     GamePlayer.create!(
@@ -219,7 +222,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     headquarters_card = Card.create!(
       nation: nation,
       name: "Invalid Move HQ",
-      code: "invalid_move_hq",
+      code: "invalid_move_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -228,7 +231,8 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Invalid Move Deck"
+      name: "Invalid Move Deck",
+      headquarters_card: headquarters_card
     )
 
     GamePlayer.create!(
@@ -316,7 +320,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     headquarters_card = Card.create!(
       nation: nation,
       name: "Attack Test HQ",
-      code: "attack_test_hq",
+      code: "attack_test_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -325,7 +329,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     enemy_headquarters_card = Card.create!(
       nation: enemy_nation,
       name: "Enemy Attack Test HQ",
-      code: "enemy_attack_test_hq",
+      code: "enemy_attack_test_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -334,13 +338,15 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Attack Test Deck"
+      name: "Attack Test Deck",
+      headquarters_card: headquarters_card
     )
 
     enemy_deck = Deck.create!(
       player: enemy,
       nation: enemy_nation,
-      name: "Enemy Attack Test Deck"
+      name: "Enemy Attack Test Deck",
+      headquarters_card: enemy_headquarters_card
     )
 
     GamePlayer.create!(
@@ -464,7 +470,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     headquarters_card = Card.create!(
       nation: nation,
       name: "Invalid Attack HQ",
-      code: "invalid_attack_hq",
+      code: "invalid_attack_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -473,7 +479,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     enemy_headquarters_card = Card.create!(
       nation: enemy_nation,
       name: "Invalid Enemy Attack HQ",
-      code: "invalid_enemy_attack_hq",
+      code: "invalid_enemy_attack_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -482,13 +488,15 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Invalid Attack Deck"
+      name: "Invalid Attack Deck",
+      headquarters_card: headquarters_card
     )
 
     enemy_deck = Deck.create!(
       player: enemy,
       nation: enemy_nation,
-      name: "Invalid Enemy Attack Deck"
+      name: "Invalid Enemy Attack Deck",
+      headquarters_card: enemy_headquarters_card
     )
 
     GamePlayer.create!(
@@ -619,7 +627,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     headquarters_card = Card.create!(
       nation: nation,
       name: "Forbidden Attack HQ",
-      code: "forbidden_attack_hq",
+      code: "forbidden_attack_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -628,7 +636,8 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Forbidden Attack Deck"
+      name: "Forbidden Attack Deck",
+      headquarters_card: headquarters_card
     )
 
     GamePlayer.create!(
@@ -670,7 +679,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     headquarters_card = Card.create!(
       nation: nation,
       name: "Surrender Test HQ",
-      code: "surrender_test_hq",
+      code: "surrender_test_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -679,7 +688,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     enemy_headquarters_card = Card.create!(
       nation: enemy_nation,
       name: "Enemy Surrender Test HQ",
-      code: "enemy_surrender_test_hq",
+      code: "enemy_surrender_test_hq_#{SecureRandom.hex(4)}",
       card_type: "headquarters",
       weight: 1,
       price: nil
@@ -688,13 +697,15 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     deck = Deck.create!(
       player: player,
       nation: nation,
-      name: "Surrender Test Deck"
+      name: "Surrender Test Deck",
+      headquarters_card: headquarters_card
     )
 
     enemy_deck = Deck.create!(
       player: enemy,
       nation: enemy_nation,
-      name: "Enemy Surrender Test Deck"
+      name: "Enemy Surrender Test Deck",
+      headquarters_card: enemy_headquarters_card
     )
 
     GamePlayer.create!(

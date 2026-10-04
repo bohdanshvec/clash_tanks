@@ -1,18 +1,18 @@
 require "test_helper"
 
 class PlayerTest < ActiveSupport::TestCase
-  test "has many decks" do
-    player = create_player
-    nation = Nation.create!(name: "СССР", code: "ussr")
+	test "has many decks" do
+		player = create_player
+		nation = Nation.create!(name: "СССР", code: "ussr")
 
-    deck = Deck.create!(
-      player: player,
-      nation: nation,
-      name: "Основная колода"
-    )
+		deck = create_deck(
+		  player: player,
+		  nation: nation,
+		  name: "Основная колода"
+		)
 
-    assert_includes player.decks, deck
-  end
+		assert_includes player.decks, deck
+	end
 
   test "accepts valid email" do
     player = Player.new(

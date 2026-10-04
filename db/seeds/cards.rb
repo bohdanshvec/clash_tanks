@@ -6,7 +6,7 @@ nations = {
 
 headquarters = [
   {
-    code: "germany_headquarters",
+    code: "germany_headquarters_operation_weiß",
     nation: nations[:germany],
     name: "Operation „Weiß“",
     weight: 1,
@@ -15,7 +15,7 @@ headquarters = [
     fuel: 4
   },
   {
-    code: "usa_headquarters",
+    code: "usa_headquarters_second_front",
     nation: nations[:usa],
     name: "Second front",
     weight: 1,
@@ -24,7 +24,7 @@ headquarters = [
     fuel: 6
   },
   {
-    code: "ussr_headquarters",
+    code: "ussr_headquarters_west_front",
     nation: nations[:ussr],
     name: "Западный фронт",
     weight: 1,

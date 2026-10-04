@@ -1,0 +1,23 @@
+<main class="decks-page">
+
+  <header class="decks-page__header">
+
+    <div class="decks-page__title">
+
+      <h1>Создать колоду</h1>
+
+      <p>
+        Создайте собственную колоду.
+      </p>
+
+    </div>
+
+  </header>
+
+  <%= render "form",
+        deck: @deck,
+        headquarters_cards: @headquarters_cards,
+        cards_by_nation: @cards_by_nation,
+        selected_quantities: @selected_quantities %>
+
+</main>

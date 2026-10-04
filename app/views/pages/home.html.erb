@@ -4,6 +4,10 @@
   <p>
     <%= link_to "Правила игры", rules_path %>
   </p>
+  
+  <p>
+    <%= link_to "Карты", cards_path %>
+  </p>
 
   <p>
     <%= link_to "Играть", play_path %>
@@ -12,7 +16,7 @@
   <p>
     <%= link_to "Колоды", decks_path %>
   </p>
-
+  
   <% if current_player %>
     <p>
       <%= link_to "Статистика", statistics_path %>

@@ -6,11 +6,14 @@ class RegistrationsController < ApplicationController
   def create
     @player = Player.new(player_params)
 
-    if @player.save
-      redirect_to root_path, notice: "Регистрация успешно завершена."
-    else
-      render :new, status: :unprocessable_entity
+    Player.transaction do
+      @player.save!
+      StarterDecks::Create.call(@player)
     end
+
+    redirect_to root_path, notice: "Регистрация успешно завершена."
+  rescue ActiveRecord::RecordInvalid
+    render :new, status: :unprocessable_entity
   end
 
   private

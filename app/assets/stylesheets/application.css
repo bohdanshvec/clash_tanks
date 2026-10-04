@@ -1,45 +1,44 @@
 /*
-
-* This is a manifest file that'll be compiled into application.css.
-*
-* With Propshaft, assets are served efficiently without preprocessing steps.
-  */
+ * This is a manifest file that'll be compiled into application.css.
+ *
+ * With Propshaft, assets are served efficiently without preprocessing steps.
+ */
 
 /* =========================================================
-Stage 15.11 — игровая геометрия
-========================================================= */
+   Stage 15.11 — игровая геометрия
+   ========================================================= */
 
 /* ---------------------------------------------------------
-Основной экран
---------------------------------------------------------- */
+   Основной экран
+   --------------------------------------------------------- */
 
 .game {
-width: 100%;
-min-height: 100vh;
-box-sizing: border-box;
-padding: 20px;
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 20px;
 }
 
 /* ---------------------------------------------------------
-Заголовок
---------------------------------------------------------- */
+   Заголовок
+   --------------------------------------------------------- */
 
 .game-header {
-display: flex;
-align-items: center;
-gap: 24px;
-margin-bottom: 20px;
-white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+  white-space: nowrap;
 }
 
 .game-header h1,
 .game-header p {
-margin: 0;
+  margin: 0;
 }
 
 /* ---------------------------------------------------------
-Верхняя часть
---------------------------------------------------------- */
+   Верхняя часть
+   --------------------------------------------------------- */
 
 .game-top {
   width: 100%;
@@ -53,29 +52,22 @@ margin: 0;
 
 .game-top__hand,
 .game-top__info {
-width: 100%;
-min-width: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .game-top__hand {
-/*
-
-* Ширина руки совпадает с максимальной шириной
-* игровой зоны:
-*
-* 100px + 10px + 900px + 10px + 100px = 1120px
-  */
   width: min(1120px, 100%);
   margin-left: auto;
   margin-right: auto;
 
-display: flex;
-justify-content: center;
+  display: flex;
+  justify-content: center;
 }
 
 /* ---------------------------------------------------------
-Нижняя часть
---------------------------------------------------------- */
+   Нижняя часть
+   --------------------------------------------------------- */
 
 .game-bottom {
   width: 100%;
@@ -89,62 +81,59 @@ justify-content: center;
 
 .game-bottom__info,
 .game-bottom__hand {
-width: 100%;
-min-width: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .game-bottom__hand {
-/*
-
-* Та же ширина, что и игровая зона.
-  */
   width: min(1120px, 100%);
   margin-left: auto;
   margin-right: auto;
 
-display: flex;
-justify-content: center;
+  display: flex;
+  justify-content: center;
 }
 
 /* ---------------------------------------------------------
-Информационные окна
---------------------------------------------------------- */
+   Информационные окна
+   --------------------------------------------------------- */
 
 .info-window {
-width: 100%;
-box-sizing: border-box;
+  width: 100%;
+  box-sizing: border-box;
 
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
 
-flex-wrap: nowrap;
-white-space: nowrap;
-overflow-x: auto;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
 }
 
 .info-window h2 {
-margin-top: 0;
+  margin-top: 0;
 }
 
 .info-window p {
-margin: 0;
+  margin: 0;
 }
 
 .info-window form {
-margin: 0;
+  margin: 0;
 }
 
 /* ---------------------------------------------------------
-Рука
---------------------------------------------------------- */
+   Рука
+   --------------------------------------------------------- */
 
 .game-top__hand,
 .game-bottom__hand {
   width: 100%;
   min-width: 0;
   margin: 0 auto;
+
   display: flex;
   justify-content: center;
 }
@@ -163,18 +152,6 @@ margin: 0;
 
   overflow: visible;
 
-  /*
-   * Пока карты помещаются:
-   * между ними сохраняется небольшой отступ.
-   *
-   * Когда карт становится слишком много:
-   * расстояние постепенно уменьшается.
-   *
-   * После достижения 0px карты начинают
-   * немного наползать друг на друга.
-   *
-   * Максимальное наползание: -55px.
-   */
   gap: clamp(
     -55px,
     calc(
@@ -195,469 +172,432 @@ margin: 0;
 }
 
 /* ---------------------------------------------------------
-Карты в руке
---------------------------------------------------------- */
+   Карты
+   --------------------------------------------------------- */
 
 .card {
-position: relative;
-z-index: 1;
+  position: relative;
+  z-index: 1;
 
-/*
-
-* Базовая ширина карточки.
-  */
   flex: 0 0 150px;
   width: 150px;
   box-sizing: border-box;
 
-/*
-
-* Наползание больше не задаётся здесь.
-* Оно автоматически определяется через gap у .hand.
-  */
-
-/*
-
-* Визуальное оформление карточки.
-  */
   padding: 8px;
 
-border: 2px solid #222;
-border-radius: 10px;
+  border: 2px solid #222;
+  border-radius: 10px;
 
-background: #fff;
+  background: #fff;
 
-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
 
-transition:
-transform 0.15s ease,
-box-shadow 0.15s ease,
-z-index 0s linear 0.15s;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    z-index 0s linear 0.15s;
 
-transform-origin: center bottom;
+  transform-origin: center bottom;
 }
 
 .card:hover {
-z-index: 100;
+  z-index: 100;
 
-transform: translateY(-20px) scale(1.15);
+  transform: translateY(-20px) scale(1.15);
 
-box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
 
-transition:
-transform 0.15s ease,
-box-shadow 0.15s ease,
-z-index 0s;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    z-index 0s;
 }
 
 .card__header {
-display: flex;
-align-items: flex-start;
-justify-content: space-between;
-gap: 6px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .card__header strong {
-line-height: 1.1;
+  line-height: 1.1;
 }
 
 .card__stats {
-display: flex;
-flex-direction: column;
-align-items: stretch;
-gap: 2px;
-margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  margin-top: 6px;
 }
 
 .card__stats p {
-margin: 0;
-line-height: 1.15;
+  margin: 0;
+  line-height: 1.15;
 }
 
 /* ---------------------------------------------------------
-Центральная игровая зона
---------------------------------------------------------- */
+   Центральная игровая зона
+   --------------------------------------------------------- */
 
 .game-board {
-display: grid;
+  display: grid;
 
-/*
-
-* Узкие панели взводов,
-* более широкое центральное поле.
-  */
   grid-template-columns: 100px minmax(600px, 900px) 100px;
 
-justify-content: center;
-align-items: stretch;
+  justify-content: center;
+  align-items: stretch;
 
-gap: 10px;
+  gap: 10px;
 }
 
 /* ---------------------------------------------------------
-Боковые панели взводов
---------------------------------------------------------- */
+   Боковые панели взводов
+   --------------------------------------------------------- */
 
 .game-board__left,
 .game-board__right {
-min-width: 0;
-display: flex;
-align-items: stretch;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
 }
 
 .game-board__left {
-justify-content: flex-end;
+  justify-content: flex-end;
 }
 
 .game-board__right {
-justify-content: flex-start;
+  justify-content: flex-start;
 }
 
 .platoon-bar {
-width: 100%;
-height: 100%;
-min-height: 100%;
-box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
 
-display: flex;
-flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .platoon-bar h2,
 .platoon-bar h3 {
-margin: 0 0 6px;
+  margin: 0 0 6px;
 }
 
-/*
-
-* Компактное отображение одного взвода.
-  */
-  .platoon-slot {
+.platoon-slot {
   flex: 1 1 0;
   min-height: 0;
   box-sizing: border-box;
 
-display: flex;
-flex-direction: column;
-justify-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 
-padding: 3px;
-overflow: hidden;
+  padding: 3px;
+  overflow: hidden;
 
-font-size: 9px;
-line-height: 1;
+  font-size: 9px;
+  line-height: 1;
 }
 
 .platoon-slot span,
 .platoon-slot strong,
 .platoon-slot p {
-margin: 0;
-line-height: 1;
+  margin: 0;
+  line-height: 1;
 }
 
 .platoon-slot strong {
-margin: 1px 0;
+  margin: 1px 0;
 
-font-size: 10px;
-line-height: 1;
+  font-size: 10px;
+  line-height: 1;
 }
 
 /* ---------------------------------------------------------
-ПОЛЕ
---------------------------------------------------------- */
+   Поле
+   --------------------------------------------------------- */
 
 .game-board__field {
-width: 100%;
-min-width: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .game-board__field h2 {
-margin: 0 0 8px;
+  margin: 0 0 8px;
 }
 
-/*
-
-* Вместо настоящей таблицы визуально превращаем
-* table/tbody/tr в CSS Grid.
-*
-* 5 колонок × 3 строки.
-  */
-
 .battlefield {
-width: 100%;
+  width: 100%;
 
-display: grid;
+  display: grid;
 
-grid-template-columns: repeat(5, minmax(0, 1fr));
-grid-template-rows: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
 
-border-collapse: collapse;
+  border-collapse: collapse;
 }
 
 .battlefield tbody,
 .battlefield tr {
-display: contents;
+  display: contents;
 }
 
 .battlefield__cell {
-position: relative;
-min-width: 0;
+  position: relative;
+  min-width: 0;
 
-aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 1;
 
-box-sizing: border-box;
-overflow: hidden;
+  box-sizing: border-box;
+  overflow: hidden;
 
-border: 1px solid #000;
+  border: 1px solid #000;
 }
 
 /* ---------------------------------------------------------
-Координаты
---------------------------------------------------------- */
+   Координаты
+   --------------------------------------------------------- */
 
 .cell-coordinate {
-position: absolute;
+  position: absolute;
 
-top: 4px;
-left: 5px;
+  top: 4px;
+  left: 5px;
 
-z-index: 10;
+  z-index: 10;
 
-margin: 0;
+  margin: 0;
 
-font-size: 10px;
-line-height: 1;
+  font-size: 10px;
+  line-height: 1;
 
-white-space: nowrap;
-pointer-events: none;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* ---------------------------------------------------------
-Пустая клетка
---------------------------------------------------------- */
+   Пустая клетка
+   --------------------------------------------------------- */
 
 .battlefield__cell > span {
-position: absolute;
-inset: 0;
+  position: absolute;
+  inset: 0;
 
-display: flex;
-align-items: center;
-justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-margin: 0;
+  margin: 0;
 
-font-size: 11px;
+  font-size: 11px;
 }
 
 /* ---------------------------------------------------------
-Объект внутри клетки
---------------------------------------------------------- */
+   Объект внутри клетки
+   --------------------------------------------------------- */
 
 .cell-object {
-position: absolute;
-inset: 0;
+  position: absolute;
+  inset: 0;
 
-box-sizing: border-box;
+  box-sizing: border-box;
 
-padding: 17px 4px 3px;
+  padding: 17px 4px 3px;
 
-display: flex;
-flex-direction: column;
-align-items: stretch;
-justify-content: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
 
-gap: 1px;
+  gap: 1px;
 
-overflow: hidden;
+  overflow: hidden;
 
-font-size: 10px;
-line-height: 1;
+  font-size: 10px;
+  line-height: 1;
 }
 
 .cell-object strong {
-display: block;
+  display: block;
 
-margin: 0 0 1px;
+  margin: 0 0 1px;
 
-font-size: 11px;
-line-height: 1;
+  font-size: 11px;
+  line-height: 1;
 
-text-align: center;
+  text-align: center;
 
-overflow: hidden;
-white-space: nowrap;
-text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .cell-object p {
-margin: 0;
+  margin: 0;
 
-line-height: 1;
+  line-height: 1;
 
-overflow: hidden;
-white-space: nowrap;
-text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* ---------------------------------------------------------
-Формы внутри клетки
---------------------------------------------------------- */
+   Формы внутри клетки
+   --------------------------------------------------------- */
 
 .cell-object form {
-display: grid;
+  display: grid;
 
-grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
 
-gap: 2px;
+  gap: 2px;
 
-margin-top: 2px;
+  margin-top: 2px;
 }
 
 .cell-object label {
-display: flex;
-align-items: center;
+  display: flex;
+  align-items: center;
 
-gap: 2px;
+  gap: 2px;
 
-min-width: 0;
+  min-width: 0;
 
-font-size: 8px;
-line-height: 1;
+  font-size: 8px;
+  line-height: 1;
 }
 
 .cell-object select {
-min-width: 0;
-width: 100%;
+  min-width: 0;
+  width: 100%;
 
-padding: 0;
+  padding: 0;
 
-font-size: 8px;
-line-height: 1;
+  font-size: 8px;
+  line-height: 1;
 }
 
 .cell-object input[type="submit"] {
-grid-column: 1 / -1;
+  grid-column: 1 / -1;
 
-width: 100%;
+  width: 100%;
 
-padding: 1px 3px;
+  padding: 1px 3px;
 
-font-size: 8px;
-line-height: 1;
+  font-size: 8px;
+  line-height: 1;
 }
 
-/*
-
-* Для форм Move/Attack не даём отдельным элементам
-* раздувать клетку.
-  */
-
 .cell-object form input[type="hidden"] {
-display: none;
+  display: none;
 }
 
 /* ---------------------------------------------------------
-Небольшая защита от переполнения
---------------------------------------------------------- */
+   Небольшая защита от переполнения
+   --------------------------------------------------------- */
 
 .cell-object ul {
-margin: 1px 0;
-padding-left: 11px;
+  margin: 1px 0;
+  padding-left: 11px;
 
-font-size: 8px;
-line-height: 1;
+  font-size: 8px;
+  line-height: 1;
 }
 
 .cell-object li {
-margin: 0;
-padding: 0;
+  margin: 0;
+  padding: 0;
 
-line-height: 1;
+  line-height: 1;
 }
 
 /* ---------------------------------------------------------
-Заголовки
---------------------------------------------------------- */
+   Заголовки
+   --------------------------------------------------------- */
 
 .game-top h2,
 .game-bottom h2 {
-margin-top: 0;
+  margin-top: 0;
 }
 
 .game-top__hand > h2,
 .game-bottom__hand > h2 {
-margin-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 /* ---------------------------------------------------------
-Рука соперника
---------------------------------------------------------- */
+   Рука соперника
+   --------------------------------------------------------- */
 
 .opponent-hand-count {
-width: 100%;
-margin: 0;
+  width: 100%;
+  margin: 0;
 
-text-align: center;
+  text-align: center;
 }
 
 /* ---------------------------------------------------------
-Abilities на карте
---------------------------------------------------------- */
+   Abilities на карте
+   --------------------------------------------------------- */
 
 .card__stats ul {
-margin: 2px 0 0;
-padding: 0;
+  margin: 2px 0 0;
+  padding: 0;
 
-list-style: none;
+  list-style: none;
 
-width: 100%;
-min-width: 0;
+  width: 100%;
+  min-width: 0;
 
-box-sizing: border-box;
+  box-sizing: border-box;
 
-overflow: hidden;
+  overflow: hidden;
 }
 
 .card__stats li {
-margin: 0;
-padding: 0;
+  margin: 0;
+  padding: 0;
 
-width: 100%;
-min-width: 0;
+  width: 100%;
+  min-width: 0;
 
-line-height: 1.15;
+  line-height: 1.15;
 
-overflow: hidden;
-white-space: normal;
-overflow-wrap: anywhere;
-word-break: break-word;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* ---------------------------------------------------------
-События игры
---------------------------------------------------------- */
+   События игры
+   --------------------------------------------------------- */
 
 .game-event--flash {
-animation: game-event-flash 0.5s ease;
+  animation: game-event-flash 0.5s ease;
 }
 
 @keyframes game-event-flash {
-0% {
-outline: 4px solid currentColor;
-}
+  0% {
+    outline: 4px solid currentColor;
+  }
 
-100% {
-outline: 0 solid transparent;
-}
+  100% {
+    outline: 0 solid transparent;
+  }
 }
 
 .game--turn-changed {
-transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
 /* ---------------------------------------------------------
-Stage 15.13.2 — выбранная карта / игровой объект
---------------------------------------------------------- */
+   Stage 15.13.2 — выбранная карта / игровой объект
+   --------------------------------------------------------- */
 
 .game-object--selected {
   outline: 4px solid currentColor;
@@ -670,8 +610,8 @@ Stage 15.13.2 — выбранная карта / игровой объект
 }
 
 /* ---------------------------------------------------------
-Stage 15.13.3 — доступные действия
---------------------------------------------------------- */
+   Stage 15.13.3 — доступные действия
+   --------------------------------------------------------- */
 
 .game-action--move {
   outline: 4px dashed currentColor;
@@ -722,18 +662,20 @@ Stage 15.13.3 — доступные действия
 }
 
 /* ---------------------------------------------------------
-Stage 15.13.6 — приглушённый игровой объект
---------------------------------------------------------- */
+   Stage 15.13.6 — приглушённый игровой объект
+   --------------------------------------------------------- */
 
 .game-object--muted {
   opacity: 0.65;
 }
 
 /* ---------------------------------------------------------
-Stage 15.15 — завершённая игра
---------------------------------------------------------- */
+   Stage 15.15 — завершённая игра
+   --------------------------------------------------------- */
 
 .game-result {
+  position: relative;
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -752,17 +694,46 @@ Stage 15.15 — завершённая игра
 }
 
 /* ---------------------------------------------------------
-Stage 15.15 — приглушённая завершённая игра
---------------------------------------------------------- */
+   Stage 15.15 — приглушённая завершённая игра
+   --------------------------------------------------------- */
 
 .game-content--muted {
   opacity: 0.5;
   pointer-events: none;
 }
 
+.game-result__exit {
+  position: absolute;
+
+  right: 20px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  display: inline-block;
+
+  padding: 12px 24px;
+
+  background-color: #2e7d32;
+  color: white;
+
+  border: 1px solid #256528;
+  border-radius: 6px;
+
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.game-result__exit:hover {
+  background-color: #256528;
+}
+
 /* ---------------------------------------------------------
-Stage 16.7 — основной header
---------------------------------------------------------- */
+   Stage 16.7 — основной header
+   --------------------------------------------------------- */
 
 .app-header {
   display: flex;
@@ -791,31 +762,661 @@ Stage 16.7 — основной header
   gap: 16px;
 }
 
-.game-result {
-  position: relative;
+/* ---------------------------------------------------------
+   Stage 17 — каталог карт
+   --------------------------------------------------------- */
+
+.cards-page {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
 }
 
-.game-result__exit {
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+.cards-page__header {
+  margin-bottom: 30px;
+}
 
+.cards-page__header h1 {
+  margin: 0 0 8px;
+}
+
+.cards-page__header p {
+  margin: 0;
+}
+
+.cards-section {
+  margin-bottom: 45px;
+}
+
+.cards-section h2 {
+  margin: 0 0 15px;
+  padding-bottom: 8px;
+
+  border-bottom: 2px solid #ccc;
+}
+
+.cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.cards-grid .card {
+  flex: 0 0 150px;
+  width: 150px;
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------
+   Штаб
+   --------------------------------------------------------- */
+
+.headquarters-card {
+  width: 220px;
+  min-height: 220px;
+
+  margin-bottom: 20px;
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+.headquarters-card .card__stats {
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------
+   Наведение
+   --------------------------------------------------------- */
+
+.cards-page .card:hover {
+  transform: translateY(-10px) scale(1.08);
+}
+
+/* ---------------------------------------------------------
+   Stage 17.1 — список колод
+   --------------------------------------------------------- */
+
+.decks-page {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+.decks-page__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+
+  margin-bottom: 30px;
+}
+
+.decks-page__title {
+  flex: 1;
+}
+
+.decks-page__header h1 {
+  margin: 0 0 8px;
+}
+
+.decks-page__header p {
+  margin: 0;
+}
+
+.decks-page__header > button {
+  flex: 0 0 auto;
+  margin-top: 4px;
+}
+
+.decks-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.deck-card {
+  width: 300px;
+  box-sizing: border-box;
+
+  padding: 18px;
+
+  border: 2px solid #222;
+  border-radius: 10px;
+
+  background: #fff;
+}
+
+.deck-card h2 {
+  margin: 0 0 15px;
+}
+
+.deck-card h3 {
+  margin: 20px 0 8px;
+}
+
+.deck-card p {
+  margin: 8px 0;
+}
+
+.deck-card ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.deck-card li {
+  margin: 4px 0;
+}
+
+.deck-card__status {
+  margin-top: 20px !important;
+  font-weight: bold;
+}
+
+.decks-page__back {
+  margin-top: 30px;
+}
+
+/* ---------------------------------------------------------
+   Stage 17.1.1 — колоды
+   --------------------------------------------------------- */
+
+.deck-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.deck-card__header h2 {
+  margin-top: 0;
+}
+
+.deck-card__header > button {
+  flex: 0 0 auto;
+}
+
+.deck-card__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin-top: 20px;
+}
+
+.deck-card__actions form {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.deck-card__actions a,
+.deck-card__actions button {
   display: inline-block;
-  padding: 12px 24px;
+  box-sizing: border-box;
 
-  background-color: #2e7d32;
-  color: white;
-  border: 1px solid #256528;
-  border-radius: 6px;
+  padding: 7px 12px;
 
-  font-size: 16px;
-  font-weight: 600;
+  border: 1px solid #767676;
+  border-radius: 3px;
+
+  background: #efefef;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.2;
   text-decoration: none;
 
   cursor: pointer;
 }
 
-.game-result__exit:hover {
-  background-color: #256528;
+.deck-card__actions a:hover,
+.deck-card__actions button:hover {
+  background: #e5e5e5;
+}
+.deck-card__cards {
+  margin-top: 20px;
+}
+
+.deck-card__cards h3 {
+  margin: 0 0 8px;
+}
+
+.deck-card__cards > ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.deck-card__card {
+  position: relative;
+  width: fit-content;
+  margin: 5px 0;
+}
+
+.deck-card__card > span {
+  cursor: default;
+}
+
+.deck-card__card-preview {
+  position: absolute;
+
+  left: 100%;
+  top: 50%;
+
+  z-index: 200;
+
+  margin-left: 15px;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform: translateY(-50%) scale(0.95);
+  transform-origin: left center;
+
+  pointer-events: none;
+
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s linear 0.15s;
+}
+
+.deck-card__card:hover {
+  z-index: 201;
+}
+
+.deck-card__card:hover .deck-card__card-preview {
+  opacity: 1;
+  visibility: visible;
+
+  transform: translateY(-50%) scale(1);
+
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s;
+}
+
+.deck-card__card-preview .card {
+  width: 150px;
+  box-sizing: border-box;
+
+  cursor: default;
+
+  transform: none;
+}
+
+.deck-card__card-preview .card:hover {
+  transform: none;
+}
+
+/* ---------------------------------------------------------
+   Stage 17.1.2 — просмотр состава сохранённой колоды
+   --------------------------------------------------------- */
+
+.deck-card__preview {
+  position: relative;
+}
+
+.deck-card__preview summary {
+  display: inline-block;
+
+  padding: 7px 12px;
+
+  border: 1px solid #767676;
+  border-radius: 3px;
+
+  background: #efefef;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.deck-card__preview summary:hover {
+  background: #e5e5e5;
+}
+
+/*
+ * Выпадающий блок содержит сразу весь состав колоды.
+ * Справа оставляем место для карточки-превью.
+ */
+
+.deck-card__preview-list {
+  position: absolute;
+
+  left: 0;
+  top: calc(100% + 5px);
+
+  z-index: 150;
+
+  width: 430px;
+
+  margin: 0;
+  padding: 8px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #aaa;
+  border-radius: 6px;
+
+  background: #fff;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  list-style: none;
+}
+
+.deck-card__preview-item {
+  position: relative;
+
+  width: 240px;
+
+  box-sizing: border-box;
+
+  padding: 6px 8px;
+
+  border-radius: 4px;
+
+  cursor: default;
+}
+
+.deck-card__preview-item:hover {
+  background: #f0f0f0;
+}
+
+.deck-card__preview-item > span {
+  display: block;
+}
+
+.deck-card__preview .deck-card__card-preview {
+  position: absolute;
+
+  left: 255px;
+  top: 50%;
+
+  z-index: 200;
+
+  margin: 0;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform: translateY(-50%) scale(0.95);
+  transform-origin: left center;
+
+  pointer-events: none;
+
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s linear 0.15s;
+}
+
+.deck-card__preview-item:hover .deck-card__card-preview {
+  opacity: 1;
+  visibility: visible;
+
+  transform: translateY(-50%) scale(1);
+
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s;
+}
+
+/* ---------------------------------------------------------
+   Stage 17.2 — редактор колоды
+   --------------------------------------------------------- */
+
+.deck-editor {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.deck-editor__general {
+  display: flex;
+  gap: 30px;
+
+  margin-bottom: 20px;
+}
+
+.deck-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deck-editor__field input,
+.deck-editor__field select {
+  min-width: 280px;
+  padding: 7px 9px;
+
+  box-sizing: border-box;
+}
+
+.deck-editor__summary {
+  display: flex;
+  gap: 30px;
+
+  margin-bottom: 25px;
+  padding: 12px 15px;
+
+  border: 1px solid #aaa;
+  border-radius: 6px;
+
+  background: #f5f5f5;
+}
+
+.deck-editor__summary--over-limit {
+  color: #b00000;
+}
+
+.deck-editor__nation {
+  margin-bottom: 25px;
+}
+
+.deck-editor__nation[hidden] {
+  display: none;
+}
+
+.deck-editor__nation h2 {
+  margin: 0 0 12px;
+}
+
+/* ---------------------------------------------------------
+   Карточки редактора
+   --------------------------------------------------------- */
+
+.deck-editor__card-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+
+  gap: 15px;
+}
+
+.deck-editor__card {
+  flex: 0 0 150px;
+  width: 150px;
+
+  box-sizing: border-box;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+}
+
+.deck-editor__card .card {
+  width: 150px;
+  box-sizing: border-box;
+}
+
+.deck-editor__card .card:hover {
+  transform: translateY(-10px) scale(1.08);
+}
+
+/* ---------------------------------------------------------
+   Количество карт
+   --------------------------------------------------------- */
+
+.deck-editor__quantity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  margin-top: 10px;
+}
+
+.deck-editor__quantity button {
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  border: 1px solid #777;
+  border-radius: 50%;
+
+  background: #eee;
+
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.deck-editor__quantity button:hover {
+  background: #ddd;
+}
+
+.deck-editor__quantity-value {
+  min-width: 20px;
+
+  text-align: center;
+
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.deck-editor__quantity input {
+  display: none;
+}
+
+/* ---------------------------------------------------------
+   Выбранный штаб при редактировании
+   --------------------------------------------------------- */
+
+.deck-editor__selected-headquarters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: 10px 14px;
+
+  border: 1px solid #aaa;
+  border-radius: 5px;
+
+  background: #f5f5f5;
+}
+
+.deck-editor__selected-headquarters small {
+  color: #666;
+}
+
+/* ---------------------------------------------------------
+   Действия редактора
+   --------------------------------------------------------- */
+
+.deck-editor__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 25px;
+}
+
+.deck-editor__actions input,
+.deck-editor__actions a {
+  box-sizing: border-box;
+
+  padding: 7px 12px;
+
+  border: 1px solid #767676;
+  border-radius: 3px;
+
+  background: #efefef;
+
+  font-size: 14px;
+  line-height: normal;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.deck-editor__actions input:hover,
+.deck-editor__actions a:hover {
+  background: #e5e5e5;
+}
+
+/* ---------------------------------------------------------
+   Ошибки редактора
+   --------------------------------------------------------- */
+
+.deck-editor__errors {
+  margin-bottom: 20px;
+  padding: 12px 15px;
+
+  border: 1px solid #b00000;
+  border-radius: 6px;
+
+  background: #fff5f5;
+}
+
+.deck-editor__errors h2 {
+  margin-top: 0;
+}
+
+.deck-editor__errors ul {
+  margin-bottom: 0;
+}
+
+/* ---------------------------------------------------------
+   Stage 17 — компактные карточки-превью
+   --------------------------------------------------------- */
+
+.deck-card__card-preview .card__stats {
+  gap: 1px;
+  margin-top: 4px;
+}
+
+.deck-card__card-preview .card__stats p {
+  margin: 0;
+  line-height: 1.05;
+}
+
+.deck-card__card-preview .card__abilities {
+  margin-top: 2px;
+}
+
+.deck-card__card-preview .card__abilities > p {
+  margin: 0;
+}
+
+.deck-card__card-preview .card__stats ul {
+  margin: 1px 0 0;
+}
+
+.deck-card__card-preview .card__stats li {
+  margin: 0;
+  line-height: 1.05;
 }

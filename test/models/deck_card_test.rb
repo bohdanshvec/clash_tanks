@@ -1,17 +1,17 @@
 require "test_helper"
 
 class DeckCardTest < ActiveSupport::TestCase
-  setup do
-    @player = create_player
-    @nation = Nation.create!(name: "СССР", code: "ussr")
+	setup do
+		@player = create_player
+		@nation = Nation.create!(name: "СССР", code: "ussr")
 
-    @deck = Deck.create!(
-      player: @player,
-      nation: @nation,
-      name: "Основная колода"
-    )
+		@deck = create_deck(
+		  player: @player,
+		  nation: @nation,
+		  name: "Основная колода"
+		)
 
-    @card = Card.create!(
+		@card = Card.create!(
       code: "test_t34",
       nation: @nation,
       name: "Т-34",
@@ -123,5 +123,25 @@ class DeckCardTest < ActiveSupport::TestCase
 
     assert_not deck_card.valid?
     assert_includes deck_card.errors[:card], "must belong to the same nation as the deck"
+  end
+  
+  test "rejects headquarters card" do
+    headquarters_card = Card.create!(
+      code: "test_headquarters_card",
+      nation: @nation,
+      name: "Штаб",
+      card_type: "headquarters",
+      weight: 1,
+      price: nil
+    )
+
+    deck_card = DeckCard.new(
+      deck: @deck,
+      card: headquarters_card,
+      quantity: 1
+    )
+
+    assert_not deck_card.valid?
+    assert_includes deck_card.errors[:card], "cannot be a headquarters card"
   end
 end

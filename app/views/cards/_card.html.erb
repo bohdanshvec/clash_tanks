@@ -1,0 +1,106 @@
+<article class="card <%= "headquarters-card" if card.card_type == "headquarters" %>">
+
+  <header class="card__header">
+    <strong><%= card.name %></strong>
+  </header>
+
+  <div class="card__stats">
+
+    <p>
+      Nation: <%= card.nation.name %>
+    </p>
+
+    <% if card.card_type == "headquarters" && card.headquarters %>
+
+      <p>
+        HP: <%= card.headquarters.hp %>
+      </p>
+
+      <p>
+        Firepower: <%= card.headquarters.firepower %>
+      </p>
+
+      <p>
+        Fuel: <%= card.headquarters.fuel %>
+      </p>
+
+    <% else %>
+
+      <p>
+        Type: <%= card.card_type %>
+      </p>
+
+      <p>
+        Weight: <%= card.weight %>
+      </p>
+
+      <p>
+        Price: <%= card.price %>
+      </p>
+
+      <% if card.card_type == "technique" && card.technique %>
+
+        <p>
+          Technique:
+          <%= card.technique.technique_type %>
+        </p>
+
+        <p>
+          HP: <%= card.technique.hp %>
+        </p>
+
+        <p>
+          Firepower: <%= card.technique.firepower %>
+        </p>
+
+        <p>
+          Fuel: <%= card.technique.fuel %>
+        </p>
+
+      <% elsif card.card_type == "platoon" && card.platoon %>
+
+        <p>
+          HP: <%= card.platoon.hp %>
+        </p>
+
+        <p>
+          Firepower: <%= card.platoon.firepower %>
+        </p>
+
+        <p>
+          Armor: <%= card.platoon.armor %>
+        </p>
+
+        <p>
+          Fuel: <%= card.platoon.fuel %>
+        </p>
+
+      <% end %>
+
+    <% end %>
+
+    <% if card.abilities.any? %>
+
+      <div class="card__abilities">
+
+        <p>Abilities:</p>
+
+        <ul>
+
+          <% card.abilities.each do |ability| %>
+
+            <li>
+              <%= ability.name %>
+            </li>
+
+          <% end %>
+
+        </ul>
+
+      </div>
+
+    <% end %>
+
+  </div>
+
+</article>

@@ -16,22 +16,22 @@ class NationTest < ActiveSupport::TestCase
     assert_includes nation.cards, card
   end
 
-  test "has many decks" do
-    player = create_player
+	test "has many decks" do
+		player = create_player
 
-    nation = Nation.create!(
-      name: "СССР",
-      code: "ussr"
-    )
+		nation = Nation.create!(
+		  name: "СССР",
+		  code: "ussr"
+		)
 
-    deck = Deck.create!(
-      player: player,
-      nation: nation,
-      name: "Основная колода"
-    )
+		deck = create_deck(
+		  player: player,
+		  nation: nation,
+		  name: "Основная колода"
+		)
 
-    assert_includes nation.decks, deck
-  end
+		assert_includes nation.decks, deck
+	end
 
   test "requires name" do
     nation = Nation.new(code: "ussr")

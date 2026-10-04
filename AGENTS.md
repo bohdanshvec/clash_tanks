@@ -364,6 +364,8 @@ class Player < ApplicationRecord
 end
 ```
 
+`Player` не использует `dependent: :destroy` для `game_players`, чтобы удаление игрока не уничтожало игровую историю автоматически.
+
 ### Game
 
 Статусы:
@@ -413,7 +415,11 @@ Game не содержит игровой логики.
 - `Deck`
 - выбранный HQ card
 
-Уникальность: `game_id + player_id`.
+Уникальность:
+
+```text
+game_id + player_id
+```
 
 ---
 
@@ -442,17 +448,115 @@ GameEngine::Abilities::Executor
 
 ---
 
-## 12. Deck и StartGame
+## 12. Deck
 
-`Deck` — постоянная колода игрока.
+`Deck` — постоянная сохранённая колода игрока.
 
-`DeckCard` хранит количество копий.
+`DeckCard` хранит количество копий карты.
 
-Ограничения:
+### Deck
 
-- максимум 3 копии карты;
+Текущие ограничения:
+
+- `DECK_SIZE = 10`;
+- максимум 3 копии одной карты;
 - уникальность `deck_id + card_id`;
-- карта и колода принадлежат одной `Nation`.
+- карта и колода принадлежат одной `Nation`;
+- `Deck` имеет `name`;
+- `Deck` имеет обязательный `headquarters_card`;
+- HQ принадлежит той же `Nation`;
+- HQ имеет `card_type == "headquarters"`;
+- HQ не входит в `DECK_SIZE`;
+- HQ не учитывается в Deck Weight.
+
+`Deck#card_count` считает количество карт с учётом `quantity`.
+
+`Deck#complete?` возвращает `true`, если:
+
+- выбран HQ;
+- количество обычных карт равно `DECK_SIZE`.
+
+Incomplete Deck может существовать в базе и редактироваться.
+
+`DECK_SIZE` должен оставаться единым изменяемым параметром для будущего перехода на размер 40.
+
+### DeckCard
+
+Проверяет:
+
+- `quantity` от 1 до 3;
+- уникальность карты внутри Deck;
+- соответствие Nation карты и Deck;
+- карта не может быть HQ.
+
+---
+
+## 13. Deck Weight
+
+Deck Weight рассчитывается только по обычным картам:
+
+```text
+sum(card.weight × deck_card.quantity)
+```
+
+HQ в Weight не входит.
+
+`weight` и `price` — разные механики:
+
+- `weight` — характеристика карты для веса колоды;
+- `price` — стоимость розыгрыша карты за Fuel.
+
+Допуск Deck Weight для будущего matchmaking (подбор соперника): **±15%**
+
+Логика допуска относится к matchmaking, а не к модели Deck.
+
+---
+
+## 14. Starter Decks
+
+Стартовые колоды определяются единым источником:
+
+```text
+app/services/starter_decks/create.rb
+```
+
+Используется:
+
+```ruby
+StarterDecks::Create::STARTER_DECKS
+```
+
+Определены три стартовые колоды:
+
+- Германия — Operation „Weiß“;
+- США — Second front;
+- СССР — Западный фронт.
+
+Каждая стартовая колода содержит:
+
+- HQ;
+- 10 обычных карт;
+- по одной копии каждой карты.
+
+`StarterDecks::Create.call(player)` создаёт три постоянные Deck для зарегистрированного игрока.
+
+Регистрация выполняет:
+
+```text
+Player
+ ↓
+StarterDecks::Create
+ ↓
+3 starter Deck
+```
+
+Создание `Player` и стартовых Deck выполняется внутри одной transaction.
+
+Seed не создаёт Player и Deck.
+
+---
+
+## 15. StartGame
 
 При `StartGame`:
 
@@ -473,7 +577,7 @@ Persistent Deck не изменяется.
 
 ---
 
-## 13. Draw / Turns / Resources
+## 16. Draw / Turns / Resources
 
 ### Draw
 
@@ -583,7 +687,7 @@ HQ + собственные Technique + собственные Platoon
 
 ---
 
-## 14. Timer
+## 17. Timer
 
 Stage 15.14 завершён.
 
@@ -635,7 +739,7 @@ JavaScript не является источником истины.
 
 ---
 
-## 15. PlayCard
+## 18. PlayCard
 
 Stage 9 завершён.
 
@@ -693,7 +797,7 @@ UI не передаёт slot в Action.
 
 ---
 
-## 16. Combat
+## 19. Combat
 
 Основной Action:
 
@@ -767,7 +871,7 @@ Armor поглощает:
 
 ---
 
-## 17. Victory / FinishGame
+## 20. Victory / FinishGame
 
 Единый сервис:
 
@@ -807,7 +911,7 @@ game_finished
 
 ---
 
-## 18. Surrender
+## 21. Surrender
 
 Реализовано в Stage 15.15.
 
@@ -842,7 +946,7 @@ Turbo
 
 ---
 
-## 19. Seed / базовый игровой контент
+## 22. Seed / базовый игровой контент
 
 Stage 14 завершён.
 
@@ -900,7 +1004,7 @@ Nations:
 
 ---
 
-## 20. Browser UI / Turbo / Stimulus
+## 23. Browser UI / Turbo / Stimulus
 
 Stage 15 — функциональный browser vertical slice, не финальный production UI.
 
@@ -964,7 +1068,7 @@ Stimulus не изменяет `GameState` и не рассчитывает иг
 
 ---
 
-## 21. Stage 15 — UI visual reactions
+## 24. Stage 15 — UI visual reactions
 
 Реализованы визуальные реакции:
 
@@ -1004,8 +1108,6 @@ Stimulus не изменяет `GameState` и не рассчитывает иг
 - обязательного Draw в начале хода;
 - Draw через Ability `draw_cards`.
 
-Важно: визуальная реакция возможна только потому, что `empty_deck_draw_attempt` корректно проходит через весь pipeline Engine → Result → Controller → Turbo → Stimulus.
-
 ### Move
 
 `technique_moved` flash'ит:
@@ -1033,7 +1135,7 @@ CSS используется только для визуального эффе
 
 ---
 
-## 22. Mouse / Drag & Drop
+## 25. Mouse / Drag & Drop
 
 Реализованы:
 
@@ -1086,7 +1188,7 @@ CSS/Stimulus не являются механизмом безопасности
 
 ---
 
-## 23. Player Perspective
+## 26. Player Perspective
 
 Stage 15.17 завершён.
 
@@ -1135,7 +1237,7 @@ Stimulus не содержит отдельной системы преобра�
 
 ---
 
-## 24. Finished UI
+## 27. Finished UI
 
 Для `status == "finished"`:
 
@@ -1167,7 +1269,7 @@ Stimulus не содержит отдельной системы преобра�
 
 ---
 
-## 25. Stage 16 — Players
+## 28. Stage 16 — Players
 
 Stage 16 завершён.
 
@@ -1222,6 +1324,20 @@ Logout использует:
 reset_session
 ```
 
+### Registration
+
+При регистрации:
+
+```text
+Player
+ ↓
+StarterDecks::Create
+ ↓
+3 starter Deck
+```
+
+`Player` и starter Deck создаются атомарно внутри transaction.
+
 ### Header
 
 Гость видит:
@@ -1245,37 +1361,13 @@ reset_session
 - `/rules`
 - `/play`
 - `/decks`
+- `/cards`
 
 Для авторизованного игрока:
 
 - `/statistics`
 
 Гость получает redirect на `/` при попытке открыть `/statistics`.
-
-### Routes
-
-```ruby
-get "login", to: "sessions#new", as: :login
-post "login", to: "sessions#create"
-delete "logout", to: "sessions#destroy", as: :logout
-
-get "register", to: "registrations#new", as: :register
-post "register", to: "registrations#create", as: :registrations
-
-get "rules", to: "pages#rules", as: :rules
-get "play", to: "pages#play", as: :play
-get "decks", to: "pages#decks", as: :decks
-get "statistics", to: "pages#statistics", as: :statistics
-
-root "pages#home"
-
-get  "games/:id",           to: "games#show",      as: :game
-post "games/:id/end_turn",  to: "games#end_turn",  as: :end_turn
-post "games/:id/play_card", to: "games#play_card", as: :play_card
-post "games/:id/move",      to: "games#move",      as: :move
-post "games/:id/attack",    to: "games#attack",    as: :attack
-post "games/:id/surrender", to: "games#surrender", as: :surrender
-```
 
 ### Development test game
 
@@ -1304,153 +1396,310 @@ bin/rails dev:create_game
 
 ---
 
-## 26. GamesController
+## 29. Deck UI — Stage 17
 
-```text
-app/controllers/games_controller.rb
+Stage 17 **завершён**.
+
+Реализованы модель, редактор, список сохранённых колод, стартовые колоды для гостей, ограничения и тесты.
+
+### Routes
+
+Добавлены:
+
+```ruby
+resources :decks, only: [:new, :create, :edit, :update, :destroy]
 ```
 
-Actions:
+Существующий публичный:
 
-- `show`
-- `end_turn`
-- `play_card`
-- `move`
-- `attack`
-- `surrender`
-
-Общий flow:
-
-```text
-HTTP request
- ↓
-current_player
- ↓
-Game / GamePlayer check
- ↓
-Action
- ↓
-GameEngine
- ↓
-Result
- ↓
-Game.update!
- ↓
-Turbo / redirect
+```ruby
+get "decks", to: "pages#decks", as: :decks
 ```
 
-Controller может:
+используется для списка Deck.
 
-- принять params;
-- определить `current_player`;
-- проверить `Game` и membership;
-- создать Action;
-- вызвать Engine;
-- обработать Result;
-- сохранить новый `GameState`;
-- выполнить Turbo response / broadcast.
+### PagesController
 
-Controller не должен:
+`PagesController#decks` работает в двух режимах.
 
-- менять HP;
-- менять hand;
-- размещать Technique;
-- рассчитывать Fuel;
-- определять победителя;
-- напрямую изменять `GameState`;
-- обходить Engine.
+Авторизованный игрок получает только свои Deck:
 
-Ошибка Action:
-
-- HTTP 422;
-- `GameState` не изменяется.
-
----
-
-## 27. Guest mode и отложенный lifecycle
-
-Гость может открыть:
-
-- `/`
-- `/rules`
-- `/play`
-- `/decks`
-
-Гость не может открыть `/statistics`.
-
-Пользовательский lifecycle партии отложен:
-
-- waiting;
-- выбор Deck для игры;
-- joining;
-- StartGame через пользовательский flow.
-
-`waiting` должен иметь:
-
-```text
-Game.status == "waiting"
-Game.state == nil
+```ruby
+current_player.decks
 ```
 
-Не создавать fake `GameState`.
+с необходимыми associations:
 
----
+- Nation;
+- HQ;
+- DeckCard;
+- Card;
+- Technique;
+- Platoon;
+- Headquarters;
+- Abilities.
 
-## 28. Stage 17 — Deck
+Гость получает подготовленные стартовые Deck через:
 
-Следующий этап проекта.
-
-Цель:
-
-```text
-Player
-  ↓
-свои Deck
-  ↓
-просмотр Deck
-  ↓
-создание / редактирование Deck
-  ↓
-подготовка выбора Deck
-  ↓
-Stage 18
+```ruby
+StarterDecks::Create::STARTER_DECKS
 ```
 
-План:
+Гостевые Deck не сохраняются и не редактируются.
 
-- UI собственных Deck;
-- просмотр состава;
-- создание Deck;
-- редактирование Deck;
-- добавление Card;
-- удаление Card;
-- изменение quantity;
+### DecksController
+
+Реализованы:
+
+- `new`
+- `create`
+- `edit`
+- `update`
+- `destroy`
+
+Все операции требуют `current_player`.
+
+Игрок работает только со своими Deck:
+
+```ruby
+current_player.decks.find(params[:id])
+```
+
+Чужой Deck приводит к:
+
+```text
+404 Not Found
+```
+
+При создании:
+
+- выбирается HQ;
+- Nation Deck определяется через HQ;
+- создаётся Deck;
+- сохраняются выбранные DeckCard.
+
+При редактировании существующий HQ сохраняется и не заменяется через форму.
+
+Deck может быть сохранён неполным.
+
+При ошибке форма отображается повторно с сохранением выбранных quantities и ошибок.
+
+### Deck editor
+
+Форма поддерживает:
+
+- название Deck;
+- выбор HQ;
 - отображение Nation;
-- отображение размера Deck;
-- отображение ограничений Deck;
-- подготовка выбора Deck для будущего входа в бой.
+- выбор количества карт;
+- `+` / `−` для quantity;
+- максимум 3 копии;
+- подсчёт количества карт;
+- подсчёт Weight;
+- сохранение;
+- отмену.
 
-### Guest
+Количество карт ограничено:
 
-- может просматривать подготовленные тестовые/готовые Deck;
-- не может изменять;
-- не может сохранять изменения.
+```text
+0..10
+```
 
-### Authenticated Player
+HQ после создания изменить нельзя.
 
-- видит только собственные Deck;
-- может изменять собственные Deck;
-- не получает доступа к чужим Deck.
+### Deck list
 
-Правила Deck проверяются сервером.
+Для авторизованного игрока `/decks` показывает:
 
-UI не является источником истины для Deck.
+- только собственные Deck;
+- название;
+- Nation;
+- HQ;
+- количество карт;
+- Weight;
+- состав Deck;
+- preview карт;
+- редактирование;
+- удаление.
 
-Не реализовывать waiting / started lifecycle до Stage 18.
+«В бой» пока не реализован и остаётся отложенным до дальнейшего lifecycle.
+
+Удаление выполняется через `button_to` с Turbo confirmation.
+
+### Guest /decks
+
+Гость видит:
+
+- три starter Deck;
+- Nation;
+- HQ;
+- состав;
+- preview карт.
+
+Гость не может:
+
+- создавать Deck;
+- редактировать Deck;
+- удалять Deck;
+- сохранять изменения.
+
+### Card preview
+
+Для preview Deck используется существующий `.card`.
+
+Для компактного отображения применяются отдельные правила:
+
+```css
+.deck-card__card-preview .card__stats
+.deck-card__card-preview .card__stats p
+.deck-card__card-preview .card__abilities
+.deck-card__card-preview .card__stats ul
+.deck-card__card-preview .card__stats li
+```
+
+Preview не изменяет основной игровой `.card`.
 
 ---
 
-## 29. Stage 18 — Waiting / Started
+## 30. Public Cards
+
+Реализована публичная страница:
+
+```text
+/cards
+```
+
+Контроллер загружает карты с необходимыми связями:
+
+```ruby
+@cards = Card
+  .includes(:nation, :technique, :platoon, :headquarters, :abilities)
+  .order(:card_type, :name)
+```
+
+Каталог визуально использует тот же базовый `.card`, что и игровые карты в руке.
+
+Карты группируются по Nation:
+
+```text
+Nation
+  ↓
+HQ
+  ↓
+остальные карты этой Nation
+```
+
+Порядок наций — по названию Nation.
+
+HQ отображается увеличенным квадратным элементом.
+
+Обычные карты отображаются в формате игровых карточек.
+
+Для Technique в каталоге не выводятся:
+
+- Range;
+- Movement;
+- Movement type.
+
+Эта информация определяется типом техники и уже описана правилами игры.
+
+Текущий каталог является UI-представлением данных и не содержит игровой логики.
+
+Будущие изображения карт должны сохранять `.card` как общую основу.
+
+Предполагается возможность разделить карту на слои:
+
+```text
+нижний слой
+  ↓
+изображение техники / фон карты
+
+верхний слой
+  ↓
+числа, характеристики, подписи и другие данные
+```
+
+---
+
+## 31. Tests
+
+Для Deck реализованы отдельные тесты:
+
+```text
+test/models/deck_test.rb
+test/models/deck_card_test.rb
+test/controllers/decks_controller_test.rb
+```
+
+Проверяются:
+
+### Deck model
+
+- associations;
+- обязательное имя;
+- обязательный HQ;
+- HQ должен быть `headquarters`;
+- HQ должен принадлежать Nation Deck;
+- `card_count`;
+- `complete?`;
+- максимум `DECK_SIZE`;
+- Deck Weight;
+- HQ не входит в Weight.
+
+### DeckCard model
+
+- associations;
+- quantity 1;
+- quantity 3;
+- запрет quantity < 1;
+- запрет quantity > 3;
+- уникальность карты в Deck;
+- соответствие Nation;
+- запрет HQ в Deck.
+
+### DecksController
+
+- guest не может открыть `new`;
+- guest не может открыть `edit`;
+- авторизованный игрок может открыть `new`;
+- авторизованный игрок может редактировать свой Deck;
+- игрок не может редактировать чужой Deck;
+- создание Deck;
+- создание с картой другой Nation;
+- более 3 копий одной карты;
+- более 10 карт;
+- редактирование Deck;
+- сохранение существующего HQ при редактировании;
+- удаление собственного Deck;
+- невозможность удалить чужой Deck.
+
+При `RecordNotFound` используется:
+
+```ruby
+assert_response :not_found
+```
+
+поскольку `ApplicationController` обрабатывает `ActiveRecord::RecordNotFound`.
+
+### Полная проверка
+
+Последняя полная проверка:
+
+```bash
+bin/rails test
+```
+
+Результат:
+
+```text
+383 runs, 1084 assertions, 0 failures, 0 errors, 0 skips
+```
+
+---
+
+## 32. Stage 18 — Waiting / Started
+
+Следующий этап.
 
 План:
 
@@ -1488,9 +1737,15 @@ Waiting:
 
 После появления второго игрока используется существующий `StartGame`.
 
+Matchmaking Deck Weight: **±15%**
+
+Допуск должен быть отдельной логикой matchmaking, а не частью модели Deck.
+
+На Stage 18 не изменять уже реализованную механику Game Engine без необходимости.
+
 ---
 
-## 30. Stage 19–24
+## 33. Stage 19–23
 
 ### Stage 19 — Human vs Human
 
@@ -1554,16 +1809,9 @@ Game Engine не зависит от Ollama.
 - отсутствие hidden information;
 - невозможность прямого изменения `GameState`.
 
-### Stage 24 — Deck Weight
-
-- реализовать правила Deck Weight;
-- использовать существующее поле `weight`;
-- не смешивать `weight` и `price`;
-- сервер является источником истины.
-
 ---
 
-## 31. Что запрещено
+## 34. Что запрещено
 
 Не переносить игровую логику в:
 
@@ -1614,7 +1862,7 @@ Game Engine не зависит от Ollama.
 
 ---
 
-## 32. Порядок работы
+## 35. Порядок работы
 
 Для каждого этапа:
 
@@ -1642,53 +1890,39 @@ Game Engine не зависит от Ollama.
 
 ---
 
-## 33. Текущая контрольная точка
+## 36. Текущая контрольная точка
 
 Завершено:
 
-- Stage 1–14
-- Stage 15.1–15.17
-- Stage 16.1–16.11
+- Stage 1–14;
+- Stage 15.1–15.17;
+- Stage 16;
+- Stage 17.
 
-### Stage 15
-
-Завершены:
-
-- VisibleState
-- dev player identity
-- GamesController / game page
-- field / hand
-- End Turn
-- PlayCard
-- Move
-- Attack
-- UI geometry
-- Turbo / real-time
-- AvailableActions
-- mouse / click / hover
-- Drag & Drop
-- muted unavailable actions
-- Timer
-- Finished UI
-- Surrender
-- Order / Platoon HTML vertical slice
-- Player Perspective
-
-### Stage 16
+### Stage 17
 
 Завершены:
 
-- Player
-- authentication
-- Registration
-- Login
-- Logout
-- current_player
-- remove `?player_id=`
-- Header
-- main pages
-- Guest mode
-- development test users / `create_game`
+- Deck model;
+- DeckCard model;
+- Deck Weight;
+- HQ для Deck;
+- `StarterDecks::Create`;
+- starter Deck при регистрации;
+- публичный каталог Cards;
+- `/decks`;
+- список собственных Deck;
+- гостевой просмотр starter Deck;
+- создание Deck;
+- редактирование Deck;
+- удаление Deck;
+- Deck editor;
+- quantity;
+- ограничения;
+- Deck preview;
+- Deck tests;
+- controller tests;
+- проверка UI в браузере.
 
 ### Последняя полная проверка
 
@@ -1699,52 +1933,36 @@ bin/rails test
 Результат:
 
 ```text
-347 runs, 948 assertions, 0 failures, 0 errors, 0 skips
+383 runs, 1084 assertions, 0 failures, 0 errors, 0 skips
 ```
-
-### Дополнительно проверено через браузер
-
-- registration;
-- login;
-- logout;
-- header;
-- Guest mode;
-- Rules;
-- Play;
-- Decks;
-- Statistics;
-- development game;
-- два development player через разные browser sessions;
-- End Turn;
-- смена игрока;
-- PlayCard;
-- Move;
-- Attack;
-- HQ Attack;
-- Timer;
-- Turbo;
-- Finished UI;
-- surrender;
-- завершение по уничтожению HQ;
-- завершение по timeout;
-- завершение через empty deck damage;
-- flash HQ при `empty_deck_draw_attempt`;
-- flash HQ при Draw через Ability;
-- flash атакующего/защищающегося HQ и соответствующих Platoon;
-- Player Perspective.
 
 ### Текущее состояние
 
 - Stage 15 — **ЗАВЕРШЁН**
 - Stage 16 — **ЗАВЕРШЁН**
+- Stage 17 — **ЗАВЕРШЁН**
+- Stage 18 — **СЛЕДУЮЩИЙ**
 
-Текущий этап: **Stage 17 — Deck**
+Следующая работа: **Stage 18 — Waiting / Started**
 
-Waiting / started lifecycle сознательно отложен на Stage 18.
+Основные задачи:
+
+- выбор полной Deck;
+- кнопка «В бой»;
+- создание `Game(status: waiting)`;
+- создание первого `GamePlayer`;
+- waiting page;
+- поиск/подключение второго игрока;
+- matchmaking по Deck Weight ±15%;
+- создание второго `GamePlayer`;
+- запуск существующего `StartGame`;
+- переход waiting → started.
+
+До Stage 18 не реализовывать пользовательский lifecycle партии.
 
 ---
 
-## 34. Архитектурные границы
+## 37. Архитектурные границы
 
 ### Игровой flow
 
@@ -1782,6 +2000,22 @@ Action.player_id
 GameEngine
 ```
 
+### Deck lifecycle
+
+```text
+Player
+ ↓
+Deck
+ ↓
+DeckCard
+ ↓
+/decks
+ ↓
+выбор полной Deck
+ ↓
+Stage 18: waiting
+```
+
 ### AI
 
 ```text
@@ -1815,7 +2049,3 @@ Stimulus visual reaction
 ```
 
 События должны сохраняться при вложенных Engine-операциях. UI может реагировать на события, но события не являются источником игровых правил.
-
----
-
-Следующий рабочий этап после коммита — **Stage 17 — Deck**.

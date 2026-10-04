@@ -8,7 +8,10 @@ Rails.application.routes.draw do
   get "rules", to: "pages#rules", as: :rules
 	get "play", to: "pages#play", as: :play
 	get "decks", to: "pages#decks", as: :decks
+	get "cards", to: "pages#cards", as: :cards
 	get "statistics", to: "pages#statistics", as: :statistics
+	
+	resources :decks, only: [:new, :create, :edit, :update, :destroy]
 		
   get "register", to: "registrations#new", as: :register
 	post "register", to: "registrations#create"
