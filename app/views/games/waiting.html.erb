@@ -1,0 +1,44 @@
+<%= turbo_stream_from @game %>
+
+<div data-controller="waiting-room"
+     data-waiting-room-url-value="<%= waiting_heartbeat_game_path(@game) %>">
+
+<h1>Ожидание соперника</h1>
+
+<% game_player = @game.game_players.find_by(player_id: current_player.id) %>
+
+<p>
+  <strong>Штаб:</strong>
+  <%= game_player.headquarters_card.name %>
+</p>
+
+<p>
+  <strong>Вес:</strong>
+  <%= game_player.deck.weight %>
+</p>
+
+<h2>Ожидающие игроки</h2>
+
+<% if @waiting_games.any? %>
+  <ul>
+    <% @waiting_games.each do |waiting_game| %>
+      <% waiting_player = waiting_game.game_players.first %>
+
+      <li>
+        Вес: <%= waiting_player.deck.weight %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>Других ожидающих игроков нет.</p>
+<% end %>
+
+<p>Поиск соперника...</p>
+
+<p>⌛</p>
+
+<%= button_to "Выйти из ожидания",
+              cancel_waiting_game_path(@game),
+              method: :delete %>
+
+</div>

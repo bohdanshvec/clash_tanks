@@ -1,6 +1,104 @@
 <h1>Играть</h1>
 
-<p>Здесь будут доступны готовые для игры колоды.</p>
+<% if current_player %>
+  <h2>Мои колоды</h2>
+
+  <% if @decks.any? %>
+    <div class="decks">
+      <% @decks.each do |deck| %>
+        <div class="deck-card">
+          <h3><%= deck.name %></h3>
+
+          <p>
+            <strong>Нация:</strong>
+            <%= deck.nation.name %>
+          </p>
+
+          <p>
+            <strong>Штаб:</strong>
+            <%= deck.headquarters_card.name %>
+          </p>
+
+          <p>
+            <strong>Вес:</strong>
+            <%= deck.weight %>
+          </p>
+
+          <div class="deck-card__actions">
+            <%= button_to "В бой — PvP",
+                          games_path,
+                          method: :post,
+                          params: {
+                            deck_id: deck.id,
+                            mode: "pvp"
+                          } %>
+
+            <%= button_to "В бой — ИИ",
+                          games_path,
+                          method: :post,
+                          params: {
+                            deck_id: deck.id,
+                            mode: "ai"
+                          } %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p>У вас пока нет готовых колод.</p>
+
+    <p>
+      <%= link_to "Создать колоду", new_deck_path %>
+    </p>
+  <% end %>
+<% else %>
+  <h2>Стартовые колоды</h2>
+
+  <div class="decks">
+    <% @starter_decks.each do |deck| %>
+      <div class="deck-card">
+        <h3><%= deck[:name] %></h3>
+
+        <p>
+          <strong>Нация:</strong>
+          <%= deck[:nation].name %>
+        </p>
+
+        <p>
+          <strong>Штаб:</strong>
+          <%= deck[:headquarters_card].name %>
+        </p>
+
+        <p>
+          <strong>Вес:</strong>
+          <%= deck[:cards].sum { |card| card.weight } %>
+        </p>
+
+        <div class="deck-card__actions">
+          <%= button_to "В бой — PvP",
+                        games_path,
+                        method: :post,
+                        params: {
+                          deck: deck[:name],
+                          mode: "pvp"
+                        },
+                        disabled: true,
+                        title: "Игра для гостей будет реализована отдельно" %>
+
+          <%= button_to "В бой — ИИ",
+                        games_path,
+                        method: :post,
+                        params: {
+                          deck: deck[:name],
+                          mode: "ai"
+                        },
+                        disabled: true,
+                        title: "Режим ИИ будет реализован отдельно" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
 
 <p>
   <%= link_to "На главную", root_path %>

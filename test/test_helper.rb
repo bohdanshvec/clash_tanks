@@ -53,6 +53,41 @@ module ActiveSupport
 
       card
     end
+    
+		def create_complete_deck(player:, name: "Test Deck")
+			nation = Nation.create!(
+				name: "Test Nation #{SecureRandom.hex(4)}",
+				code: "test_#{SecureRandom.hex(4)}"
+			)
+
+			headquarters_card = create_headquarters_card(nation: nation)
+
+			deck = Deck.create!(
+				player: player,
+				nation: nation,
+				name: name,
+				headquarters_card: headquarters_card
+			)
+
+			10.times do |index|
+				card = Card.create!(
+				  code: "#{nation.code}_card_#{index}_#{SecureRandom.hex(4)}",
+				  nation: nation,
+				  name: "Test Card #{index}",
+				  card_type: "order",
+				  weight: 1,
+				  price: 1
+				)
+
+				DeckCard.create!(
+				  deck: deck,
+				  card: card,
+				  quantity: 1
+				)
+			end
+
+			deck
+		end
 
     def create_deck(player:, nation:, name: "Test Deck", headquarters_card: nil)
       headquarters_card ||= create_headquarters_card(nation: nation)

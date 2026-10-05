@@ -23,11 +23,6 @@
 bin/dev
 ```
 
-Development PostgreSQL:
-
-- база: `clash_tanks_development`
-- порт: `5432`
-
 PostgreSQL 12 и 14 не изменять и не удалять без явного указания.
 
 ---
@@ -121,6 +116,13 @@ Player state может содержать:
 Игровые операции создают новый state через `deep_dup`.
 
 Persistent Deck во время партии не изменяется.
+
+Для `Game(status: waiting)`:
+
+- `state == nil`;
+- `GameState` не создаётся;
+- ожидание соперника не является частью игровых механик;
+- waiting metadata хранится отдельно от `GameState`.
 
 ---
 
@@ -376,6 +378,14 @@ end
 
 Game не содержит игровой логики.
 
+Для waiting games используется техническое поле:
+
+```text
+last_seen_at
+```
+
+Оно предназначено только для контроля активности waiting room и не является частью `GameState`.
+
 ### Card
 
 Типы:
@@ -506,7 +516,7 @@ HQ в Weight не входит.
 - `weight` — характеристика карты для веса колоды;
 - `price` — стоимость розыгрыша карты за Fuel.
 
-Допуск Deck Weight для будущего matchmaking (подбор соперника): **±15%**
+Допуск Deck Weight для matchmaking: **±15%**
 
 Логика допуска относится к matchmaking, а не к модели Deck.
 
@@ -538,7 +548,7 @@ StarterDecks::Create::STARTER_DECKS
 - 10 обычных карт;
 - по одной копии каждой карты.
 
-`StarterDecks::Create.call(player)` создаёт три постоянные Deck для зарегистрированного игрока.
+`StarterDecks::Create.call(player)` создаёт три постоянных Deck для зарегистрированного игрока.
 
 Регистрация выполняет:
 
@@ -644,8 +654,6 @@ Turbo / Stimulus
 - `PreparePlayer` возвращает события Draw.
 - `EndTurn` добавляет свои события к `prepare_result.events`.
 - `PlayCard#play_order` сохраняет события всех Ability через `events.concat(result.events)`.
-
-Это необходимо, в частности, для визуальной реакции на `empty_deck_draw_attempt`.
 
 ### PreparePlayer
 
@@ -1048,23 +1056,14 @@ turbo_stream_from [@game, current_player_id]
 
 Не отправлять полный скрытый `GameState` клиенту.
 
-### Stimulus
+Для waiting room используется отдельная Turbo subscription на `Game`.
 
-Основной controller:
+Waiting room может получать refresh broadcast, когда:
 
-```text
-app/javascript/controllers/game_events_controller.js
-```
-
-Stimulus отвечает за:
-
-- визуальные реакции;
-- выбор объектов;
-- `AvailableActions` подсветку;
-- mouse interaction;
-- Drag & Drop.
-
-Stimulus не изменяет `GameState` и не рассчитывает игровые правила.
+- создаётся новая waiting game;
+- waiting game удаляется;
+- waiting game получает второго игрока и становится `started`;
+- stale waiting game удаляется.
 
 ---
 
@@ -1400,164 +1399,51 @@ bin/rails dev:create_game
 
 Stage 17 **завершён**.
 
-Реализованы модель, редактор, список сохранённых колод, стартовые колоды для гостей, ограничения и тесты.
+Реализованы:
+
+- Deck model;
+- DeckCard model;
+- Deck Weight;
+- HQ для Deck;
+- `StarterDecks::Create`;
+- starter Deck при регистрации;
+- публичный каталог Cards;
+- `/decks`;
+- список собственных Deck;
+- гостевой просмотр starter Deck;
+- создание Deck;
+- редактирование Deck;
+- удаление Deck;
+- Deck editor;
+- quantity;
+- ограничения;
+- Deck preview;
+- тесты;
+- browser UI.
 
 ### Routes
-
-Добавлены:
 
 ```ruby
 resources :decks, only: [:new, :create, :edit, :update, :destroy]
 ```
 
-Существующий публичный:
+Публичный список:
 
 ```ruby
 get "decks", to: "pages#decks", as: :decks
 ```
 
-используется для списка Deck.
+### Важно
 
-### PagesController
+Кнопка «В бой» на `/decks` удалена.
 
-`PagesController#decks` работает в двух режимах.
-
-Авторизованный игрок получает только свои Deck:
-
-```ruby
-current_player.decks
-```
-
-с необходимыми associations:
-
-- Nation;
-- HQ;
-- DeckCard;
-- Card;
-- Technique;
-- Platoon;
-- Headquarters;
-- Abilities.
-
-Гость получает подготовленные стартовые Deck через:
-
-```ruby
-StarterDecks::Create::STARTER_DECKS
-```
-
-Гостевые Deck не сохраняются и не редактируются.
-
-### DecksController
-
-Реализованы:
-
-- `new`
-- `create`
-- `edit`
-- `update`
-- `destroy`
-
-Все операции требуют `current_player`.
-
-Игрок работает только со своими Deck:
-
-```ruby
-current_player.decks.find(params[:id])
-```
-
-Чужой Deck приводит к:
+Выбор Deck для начала игры выполняется только через:
 
 ```text
-404 Not Found
+/play
 ```
 
-При создании:
-
-- выбирается HQ;
-- Nation Deck определяется через HQ;
-- создаётся Deck;
-- сохраняются выбранные DeckCard.
-
-При редактировании существующий HQ сохраняется и не заменяется через форму.
-
-Deck может быть сохранён неполным.
-
-При ошибке форма отображается повторно с сохранением выбранных quantities и ошибок.
-
-### Deck editor
-
-Форма поддерживает:
-
-- название Deck;
-- выбор HQ;
-- отображение Nation;
-- выбор количества карт;
-- `+` / `−` для quantity;
-- максимум 3 копии;
-- подсчёт количества карт;
-- подсчёт Weight;
-- сохранение;
-- отмену.
-
-Количество карт ограничено:
-
-```text
-0..10
-```
-
-HQ после создания изменить нельзя.
-
-### Deck list
-
-Для авторизованного игрока `/decks` показывает:
-
-- только собственные Deck;
-- название;
-- Nation;
-- HQ;
-- количество карт;
-- Weight;
-- состав Deck;
-- preview карт;
-- редактирование;
-- удаление.
-
-«В бой» пока не реализован и остаётся отложенным до дальнейшего lifecycle.
-
-Удаление выполняется через `button_to` с Turbo confirmation.
-
-### Guest /decks
-
-Гость видит:
-
-- три starter Deck;
-- Nation;
-- HQ;
-- состав;
-- preview карт.
-
-Гость не может:
-
-- создавать Deck;
-- редактировать Deck;
-- удалять Deck;
-- сохранять изменения.
-
-### Card preview
-
-Для preview Deck используется существующий `.card`.
-
-Для компактного отображения применяются отдельные правила:
-
-```css
-.deck-card__card-preview .card__stats
-.deck-card__card-preview .card__stats p
-.deck-card__card-preview .card__abilities
-.deck-card__card-preview .card__stats ul
-.deck-card__card-preview .card__stats li
-```
-
-Preview не изменяет основной игровой `.card`.
+`/decks` остаётся страницей управления Deck и не является страницей запуска игры.
 
 ---
 
@@ -1621,140 +1507,502 @@ HQ отображается увеличенным квадратным элем
 
 ---
 
-## 31. Tests
+## 31. Matchmaking
 
-Для Deck реализованы отдельные тесты:
+Matchmaking реализуется отдельными сервисами и не помещается в `Game` или `StartGame`.
+
+Основные сервисы:
 
 ```text
-test/models/deck_test.rb
-test/models/deck_card_test.rb
-test/controllers/decks_controller_test.rb
+app/services/matchmaking/find_opponent.rb
+app/services/matchmaking/join.rb
+app/services/matchmaking/cleanup_stale_waiting_games.rb
 ```
 
-Проверяются:
+### FindOpponent
 
-### Deck model
+Ищет только:
 
-- associations;
-- обязательное имя;
-- обязательный HQ;
-- HQ должен быть `headquarters`;
-- HQ должен принадлежать Nation Deck;
-- `card_count`;
-- `complete?`;
-- максимум `DECK_SIZE`;
-- Deck Weight;
-- HQ не входит в Weight.
+- `Game(status: waiting)`;
+- игры с одним `GamePlayer`;
+- другого игрока.
 
-### DeckCard model
+Совместимость Deck Weight: **±15%**
 
-- associations;
-- quantity 1;
-- quantity 3;
-- запрет quantity < 1;
-- запрет quantity > 3;
-- уникальность карты в Deck;
-- соответствие Nation;
-- запрет HQ в Deck.
+Если подходит несколько кандидатов, приоритет:
 
-### DecksController
+1. минимальная абсолютная разница Weight;
+2. при одинаковой разнице — более старая waiting game.
 
-- guest не может открыть `new`;
-- guest не может открыть `edit`;
-- авторизованный игрок может открыть `new`;
-- авторизованный игрок может редактировать свой Deck;
-- игрок не может редактировать чужой Deck;
-- создание Deck;
-- создание с картой другой Nation;
-- более 3 копий одной карты;
-- более 10 карт;
-- редактирование Deck;
-- сохранение существующего HQ при редактировании;
-- удаление собственного Deck;
-- невозможность удалить чужой Deck.
+### Join
 
-При `RecordNotFound` используется:
+`Matchmaking::Join` использует row lock (`with_lock`), чтобы защитить matchmaking от race condition.
+
+Проверяется:
+
+- игра всё ещё `waiting`;
+- в игре только один игрок;
+- текущий игрок ещё не является участником.
+
+После добавления второго `GamePlayer` вызывается существующий:
+
+```text
+GameEngine::StartGame
+```
+
+Matchmaking не содержит игровой логики.
+
+### Waiting cleanup
+
+Для waiting games используется:
+
+```text
+Game.last_seen_at
+```
+
+Heartbeat отправляется из waiting room каждые 10 секунд.
+
+Stimulus controller:
+
+```text
+app/javascript/controllers/waiting_room_controller.js
+```
+
+Если waiting room перестал отправлять heartbeat, stale game удаляется сервисом:
+
+```text
+Matchmaking::CleanupStaleWaitingGames
+```
+
+Текущий предел:
 
 ```ruby
-assert_response :not_found
+STALE_AFTER = 30.seconds
 ```
 
-поскольку `ApplicationController` обрабатывает `ActiveRecord::RecordNotFound`.
+Правила cleanup:
 
-### Полная проверка
+- stale waiting game удаляется;
+- fresh waiting game сохраняется;
+- `started` и `finished` games не удаляются;
+- `last_seen_at == nil` не считается stale.
 
-Последняя полная проверка:
-
-```bash
-bin/rails test
-```
-
-Результат:
-
-```text
-383 runs, 1084 assertions, 0 failures, 0 errors, 0 skips
-```
+При удалении waiting game обновляются остальные waiting rooms через Turbo refresh.
 
 ---
 
 ## 32. Stage 18 — Waiting / Started
 
-Следующий этап.
+Stage 18 **ЕЩЁ НЕ ЗАВЕРШЁН**.
 
-План:
+На данный момент реализована значительная часть waiting → started flow.
+
+### Текущий flow PvP
 
 ```text
 authenticated player
         ↓
-свои Deck
+/play
         ↓
-выбор Deck
+выбор полной Deck
         ↓
-«В бой»
+«В бой — PvP»
         ↓
-Game(status: waiting)
-        ↓
-waiting page
-        ↓
-второй игрок
-        ↓
-второй GamePlayer
-        ↓
-StartGame
-        ↓
-Game(status: started)
-        ↓
-GameState
-        ↓
-game page
+FindOpponent
+        ├── соперник найден
+        │       ↓
+        │     Join
+        │       ↓
+        │   StartGame
+        │       ↓
+        │     game
+        │
+        └── соперник не найден
+                ↓
+          Game(status: waiting)
+                +
+          первый GamePlayer
+                ↓
+          waiting room
+                ├── соперник найден
+                │      ↓
+                │    Join
+                │      ↓
+                │  StartGame
+                │
+                └── отмена ожидания
+                       ↓
+                  удаление Game
 ```
 
-Waiting:
+### /play
 
-- отдельная waiting page;
-- `Game.state == nil`;
-- не создавать fake `GameState`.
+Для авторизованного игрока показываются только полные Deck.
 
-После появления второго игрока используется существующий `StartGame`.
+Для каждой полной Deck доступны:
 
-Matchmaking Deck Weight: **±15%**
+- В бой — PvP
+- В бой — ИИ
 
-Допуск должен быть отдельной логикой matchmaking, а не частью модели Deck.
+На текущем этапе:
 
-На Stage 18 не изменять уже реализованную механику Game Engine без необходимости.
+- PvP реализуется;
+- AI режим не реализован;
+- автоматическое создание AI при отсутствии соперника запрещено.
+
+На `/decks` кнопки «В бой» нет.
+
+### GamesController#create
+
+Для PvP:
+
+1. проверяется `current_player`;
+2. проверяется `mode == "pvp"`;
+3. находится Deck текущего игрока;
+4. проверяется `deck.complete?`;
+5. выполняется stale waiting cleanup;
+6. проверяется, нет ли уже собственного waiting game;
+7. вызывается `Matchmaking::FindOpponent`;
+8. при найденном сопернике вызывается `Matchmaking::Join`;
+9. если соперник не найден — создаётся новая waiting game;
+10. создаётся первый `GamePlayer`.
+
+Если у игрока уже есть собственная waiting game, новый waiting game не создаётся.
+
+### Waiting Game
+
+Waiting game содержит:
+
+```text
+status = waiting
+state = nil
+last_seen_at = current time
+```
+
+Имеет только одного `GamePlayer`.
+
+### Waiting room
+
+Waiting room показывает:
+
+- собственный HQ;
+- собственный Deck Weight;
+- индикатор ожидания;
+- список других ожидающих игроков только по Weight;
+- кнопку «Выйти из ожидания».
+
+Не показываются:
+
+- имена игроков;
+- названия Deck;
+- Nation;
+- HQ соперника;
+- другие данные соперника.
+
+Список waiting games используется только для визуальной информации о доступных Weight и не превращается в ручной выбор комнаты.
+
+### Cancel waiting
+
+Endpoint:
+
+```text
+DELETE /games/:id/cancel_waiting
+```
+
+Отмена разрешена только:
+
+- текущему игроку;
+- участнику этой waiting game;
+- пока game имеет `waiting`;
+- пока в ней только один `GamePlayer`.
+
+После отмены:
+
+- waiting `Game` удаляется;
+- его `GamePlayer` удаляется через `dependent: :destroy`;
+- остальные waiting rooms получают refresh.
+
+### Waiting heartbeat
+
+Endpoint:
+
+```text
+POST /games/:id/waiting_heartbeat
+```
+
+Heartbeat разрешён только участнику собственной waiting game.
+
+При heartbeat:
+
+```ruby
+last_seen_at = Time.current
+```
+
+После этого выполняется stale cleanup.
+
+### Turbo refresh
+
+При создании новой waiting game обновляются другие waiting rooms.
+
+При успешном Join:
+
+- started game получает `broadcast_game_refresh`;
+- остальные waiting games получают `broadcast_waiting_games_refresh`.
+
+Это необходимо, чтобы список ожидающих игроков в уже открытых browser sessions обновлялся без ручного reload.
+
+### Проверено в браузере
+
+Проверен сценарий с несколькими browser sessions и Weight:
+
+```text
+14
+23
+24
+```
+
+Проверено:
+
+- создание waiting games;
+- отображение других ожидающих игроков;
+- matchmaking;
+- присоединение игрока 24 к игроку 23;
+- переход game в `started`;
+- обновление других waiting rooms без ручного reload;
+- heartbeat;
+- удаление stale waiting game после закрытия browser session.
+
+### Текущие ограничения Stage 18
+
+Пока не завершено:
+
+1. Полностью покрыть тестами waiting → started flow.
+2. Проверить и зафиксировать тестами структуру созданного `GameState`.
+3. Проверить тестами, что оба `GamePlayer` корректно созданы после matchmaking.
+4. Проверить тестами, что hidden hand не раскрывается после `StartGame`.
+5. Проверить тестами, что игровые Actions отклоняются для waiting game.
+6. Проверить все пути завершения игры:
+   - `headquarters_destroyed`;
+   - `time_expired`;
+   - `empty_deck_damage`;
+   - `surrender`.
+7. Проверить для каждого завершения:
+   - `Game.status == finished`;
+   - корректный `state["result"]`;
+   - корректный winner/loser;
+   - корректная причина;
+   - `AvailableActions == {}` / пустой результат;
+   - последующие Actions отклоняются.
+8. Проверить полный browser flow:
+   - `/play`;
+   - выбор Deck;
+   - waiting;
+   - второй игрок;
+   - started;
+   - первая игровая страница.
+9. Проверить все edge cases matchmaking:
+   - несовместимый Weight;
+   - несколько совместимых waiting games;
+   - одинаковая разница Weight;
+   - повторная попытка Join;
+   - race condition.
+10. Проверить поведение при закрытии/обрыве waiting browser session.
+11. Отдельно реализовать вход в игру гостем.
+
+### Guest game — важно
+
+Гостевой просмотр `/play` и `/decks` существует, но гостевой вход непосредственно в игру сейчас **НЕ реализован**.
+
+Гость не может пройти текущий PvP flow, потому что:
+
+```text
+GamePlayer
+    ↓
+belongs_to Player
+```
+
+а текущая идентификация игры использует:
+
+```text
+session[:player_id]
+        ↓
+current_player
+        ↓
+GamePlayer
+```
+
+Поэтому нельзя считать гостевой режим реализованным только потому, что гость видит starter Deck.
+
+Нужно отдельно спроектировать и реализовать гостевой lifecycle.
+
+При этом нельзя:
+
+- подменять гостя постоянным `Player`;
+- использовать `?player_id=`;
+- использовать dev player как гостя;
+- хранить `GameState` в session/cookies;
+- нарушать существующую модель скрытой информации;
+- обходить `GamePlayer`/Engine архитектуру без отдельного решения.
+
+Архитектура гостевой игры должна быть сначала определена, затем зафиксирована в `AGENTS.md`, а если появляются новые игровые правила — в `GAME_RULES.md`.
 
 ---
 
-## 33. Stage 19–23
+## 33. Routes текущего игрового lifecycle
+
+Основные маршруты:
+
+```ruby
+get "play", to: "pages#play", as: :play
+get "decks", to: "pages#decks", as: :decks
+
+resources :games, only: [:create]
+
+get "games/:id", to: "games#show", as: :game
+
+post "games/:id/end_turn",
+     to: "games#end_turn",
+     as: :end_turn
+
+post "games/:id/play_card",
+     to: "games#play_card",
+     as: :play_card
+
+post "games/:id/move",
+     to: "games#move",
+     as: :move
+
+post "games/:id/attack",
+     to: "games#attack",
+     as: :attack
+
+post "games/:id/surrender",
+     to: "games#surrender",
+     as: :surrender
+
+delete "games/:id/cancel_waiting",
+       to: "games#cancel_waiting",
+       as: :cancel_waiting_game
+
+post "games/:id/waiting_heartbeat",
+     to: "games#waiting_heartbeat",
+     as: :waiting_heartbeat_game
+```
+
+---
+
+## 34. Tests
+
+Тесты должны проверять не только отдельные сервисы, но и границы между ними.
+
+### Matchmaking tests
+
+Проверяются:
+
+- поиск совместимого соперника;
+- допуск ±15%;
+- несовместимый Weight;
+- приоритет минимальной разницы Weight;
+- при равной разнице — более старая waiting game;
+- исключение самого игрока;
+- только waiting games;
+- только games с одним игроком.
+
+### Join tests
+
+Проверяются:
+
+- успешное присоединение;
+- создание второго `GamePlayer`;
+- запуск `StartGame`;
+- переход waiting → started;
+- защита от повторного Join;
+- защита от игры, которая уже `started`;
+- race-condition protection.
+
+### Cleanup tests
+
+Проверяются:
+
+- stale waiting game удаляется;
+- fresh waiting game сохраняется;
+- `started` game не удаляется;
+- `finished` game не удаляется;
+- `last_seen_at == nil` сохраняется.
+
+### GamesController tests
+
+Проверяются:
+
+- создание waiting PvP game;
+- невозможность начать игру с incomplete Deck;
+- невозможность использовать чужой Deck;
+- Join существующей совместимой waiting game;
+- создание новой waiting game при отсутствии совместимого соперника;
+- cancel waiting;
+- запрет отмены чужой waiting game;
+- запрет отмены уже `started` game;
+- waiting room;
+- отображение Weight;
+- Turbo refresh после создания waiting game;
+- Turbo refresh после Join;
+- heartbeat;
+- hidden information;
+- Actions в waiting game;
+- переход waiting → started.
+
+### Finished game tests
+
+Нужно добавить/проверить integration tests для:
+
+- HQ destroyed;
+- time expired;
+- empty deck damage;
+- surrender;
+- запрета любых последующих Actions;
+- пустого `AvailableActions`;
+- корректного `result`.
+
+### Текущая полная проверка
+
+Последний результат:
+
+```bash
+bin/rails test
+```
+
+```text
+409 runs, 1206 assertions, 0 failures, 0 errors, 0 skips
+```
+
+Controller tests:
+
+```bash
+bin/rails test test/controllers/games_controller_test.rb
+```
+
+```text
+21 runs, 100 assertions, 0 failures, 0 errors, 0 skips
+```
+
+---
+
+## 35. Stage 19–23
 
 ### Stage 19 — Human vs Human
+
+После завершения Stage 18:
 
 - полноценный flow двух реальных игроков;
 - выбор Deck;
 - waiting → started;
 - StartGame;
 - существующий Turbo real-time;
-- завершение партии.
+- полноценная партия;
+- завершение партии;
+- browser testing полного PvP lifecycle.
+
+Stage 19 не должен дублировать уже реализованный matchmaking. Его задача — довести реальный Human vs Human lifecycle до полноценной игровой партии.
 
 ### Stage 20 — Decision Provider
 
@@ -1811,7 +2059,7 @@ Game Engine не зависит от Ollama.
 
 ---
 
-## 34. Что запрещено
+## 36. Что запрещено
 
 Не переносить игровую логику в:
 
@@ -1858,11 +2106,17 @@ Game Engine не зависит от Ollama.
 - дублировать правила перспективы в Stimulus;
 - использовать визуальный порядок клеток как источник логических координат;
 - считать browser session источником `GameState`;
-- использовать одну browser session для одновременной авторизации двух разных игроков при browser-тестировании.
+- использовать одну browser session для одновременной авторизации двух разных игроков при browser-тестировании;
+- автоматически создавать AI-соперника в PvP, если человек не найден;
+- превращать список waiting players в ручной выбор комнаты;
+- хранить matchmaking metadata в `GameState`;
+- считать `last_seen_at` частью игровых правил;
+- удалять `started` или `finished` games через waiting cleanup;
+- считать гостевой просмотр starter Deck гостевой игровой сессией.
 
 ---
 
-## 35. Порядок работы
+## 37. Порядок работы
 
 Для каждого этапа:
 
@@ -1890,7 +2144,7 @@ Game Engine не зависит от Ollama.
 
 ---
 
-## 36. Текущая контрольная точка
+## 38. Текущая контрольная точка
 
 Завершено:
 
@@ -1924,45 +2178,131 @@ Game Engine не зависит от Ollama.
 - controller tests;
 - проверка UI в браузере.
 
-### Последняя полная проверка
+### Stage 18
+
+**В ПРОЦЕССЕ. НЕ ЗАВЕРШЁН.**
+
+Уже реализовано:
+
+- `/play` для авторизованного игрока;
+- выбор полной Deck;
+- «В бой — PvP»;
+- «В бой — ИИ» как UI-кнопка, но AI ещё не реализован;
+- создание `Game(status: waiting)`;
+- первый `GamePlayer`;
+- waiting page;
+- `Matchmaking::FindOpponent`;
+- matchmaking по Weight ±15%;
+- приоритет ближайшего Weight;
+- приоритет более старой waiting game при одинаковой разнице;
+- `Matchmaking::Join`;
+- row lock при Join;
+- создание второго `GamePlayer`;
+- существующий `StartGame`;
+- переход waiting → started;
+- cancel waiting;
+- waiting heartbeat;
+- stale waiting cleanup;
+- Turbo refresh waiting rooms;
+- browser testing matchmaking;
+- browser testing waiting cleanup;
+- тесты controller для waiting/matchmaking;
+- тест на refresh других waiting rooms после Join.
+
+Последняя полная проверка:
 
 ```bash
 bin/rails test
 ```
 
-Результат:
+```text
+409 runs, 1206 assertions, 0 failures, 0 errors, 0 skips
+```
+
+### Что осталось сделать в Stage 18
+
+1. Integration tests для полного waiting → started lifecycle.
+2. Проверка структуры `GameState` после `StartGame`.
+3. Проверка двух `GamePlayer`.
+4. Проверка скрытой руки после `StartGame`.
+5. Проверка запрета Actions для waiting game.
+6. Полное покрытие завершения игры:
+   - `headquarters_destroyed`;
+   - `time_expired`;
+   - `empty_deck_damage`;
+   - `surrender`.
+7. Проверка после каждого завершения:
+   - `status == finished`;
+   - `result`;
+   - winner;
+   - loser;
+   - reason;
+   - пустые `AvailableActions`;
+   - отклонение последующих Actions.
+8. Полный browser flow waiting → started → игровая страница.
+9. Дополнительные edge cases matchmaking.
+10. Проверка race conditions.
+11. Проверка stale cleanup при реальном закрытии/потере waiting browser session.
+12. Спроектировать и реализовать вход в игру гостем.
+
+### Guest mode — отдельная незавершённая задача
+
+Сейчас:
 
 ```text
-383 runs, 1084 assertions, 0 failures, 0 errors, 0 skips
+Гость
+ ↓
+/play
+ ↓
+starter Deck
 ```
+
+работает только как просмотр.
+
+Гость не может начать реальную игру.
+
+Причина:
+
+```text
+GamePlayer → Player
+```
+
+и текущий игровой lifecycle требует:
+
+```text
+session[:player_id]
+ ↓
+current_player
+ ↓
+GamePlayer
+```
+
+Это необходимо считать незавершённой частью Stage 18, а не считать гостевой режим реализованным через наличие гостевых Deck на `/play` или `/decks`.
+
+Перед реализацией гостевой игры необходимо определить архитектуру guest identity (идентификация гостя) так, чтобы:
+
+- гость мог участвовать в реальной партии;
+- сохранялась текущая архитектура Engine;
+- Engine получал нормальный `player_id`;
+- hidden information сохранялась;
+- `GameState` оставался authoritative;
+- session не становилась `GameState`;
+- не использовался `?player_id=`;
+- не создавался постоянный dev `Player`;
+- не нарушалась история завершённых игр.
+
+Архитектурное решение сначала зафиксировать в `AGENTS.md`.
 
 ### Текущее состояние
 
 - Stage 15 — **ЗАВЕРШЁН**
 - Stage 16 — **ЗАВЕРШЁН**
 - Stage 17 — **ЗАВЕРШЁН**
-- Stage 18 — **СЛЕДУЮЩИЙ**
-
-Следующая работа: **Stage 18 — Waiting / Started**
-
-Основные задачи:
-
-- выбор полной Deck;
-- кнопка «В бой»;
-- создание `Game(status: waiting)`;
-- создание первого `GamePlayer`;
-- waiting page;
-- поиск/подключение второго игрока;
-- matchmaking по Deck Weight ±15%;
-- создание второго `GamePlayer`;
-- запуск существующего `StartGame`;
-- переход waiting → started.
-
-До Stage 18 не реализовывать пользовательский lifecycle партии.
+- Stage 18 — **В ПРОЦЕССЕ**
 
 ---
 
-## 37. Архитектурные границы
+## 39. Архитектурные границы
 
 ### Игровой flow
 
@@ -2011,9 +2351,36 @@ DeckCard
  ↓
 /decks
  ↓
+/play
+ ↓
 выбор полной Deck
  ↓
 Stage 18: waiting
+```
+
+### Matchmaking
+
+```text
+/play
+ ↓
+FindOpponent
+ ├── opponent found
+ │      ↓
+ │    Join
+ │      ↓
+ │  StartGame
+ │
+ └── opponent not found
+        ↓
+   waiting Game
+        ↓
+ waiting room
+        ↓
+     heartbeat
+        ↓
+ Matchmaking / Join
+        ↓
+    StartGame
 ```
 
 ### AI
@@ -2029,6 +2396,24 @@ GameEngine
     ↓
 GameState
 ```
+
+### Guest
+
+Будущая архитектура должна сохранить общий игровой поток:
+
+```text
+Guest identity
+      ↓
+GamePlayer
+      ↓
+Action.player_id
+      ↓
+GameEngine
+      ↓
+GameState
+```
+
+Гостевая идентификация не должна создавать второй игровой Engine или отдельную систему правил.
 
 ### Event propagation
 

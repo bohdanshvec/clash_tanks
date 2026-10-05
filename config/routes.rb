@@ -19,6 +19,8 @@ Rails.application.routes.draw do
 	get "login", to: "sessions#new", as: :login
 	post "login", to: "sessions#create"
 	delete "logout", to: "sessions#destroy", as: :logout
+	
+	resources :games, only: [:create]
 
   get "games/:id", to: "games#show", as: :game
   post "games/:id/end_turn", to: "games#end_turn", as: :end_turn
@@ -26,4 +28,8 @@ Rails.application.routes.draw do
   post "games/:id/move", to: "games#move", as: :move
   post "games/:id/attack", to: "games#attack", as: :attack
   post "games/:id/surrender", to: "games#surrender", as: :surrender
+  delete "games/:id/cancel_waiting", to: "games#cancel_waiting", as: :cancel_waiting_game
+  post "games/:id/waiting_heartbeat",
+     to: "games#waiting_heartbeat",
+     as: :waiting_heartbeat_game
 end
