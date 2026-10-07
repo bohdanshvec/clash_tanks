@@ -168,6 +168,11 @@ class GamesController < ApplicationController
       return
     end
 
+    if @game.waiting? && @game.state.nil?
+      render plain: "Game has not started", status: :unprocessable_entity
+      return
+    end
+
     action = GameEngine::Action.new(
       player_id: current_player_id,
       type: "end_turn"
@@ -289,6 +294,11 @@ class GamesController < ApplicationController
 
     unless player_in_game?(@game)
       render_forbidden
+      return
+    end
+
+    if @game.waiting? && @game.state.nil?
+      render plain: "Game has not started", status: :unprocessable_entity
       return
     end
 

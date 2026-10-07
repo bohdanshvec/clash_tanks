@@ -8,7 +8,7 @@
     <div class="decks-page__title">
       <h1>Колоды</h1>
 
-      <% if current_player %>
+      <% if registered_player? %>
         <p>
           Сохранённые колоды игрока:
           <strong><%= current_player.display_name %></strong>
@@ -20,14 +20,14 @@
       <% end %>
     </div>
 
-    <% if current_player %>
-			<%= link_to "Создать колоду", new_deck_path %>
+    <% if registered_player? %>
+      <%= link_to "Создать колоду", new_deck_path %>
     <% end %>
 
   </header>
 
 
-  <% if current_player %>
+  <% if registered_player? %>
 
     <% if @decks.any? %>
 
@@ -65,148 +65,148 @@
 
             </header>
 
-						<div class="deck-card__actions">
+            <div class="deck-card__actions">
 
-							<details class="deck-card__preview">
-								<summary>
-									Просмотр колоды
-								</summary>
+              <details class="deck-card__preview">
+                <summary>
+                  Просмотр колоды
+                </summary>
 
-								<ul class="deck-card__preview-list">
+                <ul class="deck-card__preview-list">
 
-									<% deck.deck_cards.includes(:card).each do |deck_card| %>
+                  <% deck.deck_cards.includes(:card).each do |deck_card| %>
 
-										<% card = deck_card.card %>
+                    <% card = deck_card.card %>
 
-										<li class="deck-card__preview-item">
+                    <li class="deck-card__preview-item">
 
-											<span>
-												<%= card.name %>
+                      <span>
+                        <%= card.name %>
 
-												<% if deck_card.quantity > 1 %>
-												  × <%= deck_card.quantity %>
-												<% end %>
-											</span>
+                        <% if deck_card.quantity > 1 %>
+                          × <%= deck_card.quantity %>
+                        <% end %>
+                      </span>
 
-											<div class="deck-card__card-preview">
+                      <div class="deck-card__card-preview">
 
-												<article class="card">
+                        <article class="card">
 
-												  <header class="card__header">
-												    <strong><%= card.name %></strong>
-												  </header>
+                          <header class="card__header">
+                            <strong><%= card.name %></strong>
+                          </header>
 
-												  <div class="card__stats">
+                          <div class="card__stats">
 
-												    <p>
-												      Nation: <%= card.nation.name %>
-												    </p>
+                            <p>
+                              Nation: <%= card.nation.name %>
+                            </p>
 
-												    <p>
-												      Type: <%= card.card_type %>
-												    </p>
+                            <p>
+                              Type: <%= card.card_type %>
+                            </p>
 
-												    <p>
-												      Weight: <%= card.weight %>
-												    </p>
+                            <p>
+                              Weight: <%= card.weight %>
+                            </p>
 
-												    <p>
-												      Price: <%= card.price %>
-												    </p>
+                            <p>
+                              Price: <%= card.price %>
+                            </p>
 
-												    <% if card.card_type == "technique" && card.technique %>
+                            <% if card.card_type == "technique" && card.technique %>
 
-												      <p>
-												        Technique:
-												        <%= card.technique.technique_type %>
-												      </p>
+                              <p>
+                                Technique:
+                                <%= card.technique.technique_type %>
+                              </p>
 
-												      <p>
-												        HP: <%= card.technique.hp %>
-												      </p>
+                              <p>
+                                HP: <%= card.technique.hp %>
+                              </p>
 
-												      <p>
-												        Firepower: <%= card.technique.firepower %>
-												      </p>
+                              <p>
+                                Firepower: <%= card.technique.firepower %>
+                              </p>
 
-												      <p>
-												        Fuel: <%= card.technique.fuel %>
-												      </p>
+                              <p>
+                                Fuel: <%= card.technique.fuel %>
+                              </p>
 
-												    <% elsif card.card_type == "platoon" && card.platoon %>
+                            <% elsif card.card_type == "platoon" && card.platoon %>
 
-												      <p>
-												        HP: <%= card.platoon.hp %>
-												      </p>
+                              <p>
+                                HP: <%= card.platoon.hp %>
+                              </p>
 
-												      <p>
-												        Firepower: <%= card.platoon.firepower %>
-												      </p>
+                              <p>
+                                Firepower: <%= card.platoon.firepower %>
+                              </p>
 
-												      <p>
-												        Armor: <%= card.platoon.armor %>
-												      </p>
+                              <p>
+                                Armor: <%= card.platoon.armor %>
+                              </p>
 
-												      <p>
-												        Fuel: <%= card.platoon.fuel %>
-												      </p>
+                              <p>
+                                Fuel: <%= card.platoon.fuel %>
+                              </p>
 
-												    <% elsif card.card_type == "order" %>
+                            <% elsif card.card_type == "order" %>
 
-												      <div class="card__abilities">
+                              <div class="card__abilities">
 
-												        <p>Abilities:</p>
+                                <p>Abilities:</p>
 
-												        <% if card.abilities.any? %>
+                                <% if card.abilities.any? %>
 
-												          <ul>
+                                  <ul>
 
-												            <% card.abilities.each do |ability| %>
+                                    <% card.abilities.each do |ability| %>
 
-												              <li>
-												                <%= ability.name %>
-												              </li>
+                                      <li>
+                                        <%= ability.name %>
+                                      </li>
 
-												            <% end %>
+                                    <% end %>
 
-												          </ul>
+                                  </ul>
 
-												        <% else %>
+                                <% else %>
 
-												          <p>none</p>
+                                  <p>none</p>
 
-												        <% end %>
+                                <% end %>
 
-												      </div>
+                              </div>
 
-												    <% end %>
+                            <% end %>
 
-												  </div>
+                          </div>
 
-												</article>
+                        </article>
 
-											</div>
+                      </div>
 
-										</li>
+                    </li>
 
-									<% end %>
+                  <% end %>
 
-								</ul>
+                </ul>
 
-							</details>
+              </details>
 
-							  <%= link_to "Редактировать", edit_deck_path(deck) %>
+              <%= link_to "Редактировать", edit_deck_path(deck) %>
 
-								<%= button_to "Удалить",
-											deck_path(deck),
-											method: :delete,
-											form: {
-												data: {
-													turbo_confirm: "Удалить колоду «#{deck.name}»?"
-												}
-											} %>
+              <%= button_to "Удалить",
+                            deck_path(deck),
+                            method: :delete,
+                            form: {
+                              data: {
+                                turbo_confirm: "Удалить колоду «#{deck.name}»?"
+                              }
+                            } %>
 
-						</div>
+            </div>
 
           </article>
 
@@ -229,37 +229,35 @@
 
         <article class="deck-card">
 
-          <header class="deck-card__header">
+					<header class="deck-card__header">
 
-            <div>
-              <h2><%= deck[:name] %></h2>
+						<div>
 
-              <p>
-                <strong>Нация:</strong>
-                <%= deck[:nation].name %>
-              </p>
+							<h2><%= deck[:name] %></h2>
 
-              <p>
-                <strong>Штаб:</strong>
-                <%= deck[:headquarters_card].name %>
-              </p>
+							<p>
+								<strong>Нация:</strong>
+								<%= deck[:nation].name %>
+							</p>
 
-              <p>
-                <strong>Карт:</strong>
-                <%= deck[:cards].size %> / <%= Deck::DECK_SIZE %>
-              </p>
+							<p>
+								<strong>Штаб:</strong>
+								<%= deck[:headquarters_card].name %>
+							</p>
 
-              <p>
-                <strong>Weight:</strong>
-                <%= deck[:cards].sum(&:weight) %>
-              </p>
-            </div>
+							<p>
+								<strong>Карт:</strong>
+								<%= deck[:cards].size %> / <%= Deck::DECK_SIZE %>
+							</p>
 
-            <button type="button" disabled title="Будет доступно на Stage 18">
-              В бой
-            </button>
+							<p>
+								<strong>Weight:</strong>
+								<%= deck[:cards].sum(&:weight) %>
+							</p>
 
-          </header>
+						</div>
+
+					</header>
 
 
           <div class="deck-card__cards">
@@ -390,10 +388,5 @@
     </div>
 
   <% end %>
-
-
-  <p class="decks-page__back">
-    <%= link_to "На главную", root_path %>
-  </p>
 
 </div>

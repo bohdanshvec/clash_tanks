@@ -776,442 +776,576 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-	test "player can create a waiting pvp game with a complete deck" do
-		player = create_player
-		deck = create_complete_deck(player: player)
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		assert_difference("Game.count", 1) do
-		  assert_difference("GamePlayer.count", 1) do
-		    post games_path, params: {
-		      deck_id: deck.id,
-		      mode: "pvp"
-		    }
-		  end
-		end
-
-		game = Game.order(:id).last
-
-		assert_redirected_to game_path(game)
-		assert game.waiting?
-		assert_nil game.state
-
-		game_player = game.game_players.first
-
-		assert_equal player, game_player.player
-		assert_equal deck, game_player.deck
-		assert_equal deck.nation, game_player.nation
-		assert_equal deck.headquarters_card, game_player.headquarters_card
-	end
-
-	test "player cannot create a game with another player's deck" do
-		player = create_player
-		other_player = create_player(email: "other@example.com")
-
-		deck = create_complete_deck(player: other_player)
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		assert_no_difference("Game.count") do
-		  post games_path, params: {
-		    deck_id: deck.id,
-		    mode: "pvp"
-		  }
-		end
-
-		assert_response :not_found
-	end
-
-	test "player cannot create a game with an incomplete deck" do
-		player = create_player
-
-		nation = Nation.create!(
-		  name: "Incomplete Nation",
-		  code: "incomplete_#{SecureRandom.hex(4)}"
-		)
-
-		headquarters_card = create_headquarters_card(nation: nation)
-
-		deck = Deck.create!(
-		  player: player,
-		  nation: nation,
-		  name: "Incomplete Deck",
-		  headquarters_card: headquarters_card
-		)
-
-		9.times do |index|
-		  card = Card.create!(
-		    code: "#{nation.code}_card_#{index}_#{SecureRandom.hex(4)}",
-		    nation: nation,
-		    name: "Test Card #{index}",
-		    card_type: "order",
-		    weight: 1,
-		    price: 1
-		  )
-
-		  DeckCard.create!(
-		    deck: deck,
-		    card: card,
-		    quantity: 1
-		  )
-		end
-
-		assert_not deck.complete?
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		assert_no_difference("Game.count") do
-		  post games_path, params: {
-		    deck_id: deck.id,
-		    mode: "pvp"
-		  }
-		end
-
-		assert_response :unprocessable_entity
-	end
-	
-	test "joins an existing compatible waiting game" do
-		first_player = create_player
-		second_player = create_player(email: "second@example.com")
-
-		first_deck = create_complete_deck(player: first_player)
-		second_deck = create_complete_deck(player: second_player)
-
-		waiting_game = Game.create!(status: "waiting")
-
-		waiting_game.game_players.create!(
-		  player: first_player,
-		  nation: first_deck.nation,
-		  deck: first_deck,
-		  headquarters_card: first_deck.headquarters_card
-		)
-
-		post login_path, params: {
-		  email: second_player.email,
-		  password: "password"
-		}
-
-		assert_difference("Game.count", 0) do
-		  post games_path, params: {
-		    deck_id: second_deck.id,
-		    mode: "pvp"
-		  }
-		end
-
-		waiting_game.reload
-
-		assert waiting_game.started?
-		assert_not_nil waiting_game.state
-		assert_equal 2, waiting_game.game_players.count
-		assert_redirected_to game_path(waiting_game)
-	end
-	
-	test "joining an existing waiting game refreshes other waiting rooms" do
-		first_player = create_player
-		second_player = create_player(email: "second@example.com")
-		third_player = create_player(email: "third@example.com")
-
-		first_deck = create_complete_deck(player: first_player)
-		second_deck = create_complete_deck(player: second_player)
-		third_deck = create_complete_deck(player: third_player)
-
-		waiting_game = Game.create!(
-		  status: "waiting",
-		  last_seen_at: Time.current
-		)
-
-		waiting_game.game_players.create!(
-		  player: first_player,
-		  nation: first_deck.nation,
-		  deck: first_deck,
-		  headquarters_card: first_deck.headquarters_card
-		)
-
-		other_waiting_game = Game.create!(
-		  status: "waiting",
-		  last_seen_at: Time.current
-		)
-
-		other_waiting_game.game_players.create!(
-		  player: second_player,
-		  nation: second_deck.nation,
-		  deck: second_deck,
-		  headquarters_card: second_deck.headquarters_card
-		)
-
-		# Делаем третью колоду совместимой с первой.
-		first_deck.deck_cards.first.card.update!(weight: 20)
-		third_deck.deck_cards.first.card.update!(weight: 20)
-
-		post login_path, params: {
-		  email: third_player.email,
-		  password: "password"
-		}
-
-		broadcasted_games = []
-
-		original_method = Turbo::StreamsChannel.method(:broadcast_refresh_to)
-
-		Turbo::StreamsChannel.define_singleton_method(:broadcast_refresh_to) do |game|
-		  broadcasted_games << game
-		end
-
-		begin
-		  post games_path, params: {
-		    deck_id: third_deck.id,
-		    mode: "pvp"
-		  }
-		ensure
-		  Turbo::StreamsChannel.define_singleton_method(
-		    :broadcast_refresh_to,
-		    original_method
-		  )
-		end
-
-		waiting_game.reload
-		other_waiting_game.reload
-
-		assert waiting_game.started?
-		assert_equal 2, waiting_game.game_players.count
-
-		assert other_waiting_game.waiting?
-
-		assert_includes broadcasted_games, waiting_game
-		assert_includes broadcasted_games, other_waiting_game
-
-		assert_redirected_to game_path(waiting_game)
-	end
-
-	test "creates a waiting game when no compatible opponent exists" do
-		player = create_player
-		deck = create_complete_deck(player: player)
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		assert_difference("Game.count", 1) do
-		  post games_path, params: {
-		    deck_id: deck.id,
-		    mode: "pvp"
-		  }
-		end
-
-		game = Game.order(:id).last
-
-		assert game.waiting?
-		assert_nil game.state
-		assert_equal 1, game.game_players.count
-		assert_redirected_to game_path(game)
-	end
-	
-	test "cancels own waiting game" do
-		player = create_player
-		deck = create_complete_deck(player: player)
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		game = Game.create!(status: "waiting")
-
-		game.game_players.create!(
-		  player: player,
-		  nation: deck.nation,
-		  deck: deck,
-		  headquarters_card: deck.headquarters_card
-		)
-
-		assert_difference("Game.count", -1) do
-		  delete cancel_waiting_game_path(game)
-		end
-
-		assert_redirected_to play_path
-		assert_not Game.exists?(game.id)
-	end
-
-	test "cannot cancel another player's waiting game" do
-		owner = create_player
-		player = create_player(email: "second@example.com")
-
-		deck = create_complete_deck(player: owner)
-
-		game = Game.create!(status: "waiting")
-
-		game.game_players.create!(
-		  player: owner,
-		  nation: deck.nation,
-		  deck: deck,
-		  headquarters_card: deck.headquarters_card
-		)
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		assert_no_difference("Game.count") do
-		  delete cancel_waiting_game_path(game)
-		end
-
-		assert_response :forbidden
-		assert Game.exists?(game.id)
-	end
-
-	test "cannot cancel a started game" do
-		player = create_player
-		deck = create_complete_deck(player: player)
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		game = Game.create!(
-		  status: "started",
-		  state: {}
-		)
-
-		game.game_players.create!(
-		  player: player,
-		  nation: deck.nation,
-		  deck: deck,
-		  headquarters_card: deck.headquarters_card
-		)
-
-		assert_no_difference("Game.count") do
-		  delete cancel_waiting_game_path(game)
-		end
-
-		assert_response :unprocessable_entity
-		assert Game.exists?(game.id)
-	end
-	
-	test "waiting game renders turbo stream subscription" do
-		player = create_player
-		deck = create_complete_deck(player: player)
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		game = Game.create!(status: "waiting")
-
-		game.game_players.create!(
-		  player: player,
-		  nation: deck.nation,
-		  deck: deck,
-		  headquarters_card: deck.headquarters_card
-		)
-
-		get game_path(game)
-
-		assert_response :success
-		assert_select "turbo-cable-stream-source"
-	end
-	
-	test "waiting room shows weights of other waiting games" do
-		player = create_player
-		opponent = create_player(email: "opponent@example.com")
-		another_opponent = create_player(email: "another@example.com")
-
-		player_deck = create_complete_deck(player: player)
-		opponent_deck = create_complete_deck(player: opponent)
-		another_deck = create_complete_deck(player: another_opponent)
-
-		game = Game.create!(status: "waiting")
-
-		game.game_players.create!(
-		  player: player,
-		  nation: player_deck.nation,
-		  deck: player_deck,
-		  headquarters_card: player_deck.headquarters_card
-		)
-
-		opponent_game = Game.create!(status: "waiting")
-
-		opponent_game.game_players.create!(
-		  player: opponent,
-		  nation: opponent_deck.nation,
-		  deck: opponent_deck,
-		  headquarters_card: opponent_deck.headquarters_card
-		)
-
-		another_game = Game.create!(status: "waiting")
-
-		another_game.game_players.create!(
-		  player: another_opponent,
-		  nation: another_deck.nation,
-		  deck: another_deck,
-		  headquarters_card: another_deck.headquarters_card
-		)
-
-		post login_path, params: {
-		  email: player.email,
-		  password: "password"
-		}
-
-		get game_path(game)
-
-		assert_response :success
-
-		assert_select "li", minimum: 2
-	 	assert_select "li", text: "Вес: #{opponent_deck.weight}"
-		assert_select "li", text: "Вес: #{another_deck.weight}"
-	end
-	
-	test "creating a waiting game refreshes other waiting rooms" do
-		first_player = create_player
-		second_player = create_player(email: "second@example.com")
-
-		first_deck = create_complete_deck(player: first_player)
-		second_deck = create_complete_deck(player: second_player)
-
-		waiting_game = Game.create!(status: "waiting")
-
-		waiting_game.game_players.create!(
-		  player: first_player,
-		  nation: first_deck.nation,
-		  deck: first_deck,
-		  headquarters_card: first_deck.headquarters_card
-		)
-
-		first_deck.deck_cards.first.card.update!(weight: 20)
-		second_deck.deck_cards.first.card.update!(weight: 1)
-
-		post login_path, params: {
-		  email: second_player.email,
-		  password: "password"
-		}
-
-		assert_difference("Game.count", 1) do
-		  post games_path, params: {
-		    deck_id: second_deck.id,
-		    mode: "pvp"
-		  }
-		end
-
-		created_game = Game
-		  .where(status: "waiting")
-		  .where.not(id: waiting_game.id)
-		  .order(:id)
-		  .last
-
-		assert_not_nil created_game
-		assert_redirected_to game_path(created_game)
-		assert waiting_game.reload.waiting?
-	end
+  test "player can create a waiting pvp game with a complete deck" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    assert_difference("Game.count", 1) do
+      assert_difference("GamePlayer.count", 1) do
+        post games_path, params: {
+          deck_id: deck.id,
+          mode: "pvp"
+        }
+      end
+    end
+
+    game = Game.order(:id).last
+
+    assert_redirected_to game_path(game)
+    assert game.waiting?
+    assert_nil game.state
+
+    game_player = game.game_players.first
+
+    assert_equal player, game_player.player
+    assert_equal deck, game_player.deck
+    assert_equal deck.nation, game_player.nation
+    assert_equal deck.headquarters_card, game_player.headquarters_card
+  end
+
+  test "player cannot create a game with another player's deck" do
+    player = create_player
+    other_player = create_player(email: "other@example.com")
+
+    deck = create_complete_deck(player: other_player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    assert_no_difference("Game.count") do
+      post games_path, params: {
+        deck_id: deck.id,
+        mode: "pvp"
+      }
+    end
+
+    assert_response :not_found
+  end
+
+  test "player cannot create a game with an incomplete deck" do
+    player = create_player
+
+    nation = Nation.create!(
+      name: "Incomplete Nation",
+      code: "incomplete_#{SecureRandom.hex(4)}"
+    )
+
+    headquarters_card = create_headquarters_card(nation: nation)
+
+    deck = Deck.create!(
+      player: player,
+      nation: nation,
+      name: "Incomplete Deck",
+      headquarters_card: headquarters_card
+    )
+
+    9.times do |index|
+      card = Card.create!(
+        code: "#{nation.code}_card_#{index}_#{SecureRandom.hex(4)}",
+        nation: nation,
+        name: "Test Card #{index}",
+        card_type: "order",
+        weight: 1,
+        price: 1
+      )
+
+      DeckCard.create!(
+        deck: deck,
+        card: card,
+        quantity: 1
+      )
+    end
+
+    assert_not deck.complete?
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    assert_no_difference("Game.count") do
+      post games_path, params: {
+        deck_id: deck.id,
+        mode: "pvp"
+      }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "joins an existing compatible waiting game and starts a complete game state" do
+    first_player = create_player
+    second_player = create_player(email: "second@example.com")
+
+    first_deck = create_complete_deck(player: first_player)
+    second_deck = create_complete_deck(player: second_player)
+
+    waiting_game = Game.create!(
+      status: "waiting",
+      state: nil
+    )
+
+    waiting_game.game_players.create!(
+      player: first_player,
+      nation: first_deck.nation,
+      deck: first_deck,
+      headquarters_card: first_deck.headquarters_card
+    )
+
+    post login_path, params: {
+      email: second_player.email,
+      password: "password"
+    }
+
+    assert_no_difference("Game.count") do
+      post games_path, params: {
+        deck_id: second_deck.id,
+        mode: "pvp"
+      }
+    end
+
+    waiting_game.reload
+
+    assert waiting_game.started?
+    assert_not_nil waiting_game.state
+    assert_equal 2, waiting_game.game_players.count
+    assert_redirected_to game_path(waiting_game)
+
+    state = waiting_game.state
+
+    assert_equal "started", state["status"]
+    assert_equal 1, state["turn_number"]
+
+    assert_includes(
+      [first_player.id.to_s, second_player.id.to_s],
+      state["current_player_id"].to_s
+    )
+
+    assert_equal(
+      [first_player.id.to_s, second_player.id.to_s].sort,
+      state["players"].keys.sort
+    )
+
+    assert_equal(
+      first_deck.nation_id,
+      state["players"][first_player.id.to_s]["nation_id"]
+    )
+
+    assert_equal(
+      second_deck.nation_id,
+      state["players"][second_player.id.to_s]["nation_id"]
+    )
+
+    assert_equal 6, state["players"][first_player.id.to_s]["hand"].size
+    assert_equal 6, state["players"][second_player.id.to_s]["hand"].size
+
+    assert_equal 4, state["players"][first_player.id.to_s]["deck"].size
+    assert_equal 4, state["players"][second_player.id.to_s]["deck"].size
+
+    assert_equal(
+      [2, 0],
+      find_object_coordinates(state, "headquarters", first_player.id.to_s)
+    )
+
+    assert_equal(
+      [0, 4],
+      find_object_coordinates(state, "headquarters", second_player.id.to_s)
+    )
+  end
+
+  test "rejects end turn while game is waiting" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    game = Game.create!(
+      status: "waiting",
+      state: nil
+    )
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    log_in(player)
+
+    assert_no_difference("Game.count") do
+      post end_turn_path(game)
+    end
+
+    assert_response :unprocessable_entity
+
+    game.reload
+
+    assert game.waiting?
+    assert_nil game.state
+  end
+
+  test "rejects attack while game is waiting" do
+    player = create_player
+    enemy = create_player(email: "enemy@example.com")
+
+    deck = create_complete_deck(player: player)
+    enemy_deck = create_complete_deck(player: enemy)
+
+    game = Game.create!(
+      status: "waiting",
+      state: nil
+    )
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    game.game_players.create!(
+      player: enemy,
+      nation: enemy_deck.nation,
+      deck: enemy_deck,
+      headquarters_card: enemy_deck.headquarters_card
+    )
+
+    log_in(player)
+
+    post attack_path(
+      game,
+      attacker_row: 1,
+      attacker_column: 1,
+      target_row: 1,
+      target_column: 2
+    )
+
+    assert_response :unprocessable_entity
+
+    game.reload
+
+    assert game.waiting?
+    assert_nil game.state
+  end
+
+  test "joining an existing waiting game refreshes other waiting rooms" do
+    first_player = create_player
+    second_player = create_player(email: "second@example.com")
+    third_player = create_player(email: "third@example.com")
+
+    first_deck = create_complete_deck(player: first_player)
+    second_deck = create_complete_deck(player: second_player)
+    third_deck = create_complete_deck(player: third_player)
+
+    waiting_game = Game.create!(
+      status: "waiting",
+      last_seen_at: Time.current
+    )
+
+    waiting_game.game_players.create!(
+      player: first_player,
+      nation: first_deck.nation,
+      deck: first_deck,
+      headquarters_card: first_deck.headquarters_card
+    )
+
+    other_waiting_game = Game.create!(
+      status: "waiting",
+      last_seen_at: Time.current
+    )
+
+    other_waiting_game.game_players.create!(
+      player: second_player,
+      nation: second_deck.nation,
+      deck: second_deck,
+      headquarters_card: second_deck.headquarters_card
+    )
+
+    # Делаем третью колоду совместимой с первой.
+    first_deck.deck_cards.first.card.update!(weight: 20)
+    third_deck.deck_cards.first.card.update!(weight: 20)
+
+    post login_path, params: {
+      email: third_player.email,
+      password: "password"
+    }
+
+    broadcasted_games = []
+
+    original_method = Turbo::StreamsChannel.method(:broadcast_refresh_to)
+
+    Turbo::StreamsChannel.define_singleton_method(:broadcast_refresh_to) do |game|
+      broadcasted_games << game
+    end
+
+    begin
+      post games_path, params: {
+        deck_id: third_deck.id,
+        mode: "pvp"
+      }
+    ensure
+      Turbo::StreamsChannel.define_singleton_method(
+        :broadcast_refresh_to,
+        original_method
+      )
+    end
+
+    waiting_game.reload
+    other_waiting_game.reload
+
+    assert waiting_game.started?
+    assert_equal 2, waiting_game.game_players.count
+
+    assert other_waiting_game.waiting?
+
+    assert_includes broadcasted_games, waiting_game
+    assert_includes broadcasted_games, other_waiting_game
+
+    assert_redirected_to game_path(waiting_game)
+  end
+
+  test "creates a waiting game when no compatible opponent exists" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    assert_difference("Game.count", 1) do
+      post games_path, params: {
+        deck_id: deck.id,
+        mode: "pvp"
+      }
+    end
+
+    game = Game.order(:id).last
+
+    assert game.waiting?
+    assert_nil game.state
+    assert_equal 1, game.game_players.count
+    assert_redirected_to game_path(game)
+  end
+
+  test "cancels own waiting game" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    game = Game.create!(status: "waiting")
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    assert_difference("Game.count", -1) do
+      delete cancel_waiting_game_path(game)
+    end
+
+    assert_redirected_to play_path
+    assert_not Game.exists?(game.id)
+  end
+
+  test "cannot cancel another player's waiting game" do
+    owner = create_player
+    player = create_player(email: "second@example.com")
+
+    deck = create_complete_deck(player: owner)
+
+    game = Game.create!(status: "waiting")
+
+    game.game_players.create!(
+      player: owner,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    assert_no_difference("Game.count") do
+      delete cancel_waiting_game_path(game)
+    end
+
+    assert_response :forbidden
+    assert Game.exists?(game.id)
+  end
+
+  test "cannot cancel a started game" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    game = Game.create!(
+      status: "started",
+      state: {}
+    )
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    assert_no_difference("Game.count") do
+      delete cancel_waiting_game_path(game)
+    end
+
+    assert_response :unprocessable_entity
+    assert Game.exists?(game.id)
+  end
+
+  test "waiting game renders turbo stream subscription" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    game = Game.create!(status: "waiting")
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    get game_path(game)
+
+    assert_response :success
+    assert_select "turbo-cable-stream-source"
+  end
+
+  test "waiting room shows weights of other waiting games" do
+    player = create_player
+    opponent = create_player(email: "opponent@example.com")
+    another_opponent = create_player(email: "another@example.com")
+
+    player_deck = create_complete_deck(player: player)
+    opponent_deck = create_complete_deck(player: opponent)
+    another_deck = create_complete_deck(player: another_opponent)
+
+    game = Game.create!(status: "waiting")
+
+    game.game_players.create!(
+      player: player,
+      nation: player_deck.nation,
+      deck: player_deck,
+      headquarters_card: player_deck.headquarters_card
+    )
+
+    opponent_game = Game.create!(status: "waiting")
+
+    opponent_game.game_players.create!(
+      player: opponent,
+      nation: opponent_deck.nation,
+      deck: opponent_deck,
+      headquarters_card: opponent_deck.headquarters_card
+    )
+
+    another_game = Game.create!(status: "waiting")
+
+    another_game.game_players.create!(
+      player: another_opponent,
+      nation: another_deck.nation,
+      deck: another_deck,
+      headquarters_card: another_deck.headquarters_card
+    )
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    get game_path(game)
+
+    assert_response :success
+
+    assert_select "li", minimum: 2
+    assert_select "li", text: "Вес: #{opponent_deck.weight}"
+    assert_select "li", text: "Вес: #{another_deck.weight}"
+  end
+
+  test "creating a waiting game refreshes other waiting rooms" do
+    first_player = create_player
+    second_player = create_player(email: "second@example.com")
+
+    first_deck = create_complete_deck(player: first_player)
+    second_deck = create_complete_deck(player: second_player)
+
+    waiting_game = Game.create!(status: "waiting")
+
+    waiting_game.game_players.create!(
+      player: first_player,
+      nation: first_deck.nation,
+      deck: first_deck,
+      headquarters_card: first_deck.headquarters_card
+    )
+
+    first_deck.deck_cards.first.card.update!(weight: 20)
+    second_deck.deck_cards.first.card.update!(weight: 1)
+
+    post login_path, params: {
+      email: second_player.email,
+      password: "password"
+    }
+
+    assert_difference("Game.count", 1) do
+      post games_path, params: {
+        deck_id: second_deck.id,
+        mode: "pvp"
+      }
+    end
+
+    created_game = Game
+      .where(status: "waiting")
+      .where.not(id: waiting_game.id)
+      .order(:id)
+      .last
+
+    assert_not_nil created_game
+    assert_redirected_to game_path(created_game)
+    assert waiting_game.reload.waiting?
+  end
+
+  private
+
+  def find_object_coordinates(state, type, player_id)
+    state["field"].each_with_index do |row, row_index|
+      row.each_with_index do |cell, column_index|
+        next unless cell
+        next unless cell["type"] == type
+        next unless cell["player_id"].to_s == player_id.to_s
+
+        return [row_index, column_index]
+      end
+    end
+
+    nil
+  end
 end

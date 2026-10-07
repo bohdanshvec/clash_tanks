@@ -36,6 +36,20 @@
   margin: 0;
 }
 
+.app-header__home {
+  display: inline-block;
+  margin-left: 16px;
+  padding: 6px 12px;
+  border: 1px solid #222;
+  border-radius: 6px;
+  text-decoration: none;
+  background: #eee;
+}
+
+.app-header__home:hover {
+  background: #ddd;
+} 
+
 /* ---------------------------------------------------------
    Верхняя часть
    --------------------------------------------------------- */
@@ -1419,4 +1433,27 @@
 .deck-card__card-preview .card__stats li {
   margin: 0;
   line-height: 1.05;
+}
+
+/* ---------------------------------------------------------
+   Stage 18 — выбор колоды для игры
+   --------------------------------------------------------- */
+
+.play-decks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.play-decks .deck-card {
+  width: 300px;
+  box-sizing: border-box;
+
+  padding: 18px;
+
+  border: 2px solid #222;
+  border-radius: 10px;
+
+  background: #fff;
 }

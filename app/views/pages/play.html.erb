@@ -4,7 +4,7 @@
   <h2>Мои колоды</h2>
 
   <% if @decks.any? %>
-    <div class="decks">
+    <div class="play-decks">
       <% @decks.each do |deck| %>
         <div class="deck-card">
           <h3><%= deck.name %></h3>
@@ -54,7 +54,7 @@
 <% else %>
   <h2>Стартовые колоды</h2>
 
-  <div class="decks">
+  <div class="play-decks">
     <% @starter_decks.each do |deck| %>
       <div class="deck-card">
         <h3><%= deck[:name] %></h3>
@@ -100,6 +100,3 @@
   </div>
 <% end %>
 
-<p>
-  <%= link_to "На главную", root_path %>
-</p>

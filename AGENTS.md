@@ -347,24 +347,27 @@ Technique не имеет Armor.
 - `email`
 - `name`
 - `password_digest`
+- `guest`
+- `last_seen_at`
 
-Email уникален. `name` необязателен.
+Email уникален.
+
+Player может быть:
+
+- зарегистрированным;
+- временным гостем.
+
+Методы:
 
 ```ruby
-class Player < ApplicationRecord
-  has_secure_password
-
-  has_many :game_players
-  has_many :games, through: :game_players
-  has_many :decks, dependent: :destroy
-
-  validates :email, presence: true, uniqueness: true
-
-  def display_name
-    name.presence || email.split("@").first
-  end
-end
+player.guest?
+player.registered?
+player.display_name
 ```
+
+Гость остаётся обычным `Player` с нормальным `player_id`.
+
+Guest identity не является отдельным игровым Engine и не создаёт отдельную систему правил.
 
 `Player` не использует `dependent: :destroy` для `game_players`, чтобы удаление игрока не уничтожало игровую историю автоматически.
 
@@ -385,51 +388,6 @@ last_seen_at
 ```
 
 Оно предназначено только для контроля активности waiting room и не является частью `GameState`.
-
-### Card
-
-Типы:
-
-- `headquarters`
-- `technique`
-- `order`
-- `platoon`
-
-Поля:
-
-- `code`
-- `name`
-- `nation`
-- `card_type`
-- `weight`
-- `price`
-
-`code` — стабильный уникальный машинный идентификатор.
-
-### Platoon
-
-Поля:
-
-- `firepower`
-- `hp`
-- `armor`
-- `fuel`
-
-### GamePlayer
-
-Связывает:
-
-- `Game`
-- `Player`
-- `Nation`
-- `Deck`
-- выбранный HQ card
-
-Уникальность:
-
-```text
-game_id + player_id
-```
 
 ---
 
@@ -550,17 +508,9 @@ StarterDecks::Create::STARTER_DECKS
 
 `StarterDecks::Create.call(player)` создаёт три постоянных Deck для зарегистрированного игрока.
 
-Регистрация выполняет:
+При создании гостя также создаются три starter Deck.
 
-```text
-Player
- ↓
-StarterDecks::Create
- ↓
-3 starter Deck
-```
-
-Создание `Player` и стартовых Deck выполняется внутри одной transaction.
+Регистрация и создание гостя создают `Player` и starter Deck внутри одной transaction.
 
 Seed не создаёт Player и Deck.
 
@@ -1406,7 +1356,7 @@ Stage 17 **завершён**.
 - Deck Weight;
 - HQ для Deck;
 - `StarterDecks::Create`;
-- starter Deck при регистрации;
+- starter Deck при регистрации и создании гостя;
 - публичный каталог Cards;
 - `/decks`;
 - список собственных Deck;
@@ -1444,6 +1394,12 @@ get "decks", to: "pages#decks", as: :decks
 ```
 
 `/decks` остаётся страницей управления Deck и не является страницей запуска игры.
+
+Гость может просматривать starter Deck, но не может:
+
+- создавать Deck;
+- редактировать Deck;
+- удалять Deck.
 
 ---
 
@@ -1593,58 +1549,62 @@ STALE_AFTER = 30.seconds
 
 ## 32. Stage 18 — Waiting / Started
 
-Stage 18 **ЕЩЁ НЕ ЗАВЕРШЁН**.
+### Статус
 
-На данный момент реализована значительная часть waiting → started flow.
+Stage 18 — **В ПРОЦЕССЕ. НЕ ЗАВЕРШЁН.**
 
-### Текущий flow PvP
+Основная инфраструктура waiting → started уже реализована и проверена браузером. Оставшаяся работа Stage 18 в основном относится к завершению тестового покрытия, проверке интеграционного lifecycle и финальной фиксации всех гарантий.
+
+Stage 18 не следует считать завершённым только потому, что matchmaking уже работает в браузере.
+
+### 32.1. Реализованный PvP flow
 
 ```text
-authenticated player
-        ↓
+Player / Guest
+      ↓
 /play
-        ↓
+      ↓
 выбор полной Deck
-        ↓
+      ↓
 «В бой — PvP»
-        ↓
+      ↓
 FindOpponent
-        ├── соперник найден
-        │       ↓
-        │     Join
-        │       ↓
-        │   StartGame
-        │       ↓
-        │     game
-        │
-        └── соперник не найден
-                ↓
-          Game(status: waiting)
-                +
-          первый GamePlayer
-                ↓
-          waiting room
-                ├── соперник найден
-                │      ↓
-                │    Join
-                │      ↓
-                │  StartGame
-                │
-                └── отмена ожидания
-                       ↓
-                  удаление Game
+      ├── соперник найден
+      │       ↓
+      │     Join
+      │       ↓
+      │   StartGame
+      │       ↓
+      │    started
+      │
+      └── соперник не найден
+              ↓
+        Game(status: waiting)
+              +
+        первый GamePlayer
+              ↓
+         waiting room
+              ├── соперник найден
+              │      ↓
+              │    Join
+              │      ↓
+              │  StartGame
+              │
+              └── отмена ожидания
+                     ↓
+                удаление Game
 ```
 
-### /play
+### 32.2. /play
 
-Для авторизованного игрока показываются только полные Deck.
+Для зарегистрированного игрока и гостя доступны starter/собственные Deck согласно текущему lifecycle.
 
-Для каждой полной Deck доступны:
+Для полной Deck доступны:
 
-- В бой — PvP
-- В бой — ИИ
+- В бой — PvP;
+- В бой — ИИ.
 
-На текущем этапе:
+На Stage 18:
 
 - PvP реализуется;
 - AI режим не реализован;
@@ -1652,16 +1612,22 @@ FindOpponent
 
 На `/decks` кнопки «В бой» нет.
 
-### GamesController#create
+Выбор Deck для запуска игры выполняется через:
+
+```text
+/play
+```
+
+### 32.3. GamesController#create
 
 Для PvP:
 
-1. проверяется `current_player`;
+1. определяется текущий `Player`;
 2. проверяется `mode == "pvp"`;
 3. находится Deck текущего игрока;
 4. проверяется `deck.complete?`;
 5. выполняется stale waiting cleanup;
-6. проверяется, нет ли уже собственного waiting game;
+6. проверяется наличие собственной waiting game;
 7. вызывается `Matchmaking::FindOpponent`;
 8. при найденном сопернике вызывается `Matchmaking::Join`;
 9. если соперник не найден — создаётся новая waiting game;
@@ -1669,7 +1635,7 @@ FindOpponent
 
 Если у игрока уже есть собственная waiting game, новый waiting game не создаётся.
 
-### Waiting Game
+### 32.4. Waiting Game
 
 Waiting game содержит:
 
@@ -1681,7 +1647,23 @@ last_seen_at = current time
 
 Имеет только одного `GamePlayer`.
 
-### Waiting room
+Важно:
+
+```text
+waiting + state == nil
+```
+
+— это именно состояние ожидания соперника.
+
+Контроллеры не должны передавать такую игру в `GameEngine` как обычную игровую партию.
+
+Для этого в `GamesController` перед выполнением игровых Actions выполняется проверка waiting boundary (границы waiting-состояния).
+
+В частности, `end_turn` и `attack` не должны вызывать Engine для waiting game с `state == nil`; запрос отклоняется на уровне controller boundary.
+
+При этом проверка доступа к игре выполняется до проверки waiting boundary, чтобы чужой игрок получил 403, а не 422.
+
+### 32.5. Waiting room
 
 Waiting room показывает:
 
@@ -1701,7 +1683,7 @@ Waiting room показывает:
 
 Список waiting games используется только для визуальной информации о доступных Weight и не превращается в ручной выбор комнаты.
 
-### Cancel waiting
+### 32.6. Cancel waiting
 
 Endpoint:
 
@@ -1722,7 +1704,7 @@ DELETE /games/:id/cancel_waiting
 - его `GamePlayer` удаляется через `dependent: :destroy`;
 - остальные waiting rooms получают refresh.
 
-### Waiting heartbeat
+### 32.7. Waiting heartbeat
 
 Endpoint:
 
@@ -1740,111 +1722,628 @@ last_seen_at = Time.current
 
 После этого выполняется stale cleanup.
 
-### Turbo refresh
+Heartbeat отправляется из:
 
-При создании новой waiting game обновляются другие waiting rooms.
+```text
+app/javascript/controllers/waiting_room_controller.js
+```
+
+примерно каждые 10 секунд.
+
+### 32.8. Stale waiting cleanup
+
+Сервис:
+
+```text
+Matchmaking::CleanupStaleWaitingGames
+```
+
+Текущий предел:
+
+```ruby
+STALE_AFTER = 30.seconds
+```
+
+Правила:
+
+- stale waiting game удаляется;
+- fresh waiting game сохраняется;
+- `started` game не удаляется;
+- `finished` game не удаляется;
+- `last_seen_at == nil` не считается stale.
+
+В браузере уже проверялось:
+
+- heartbeat;
+- потеря waiting browser session;
+- последующее удаление stale waiting game.
+
+### 32.9. Matchmaking уже реализован
+
+`Matchmaking::FindOpponent`:
+
+- допускает Weight в пределах ±15%;
+- выбирает ближайший Weight;
+- при одинаковой разнице выбирает более старую waiting game;
+- исключает самого игрока;
+- работает только с waiting games;
+- работает только с games, содержащими одного `GamePlayer`.
+
+`Matchmaking::Join`:
+
+- использует row lock (`with_lock`);
+- проверяет, что `Game` всё ещё `waiting`;
+- проверяет одного участника;
+- не позволяет игроку присоединиться повторно;
+- создаёт второго `GamePlayer`;
+- вызывает `GameEngine::StartGame`.
+
+После Join:
+
+```text
+waiting
+  ↓
+2 GamePlayers
+  ↓
+StartGame
+  ↓
+started
+```
+
+### 32.10. Turbo refresh
+
+При создании waiting game обновляются другие waiting rooms.
 
 При успешном Join:
 
 - started game получает `broadcast_game_refresh`;
 - остальные waiting games получают `broadcast_waiting_games_refresh`.
 
-Это необходимо, чтобы список ожидающих игроков в уже открытых browser sessions обновлялся без ручного reload.
+Это уже проверялось в браузере.
 
-### Проверено в браузере
+### 32.11. Что ОБЯЗАТЕЛЬНО доделать в Stage 18
 
-Проверен сценарий с несколькими browser sessions и Weight:
+#### 1. Завершить тестирование waiting → started lifecycle
+
+Нужен полноценный integration/controller flow:
 
 ```text
-14
-23
-24
+Player A
+ ↓
+/play
+ ↓
+create waiting
+ ↓
+Player B
+ ↓
+/play
+ ↓
+FindOpponent
+ ↓
+Join
+ ↓
+StartGame
+ ↓
+started
+ ↓
+GET game
 ```
 
-Проверено:
+Нужно проверить не только HTTP response, но и состояние базы.
 
-- создание waiting games;
-- отображение других ожидающих игроков;
-- matchmaking;
-- присоединение игрока 24 к игроку 23;
-- переход game в `started`;
-- обновление других waiting rooms без ручного reload;
-- heartbeat;
-- удаление stale waiting game после закрытия browser session.
-
-### Текущие ограничения Stage 18
-
-Пока не завершено:
-
-1. Полностью покрыть тестами waiting → started flow.
-2. Проверить и зафиксировать тестами структуру созданного `GameState`.
-3. Проверить тестами, что оба `GamePlayer` корректно созданы после matchmaking.
-4. Проверить тестами, что hidden hand не раскрывается после `StartGame`.
-5. Проверить тестами, что игровые Actions отклоняются для waiting game.
-6. Проверить все пути завершения игры:
-   - `headquarters_destroyed`;
-   - `time_expired`;
-   - `empty_deck_damage`;
-   - `surrender`.
-7. Проверить для каждого завершения:
-   - `Game.status == finished`;
-   - корректный `state["result"]`;
-   - корректный winner/loser;
-   - корректная причина;
-   - `AvailableActions == {}` / пустой результат;
-   - последующие Actions отклоняются.
-8. Проверить полный browser flow:
-   - `/play`;
-   - выбор Deck;
-   - waiting;
-   - второй игрок;
-   - started;
-   - первая игровая страница.
-9. Проверить все edge cases matchmaking:
-   - несовместимый Weight;
-   - несколько совместимых waiting games;
-   - одинаковая разница Weight;
-   - повторная попытка Join;
-   - race condition.
-10. Проверить поведение при закрытии/обрыве waiting browser session.
-11. Отдельно реализовать вход в игру гостем.
-
-### Guest game — важно
-
-Гостевой просмотр `/play` и `/decks` существует, но гостевой вход непосредственно в игру сейчас **НЕ реализован**.
-
-Гость не может пройти текущий PvP flow, потому что:
+После Join должно быть:
 
 ```text
-GamePlayer
-    ↓
-belongs_to Player
+Game.status == "started"
+Game.state != nil
+Game.game_players.count == 2
 ```
 
-а текущая идентификация игры использует:
+#### 2. Проверить структуру GameState после StartGame
+
+Тестами проверить минимум:
+
+- `status`;
+- `turn_number`;
+- `current_player_id`;
+- `turn_started_at`;
+- `players`;
+- `field`;
+- оба HQ;
+- руки обоих игроков;
+- deck;
+- graveyard;
+- platoons;
+- resources;
+- remaining_time.
+
+Особенно проверить, что первый игрок определяется корректно и получает стартовый Fuel.
+
+#### 3. Проверить количество и принадлежность GamePlayer
+
+После успешного Join:
 
 ```text
+game.game_players.count == 2
+```
+
+Проверить:
+
+- первый Player сохранился;
+- второй Player добавлен;
+- у каждого правильный `nation_id`;
+- у каждого правильный `deck_id`;
+- у каждого правильный `headquarters_card`.
+
+#### 4. Проверить hidden information после StartGame
+
+Это важная граница Stage 18.
+
+Для каждого игрока необходимо проверить `VisibleState`.
+
+Игрок должен видеть:
+
+```text
+свою hand
+```
+
+но не должен видеть:
+
+```text
+hand соперника
+deck соперника
+порядок deck соперника
+graveyard соперника
+```
+
+Проверять нужно не только HTML, но и сам `VisibleState`.
+
+#### 5. Проверить Actions для waiting game
+
+Уже добавлены controller tests для важных случаев.
+
+В частности, waiting game с:
+
+```text
+status = waiting
+state = nil
+```
+
+не должна передаваться в Engine как обычная игра.
+
+Проверить как минимум:
+
+- `end_turn`;
+- `attack`.
+
+Также проверить остальные игровые Actions, если они доступны непосредственно через controller:
+
+- `play_card`;
+- `move`;
+- другие Actions, появляющиеся в текущем lifecycle.
+
+При этом важно сохранять порядок проверок:
+
+```text
+1. доступ игрока к Game
+2. waiting boundary
+3. GameEngine
+```
+
+Чужой игрок должен получать 403, а участник waiting game — 422.
+
+#### 6. Завершение игры — полный integration coverage
+
+Stage 18 должен проверить все четыре причины:
+
+```text
+headquarters_destroyed
+time_expired
+empty_deck_damage
+surrender
+```
+
+Для каждого сценария проверить:
+
+```text
+Game.status == finished
+```
+
+и:
+
+```text
+state["result"]["winner_id"]
+state["result"]["loser_id"]
+state["result"]["reason"]
+```
+
+Причина должна соответствовать реальному способу завершения.
+
+#### 7. Проверить поведение после finished
+
+После каждой причины завершения проверить:
+
+- `AvailableActions` пуст;
+- новый Action отклоняется;
+- `Game.state` не возвращается в `started`;
+- `result` сохраняется;
+- winner/loser не меняются новым запросом.
+
+Проверить несколько Action endpoints, а не только один.
+
+#### 8. Проверить Finished UI / VisibleState
+
+После завершения:
+
+```text
+VisibleState
+ ↓
+result
+ ↓
+available_actions = {}
+```
+
+Проверить:
+
+- winner;
+- loser;
+- reason;
+- отсутствие доступных игровых Actions;
+- отсутствие раскрытия hidden information.
+
+#### 9. Дополнить Matchmaking service tests
+
+Нужно проверить не просто наличие тестов, а фактическое покрытие требований.
+
+##### FindOpponent
+
+Обязательные сценарии:
+
+- точное совпадение Weight;
+- допустимая граница +15%;
+- допустимая граница -15%;
+- значение за пределами допуска;
+- несколько подходящих игр;
+- выбор минимальной разницы;
+- одинаковая разница;
+- выбор более старой waiting game;
+- исключение собственной игры;
+- исключение игр с двумя игроками;
+- исключение `started`;
+- исключение `finished`.
+
+##### Join
+
+Проверить:
+
+- успешный Join;
+- второй `GamePlayer`;
+- `StartGame`;
+- waiting → started;
+- повторный Join;
+- Join уже started game;
+- Join при двух игроках;
+- Join самим участником;
+- race-condition protection.
+
+##### Cleanup
+
+Проверить:
+
+- stale waiting удаляется;
+- fresh waiting сохраняется;
+- started сохраняется;
+- finished сохраняется;
+- `last_seen_at == nil` сохраняется.
+
+#### 10. Проверить race conditions
+
+Особенно важно для:
+
+```text
+FindOpponent
++
+Join
++
+StartGame
+```
+
+Два игрока не должны одновременно получить одну и ту же waiting game в состоянии, где оба считают себя вторым игроком.
+
+Join должен оставаться защищённым `with_lock`.
+
+Не переносить эту защиту в JavaScript.
+
+#### 11. Проверить полный browser lifecycle
+
+Финальная браузерная проверка Stage 18 должна включать:
+
+```text
+Player A
+ ↓
+/play
+ ↓
+выбор Deck
+ ↓
+PvP
+ ↓
+waiting room
+
+Player B
+ ↓
+/play
+ ↓
+выбор Deck
+ ↓
+PvP
+ ↓
+Join
+
+A + B
+ ↓
+started game
+ ↓
+GET /games/:id
+ ↓
+первая игровая страница
+ ↓
+игровые Actions
+```
+
+Проверить минимум:
+
+- две независимые browser sessions;
+- разные Players;
+- правильные Deck;
+- waiting;
+- Join;
+- started;
+- отображение собственной/чужой информации;
+- hidden information;
+- первый ход;
+- возможность выполнить обычный Action.
+
+#### 12. Проверить waiting browser disconnect
+
+Уже проверен сценарий stale cleanup после закрытия browser session.
+
+В Stage 18 необходимо зафиксировать тестом/документацией ожидаемое поведение:
+
+```text
+waiting room
+ ↓
+heartbeat прекращён
+ ↓
+last_seen_at становится stale
+ ↓
+CleanupStaleWaitingGames
+ ↓
+Game удаляется
+```
+
+Важно не пытаться определять закрытие браузера напрямую.
+
+Источник истины для активности waiting room:
+
+```text
+last_seen_at
+```
+
+#### 13. Проверить Turbo refresh
+
+Финально проверить:
+
+##### Создание waiting
+
+Открытая waiting room другого игрока получает refresh.
+
+##### Join
+
+После присоединения:
+
+- участники получают started game;
+- остальные waiting rooms обновляются;
+- исчезнувшая waiting game не остаётся в списке.
+
+##### Cleanup
+
+После удаления stale waiting game остальные waiting rooms обновляются.
+
+#### 14. Проверить guest lifecycle
+
+Гостевой lifecycle уже реализован.
+
+Это важно: старое утверждение о том, что гостевой вход в игру не реализован, больше не актуально.
+
+Текущая архитектура:
+
+```text
+guest /play
+      ↓
+ensure_guest_player!
+      ↓
+temporary Player
+      ↓
+3 starter Deck
+      ↓
 session[:player_id]
-        ↓
-current_player
-        ↓
+      ↓
+/play
+      ↓
+PvP
+      ↓
 GamePlayer
+      ↓
+Matchmaking
+      ↓
+StartGame
 ```
 
-Поэтому нельзя считать гостевой режим реализованным только потому, что гость видит starter Deck.
+Гость остаётся обычным `Player` для игрового Engine.
 
-Нужно отдельно спроектировать и реализовать гостевой lifecycle.
+Engine не знает о различии guest/registered.
 
-При этом нельзя:
+##### Реализовано
 
-- подменять гостя постоянным `Player`;
-- использовать `?player_id=`;
-- использовать dev player как гостя;
-- хранить `GameState` в session/cookies;
-- нарушать существующую модель скрытой информации;
-- обходить `GamePlayer`/Engine архитектуру без отдельного решения.
+- гость создаётся непосредственно при входе на `/play`;
+- публичный `/decks` сам по себе не создаёт гостя;
+- гостю создаются ровно 3 starter Deck;
+- повторный `/play` использует существующего гостя;
+- гость может начать игру;
+- guest vs guest работает;
+- guest vs registered работает;
+- guest может играть несколько игр;
+- guest Deck нельзя создавать/редактировать/удалять;
+- guest `/statistics` запрещён;
+- guest game history не требуется;
+- guest cleanup основан на `Player.last_seen_at`;
+- активные waiting/started games должны защищать гостя от cleanup;
+- Engine работает с обычным `player_id`.
 
-Архитектура гостевой игры должна быть сначала определена, затем зафиксирована в `AGENTS.md`, а если появляются новые игровые правила — в `GAME_RULES.md`.
+##### Browser verification
+
+Уже проверены:
+
+- guest `/play`;
+- waiting room;
+- guest vs guest;
+- guest vs registered;
+- registered vs registered;
+- surrender;
+- HQ destruction.
+
+##### Что ещё проверить для guest
+
+Перед закрытием Stage 18 проверить тестами:
+
+- создание guest Player;
+- повторное использование guest Player;
+- создание ровно трёх starter Deck;
+- отсутствие guest при простом открытии публичного `/decks`;
+- guest может создать waiting game;
+- guest может Join;
+- guest vs guest;
+- guest vs registered;
+- guest не может изменять Deck;
+- guest не имеет доступа к statistics;
+- guest cleanup;
+- защита активного waiting/started guest game от cleanup;
+- завершённые guest games не ломают lifecycle.
+
+Не создавать отдельный Engine для гостей.
+
+Не использовать:
+
+```text
+?player_id=
+```
+
+Не хранить `GameState` в session/cookies.
+
+### 32.12. Критерии завершения Stage 18
+
+Stage 18 можно считать завершённым только когда выполнены все пункты:
+
+#### Lifecycle
+
+```text
+/play
+ ↓
+Deck
+ ↓
+waiting
+ ↓
+Join
+ ↓
+StartGame
+ ↓
+started
+ ↓
+Game page
+```
+
+#### Matchmaking
+
+- ±15%;
+- closest Weight;
+- oldest tie-break;
+- self exclusion;
+- waiting-only;
+- one-player-only;
+- Join lock;
+- повторный Join отклоняется.
+
+#### GameState
+
+- корректный `StartGame`;
+- два игрока;
+- два HQ;
+- корректные hands;
+- корректные decks;
+- первый игрок;
+- стартовый Fuel;
+- hidden information.
+
+#### Waiting
+
+- `state == nil`;
+- waiting Actions отклоняются;
+- cancel работает;
+- heartbeat работает;
+- stale cleanup работает.
+
+#### Finished
+
+Все причины:
+
+```text
+headquarters_destroyed
+time_expired
+empty_deck_damage
+surrender
+```
+
+Для всех:
+
+- finished;
+- result;
+- winner;
+- loser;
+- reason;
+- empty `AvailableActions`;
+- дальнейшие Actions запрещены.
+
+#### Guest
+
+- guest creation;
+- guest authentication;
+- guest waiting;
+- guest Join;
+- guest vs guest;
+- guest vs registered;
+- guest Deck restrictions;
+- guest cleanup.
+
+#### Browser
+
+Проверен полный lifecycle в двух независимых sessions.
+
+#### Tests
+
+После завершения Stage 18:
+
+```bash
+bin/rails test
+```
+
+должен завершаться:
+
+```text
+0 failures
+0 errors
+```
+
+Нельзя считать Stage 18 завершённым только по количеству тестов. Важны проверяемые архитектурные границы и полный lifecycle.
 
 ---
 
@@ -1897,10 +2396,11 @@ post "games/:id/waiting_heartbeat",
 
 ### Matchmaking tests
 
-Проверяются:
+Проверять:
 
 - поиск совместимого соперника;
 - допуск ±15%;
+- обе границы допуска;
 - несовместимый Weight;
 - приоритет минимальной разницы Weight;
 - при равной разнице — более старая waiting game;
@@ -1910,19 +2410,21 @@ post "games/:id/waiting_heartbeat",
 
 ### Join tests
 
-Проверяются:
+Проверять:
 
 - успешное присоединение;
 - создание второго `GamePlayer`;
 - запуск `StartGame`;
 - переход waiting → started;
+- корректный `GameState`;
 - защита от повторного Join;
 - защита от игры, которая уже `started`;
+- защита игры с двумя участниками;
 - race-condition protection.
 
 ### Cleanup tests
 
-Проверяются:
+Проверять:
 
 - stale waiting game удаляется;
 - fresh waiting game сохраняется;
@@ -1932,7 +2434,7 @@ post "games/:id/waiting_heartbeat",
 
 ### GamesController tests
 
-Проверяются:
+Проверять:
 
 - создание waiting PvP game;
 - невозможность начать игру с incomplete Deck;
@@ -1949,41 +2451,58 @@ post "games/:id/waiting_heartbeat",
 - heartbeat;
 - hidden information;
 - Actions в waiting game;
-- переход waiting → started.
+- переход waiting → started;
+- корректную controller boundary для `waiting + state == nil`.
+
+### Guest tests
+
+Проверять:
+
+- guest creation;
+- повторное использование гостя;
+- starter Deck;
+- guest PvP;
+- guest vs guest;
+- guest vs registered;
+- guest Deck restrictions;
+- guest statistics restriction;
+- guest cleanup;
+- защита активных guest games от cleanup.
 
 ### Finished game tests
 
-Нужно добавить/проверить integration tests для:
+Проверять:
 
 - HQ destroyed;
 - time expired;
 - empty deck damage;
 - surrender;
-- запрета любых последующих Actions;
-- пустого `AvailableActions`;
-- корректного `result`.
+- `status == finished`;
+- корректный `state["result"]`;
+- корректный winner/loser;
+- корректную reason;
+- пустой `AvailableActions`;
+- запрет любых последующих Actions.
 
-### Текущая полная проверка
+### Integration tests
 
-Последний результат:
-
-```bash
-bin/rails test
-```
-
-```text
-409 runs, 1206 assertions, 0 failures, 0 errors, 0 skips
-```
-
-Controller tests:
-
-```bash
-bin/rails test test/controllers/games_controller_test.rb
-```
+Обязательно иметь хотя бы один тест полного lifecycle:
 
 ```text
-21 runs, 100 assertions, 0 failures, 0 errors, 0 skips
+create waiting
+ ↓
+join
+ ↓
+StartGame
+ ↓
+started
+ ↓
+GET game
+ ↓
+VisibleState
 ```
+
+и отдельные тесты завершения игры.
 
 ---
 
@@ -2112,7 +2631,8 @@ Game Engine не зависит от Ollama.
 - хранить matchmaking metadata в `GameState`;
 - считать `last_seen_at` частью игровых правил;
 - удалять `started` или `finished` games через waiting cleanup;
-- считать гостевой просмотр starter Deck гостевой игровой сессией.
+- считать гостевой просмотр starter Deck гостевой игровой сессией;
+- создавать отдельный Engine или отдельную игровую систему для гостей.
 
 ---
 
@@ -2155,6 +2675,8 @@ Game Engine не зависит от Ollama.
 
 ### Stage 17
 
+**ЗАВЕРШЁН.**
+
 Завершены:
 
 - Deck model;
@@ -2163,6 +2685,7 @@ Game Engine не зависит от Ollama.
 - HQ для Deck;
 - `StarterDecks::Create`;
 - starter Deck при регистрации;
+- starter Deck при создании гостя;
 - публичный каталог Cards;
 - `/decks`;
 - список собственных Deck;
@@ -2176,7 +2699,7 @@ Game Engine не зависит от Ollama.
 - Deck preview;
 - Deck tests;
 - controller tests;
-- проверка UI в браузере.
+- browser UI.
 
 ### Stage 18
 
@@ -2184,121 +2707,141 @@ Game Engine не зависит от Ollama.
 
 Уже реализовано:
 
-- `/play` для авторизованного игрока;
+- `/play`;
 - выбор полной Deck;
-- «В бой — PvP»;
-- «В бой — ИИ» как UI-кнопка, но AI ещё не реализован;
-- создание `Game(status: waiting)`;
+- PvP;
+- UI-кнопка AI;
+- создание waiting game;
 - первый `GamePlayer`;
 - waiting page;
 - `Matchmaking::FindOpponent`;
 - matchmaking по Weight ±15%;
-- приоритет ближайшего Weight;
-- приоритет более старой waiting game при одинаковой разнице;
+- выбор ближайшего Weight;
+- tie-break по возрасту waiting game;
 - `Matchmaking::Join`;
-- row lock при Join;
-- создание второго `GamePlayer`;
-- существующий `StartGame`;
-- переход waiting → started;
+- row lock;
+- второй `GamePlayer`;
+- `StartGame`;
+- waiting → started;
 - cancel waiting;
 - waiting heartbeat;
 - stale waiting cleanup;
 - Turbo refresh waiting rooms;
-- browser testing matchmaking;
-- browser testing waiting cleanup;
-- тесты controller для waiting/matchmaking;
-- тест на refresh других waiting rooms после Join.
+- guest creation;
+- guest starter Deck;
+- guest PvP;
+- guest vs guest;
+- guest vs registered;
+- guest Deck restrictions;
+- browser testing основных guest/matchmaking сценариев;
+- controller tests для waiting/matchmaking;
+- controller boundary для waiting `state == nil`.
 
-Последняя полная проверка:
+### Последняя полная проверка
+
+Последний зафиксированный результат:
 
 ```bash
 bin/rails test
 ```
 
 ```text
-409 runs, 1206 assertions, 0 failures, 0 errors, 0 skips
+417 runs, 1256 assertions, 0 failures, 0 errors, 0 skips
 ```
 
-### Что осталось сделать в Stage 18
+Controller tests:
 
-1. Integration tests для полного waiting → started lifecycle.
-2. Проверка структуры `GameState` после `StartGame`.
-3. Проверка двух `GamePlayer`.
-4. Проверка скрытой руки после `StartGame`.
-5. Проверка запрета Actions для waiting game.
-6. Полное покрытие завершения игры:
-   - `headquarters_destroyed`;
-   - `time_expired`;
-   - `empty_deck_damage`;
-   - `surrender`.
-7. Проверка после каждого завершения:
-   - `status == finished`;
-   - `result`;
-   - winner;
-   - loser;
-   - reason;
-   - пустые `AvailableActions`;
-   - отклонение последующих Actions.
-8. Полный browser flow waiting → started → игровая страница.
-9. Дополнительные edge cases matchmaking.
-10. Проверка race conditions.
-11. Проверка stale cleanup при реальном закрытии/потере waiting browser session.
-12. Спроектировать и реализовать вход в игру гостем.
-
-### Guest mode — отдельная незавершённая задача
-
-Сейчас:
+```bash
+bin/rails test test/controllers/games_controller_test.rb
+```
 
 ```text
-Гость
+23 runs, 121 assertions, 0 failures, 0 errors, 0 skips
+```
+
+Эти результаты являются последней контрольной точкой перед дальнейшим расширением Stage 18.
+
+### Что осталось в Stage 18
+
+Главные оставшиеся задачи:
+
+1. Закончить integration tests полного waiting → started lifecycle.
+2. Закрепить тестами структуру `GameState` после `StartGame`.
+3. Закрепить тестами двух `GamePlayer`.
+4. Закрепить тестами hidden information после `StartGame`.
+5. Завершить проверку Actions для waiting games.
+6. Дополнить тесты всех четырёх причин завершения.
+7. Проверить post-finish invariants.
+8. Проверить пустые `AvailableActions` после завершения.
+9. Проверить отклонение последующих Actions.
+10. Дополнить edge cases Matchmaking.
+11. Проверить race-condition protection.
+12. Дополнить тесты guest lifecycle.
+13. Финально проверить полный browser lifecycle.
+14. Финально проверить Turbo refresh.
+15. После выполнения всех пунктов повторно запустить весь test suite и обновить этот checkpoint.
+
+### Guest mode
+
+Guest mode больше не является незавершённой функцией входа в игру.
+
+Гостевая игра уже реализована.
+
+Текущий lifecycle:
+
+```text
+guest
  ↓
 /play
  ↓
-starter Deck
-```
-
-работает только как просмотр.
-
-Гость не может начать реальную игру.
-
-Причина:
-
-```text
-GamePlayer → Player
-```
-
-и текущий игровой lifecycle требует:
-
-```text
+ensure_guest_player!
+ ↓
+temporary Player
+ ↓
+3 starter Deck
+ ↓
 session[:player_id]
  ↓
-current_player
+PvP
+ ↓
+waiting / Join
  ↓
 GamePlayer
+ ↓
+StartGame
+ ↓
+started game
 ```
 
-Это необходимо считать незавершённой частью Stage 18, а не считать гостевой режим реализованным через наличие гостевых Deck на `/play` или `/decks`.
+Гость использует тот же:
 
-Перед реализацией гостевой игры необходимо определить архитектуру guest identity (идентификация гостя) так, чтобы:
+- `Player`
+- `GamePlayer`
+- Matchmaking
+- `GameEngine`
+- `GameState`
+- `VisibleState`
 
-- гость мог участвовать в реальной партии;
-- сохранялась текущая архитектура Engine;
-- Engine получал нормальный `player_id`;
-- hidden information сохранялась;
-- `GameState` оставался authoritative;
-- session не становилась `GameState`;
-- не использовался `?player_id=`;
-- не создавался постоянный dev `Player`;
-- не нарушалась история завершённых игр.
+что и зарегистрированный игрок.
 
-Архитектурное решение сначала зафиксировать в `AGENTS.md`.
+Engine не различает guest/registered.
 
-### Текущее состояние
+#### Guest restrictions
 
-- Stage 15 — **ЗАВЕРШЁН**
-- Stage 16 — **ЗАВЕРШЁН**
-- Stage 17 — **ЗАВЕРШЁН**
-- Stage 18 — **В ПРОЦЕССЕ**
+Гость:
+
+- может играть;
+- может иметь несколько игр;
+- может участвовать в guest vs guest;
+- может играть против зарегистрированного игрока;
+- не может создавать Deck;
+- не может редактировать Deck;
+- не может удалять Deck;
+- не имеет `/statistics`;
+- не создаётся просто при открытии публичного `/decks`;
+- очищается по inactivity lifecycle, а не по закрытию браузера напрямую.
+
+Активные waiting/started games должны защищать гостя от преждевременного cleanup.
 
 ---
 
@@ -2383,6 +2926,24 @@ FindOpponent
     StartGame
 ```
 
+### Guest
+
+```text
+Guest / registered identity
+          ↓
+     current_player
+          ↓
+       GamePlayer
+          ↓
+   Action.player_id
+          ↓
+      GameEngine
+          ↓
+       GameState
+```
+
+Guest не имеет отдельного игрового Engine.
+
 ### AI
 
 ```text
@@ -2396,24 +2957,6 @@ GameEngine
     ↓
 GameState
 ```
-
-### Guest
-
-Будущая архитектура должна сохранить общий игровой поток:
-
-```text
-Guest identity
-      ↓
-GamePlayer
-      ↓
-Action.player_id
-      ↓
-GameEngine
-      ↓
-GameState
-```
-
-Гостевая идентификация не должна создавать второй игровой Engine или отдельную систему правил.
 
 ### Event propagation
 

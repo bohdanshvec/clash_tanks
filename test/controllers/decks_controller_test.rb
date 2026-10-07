@@ -11,13 +11,13 @@ class DecksControllerTest < ActionDispatch::IntegrationTest
   test "guest is redirected from new deck" do
     get new_deck_path
 
-    assert_redirected_to root_path
+    assert_redirected_to login_path
   end
 
   test "guest is redirected from edit deck" do
     get edit_deck_path(@deck)
 
-    assert_redirected_to root_path
+    assert_redirected_to login_path
   end
 
   test "logged in player can access new deck" do
@@ -232,5 +232,55 @@ end
 		end
 
 		assert_response :not_found
+	end
+	
+	test "guest cannot open new deck page" do
+		get play_path
+
+		get new_deck_path
+
+		assert_response :forbidden
+	end
+
+	test "guest cannot edit a deck" do
+		get play_path
+
+		guest = Player.find(session[:player_id])
+		deck = guest.decks.first
+
+		get edit_deck_path(deck)
+
+		assert_response :forbidden
+	end
+
+	test "guest cannot update a deck" do
+		get play_path
+
+		guest = Player.find(session[:player_id])
+		deck = guest.decks.first
+
+		patch deck_path(deck), params: {
+		  deck: {
+		    name: "Guest Modified Deck"
+		  }
+		}
+
+		assert_response :forbidden
+
+		assert_equal deck.name, deck.reload.name
+	end
+
+	test "guest cannot destroy a deck" do
+		get play_path
+
+		guest = Player.find(session[:player_id])
+		deck = guest.decks.first
+
+		assert_no_difference("Deck.count") do
+		  delete deck_path(deck)
+		end
+
+		assert_response :forbidden
+		assert Deck.exists?(deck.id)
 	end
 end

@@ -1,4 +1,6 @@
 class DecksController < ApplicationController
+	before_action :require_registered_player!
+	
   before_action :require_current_player
   before_action :set_deck, only: [:edit, :update, :destroy]
   before_action :load_editor_data, only: [:new, :edit]

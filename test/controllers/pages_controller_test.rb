@@ -17,11 +17,23 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "guest can access play" do
-    get play_path
+	test "guest enters play and receives a temporary player with three starter decks" do
+		assert_difference("Player.count", 1) do
+		  assert_difference("Deck.count", 3) do
+		    get play_path
+		  end
+		end
 
-    assert_response :success
-  end
+		assert_response :success
+
+		player = Player.order(:id).last
+
+		assert player.guest?
+		assert_equal "Гость", player.name
+		assert_equal player.id, session[:player_id]
+		assert_equal 3, player.decks.count
+		assert player.decks.all?(&:complete?)
+	end
 
   test "guest can access decks" do
     get decks_path
@@ -110,5 +122,34 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 		assert_select ".deck-card", text: /Second front/
 		assert_select ".deck-card", text: /Западный фронт/
 		assert_select ".deck-card", text: /Incomplete/, count: 0
+	end
+	
+	test "guest reuses the same player and decks on repeated play page visits" do
+		get play_path
+
+		player = Player.order(:id).last
+		player_id = player.id
+
+		assert_equal 3, player.decks.count
+
+		assert_no_difference("Player.count") do
+		  assert_no_difference("Deck.count") do
+		    get play_path
+		  end
+		end
+
+		assert_response :success
+		assert_equal player_id, session[:player_id]
+		assert_equal 3, player.reload.decks.count
+	end
+
+	test "guest cannot access statistics" do
+		get play_path
+
+		assert_response :success
+
+		get statistics_path
+
+		assert_redirected_to root_path
 	end
 end

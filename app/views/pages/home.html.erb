@@ -17,7 +17,7 @@
     <%= link_to "Колоды", decks_path %>
   </p>
   
-  <% if current_player %>
+  <% if registered_player? %>
     <p>
       <%= link_to "Статистика", statistics_path %>
     </p>

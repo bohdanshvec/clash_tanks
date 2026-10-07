@@ -16,6 +16,14 @@ class Player < ApplicationRecord
             length: { minimum: 8 },
             if: -> { password.present? }
 
+  def guest?
+    guest
+  end
+
+  def registered?
+    !guest?
+  end
+
   def display_name
     name.presence || email.split("@").first
   end
