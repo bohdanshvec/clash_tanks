@@ -229,4 +229,36 @@ class GameEngine::VisibleStateTest < ActiveSupport::TestCase
 		  visible_state["available_actions"]
 		)
 	end
+	
+	test "does not expose opponent hidden information for either player" do
+		visible_for_player_1 = GameEngine::VisibleState.call(
+		  state: @state,
+		  player_id: 1
+		)
+
+		visible_for_player_2 = GameEngine::VisibleState.call(
+		  state: @state,
+		  player_id: 2
+		)
+
+		opponent_for_player_1 = visible_for_player_1["players"]["2"]
+		opponent_for_player_2 = visible_for_player_2["players"]["1"]
+
+		refute opponent_for_player_1.key?("hand")
+		refute opponent_for_player_1.key?("deck")
+		refute opponent_for_player_1.key?("graveyard")
+
+		refute opponent_for_player_2.key?("hand")
+		refute opponent_for_player_2.key?("deck")
+		refute opponent_for_player_2.key?("graveyard")
+
+		# Player 1 видит количество карт в закрытой колоде Player 2.
+		assert_equal 1, opponent_for_player_1["deck_count"]
+
+		# Player 2 видит количество карт в закрытой колоде Player 1.
+		assert_equal 3, opponent_for_player_2["deck_count"]
+
+		assert_equal 2, opponent_for_player_1["hand_count"]
+		assert_equal 2, opponent_for_player_2["hand_count"]
+	end
 end

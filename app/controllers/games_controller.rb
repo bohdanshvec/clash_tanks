@@ -168,10 +168,7 @@ class GamesController < ApplicationController
       return
     end
 
-    if @game.waiting? && @game.state.nil?
-      render plain: "Game has not started", status: :unprocessable_entity
-      return
-    end
+		return if reject_waiting_game_action!
 
     action = GameEngine::Action.new(
       player_id: current_player_id,
@@ -185,39 +182,45 @@ class GamesController < ApplicationController
       return
     end
 
-    @game.update!(state: result.state)
+    @game.update!(
+			state: result.state,
+			status: result.state["status"]
+		)
 
     broadcast_game_update(result.events)
 
     respond_after_success
   end
 
-  def surrender
-    @game = Game.find(params[:id])
+	def surrender
+		@game = Game.find(params[:id])
+		unless player_in_game?(@game)
+		  render_forbidden
+		  return
+		end
 
-    unless player_in_game?(@game)
-      render_forbidden
-      return
-    end
+		return if reject_waiting_game_action!
 
-    action = GameEngine::Action.new(
-      player_id: current_player_id,
-      type: "surrender"
-    )
+		action = GameEngine::Action.new(
+		  player_id: current_player_id,
+		  type: "surrender"
+		)
 
-    result = GameEngine::Engine.new(@game.state).call(action)
+		result = GameEngine::Engine.new(@game.state).call(action)
 
-    unless result.success?
-      render plain: result.error, status: :unprocessable_entity
-      return
-    end
+		unless result.success?
+		  render plain: result.error, status: :unprocessable_entity
+		  return
+		end
 
-    @game.update!(state: result.state)
+		@game.update!(
+		  state: result.state,
+		  status: result.state["status"]
+		)
 
-    broadcast_game_update(result.events)
-
-    respond_after_success
-  end
+		broadcast_game_update(result.events)
+		respond_after_success
+	end
 
   def play_card
     @game = Game.find(params[:id])
@@ -227,6 +230,8 @@ class GamesController < ApplicationController
       return
     end
 
+		return if reject_waiting_game_action!
+		
     action = GameEngine::Action.new(
       player_id: current_player_id,
       type: "play_card",
@@ -259,6 +264,8 @@ class GamesController < ApplicationController
       render_forbidden
       return
     end
+    
+    return if reject_waiting_game_action!
 
     action = GameEngine::Action.new(
       player_id: current_player_id,
@@ -297,10 +304,7 @@ class GamesController < ApplicationController
       return
     end
 
-    if @game.waiting? && @game.state.nil?
-      render plain: "Game has not started", status: :unprocessable_entity
-      return
-    end
+		return if reject_waiting_game_action!
 
     action = GameEngine::Action.new(
       player_id: current_player_id,
@@ -324,7 +328,10 @@ class GamesController < ApplicationController
       return
     end
 
-    @game.update!(state: result.state)
+    @game.update!(
+			state: result.state,
+			status: result.state["status"]
+		)
 
     broadcast_game_update(result.events)
 
@@ -332,6 +339,13 @@ class GamesController < ApplicationController
   end
 
   private
+  
+	def reject_waiting_game_action!
+		return false unless @game.waiting? && @game.state.nil?
+
+		render plain: "Game has not started", status: :unprocessable_entity
+		true
+	end
 
   def build_targets
     return [] unless params[:target].present?

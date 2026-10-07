@@ -60,14 +60,17 @@ class PagesController < ApplicationController
 
   private
 
-  def ensure_guest_player!
-    return if current_player
+	def ensure_guest_player!
+		return if current_player
 
-    player = GuestPlayers::Create.call
+		Matchmaking::CleanupStaleWaitingGames.call
+		GuestPlayers::CleanupStale.call
 
-    session[:player_id] = player.id
-    @current_player = player
-  end
+		player = GuestPlayers::Create.call
+
+		session[:player_id] = player.id
+		@current_player = player
+	end
 
   def starter_decks
     StarterDecks::Create::STARTER_DECKS.map do |definition|

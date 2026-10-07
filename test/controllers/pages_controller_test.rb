@@ -142,6 +142,46 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 		assert_equal player_id, session[:player_id]
 		assert_equal 3, player.reload.decks.count
 	end
+	
+  test "new guest creation removes stale guest without active games" do
+    stale_guest = GuestPlayers::Create.call
+    stale_guest.update!(last_seen_at: 25.hours.ago)
+
+    get play_path
+
+    assert_response :success
+
+    assert_not Player.exists?(stale_guest.id)
+    assert_equal 1, Player.where(guest: true).count
+    assert_equal session[:player_id], Player.where(guest: true).first.id
+  end
+
+  test "new guest creation keeps stale guest with active game" do
+    stale_guest = GuestPlayers::Create.call
+    stale_guest.update!(last_seen_at: 25.hours.ago)
+
+    deck = stale_guest.decks.first
+
+		game = Game.create!(
+			status: "waiting",
+			last_seen_at: 10.seconds.ago
+		)
+
+    game.game_players.create!(
+      player: stale_guest,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    get play_path
+
+    assert_response :success
+
+    assert Player.exists?(stale_guest.id)
+    assert Game.exists?(game.id)
+    assert_not_equal stale_guest.id, session[:player_id]
+  end
 
 	test "guest cannot access statistics" do
 		get play_path

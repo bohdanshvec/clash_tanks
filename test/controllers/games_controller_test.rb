@@ -451,6 +451,153 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, attacker["has_attacked"]
     assert_equal true, target["has_counterattacked"]
   end
+  
+test "finishes game when attack destroys headquarters through controller" do
+  game = Game.create!
+  player = create_player
+  enemy = create_player
+
+  nation = Nation.create!(
+    name: "HQ Attack Test Nation",
+    code: "hq_attack_test_nation"
+  )
+
+  enemy_nation = Nation.create!(
+    name: "Enemy HQ Attack Test Nation",
+    code: "enemy_hq_attack_test_nation"
+  )
+
+  headquarters_card = Card.create!(
+    nation: nation,
+    name: "HQ Attack Test HQ",
+    code: "hq_attack_test_hq_#{SecureRandom.hex(4)}",
+    card_type: "headquarters",
+    weight: 1,
+    price: nil
+  )
+
+  enemy_headquarters_card = Card.create!(
+    nation: enemy_nation,
+    name: "Enemy HQ Attack Test HQ",
+    code: "enemy_hq_attack_test_hq_#{SecureRandom.hex(4)}",
+    card_type: "headquarters",
+    weight: 1,
+    price: nil
+  )
+
+  deck = Deck.create!(
+    player: player,
+    nation: nation,
+    name: "HQ Attack Test Deck",
+    headquarters_card: headquarters_card
+  )
+
+  enemy_deck = Deck.create!(
+    player: enemy,
+    nation: enemy_nation,
+    name: "Enemy HQ Attack Test Deck",
+    headquarters_card: enemy_headquarters_card
+  )
+
+  GamePlayer.create!(
+    game: game,
+    player: player,
+    nation: nation,
+    deck: deck,
+    headquarters_card: headquarters_card
+  )
+
+  GamePlayer.create!(
+    game: game,
+    player: enemy,
+    nation: enemy_nation,
+    deck: enemy_deck,
+    headquarters_card: enemy_headquarters_card
+  )
+
+  state = GameEngine::GameState.initial(
+    current_player_id: player.id,
+		participants: [
+			headquarters_participant(
+				player_id: player.id,
+				nation_id: nation.id
+			),
+			headquarters_participant(
+				player_id: enemy.id,
+				nation_id: enemy_nation.id
+			)
+		]
+  )
+
+  state["current_player_id"] = player.id.to_s
+
+  enemy_hq = state["field"][0][4]
+  enemy_hq["hp"] = 1
+
+  game.update!(
+    state: state
+  )
+
+  log_in(player)
+
+  post attack_path(
+    game,
+    attacker_row: 2,
+    attacker_column: 0,
+    target_row: 0,
+    target_column: 4
+  )
+
+  assert_response :redirect
+
+  game.reload
+
+  assert game.finished?
+  assert_equal "finished", game.state["status"]
+
+  assert_equal(
+    {
+      "winner_id" => player.id,
+      "loser_id" => enemy.id,
+      "reason" => "headquarters_destroyed"
+    },
+    game.state["result"]
+  )
+
+  player_actions = GameEngine::AvailableActions.call(
+    state: game.state,
+    player_id: player.id.to_s
+  )
+
+  enemy_actions = GameEngine::AvailableActions.call(
+    state: game.state,
+    player_id: enemy.id.to_s
+  )
+
+  assert_empty player_actions["field"]
+  assert_empty player_actions["hand"]
+
+  assert_empty enemy_actions["field"]
+  assert_empty enemy_actions["hand"]
+
+  finished_state = game.state.deep_dup
+
+  post attack_path(
+    game,
+    attacker_row: 2,
+    attacker_column: 0,
+    target_row: 0,
+    target_column: 4
+  )
+
+  assert_response :unprocessable_entity
+
+  game.reload
+
+  assert_equal finished_state, game.state
+  assert game.finished?
+  assert_equal "headquarters_destroyed", game.state["result"]["reason"]
+end
 
   test "returns unprocessable entity when attack is invalid" do
     game = Game.create!
@@ -661,120 +808,149 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  test "surrenders game through controller" do
-    game = Game.create!
-    player = create_player
-    enemy = create_player
+	test "surrenders game through controller" do
+		game = Game.create!
+		player = create_player
+		enemy = create_player
 
-    nation = Nation.create!(
-      name: "Surrender Test Nation",
-      code: "surrender_test_nation"
-    )
+		nation = Nation.create!(
+		  name: "Surrender Test Nation",
+		  code: "surrender_test_nation"
+		)
 
-    enemy_nation = Nation.create!(
-      name: "Enemy Surrender Test Nation",
-      code: "enemy_surrender_test_nation"
-    )
+		enemy_nation = Nation.create!(
+		  name: "Enemy Surrender Test Nation",
+		  code: "enemy_surrender_test_nation"
+		)
 
-    headquarters_card = Card.create!(
-      nation: nation,
-      name: "Surrender Test HQ",
-      code: "surrender_test_hq_#{SecureRandom.hex(4)}",
-      card_type: "headquarters",
-      weight: 1,
-      price: nil
-    )
+		headquarters_card = Card.create!(
+		  nation: nation,
+		  name: "Surrender Test HQ",
+		  code: "surrender_test_hq_#{SecureRandom.hex(4)}",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
 
-    enemy_headquarters_card = Card.create!(
-      nation: enemy_nation,
-      name: "Enemy Surrender Test HQ",
-      code: "enemy_surrender_test_hq_#{SecureRandom.hex(4)}",
-      card_type: "headquarters",
-      weight: 1,
-      price: nil
-    )
+		enemy_headquarters_card = Card.create!(
+		  nation: enemy_nation,
+		  name: "Enemy Surrender Test HQ",
+		  code: "enemy_surrender_test_hq_#{SecureRandom.hex(4)}",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
 
-    deck = Deck.create!(
-      player: player,
-      nation: nation,
-      name: "Surrender Test Deck",
-      headquarters_card: headquarters_card
-    )
+		deck = Deck.create!(
+		  player: player,
+		  nation: nation,
+		  name: "Surrender Test Deck",
+		  headquarters_card: headquarters_card
+		)
 
-    enemy_deck = Deck.create!(
-      player: enemy,
-      nation: enemy_nation,
-      name: "Enemy Surrender Test Deck",
-      headquarters_card: enemy_headquarters_card
-    )
+		enemy_deck = Deck.create!(
+		  player: enemy,
+		  nation: enemy_nation,
+		  name: "Enemy Surrender Test Deck",
+		  headquarters_card: enemy_headquarters_card
+		)
 
-    GamePlayer.create!(
-      game: game,
-      player: player,
-      nation: nation,
-      deck: deck,
-      headquarters_card: headquarters_card
-    )
+		GamePlayer.create!(
+		  game: game,
+		  player: player,
+		  nation: nation,
+		  deck: deck,
+		  headquarters_card: headquarters_card
+		)
 
-    GamePlayer.create!(
-      game: game,
-      player: enemy,
-      nation: enemy_nation,
-      deck: enemy_deck,
-      headquarters_card: enemy_headquarters_card
-    )
+		GamePlayer.create!(
+		  game: game,
+		  player: enemy,
+		  nation: enemy_nation,
+		  deck: enemy_deck,
+		  headquarters_card: enemy_headquarters_card
+		)
 
-    game.update!(
-      state: {
-        "status" => "started",
-        "turn_number" => 1,
-        "current_player_id" => enemy.id,
-        "turn_started_at" => Time.current.iso8601,
-        "players" => {
-          player.id.to_s => {
-            "nation_id" => nation.id,
-            "hand" => [],
-            "deck" => [],
-            "graveyard" => [],
-            "platoons" => [nil, nil, nil, nil],
-            "resources" => 0,
-            "remaining_time" => 600,
-            "empty_deck_draw_attempts" => 0
-          },
-          enemy.id.to_s => {
-            "nation_id" => enemy_nation.id,
-            "hand" => [],
-            "deck" => [],
-            "graveyard" => [],
-            "platoons" => [nil, nil, nil, nil],
-            "resources" => 0,
-            "remaining_time" => 600,
-            "empty_deck_draw_attempts" => 0
-          }
-        },
-        "field" => GameEngine::GameState.empty_field
-      }
-    )
+		game.update!(
+		  state: {
+		    "status" => "started",
+		    "turn_number" => 1,
+		    "current_player_id" => enemy.id,
+		    "turn_started_at" => Time.current.iso8601,
+		    "players" => {
+		      player.id.to_s => {
+		        "nation_id" => nation.id,
+		        "hand" => [],
+		        "deck" => [],
+		        "graveyard" => [],
+		        "platoons" => [nil, nil, nil, nil],
+		        "resources" => 0,
+		        "remaining_time" => 600,
+		        "empty_deck_draw_attempts" => 0
+		      },
+		      enemy.id.to_s => {
+		        "nation_id" => enemy_nation.id,
+		        "hand" => [],
+		        "deck" => [],
+		        "graveyard" => [],
+		        "platoons" => [nil, nil, nil, nil],
+		        "resources" => 0,
+		        "remaining_time" => 600,
+		        "empty_deck_draw_attempts" => 0
+		      }
+		    },
+		    "field" => GameEngine::GameState.empty_field
+		  }
+		)
 
-    log_in(player)
+		log_in(player)
 
-    post surrender_path(game)
+		post surrender_path(game)
 
-    assert_response :redirect
+		assert_response :redirect
 
-    game.reload
+		game.reload
 
-    assert_equal "finished", game.state["status"]
+		assert game.finished?
+		assert_equal "finished", game.state["status"]
 
-    assert_equal(
-      {
-        "winner_id" => enemy.id.to_s,
-        "loser_id" => player.id.to_s,
-        "reason" => "surrender"
-      },
-      game.state["result"]
-    )
-  end
+		assert_equal(
+		  {
+		    "winner_id" => enemy.id.to_s,
+		    "loser_id" => player.id.to_s,
+		    "reason" => "surrender"
+		  },
+		  game.state["result"]
+		)
+
+		player_actions = GameEngine::AvailableActions.call(
+		  state: game.state,
+		  player_id: player.id.to_s
+		)
+
+		enemy_actions = GameEngine::AvailableActions.call(
+		  state: game.state,
+		  player_id: enemy.id.to_s
+		)
+
+		assert_empty player_actions["field"]
+		assert_empty player_actions["hand"]
+
+		assert_empty enemy_actions["field"]
+		assert_empty enemy_actions["hand"]
+
+		finished_state = game.state.deep_dup
+
+		post surrender_path(game)
+
+		assert_response :unprocessable_entity
+
+		game.reload
+
+		assert_equal finished_state, game.state
+		assert game.finished?
+		assert_equal "surrender", game.state["result"]["reason"]
+	end
 
   test "player can create a waiting pvp game with a complete deck" do
     player = create_player
@@ -959,6 +1135,246 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       find_object_coordinates(state, "headquarters", second_player.id.to_s)
     )
   end
+  
+  test "completes full pvp lifecycle from play to first action" do
+    first_player = create_player
+    second_player = create_player(email: "second@example.com")
+
+    first_deck = create_complete_deck(player: first_player)
+    second_deck = create_complete_deck(player: second_player)
+
+    # Player 1 входит в игру через /play.
+    post login_path, params: {
+      email: first_player.email,
+      password: "password"
+    }
+
+    get play_path
+
+    assert_response :success
+
+    # Player 1 создаёт waiting game.
+    assert_difference("Game.count", 1) do
+      assert_difference("GamePlayer.count", 1) do
+        post games_path, params: {
+          deck_id: first_deck.id,
+          mode: "pvp"
+        }
+      end
+    end
+
+    waiting_game = Game.order(:id).last
+
+    assert_redirected_to game_path(waiting_game)
+    assert waiting_game.waiting?
+    assert_nil waiting_game.state
+
+    assert_equal 1, waiting_game.game_players.count
+    assert_equal first_player.id, waiting_game.game_players.first.player_id
+
+    # Player 2 входит в игру через /play.
+    post login_path, params: {
+      email: second_player.email,
+      password: "password"
+    }
+
+    get play_path
+
+    assert_response :success
+
+    # Player 2 выбирает совместимую колоду.
+    assert_no_difference("Game.count") do
+      assert_difference("GamePlayer.count", 1) do
+        post games_path, params: {
+          deck_id: second_deck.id,
+          mode: "pvp"
+        }
+      end
+    end
+
+    waiting_game.reload
+
+    # Waiting → started.
+    assert waiting_game.started?
+    assert_not_nil waiting_game.state
+    assert_equal 2, waiting_game.game_players.count
+
+    assert_redirected_to game_path(waiting_game)
+
+    state = waiting_game.state
+
+    assert_equal "started", state["status"]
+    assert_equal 1, state["turn_number"]
+    assert_equal 2, state["players"].size
+    assert_equal 3, state["field"].size
+    assert state["field"].all? { |row| row.size == 5 }
+
+    assert_includes(
+      [first_player.id.to_s, second_player.id.to_s],
+      state["current_player_id"].to_s
+    )
+
+    assert state["turn_started_at"].present?
+
+    # Оба игрока получили полную структуру GameState.
+    [first_player, second_player].each do |player|
+      player_state = state["players"][player.id.to_s]
+
+      assert_not_nil player_state
+      assert player_state.key?("nation_id")
+      assert player_state.key?("hand")
+      assert player_state.key?("deck")
+      assert player_state.key?("graveyard")
+      assert player_state.key?("platoons")
+      assert player_state.key?("resources")
+      assert player_state.key?("remaining_time")
+      assert player_state.key?("empty_deck_draw_attempts")
+
+      assert_equal 6, player_state["hand"].size
+      assert_equal 4, player_state["deck"].size
+      assert_empty player_state["graveyard"]
+      assert_equal 4, player_state["platoons"].size
+      assert_equal 600, player_state["remaining_time"]
+      assert_equal 0, player_state["empty_deck_draw_attempts"]
+    end
+
+    # Оба штаба находятся на своих логических координатах.
+    assert_equal(
+      [2, 0],
+      find_object_coordinates(state, "headquarters", first_player.id.to_s)
+    )
+
+    assert_equal(
+      [0, 4],
+      find_object_coordinates(state, "headquarters", second_player.id.to_s)
+    )
+
+    # Второй игрок открывает уже started game.
+    get game_path(waiting_game)
+
+    assert_response :success
+
+    # VisibleState не должен раскрывать закрытую информацию второго игрока.
+    assert_select "[data-player-id='#{second_player.id}']"
+
+    # Возвращаем session к игроку, чей сейчас ход.
+    current_player = Player.find(state["current_player_id"])
+
+    log_in(current_player)
+
+    # Первый Action после запуска игры.
+    post end_turn_path(waiting_game)
+
+    assert_response :redirect
+
+    waiting_game.reload
+
+    assert waiting_game.started?
+    assert_not_nil waiting_game.state
+
+    assert_equal 2, waiting_game.state["turn_number"]
+    assert_not_equal(
+      current_player.id.to_s,
+      waiting_game.state["current_player_id"].to_s
+    )
+  end
+  
+  test "rejects play card while game is waiting" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    game = Game.create!(status: "waiting")
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    log_in(player)
+
+    post play_card_path(game), params: {
+      card_id: "1",
+      row: 1,
+      column: 1
+    }
+
+    assert_response :unprocessable_entity
+    assert_equal "Game has not started", response.body
+    assert_nil game.reload.state
+  end
+
+  test "rejects move while game is waiting" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    game = Game.create!(status: "waiting")
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    log_in(player)
+
+    post move_path(game), params: {
+      from_row: 1,
+      from_column: 1,
+      to_row: 1,
+      to_column: 2
+    }
+
+    assert_response :unprocessable_entity
+    assert_equal "Game has not started", response.body
+    assert_nil game.reload.state
+  end
+
+  test "rejects surrender while game is waiting" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    game = Game.create!(status: "waiting")
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    log_in(player)
+
+    post surrender_path(game)
+
+    assert_response :unprocessable_entity
+    assert_equal "Game has not started", response.body
+    assert_nil game.reload.state
+  end
+
+  test "forbids a non-participant from performing an action in a waiting game" do
+    player = create_player
+    outsider = create_player(email: "outsider@example.com")
+    deck = create_complete_deck(player: player)
+
+    game = Game.create!(status: "waiting")
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    log_in(outsider)
+
+    post surrender_path(game)
+
+    assert_response :forbidden
+    assert_nil game.reload.state
+  end
 
   test "rejects end turn while game is waiting" do
     player = create_player
@@ -1111,7 +1527,23 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creates a waiting game when no compatible opponent exists" do
-    player = create_player
+    other_player = create_player
+    other_deck = create_complete_deck(player: other_player)
+		other_deck.deck_cards.first.card.update!(weight: 20)
+
+    other_waiting_game = Game.create!(
+      status: "waiting",
+      last_seen_at: Time.current
+    )
+
+    other_waiting_game.game_players.create!(
+      player: other_player,
+      nation: other_deck.nation,
+      deck: other_deck,
+      headquarters_card: other_deck.headquarters_card
+    )
+
+    player = create_player(email: "new-player@example.com")
     deck = create_complete_deck(player: player)
 
     post login_path, params: {
@@ -1119,11 +1551,26 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       password: "password"
     }
 
-    assert_difference("Game.count", 1) do
-      post games_path, params: {
-        deck_id: deck.id,
-        mode: "pvp"
-      }
+    broadcasted_games = []
+
+    original_method = Turbo::StreamsChannel.method(:broadcast_refresh_to)
+
+    Turbo::StreamsChannel.define_singleton_method(:broadcast_refresh_to) do |game|
+      broadcasted_games << game
+    end
+
+    begin
+      assert_difference("Game.count", 1) do
+        post games_path, params: {
+          deck_id: deck.id,
+          mode: "pvp"
+        }
+      end
+    ensure
+      Turbo::StreamsChannel.define_singleton_method(
+        :broadcast_refresh_to,
+        original_method
+      )
     end
 
     game = Game.order(:id).last
@@ -1131,6 +1578,11 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert game.waiting?
     assert_nil game.state
     assert_equal 1, game.game_players.count
+    assert other_waiting_game.waiting?
+
+    assert_includes broadcasted_games, other_waiting_game
+    assert_not_includes broadcasted_games, game
+
     assert_redirected_to game_path(game)
   end
 
@@ -1215,6 +1667,128 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert Game.exists?(game.id)
+  end
+
+  test "waiting heartbeat updates game last_seen_at" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    old_time = 1.minute.ago
+
+    game = Game.create!(
+      status: "waiting",
+      last_seen_at: old_time
+    )
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    post waiting_heartbeat_game_path(game)
+
+    assert_response :no_content
+
+    game.reload
+    assert_operator game.last_seen_at, :>, old_time
+  end
+
+  test "cannot send waiting heartbeat for another player's game" do
+    owner = create_player
+    player = create_player(email: "second@example.com")
+
+    deck = create_complete_deck(player: owner)
+
+    game = Game.create!(
+      status: "waiting",
+      last_seen_at: 1.minute.ago
+    )
+
+    game.game_players.create!(
+      player: owner,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    old_time = game.last_seen_at
+
+    post waiting_heartbeat_game_path(game)
+
+    assert_response :forbidden
+
+    game.reload
+    assert_equal old_time.to_i, game.last_seen_at.to_i
+  end
+
+  test "cannot send waiting heartbeat for started game" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    post login_path, params: {
+      email: player.email,
+      password: "password"
+    }
+
+    game = Game.create!(
+      status: "started",
+      state: {},
+      last_seen_at: 1.minute.ago
+    )
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    old_time = game.last_seen_at
+
+    post waiting_heartbeat_game_path(game)
+
+    assert_response :unprocessable_entity
+
+    game.reload
+    assert_equal old_time.to_i, game.last_seen_at.to_i
+  end
+
+  test "unauthenticated player cannot send waiting heartbeat" do
+    player = create_player
+    deck = create_complete_deck(player: player)
+
+    game = Game.create!(
+      status: "waiting",
+      last_seen_at: 1.minute.ago
+    )
+
+    game.game_players.create!(
+      player: player,
+      nation: deck.nation,
+      deck: deck,
+      headquarters_card: deck.headquarters_card
+    )
+
+    old_time = game.last_seen_at
+
+    post waiting_heartbeat_game_path(game)
+
+    assert_response :unauthorized
+
+    game.reload
+    assert_equal old_time.to_i, game.last_seen_at.to_i
   end
 
   test "waiting game renders turbo stream subscription" do
@@ -1332,6 +1906,277 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to game_path(created_game)
     assert waiting_game.reload.waiting?
   end
+  
+	test "finishes game when player time expires through controller" do
+		game = Game.create!
+		player = create_player
+		enemy = create_player
+
+		nation = Nation.create!(
+		  name: "Timeout Test Nation",
+		  code: "timeout_test_nation"
+		)
+
+		enemy_nation = Nation.create!(
+		  name: "Enemy Timeout Test Nation",
+		  code: "enemy_timeout_test_nation"
+		)
+
+		headquarters_card = Card.create!(
+		  nation: nation,
+		  name: "Timeout Test HQ",
+		  code: "timeout_test_hq_#{SecureRandom.hex(4)}",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
+
+		enemy_headquarters_card = Card.create!(
+		  nation: enemy_nation,
+		  name: "Enemy Timeout Test HQ",
+		  code: "enemy_timeout_test_hq_#{SecureRandom.hex(4)}",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
+
+		deck = Deck.create!(
+		  player: player,
+		  nation: nation,
+		  name: "Timeout Test Deck",
+		  headquarters_card: headquarters_card
+		)
+
+		enemy_deck = Deck.create!(
+		  player: enemy,
+		  nation: enemy_nation,
+		  name: "Enemy Timeout Enemy Deck",
+		  headquarters_card: enemy_headquarters_card
+		)
+
+		GamePlayer.create!(
+		  game: game,
+		  player: player,
+		  nation: nation,
+		  deck: deck,
+		  headquarters_card: headquarters_card
+		)
+
+		GamePlayer.create!(
+		  game: game,
+		  player: enemy,
+		  nation: enemy_nation,
+		  deck: enemy_deck,
+		  headquarters_card: enemy_headquarters_card
+		)
+
+		state = GameEngine::GameState.initial(
+		  current_player_id: player.id,
+		  participants: [
+		    headquarters_participant(
+		      player_id: player.id,
+		      nation_id: nation.id
+		    ),
+		    headquarters_participant(
+		      player_id: enemy.id,
+		      nation_id: enemy_nation.id
+		    )
+		  ]
+		)
+
+		state["current_player_id"] = player.id.to_s
+		state["turn_started_at"] = 10.minutes.ago.iso8601
+		state["players"][player.id.to_s]["remaining_time"] = 1
+
+		game.update!(state: state)
+
+		log_in(player)
+
+		post end_turn_path(game)
+
+		assert_response :redirect
+
+		game.reload
+
+		assert game.finished?
+		assert_equal "finished", game.state["status"]
+
+		assert_equal(
+		  {
+		    "winner_id" => enemy.id.to_s,
+		    "loser_id" => player.id.to_s,
+		    "reason" => "time_expired"
+		  },
+		  game.state["result"]
+		)
+
+		player_actions = GameEngine::AvailableActions.call(
+		  state: game.state,
+		  player_id: player.id.to_s
+		)
+
+		enemy_actions = GameEngine::AvailableActions.call(
+		  state: game.state,
+		  player_id: enemy.id.to_s
+		)
+
+		assert_empty player_actions["field"]
+		assert_empty player_actions["hand"]
+
+		assert_empty enemy_actions["field"]
+		assert_empty enemy_actions["hand"]
+
+		finished_state = game.state.deep_dup
+
+		post end_turn_path(game)
+
+		assert_response :unprocessable_entity
+
+		game.reload
+
+		assert_equal finished_state, game.state
+		assert game.finished?
+		assert_equal "time_expired", game.state["result"]["reason"]
+	end
+
+test "finishes game when empty deck damage destroys headquarters through controller" do
+  game = Game.create!
+  player = create_player
+  enemy = create_player
+
+  nation = Nation.create!(
+    name: "Empty Deck Test Nation",
+    code: "empty_deck_test_nation"
+  )
+
+  enemy_nation = Nation.create!(
+    name: "Enemy Empty Deck Test Nation",
+    code: "enemy_empty_deck_test_nation"
+  )
+
+  headquarters_card = Card.create!(
+    nation: nation,
+    name: "Empty Deck Test HQ",
+    code: "empty_deck_test_hq_#{SecureRandom.hex(4)}",
+    card_type: "headquarters",
+    weight: 1,
+    price: nil
+  )
+
+  enemy_headquarters_card = Card.create!(
+    nation: enemy_nation,
+    name: "Enemy Empty Deck Test HQ",
+    code: "enemy_empty_deck_test_hq_#{SecureRandom.hex(4)}",
+    card_type: "headquarters",
+    weight: 1,
+    price: nil
+  )
+
+  deck = Deck.create!(
+    player: player,
+    nation: nation,
+    name: "Empty Deck Test Deck",
+    headquarters_card: headquarters_card
+  )
+
+  enemy_deck = Deck.create!(
+    player: enemy,
+    nation: enemy_nation,
+    name: "Enemy Empty Deck Test Deck",
+    headquarters_card: enemy_headquarters_card
+  )
+
+  GamePlayer.create!(
+    game: game,
+    player: player,
+    nation: nation,
+    deck: deck,
+    headquarters_card: headquarters_card
+  )
+
+  GamePlayer.create!(
+    game: game,
+    player: enemy,
+    nation: enemy_nation,
+    deck: enemy_deck,
+    headquarters_card: enemy_headquarters_card
+  )
+
+  state = GameEngine::GameState.initial(
+    current_player_id: player.id,
+    participants: [
+      headquarters_participant(
+        player_id: player.id,
+        nation_id: nation.id
+      ),
+      headquarters_participant(
+        player_id: enemy.id,
+        nation_id: enemy_nation.id
+      )
+    ]
+  )
+
+  state["current_player_id"] = player.id.to_s
+  state["players"][enemy.id.to_s]["deck"] = []
+  state["field"][0][4]["hp"] = 1
+
+  game.update!(state: state)
+
+  log_in(player)
+
+  post end_turn_path(game)
+
+  assert_response :redirect
+
+  game.reload
+
+  assert game.finished?
+  assert_equal "finished", game.state["status"]
+
+  assert_equal(
+    {
+      "winner_id" => player.id.to_s,
+      "loser_id" => enemy.id.to_s,
+      "reason" => "empty_deck_damage"
+    },
+    game.state["result"]
+  )
+
+  assert_equal 0, game.state["field"][0][4]["hp"]
+
+  assert_equal(
+    1,
+    game.state["players"][enemy.id.to_s]["empty_deck_draw_attempts"]
+  )
+
+  player_actions = GameEngine::AvailableActions.call(
+    state: game.state,
+    player_id: player.id.to_s
+  )
+
+  enemy_actions = GameEngine::AvailableActions.call(
+    state: game.state,
+    player_id: enemy.id.to_s
+  )
+
+  assert_empty player_actions["field"]
+  assert_empty player_actions["hand"]
+
+  assert_empty enemy_actions["field"]
+  assert_empty enemy_actions["hand"]
+
+  finished_state = game.state.deep_dup
+
+  post end_turn_path(game)
+
+  assert_response :unprocessable_entity
+
+  game.reload
+
+  assert_equal finished_state, game.state
+  assert game.finished?
+  assert_equal "empty_deck_damage", game.state["result"]["reason"]
+end
 
   private
 
