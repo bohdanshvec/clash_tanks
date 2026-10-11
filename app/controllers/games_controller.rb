@@ -250,7 +250,10 @@ class GamesController < ApplicationController
       return
     end
 
-    @game.update!(state: result.state)
+    @game.update!(
+			state: result.state,
+			status: result.state["status"]
+		)
 
     broadcast_game_update(result.events)
 
@@ -339,6 +342,51 @@ class GamesController < ApplicationController
   end
 
   private
+  
+	def process_game_action(action)
+		result = nil
+		waiting_game = false
+
+		@game.with_lock do
+		  # with_lock обновляет запись из базы данных
+		  # и удерживает блокировку до завершения транзакции.
+
+		  if @game.waiting? && @game.state.nil?
+		    waiting_game = true
+		    next
+		  end
+
+		  # Движок получает актуальное состояние уже после блокировки.
+		  result = GameEngine::Engine.new(@game.state).call(action)
+
+		  # При ошибке состояние игры не сохраняем.
+		  next unless result.success?
+
+		  attributes = { state: result.state }
+
+		  # Синхронизируем статус только при его фактическом изменении.
+		  if result.state["status"].present? &&
+		     result.state["status"] != @game.status
+		    attributes[:status] = result.state["status"]
+		  end
+
+		  @game.update!(attributes)
+		end
+
+		if waiting_game
+		  render plain: "Game has not started", status: :unprocessable_entity
+		  return
+		end
+
+		unless result.success?
+		  render plain: result.error, status: :unprocessable_entity
+		  return
+		end
+
+		broadcast_game_update(result.events)
+
+		respond_after_success
+	end
   
 	def reject_waiting_game_action!
 		return false unless @game.waiting? && @game.state.nil?

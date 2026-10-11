@@ -84,6 +84,8 @@ module GameEngine
 
           current_state = result.state
           events.concat(result.events)
+          
+          break if current_state["status"] == "finished"
         end
 
         new_state = current_state.deep_dup

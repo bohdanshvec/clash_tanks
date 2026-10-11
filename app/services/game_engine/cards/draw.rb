@@ -19,6 +19,8 @@ module GameEngine
         events = []
 
         @count.times do
+        	break if new_state["status"] == "finished"
+        
           draw_one(new_state, events)
         end
 
