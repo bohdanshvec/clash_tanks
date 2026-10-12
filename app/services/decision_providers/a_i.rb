@@ -5,10 +5,10 @@ module DecisionProviders
     class InvalidDecision < StandardError
     end
 
-    def initialize(context:, decision_source: nil)
-      super(context: context)
-      @decision_source = decision_source || OpenAiAdapter.new
-    end
+		def initialize(context:, decision_source: nil)
+			super(context: context)
+			@decision_source = decision_source || method(:call_default_adapter)
+		end
 
     def call
       attempts = 0
@@ -30,6 +30,18 @@ module DecisionProviders
     end
 
     private
+    
+		def call_default_adapter(visible_state)
+			case ENV.fetch("AI_PROVIDER", "groq").downcase
+			when "groq"
+				GroqAdapter.new.call(visible_state)
+			when "openai"
+				OpenAiAdapter.new.call(visible_state)
+			else
+				raise ArgumentError,
+				      "Unsupported AI_PROVIDER: #{ENV.fetch("AI_PROVIDER")}"
+			end
+		end
 
     def build_action(decision)
       unless decision.is_a?(Hash)
