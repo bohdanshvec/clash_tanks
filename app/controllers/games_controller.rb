@@ -169,10 +169,10 @@ class GamesController < ApplicationController
 
     return if reject_waiting_game_action!
 
-    action = GameEngine::Action.new(
+    action = DecisionProviders::Human.new(
       player_id: current_player_id,
       type: "end_turn"
-    )
+    ).call
 
     process_game_action(action)
   end
@@ -187,10 +187,10 @@ class GamesController < ApplicationController
 
     return if reject_waiting_game_action!
 
-    action = GameEngine::Action.new(
+    action = DecisionProviders::Human.new(
       player_id: current_player_id,
       type: "surrender"
-    )
+    ).call
 
     process_game_action(action)
   end
@@ -205,7 +205,7 @@ class GamesController < ApplicationController
 
     return if reject_waiting_game_action!
 
-    action = GameEngine::Action.new(
+    action = DecisionProviders::Human.new(
       player_id: current_player_id,
       type: "play_card",
       payload: {
@@ -214,7 +214,7 @@ class GamesController < ApplicationController
         column: params[:column]&.to_i,
         targets: build_targets
       }
-    )
+    ).call
 
     process_game_action(action)
   end
@@ -229,7 +229,7 @@ class GamesController < ApplicationController
 
     return if reject_waiting_game_action!
 
-    action = GameEngine::Action.new(
+    action = DecisionProviders::Human.new(
       player_id: current_player_id,
       type: "move",
       payload: {
@@ -242,7 +242,7 @@ class GamesController < ApplicationController
           params[:to_column].to_i
         ]
       }
-    )
+    ).call
 
     process_game_action(action)
   end
@@ -257,7 +257,7 @@ class GamesController < ApplicationController
 
     return if reject_waiting_game_action!
 
-    action = GameEngine::Action.new(
+    action = DecisionProviders::Human.new(
       player_id: current_player_id,
       type: "attack",
       payload: {
@@ -270,7 +270,7 @@ class GamesController < ApplicationController
           params[:target_column].to_i
         ]
       }
-    )
+    ).call
 
     process_game_action(action)
   end
@@ -278,45 +278,17 @@ class GamesController < ApplicationController
   private
 
   def process_game_action(action)
-    result = nil
-    waiting_game = false
-
-    @game.with_lock do
-      # Проверяем состояние игры после получения блокировки.
-      # with_lock перезагружает запись из БД и начинает транзакцию.
-      if @game.waiting? && @game.state.nil?
-        waiting_game = true
-        next
-      end
-
-      # Движок получает актуальное состояние игры.
-      result = GameEngine::Engine.new(@game.state).call(action)
-
-      # Не сохраняем состояние, если действие отклонено.
-      next unless result.success?
-
-      attributes = { state: result.state }
-
-      # Обновляем статус, если движок изменил его.
-      if result.state["status"].present? &&
-         result.state["status"] != @game.status
-        attributes[:status] = result.state["status"]
-      end
-
-      @game.update!(attributes)
-    end
-
-    if waiting_game
-      render plain: "Game has not started", status: :unprocessable_entity
-      return
-    end
+    result = GameActionRunner.call(
+      game: @game,
+      action: action
+    )
 
     unless result.success?
       render plain: result.error, status: :unprocessable_entity
       return
     end
 
-    # Рассылаем обновления только после сохранения состояния.
+    # Рассылаем обновления только после успешного сохранения состояния.
     broadcast_game_update(result.events)
 
     respond_after_success
