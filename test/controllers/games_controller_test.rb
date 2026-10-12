@@ -452,152 +452,212 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, target["has_counterattacked"]
   end
   
-test "finishes game when attack destroys headquarters through controller" do
-  game = Game.create!
-  player = create_player
-  enemy = create_player
+	test "finishes game when attack destroys headquarters through controller" do
+		game = Game.create!
+		player = create_player
+		enemy = create_player
 
-  nation = Nation.create!(
-    name: "HQ Attack Test Nation",
-    code: "hq_attack_test_nation"
-  )
+		nation = Nation.create!(
+		  name: "HQ Attack Test Nation",
+		  code: "hq_attack_test_nation"
+		)
 
-  enemy_nation = Nation.create!(
-    name: "Enemy HQ Attack Test Nation",
-    code: "enemy_hq_attack_test_nation"
-  )
+		enemy_nation = Nation.create!(
+		  name: "Enemy HQ Attack Test Nation",
+		  code: "enemy_hq_attack_test_nation"
+		)
 
-  headquarters_card = Card.create!(
-    nation: nation,
-    name: "HQ Attack Test HQ",
-    code: "hq_attack_test_hq_#{SecureRandom.hex(4)}",
-    card_type: "headquarters",
-    weight: 1,
-    price: nil
-  )
+		headquarters_card = Card.create!(
+		  nation: nation,
+		  name: "HQ Attack Test HQ",
+		  code: "hq_attack_test_hq_#{SecureRandom.hex(4)}",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
 
-  enemy_headquarters_card = Card.create!(
-    nation: enemy_nation,
-    name: "Enemy HQ Attack Test HQ",
-    code: "enemy_hq_attack_test_hq_#{SecureRandom.hex(4)}",
-    card_type: "headquarters",
-    weight: 1,
-    price: nil
-  )
+		enemy_headquarters_card = Card.create!(
+		  nation: enemy_nation,
+		  name: "Enemy HQ Attack Test HQ",
+		  code: "enemy_hq_attack_test_hq_#{SecureRandom.hex(4)}",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
 
-  deck = Deck.create!(
-    player: player,
-    nation: nation,
-    name: "HQ Attack Test Deck",
-    headquarters_card: headquarters_card
-  )
+		deck = Deck.create!(
+		  player: player,
+		  nation: nation,
+		  name: "HQ Attack Test Deck",
+		  headquarters_card: headquarters_card
+		)
 
-  enemy_deck = Deck.create!(
-    player: enemy,
-    nation: enemy_nation,
-    name: "Enemy HQ Attack Test Deck",
-    headquarters_card: enemy_headquarters_card
-  )
+		enemy_deck = Deck.create!(
+		  player: enemy,
+		  nation: enemy_nation,
+		  name: "Enemy HQ Attack Test Deck",
+		  headquarters_card: enemy_headquarters_card
+		)
 
-  GamePlayer.create!(
-    game: game,
-    player: player,
-    nation: nation,
-    deck: deck,
-    headquarters_card: headquarters_card
-  )
+		GamePlayer.create!(
+		  game: game,
+		  player: player,
+		  nation: nation,
+		  deck: deck,
+		  headquarters_card: headquarters_card
+		)
 
-  GamePlayer.create!(
-    game: game,
-    player: enemy,
-    nation: enemy_nation,
-    deck: enemy_deck,
-    headquarters_card: enemy_headquarters_card
-  )
+		GamePlayer.create!(
+		  game: game,
+		  player: enemy,
+		  nation: enemy_nation,
+		  deck: enemy_deck,
+		  headquarters_card: enemy_headquarters_card
+		)
 
-  state = GameEngine::GameState.initial(
-    current_player_id: player.id,
-		participants: [
-			headquarters_participant(
-				player_id: player.id,
-				nation_id: nation.id
-			),
-			headquarters_participant(
-				player_id: enemy.id,
-				nation_id: enemy_nation.id
-			)
-		]
-  )
+		state = GameEngine::GameState.initial(
+		  current_player_id: player.id,
+		  participants: [
+		    headquarters_participant(
+		      player_id: player.id,
+		      nation_id: nation.id
+		    ),
+		    headquarters_participant(
+		      player_id: enemy.id,
+		      nation_id: enemy_nation.id
+		    )
+		  ]
+		)
 
-  state["current_player_id"] = player.id.to_s
+		state["current_player_id"] = player.id.to_s
 
-  enemy_hq = state["field"][0][4]
-  enemy_hq["hp"] = 1
+		enemy_hq = state["field"][0][4]
+		enemy_hq["hp"] = 1
 
-  game.update!(
-    state: state
-  )
+		game.update!(state: state)
 
-  log_in(player)
+		log_in(player)
 
-  post attack_path(
-    game,
-    attacker_row: 2,
-    attacker_column: 0,
-    target_row: 0,
-    target_column: 4
-  )
+		# Перехватываем Turbo-обновления для обоих игроков.
+		broadcasts = []
 
-  assert_response :redirect
+		original_broadcast_method =
+		  Turbo::StreamsChannel.method(:broadcast_update_to)
 
-  game.reload
+		Turbo::StreamsChannel.define_singleton_method(
+		  :broadcast_update_to
+		) do |*args, **kwargs|
+		  broadcasts << [args, kwargs]
+		end
 
-  assert game.finished?
-  assert_equal "finished", game.state["status"]
+		begin
+		  post attack_path(
+		    game,
+		    attacker_row: 2,
+		    attacker_column: 0,
+		    target_row: 0,
+		    target_column: 4
+		  )
+		ensure
+		  Turbo::StreamsChannel.define_singleton_method(
+		    :broadcast_update_to,
+		    original_broadcast_method
+		  )
+		end
 
-  assert_equal(
-    {
-      "winner_id" => player.id,
-      "loser_id" => enemy.id,
-      "reason" => "headquarters_destroyed"
-    },
-    game.state["result"]
-  )
+		assert_response :redirect
 
-  player_actions = GameEngine::AvailableActions.call(
-    state: game.state,
-    player_id: player.id.to_s
-  )
+		# Проверяем, что обновления отправлены обоим игрокам.
+		assert_equal(
+		  [
+		    [game, player.id.to_s],
+		    [game, enemy.id.to_s]
+		  ],
+		  broadcasts.map { |args, _kwargs| args.first },
+		  "Turbo-обновления должны отправляться обоим игрокам"
+		)
 
-  enemy_actions = GameEngine::AvailableActions.call(
-    state: game.state,
-    player_id: enemy.id.to_s
-  )
+		game.reload
 
-  assert_empty player_actions["field"]
-  assert_empty player_actions["hand"]
+		assert game.finished?
+		assert_equal "finished", game.state["status"]
 
-  assert_empty enemy_actions["field"]
-  assert_empty enemy_actions["hand"]
+		expected_result = {
+		  "winner_id" => player.id,
+		  "loser_id" => enemy.id,
+		  "reason" => "headquarters_destroyed"
+		}
 
-  finished_state = game.state.deep_dup
+		assert_equal expected_result, game.state["result"]
 
-  post attack_path(
-    game,
-    attacker_row: 2,
-    attacker_column: 0,
-    target_row: 0,
-    target_column: 4
-  )
+		# Проверяем состояние, полученное каждым игроком.
+		broadcasts.each do |args, kwargs|
+		  stream = args.first
+		  locals = kwargs.fetch(:locals)
+		  visible_state = locals.fetch(:visible_state)
+		  viewer_id = stream.last.to_s
 
-  assert_response :unprocessable_entity
+		  assert_equal viewer_id, locals.fetch(:current_player_id).to_s
+		  assert_equal "games/game", kwargs.fetch(:partial)
+		  assert_equal "game-content", kwargs.fetch(:target)
 
-  game.reload
+		  assert_equal(
+		    "finished",
+		    visible_state.fetch("status"),
+		    "Оба игрока должны получить состояние завершённой игры"
+		  )
 
-  assert_equal finished_state, game.state
-  assert game.finished?
-  assert_equal "headquarters_destroyed", game.state["result"]["reason"]
-end
+		  assert_equal(
+		    expected_result,
+		    visible_state.fetch("result"),
+		    "Оба игрока должны получить правильный результат завершения"
+		  )
+
+		  opponent_id =
+		    viewer_id == player.id.to_s ? enemy.id.to_s : player.id.to_s
+
+		  refute(
+		    visible_state.fetch("players").fetch(opponent_id).key?("hand"),
+		    "Видимое состояние не должно раскрывать руку противника"
+		  )
+		end
+
+		# После завершения игры доступных действий быть не должно.
+		player_actions = GameEngine::AvailableActions.call(
+		  state: game.state,
+		  player_id: player.id.to_s
+		)
+
+		enemy_actions = GameEngine::AvailableActions.call(
+		  state: game.state,
+		  player_id: enemy.id.to_s
+		)
+
+		assert_empty player_actions["field"]
+		assert_empty player_actions["hand"]
+
+		assert_empty enemy_actions["field"]
+		assert_empty enemy_actions["hand"]
+
+		# Повторная атака не должна изменять завершённую игру.
+		finished_state = game.state.deep_dup
+
+		post attack_path(
+		  game,
+		  attacker_row: 2,
+		  attacker_column: 0,
+		  target_row: 0,
+		  target_column: 4
+		)
+
+		assert_response :unprocessable_entity
+
+		game.reload
+
+		assert_equal finished_state, game.state
+		assert game.finished?
+		assert_equal "headquarters_destroyed", game.state["result"]["reason"]
+	end
 
   test "returns unprocessable entity when attack is invalid" do
     game = Game.create!
@@ -905,24 +965,83 @@ end
 
 		log_in(player)
 
-		post surrender_path(game)
+		broadcasts = []
+
+		original_broadcast_method =
+		  Turbo::StreamsChannel.method(:broadcast_update_to)
+
+		Turbo::StreamsChannel.define_singleton_method(
+		  :broadcast_update_to
+		) do |*args, **kwargs|
+		  broadcasts << [args, kwargs]
+		end
+
+		begin
+		  post surrender_path(game)
+		ensure
+		  Turbo::StreamsChannel.define_singleton_method(
+		    :broadcast_update_to,
+		    original_broadcast_method
+		  )
+		end
 
 		assert_response :redirect
+
+		# Проверяем, что обновления отправлены обоим игрокам.
+		assert_equal(
+		  [
+		    [game, player.id.to_s],
+		    [game, enemy.id.to_s]
+		  ],
+		  broadcasts.map { |args, _kwargs| args.first },
+		  "Turbo-обновления должны отправляться обоим игрокам"
+		)
+
+		expected_result = {
+		  "winner_id" => enemy.id.to_s,
+		  "loser_id" => player.id.to_s,
+		  "reason" => "surrender"
+		}
+
+		# Проверяем состояние завершённой игры, полученное каждым игроком.
+		broadcasts.each do |args, kwargs|
+		  stream = args.first
+		  locals = kwargs.fetch(:locals)
+		  visible_state = locals.fetch(:visible_state)
+		  viewer_id = stream.last.to_s
+
+		  assert_equal viewer_id, locals.fetch(:current_player_id).to_s
+		  assert_equal "games/game", kwargs.fetch(:partial)
+		  assert_equal "game-content", kwargs.fetch(:target)
+
+		  assert_equal(
+		    "finished",
+		    visible_state.fetch("status"),
+		    "Игрок должен получить обновлённое состояние завершённой игры"
+		  )
+
+		  assert_equal(
+		    expected_result,
+		    visible_state.fetch("result"),
+		    "Оба игрока должны получить правильный результат сдачи"
+		  )
+
+		  opponent_id =
+		    viewer_id == player.id.to_s ? enemy.id.to_s : player.id.to_s
+
+		  refute(
+		    visible_state.fetch("players").fetch(opponent_id).key?("hand"),
+		    "Видимое состояние не должно раскрывать руку противника"
+		  )
+		end
 
 		game.reload
 
 		assert game.finished?
 		assert_equal "finished", game.state["status"]
+		assert_equal expected_result, game.state["result"]
 
-		assert_equal(
-		  {
-		    "winner_id" => enemy.id.to_s,
-		    "loser_id" => player.id.to_s,
-		    "reason" => "surrender"
-		  },
-		  game.state["result"]
-		)
-
+		# После завершения игры доступных действий быть не должно.
 		player_actions = GameEngine::AvailableActions.call(
 		  state: game.state,
 		  player_id: player.id.to_s
@@ -939,6 +1058,7 @@ end
 		assert_empty enemy_actions["field"]
 		assert_empty enemy_actions["hand"]
 
+		# Повторная сдача не должна изменять завершённую игру.
 		finished_state = game.state.deep_dup
 
 		post surrender_path(game)
@@ -1136,148 +1256,268 @@ end
     )
   end
   
-  test "completes full pvp lifecycle from play to first action" do
-    first_player = create_player
-    second_player = create_player(email: "second@example.com")
+	test "completes full pvp lifecycle from play to first action" do
+		first_player = create_player
+		second_player = create_player(email: "second@example.com")
 
-    first_deck = create_complete_deck(player: first_player)
-    second_deck = create_complete_deck(player: second_player)
+		first_deck = create_complete_deck(player: first_player)
+		second_deck = create_complete_deck(player: second_player)
 
-    # Player 1 входит в игру через /play.
-    post login_path, params: {
-      email: first_player.email,
-      password: "password"
-    }
+		# Player 1 входит в игру через /play.
+		post login_path, params: {
+		  email: first_player.email,
+		  password: "password"
+		}
 
-    get play_path
+		get play_path
 
-    assert_response :success
+		assert_response :success
 
-    # Player 1 создаёт waiting game.
-    assert_difference("Game.count", 1) do
-      assert_difference("GamePlayer.count", 1) do
-        post games_path, params: {
-          deck_id: first_deck.id,
-          mode: "pvp"
-        }
-      end
-    end
+		# Player 1 создаёт waiting game.
+		assert_difference("Game.count", 1) do
+		  assert_difference("GamePlayer.count", 1) do
+		    post games_path, params: {
+		      deck_id: first_deck.id,
+		      mode: "pvp"
+		    }
+		  end
+		end
 
-    waiting_game = Game.order(:id).last
+		waiting_game = Game.order(:id).last
 
-    assert_redirected_to game_path(waiting_game)
-    assert waiting_game.waiting?
-    assert_nil waiting_game.state
+		assert_redirected_to game_path(waiting_game)
+		assert waiting_game.waiting?
+		assert_nil waiting_game.state
 
-    assert_equal 1, waiting_game.game_players.count
-    assert_equal first_player.id, waiting_game.game_players.first.player_id
+		assert_equal 1, waiting_game.game_players.count
+		assert_equal first_player.id, waiting_game.game_players.first.player_id
 
-    # Player 2 входит в игру через /play.
-    post login_path, params: {
-      email: second_player.email,
-      password: "password"
-    }
+		# Player 2 входит в игру через /play.
+		post login_path, params: {
+		  email: second_player.email,
+		  password: "password"
+		}
 
-    get play_path
+		get play_path
 
-    assert_response :success
+		assert_response :success
 
-    # Player 2 выбирает совместимую колоду.
-    assert_no_difference("Game.count") do
-      assert_difference("GamePlayer.count", 1) do
-        post games_path, params: {
-          deck_id: second_deck.id,
-          mode: "pvp"
-        }
-      end
-    end
+		# Player 2 выбирает совместимую колоду.
+		assert_no_difference("Game.count") do
+		  assert_difference("GamePlayer.count", 1) do
+		    post games_path, params: {
+		      deck_id: second_deck.id,
+		      mode: "pvp"
+		    }
+		  end
+		end
 
-    waiting_game.reload
+		waiting_game.reload
 
-    # Waiting → started.
-    assert waiting_game.started?
-    assert_not_nil waiting_game.state
-    assert_equal 2, waiting_game.game_players.count
+		# Waiting → started.
+		assert waiting_game.started?
+		assert_not_nil waiting_game.state
+		assert_equal 2, waiting_game.game_players.count
 
-    assert_redirected_to game_path(waiting_game)
+		assert_redirected_to game_path(waiting_game)
 
-    state = waiting_game.state
+		state = waiting_game.state
 
-    assert_equal "started", state["status"]
-    assert_equal 1, state["turn_number"]
-    assert_equal 2, state["players"].size
-    assert_equal 3, state["field"].size
-    assert state["field"].all? { |row| row.size == 5 }
+		assert_equal "started", state["status"]
+		assert_equal 1, state["turn_number"]
+		assert_equal 2, state["players"].size
+		assert_equal 3, state["field"].size
+		assert state["field"].all? { |row| row.size == 5 }
 
-    assert_includes(
-      [first_player.id.to_s, second_player.id.to_s],
-      state["current_player_id"].to_s
-    )
+		assert_includes(
+		  [first_player.id.to_s, second_player.id.to_s],
+		  state["current_player_id"].to_s
+		)
 
-    assert state["turn_started_at"].present?
+		assert state["turn_started_at"].present?
 
-    # Оба игрока получили полную структуру GameState.
-    [first_player, second_player].each do |player|
-      player_state = state["players"][player.id.to_s]
+		# Оба игрока получили полную структуру GameState.
+		[first_player, second_player].each do |player|
+		  player_state = state["players"][player.id.to_s]
 
-      assert_not_nil player_state
-      assert player_state.key?("nation_id")
-      assert player_state.key?("hand")
-      assert player_state.key?("deck")
-      assert player_state.key?("graveyard")
-      assert player_state.key?("platoons")
-      assert player_state.key?("resources")
-      assert player_state.key?("remaining_time")
-      assert player_state.key?("empty_deck_draw_attempts")
+		  assert_not_nil player_state
+		  assert player_state.key?("nation_id")
+		  assert player_state.key?("hand")
+		  assert player_state.key?("deck")
+		  assert player_state.key?("graveyard")
+		  assert player_state.key?("platoons")
+		  assert player_state.key?("resources")
+		  assert player_state.key?("remaining_time")
+		  assert player_state.key?("empty_deck_draw_attempts")
 
-      assert_equal 6, player_state["hand"].size
-      assert_equal 4, player_state["deck"].size
-      assert_empty player_state["graveyard"]
-      assert_equal 4, player_state["platoons"].size
-      assert_equal 600, player_state["remaining_time"]
-      assert_equal 0, player_state["empty_deck_draw_attempts"]
-    end
+		  assert_equal 6, player_state["hand"].size
+		  assert_equal 4, player_state["deck"].size
+		  assert_empty player_state["graveyard"]
+		  assert_equal 4, player_state["platoons"].size
+		  assert_equal 600, player_state["remaining_time"]
+		  assert_equal 0, player_state["empty_deck_draw_attempts"]
+		end
 
-    # Оба штаба находятся на своих логических координатах.
-    assert_equal(
-      [2, 0],
-      find_object_coordinates(state, "headquarters", first_player.id.to_s)
-    )
+		# Оба штаба находятся на своих логических координатах.
+		assert_equal(
+		  [2, 0],
+		  find_object_coordinates(state, "headquarters", first_player.id.to_s)
+		)
 
-    assert_equal(
-      [0, 4],
-      find_object_coordinates(state, "headquarters", second_player.id.to_s)
-    )
+		assert_equal(
+		  [0, 4],
+		  find_object_coordinates(state, "headquarters", second_player.id.to_s)
+		)
 
-    # Второй игрок открывает уже started game.
-    get game_path(waiting_game)
+		# Второй игрок открывает уже started game.
+		get game_path(waiting_game)
 
-    assert_response :success
+		assert_response :success
 
-    # VisibleState не должен раскрывать закрытую информацию второго игрока.
-    assert_select "[data-player-id='#{second_player.id}']"
+		# Страница содержит представление игрового состояния для второго игрока.
+		assert_select "[data-player-id='#{second_player.id}']"
 
-    # Возвращаем session к игроку, чей сейчас ход.
-    current_player = Player.find(state["current_player_id"])
+		# Возвращаем session к игроку, чей сейчас ход.
+		current_player = Player.find(state["current_player_id"])
 
-    log_in(current_player)
+		log_in(current_player)
 
-    # Первый Action после запуска игры.
-    post end_turn_path(waiting_game)
+		# Перехватываем Turbo-обновления, не отправляя реальные broadcasts.
+		broadcasts = []
 
-    assert_response :redirect
+		original_broadcast_method =
+		  Turbo::StreamsChannel.method(:broadcast_update_to)
 
-    waiting_game.reload
+		Turbo::StreamsChannel.define_singleton_method(
+		  :broadcast_update_to
+		) do |*args, **kwargs|
+		  broadcasts << [args, kwargs]
+		end
 
-    assert waiting_game.started?
-    assert_not_nil waiting_game.state
+		begin
+		  # Первый Action после запуска игры.
+		  post end_turn_path(waiting_game)
+		ensure
+		  Turbo::StreamsChannel.define_singleton_method(
+		    :broadcast_update_to,
+		    original_broadcast_method
+		  )
+		end
 
-    assert_equal 2, waiting_game.state["turn_number"]
-    assert_not_equal(
-      current_player.id.to_s,
-      waiting_game.state["current_player_id"].to_s
-    )
-  end
+		assert_response :redirect
+
+		# Сохраняем актуальное состояние после завершения хода.
+		final_state = waiting_game.reload.state
+
+		assert_equal 2, final_state["turn_number"]
+
+		assert_not_equal(
+		  current_player.id.to_s,
+		  final_state["current_player_id"].to_s,
+		  "После завершения хода активным должен стать другой игрок"
+		)
+
+		assert final_state["turn_started_at"].present?
+
+		# После завершения хода обновление должно уйти обоим игрокам.
+		expected_streams = [
+		  [waiting_game, first_player.id.to_s],
+		  [waiting_game, second_player.id.to_s]
+		]
+
+		actual_streams = broadcasts.map do |args, _kwargs|
+		  args.first
+		end
+
+		assert_equal(
+		  expected_streams.sort_by { |stream| stream.last },
+		  actual_streams.sort_by { |stream| stream.last },
+		  "После игрового действия Turbo-обновление должны получить оба игрока"
+		)
+
+		# Каждый игрок получает актуальное состояние, подготовленное именно для него.
+		broadcasts.each do |args, kwargs|
+		  stream = args.first
+		  locals = kwargs.fetch(:locals)
+		  viewer_id = stream.last.to_s
+
+		  assert_equal viewer_id, locals.fetch(:current_player_id).to_s
+		  assert_equal "games/game", kwargs.fetch(:partial)
+		  assert_equal "game-content", kwargs.fetch(:target)
+
+		  visible_state = locals.fetch(:visible_state)
+
+		  assert_equal "started", visible_state.fetch("status")
+
+		  assert_equal(
+		    final_state["turn_number"],
+		    visible_state.fetch("turn_number"),
+		    "Клиент должен получить актуальный номер хода"
+		  )
+
+		  assert_equal(
+		    final_state["current_player_id"].to_s,
+		    visible_state.fetch("current_player_id").to_s,
+		    "Клиент должен получить актуального игрока, чей сейчас ход"
+		  )
+
+		  assert_equal(
+		    final_state["turn_started_at"],
+		    visible_state.fetch("turn_started_at"),
+		    "Клиент должен получить актуальное время начала хода"
+		  )
+
+		  # Проверяем актуальное оставшееся время обоих игроков.
+		  final_state.fetch("players").each do |player_id, player_state|
+		    visible_player_state =
+		      visible_state.fetch("players").fetch(player_id)
+
+		    assert_equal(
+		      player_state["remaining_time"],
+		      visible_player_state.fetch("remaining_time"),
+		      "Клиент должен получить актуальное оставшееся время игрока #{player_id}"
+		    )
+		  end
+
+		  players_state = visible_state.fetch("players")
+
+		  # Игрок должен видеть собственную руку.
+		  assert(
+		    players_state.fetch(viewer_id).key?("hand"),
+		    "Игрок #{viewer_id} должен видеть собственную руку"
+		  )
+
+		  # Рука противника должна оставаться скрытой.
+		  opponent_id = (
+		    viewer_id == first_player.id.to_s ?
+		      second_player.id.to_s :
+		      first_player.id.to_s
+		  )
+
+		  refute(
+		    players_state.fetch(opponent_id).key?("hand"),
+		    "Игрок #{viewer_id} не должен получать закрытую руку противника"
+		  )
+		end
+
+		# Проверяем итоговое состояние игры после завершения хода.
+		waiting_game.reload
+
+		assert waiting_game.started?
+		assert_not_nil waiting_game.state
+
+		assert_equal 2, waiting_game.state["turn_number"]
+
+		assert_equal(
+		  final_state["current_player_id"].to_s,
+		  waiting_game.state["current_player_id"].to_s
+		)
+
+		assert_equal(
+		  final_state["turn_started_at"],
+		  waiting_game.state["turn_started_at"]
+		)
+	end
   
   test "rejects play card while game is waiting" do
     player = create_player
@@ -1906,7 +2146,7 @@ end
     assert_redirected_to game_path(created_game)
     assert waiting_game.reload.waiting?
   end
-  
+
 	test "finishes game when player time expires through controller" do
 		game = Game.create!
 		player = create_player
@@ -1992,9 +2232,65 @@ end
 
 		log_in(player)
 
-		post end_turn_path(game)
+		broadcasts = []
+
+		original_broadcast_method =
+		  Turbo::StreamsChannel.method(:broadcast_update_to)
+
+		Turbo::StreamsChannel.define_singleton_method(
+		  :broadcast_update_to
+		) do |*args, **kwargs|
+		  broadcasts << [args, kwargs]
+		end
+
+		begin
+		  post end_turn_path(game)
+		ensure
+		  Turbo::StreamsChannel.define_singleton_method(
+		    :broadcast_update_to,
+		    original_broadcast_method
+		  )
+		end
 
 		assert_response :redirect
+
+		assert_equal(
+		  [
+		    [game, player.id.to_s],
+		    [game, enemy.id.to_s]
+		  ],
+		  broadcasts.map { |args, _kwargs| args.first },
+		  "Turbo-обновления должны отправляться обоим игрокам"
+		)
+
+		broadcasts.each do |args, kwargs|
+		  stream = args.first
+		  locals = kwargs.fetch(:locals)
+		  visible_state = locals.fetch(:visible_state)
+
+		  assert_equal stream.last.to_s, locals.fetch(:current_player_id).to_s
+		  assert_equal "games/game", kwargs.fetch(:partial)
+		  assert_equal "game-content", kwargs.fetch(:target)
+		  assert_equal "finished", visible_state.fetch("status")
+
+		  assert_equal(
+		    {
+		      "winner_id" => enemy.id.to_s,
+		      "loser_id" => player.id.to_s,
+		      "reason" => "time_expired"
+		    },
+		    visible_state.fetch("result")
+		  )
+
+		  opponent_id =
+		    stream.last.to_s == player.id.to_s ? enemy.id.to_s : player.id.to_s
+
+		  assert_equal(
+		    false,
+		    visible_state.fetch("players").fetch(opponent_id).key?("hand"),
+		    "Видимое состояние не должно раскрывать руку противника"
+		  )
+		end
 
 		game.reload
 
@@ -2039,144 +2335,197 @@ end
 		assert_equal "time_expired", game.state["result"]["reason"]
 	end
 
-test "finishes game when empty deck damage destroys headquarters through controller" do
-  game = Game.create!
-  player = create_player
-  enemy = create_player
+	test "finishes game when empty deck damage destroys headquarters through controller" do
+		game = Game.create!
+		player = create_player
+		enemy = create_player
 
-  nation = Nation.create!(
-    name: "Empty Deck Test Nation",
-    code: "empty_deck_test_nation"
-  )
+		nation = Nation.create!(
+		  name: "Empty Deck Test Nation",
+		  code: "empty_deck_test_nation"
+		)
 
-  enemy_nation = Nation.create!(
-    name: "Enemy Empty Deck Test Nation",
-    code: "enemy_empty_deck_test_nation"
-  )
+		enemy_nation = Nation.create!(
+		  name: "Enemy Empty Deck Test Nation",
+		  code: "enemy_empty_deck_test_nation"
+		)
 
-  headquarters_card = Card.create!(
-    nation: nation,
-    name: "Empty Deck Test HQ",
-    code: "empty_deck_test_hq_#{SecureRandom.hex(4)}",
-    card_type: "headquarters",
-    weight: 1,
-    price: nil
-  )
+		headquarters_card = Card.create!(
+		  nation: nation,
+		  name: "Empty Deck Test HQ",
+		  code: "empty_deck_test_hq_#{SecureRandom.hex(4)}",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
 
-  enemy_headquarters_card = Card.create!(
-    nation: enemy_nation,
-    name: "Enemy Empty Deck Test HQ",
-    code: "enemy_empty_deck_test_hq_#{SecureRandom.hex(4)}",
-    card_type: "headquarters",
-    weight: 1,
-    price: nil
-  )
+		enemy_headquarters_card = Card.create!(
+		  nation: enemy_nation,
+		  name: "Enemy Empty Deck Test HQ",
+		  code: "enemy_empty_deck_test_hq_#{SecureRandom.hex(4)}",
+		  card_type: "headquarters",
+		  weight: 1,
+		  price: nil
+		)
 
-  deck = Deck.create!(
-    player: player,
-    nation: nation,
-    name: "Empty Deck Test Deck",
-    headquarters_card: headquarters_card
-  )
+		deck = Deck.create!(
+		  player: player,
+		  nation: nation,
+		  name: "Empty Deck Test Deck",
+		  headquarters_card: headquarters_card
+		)
 
-  enemy_deck = Deck.create!(
-    player: enemy,
-    nation: enemy_nation,
-    name: "Enemy Empty Deck Test Deck",
-    headquarters_card: enemy_headquarters_card
-  )
+		enemy_deck = Deck.create!(
+		  player: enemy,
+		  nation: enemy_nation,
+		  name: "Enemy Empty Deck Test Deck",
+		  headquarters_card: enemy_headquarters_card
+		)
 
-  GamePlayer.create!(
-    game: game,
-    player: player,
-    nation: nation,
-    deck: deck,
-    headquarters_card: headquarters_card
-  )
+		GamePlayer.create!(
+		  game: game,
+		  player: player,
+		  nation: nation,
+		  deck: deck,
+		  headquarters_card: headquarters_card
+		)
 
-  GamePlayer.create!(
-    game: game,
-    player: enemy,
-    nation: enemy_nation,
-    deck: enemy_deck,
-    headquarters_card: enemy_headquarters_card
-  )
+		GamePlayer.create!(
+		  game: game,
+		  player: enemy,
+		  nation: enemy_nation,
+		  deck: enemy_deck,
+		  headquarters_card: enemy_headquarters_card
+		)
 
-  state = GameEngine::GameState.initial(
-    current_player_id: player.id,
-    participants: [
-      headquarters_participant(
-        player_id: player.id,
-        nation_id: nation.id
-      ),
-      headquarters_participant(
-        player_id: enemy.id,
-        nation_id: enemy_nation.id
-      )
-    ]
-  )
+		state = GameEngine::GameState.initial(
+		  current_player_id: player.id,
+		  participants: [
+		    headquarters_participant(
+		      player_id: player.id,
+		      nation_id: nation.id
+		    ),
+		    headquarters_participant(
+		      player_id: enemy.id,
+		      nation_id: enemy_nation.id
+		    )
+		  ]
+		)
 
-  state["current_player_id"] = player.id.to_s
-  state["players"][enemy.id.to_s]["deck"] = []
-  state["field"][0][4]["hp"] = 1
+		state["current_player_id"] = player.id.to_s
+		state["players"][enemy.id.to_s]["deck"] = []
+		state["field"][0][4]["hp"] = 1
 
-  game.update!(state: state)
+		game.update!(state: state)
 
-  log_in(player)
+		log_in(player)
 
-  post end_turn_path(game)
+		# Перехватываем Turbo-обновления, отправленные обоим игрокам.
+		broadcasts = []
 
-  assert_response :redirect
+		original_broadcast_method =
+		  Turbo::StreamsChannel.method(:broadcast_update_to)
 
-  game.reload
+		Turbo::StreamsChannel.define_singleton_method(
+		  :broadcast_update_to
+		) do |*args, **kwargs|
+		  broadcasts << [args, kwargs]
+		end
 
-  assert game.finished?
-  assert_equal "finished", game.state["status"]
+		begin
+		  post end_turn_path(game)
+		ensure
+		  Turbo::StreamsChannel.define_singleton_method(
+		    :broadcast_update_to,
+		    original_broadcast_method
+		  )
+		end
 
-  assert_equal(
-    {
-      "winner_id" => player.id.to_s,
-      "loser_id" => enemy.id.to_s,
-      "reason" => "empty_deck_damage"
-    },
-    game.state["result"]
-  )
+		assert_response :redirect
 
-  assert_equal 0, game.state["field"][0][4]["hp"]
+		# Проверяем, что обновления отправлены обоим игрокам.
+		assert_equal(
+		  [
+		    [game, player.id.to_s],
+		    [game, enemy.id.to_s]
+		  ],
+		  broadcasts.map { |args, _kwargs| args.first },
+		  "Turbo-обновления должны отправляться обоим игрокам"
+		)
 
-  assert_equal(
-    1,
-    game.state["players"][enemy.id.to_s]["empty_deck_draw_attempts"]
-  )
+		game.reload
 
-  player_actions = GameEngine::AvailableActions.call(
-    state: game.state,
-    player_id: player.id.to_s
-  )
+		assert game.finished?
+		assert_equal "finished", game.state["status"]
 
-  enemy_actions = GameEngine::AvailableActions.call(
-    state: game.state,
-    player_id: enemy.id.to_s
-  )
+		expected_result = {
+		  "winner_id" => player.id.to_s,
+		  "loser_id" => enemy.id.to_s,
+		  "reason" => "empty_deck_damage"
+		}
 
-  assert_empty player_actions["field"]
-  assert_empty player_actions["hand"]
+		assert_equal expected_result, game.state["result"]
 
-  assert_empty enemy_actions["field"]
-  assert_empty enemy_actions["hand"]
+		assert_equal 0, game.state["field"][0][4]["hp"]
 
-  finished_state = game.state.deep_dup
+		assert_equal(
+		  1,
+		  game.state["players"][enemy.id.to_s]["empty_deck_draw_attempts"]
+		)
 
-  post end_turn_path(game)
+		# Проверяем состояние, полученное каждым игроком через Turbo.
+		broadcasts.each do |args, kwargs|
+		  stream = args.first
+		  locals = kwargs.fetch(:locals)
+		  visible_state = locals.fetch(:visible_state)
+		  viewer_id = stream.last.to_s
 
-  assert_response :unprocessable_entity
+		  assert_equal viewer_id, locals.fetch(:current_player_id).to_s
+		  assert_equal "games/game", kwargs.fetch(:partial)
+		  assert_equal "game-content", kwargs.fetch(:target)
 
-  game.reload
+		  assert_equal "finished", visible_state.fetch("status")
+		  assert_equal expected_result, visible_state.fetch("result")
 
-  assert_equal finished_state, game.state
-  assert game.finished?
-  assert_equal "empty_deck_damage", game.state["result"]["reason"]
-end
+		  opponent_id =
+		    viewer_id == player.id.to_s ? enemy.id.to_s : player.id.to_s
+
+		  refute(
+		    visible_state.fetch("players").fetch(opponent_id).key?("hand"),
+		    "Видимое состояние не должно раскрывать руку противника"
+		  )
+		end
+
+		# После завершения игры доступных действий быть не должно.
+		player_actions = GameEngine::AvailableActions.call(
+		  state: game.state,
+		  player_id: player.id.to_s
+		)
+
+		enemy_actions = GameEngine::AvailableActions.call(
+		  state: game.state,
+		  player_id: enemy.id.to_s
+		)
+
+		assert_empty player_actions["field"]
+		assert_empty player_actions["hand"]
+
+		assert_empty enemy_actions["field"]
+		assert_empty enemy_actions["hand"]
+
+		# Повторное действие не должно изменять завершённую игру.
+		finished_state = game.state.deep_dup
+
+		post end_turn_path(game)
+
+		assert_response :unprocessable_entity
+
+		game.reload
+
+		assert_equal finished_state, game.state
+		assert game.finished?
+		assert_equal "empty_deck_damage", game.state["result"]["reason"]
+	end
 
   private
 

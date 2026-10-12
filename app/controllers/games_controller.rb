@@ -1,164 +1,163 @@
 class GamesController < ApplicationController
+  layout "game"
 
-	layout "game"
-	
-	def create
-		unless current_player
-		  redirect_to login_path
-		  return
-		end
+  def create
+    unless current_player
+      redirect_to login_path
+      return
+    end
 
-		unless params[:mode] == "pvp"
-		  render plain: "Game mode is not available", status: :unprocessable_entity
-		  return
-		end
+    unless params[:mode] == "pvp"
+      render plain: "Game mode is not available", status: :unprocessable_entity
+      return
+    end
 
-		deck = current_player.decks.find(params[:deck_id])
+    deck = current_player.decks.find(params[:deck_id])
 
-		unless deck.complete?
-		  render plain: "Deck is not complete", status: :unprocessable_entity
-		  return
-		end
+    unless deck.complete?
+      render plain: "Deck is not complete", status: :unprocessable_entity
+      return
+    end
 
-		Matchmaking::CleanupStaleWaitingGames.call
+    Matchmaking::CleanupStaleWaitingGames.call
 
-		existing_waiting_game = current_player
-		  .games
-		  .where(status: "waiting")
-		  .joins(:game_players)
-		  .find_by(game_players: { player_id: current_player.id })
+    existing_waiting_game = current_player
+      .games
+      .where(status: "waiting")
+      .joins(:game_players)
+      .find_by(game_players: { player_id: current_player.id })
 
-		if existing_waiting_game
-		  redirect_to game_path(existing_waiting_game)
-		  return
-		end
+    if existing_waiting_game
+      redirect_to game_path(existing_waiting_game)
+      return
+    end
 
-		waiting_game = Matchmaking::FindOpponent.call(
-		  player: current_player,
-		  deck: deck
-		)
+    waiting_game = Matchmaking::FindOpponent.call(
+      player: current_player,
+      deck: deck
+    )
 
-		if waiting_game
-		  joined_game = Matchmaking::Join.call(
-		    game: waiting_game,
-		    player: current_player,
-		    deck: deck
-		  )
+    if waiting_game
+      joined_game = Matchmaking::Join.call(
+        game: waiting_game,
+        player: current_player,
+        deck: deck
+      )
 
-			if joined_game
-				broadcast_game_refresh(joined_game)
-				broadcast_waiting_games_refresh
+      if joined_game
+        broadcast_game_refresh(joined_game)
+        broadcast_waiting_games_refresh
 
-				redirect_to game_path(joined_game)
-				return
-			end
-		end
+        redirect_to game_path(joined_game)
+        return
+      end
+    end
 
-		game = Game.new(
-		  status: "waiting",
-		  last_seen_at: Time.current
-		)
+    game = Game.new(
+      status: "waiting",
+      last_seen_at: Time.current
+    )
 
-		game.transaction do
-		  game.save!
+    game.transaction do
+      game.save!
 
-		  game.game_players.create!(
-		    player: current_player,
-		    nation: deck.nation,
-		    deck: deck,
-		    headquarters_card: deck.headquarters_card
-		  )
-		end
+      game.game_players.create!(
+        player: current_player,
+        nation: deck.nation,
+        deck: deck,
+        headquarters_card: deck.headquarters_card
+      )
+    end
 
-		broadcast_waiting_games_refresh(except: game)
+    broadcast_waiting_games_refresh(except: game)
 
-		redirect_to game_path(game)
-	end
-	
-	def show
-		@game = Game.find(params[:id])
+    redirect_to game_path(game)
+  end
 
-		unless player_in_game?(@game)
-		  render_forbidden
-		  return
-		end
+  def show
+    @game = Game.find(params[:id])
 
-		if @game.waiting?
-			@waiting_games = Game
-				.where(status: "waiting")
-				.joins(:game_players)
-				.includes(game_players: :deck)
-				.select { |game| game.game_players.size == 1 }
-				.reject { |game| game.id == @game.id }
+    unless player_in_game?(@game)
+      render_forbidden
+      return
+    end
 
-			render :waiting
-			return
-		end
+    if @game.waiting?
+      @waiting_games = Game
+        .where(status: "waiting")
+        .joins(:game_players)
+        .includes(game_players: :deck)
+        .select { |game| game.game_players.size == 1 }
+        .reject { |game| game.id == @game.id }
 
-		@current_player_id = current_player_id
+      render :waiting
+      return
+    end
 
-		@visible_state = GameEngine::VisibleState.call(
-		  state: @game.state,
-		  player_id: @current_player_id
-		)
-	end
-	
-	def cancel_waiting
-		game = Game.find(params[:id])
+    @current_player_id = current_player_id
 
-		unless current_player
-		  redirect_to login_path
-		  return
-		end
+    @visible_state = GameEngine::VisibleState.call(
+      state: @game.state,
+      player_id: @current_player_id
+    )
+  end
 
-		game.with_lock do
-		  unless game.waiting?
-		    render plain: "Game is not waiting", status: :unprocessable_entity
-		    return
-		  end
+  def cancel_waiting
+    game = Game.find(params[:id])
 
-		  unless game.game_players.exists?(player_id: current_player.id)
-		    render_forbidden
-		    return
-		  end
+    unless current_player
+      redirect_to login_path
+      return
+    end
 
-		  unless game.game_players.count == 1
-		    render plain: "Game already has two players", status: :unprocessable_entity
-		    return
-		  end
+    game.with_lock do
+      unless game.waiting?
+        render plain: "Game is not waiting", status: :unprocessable_entity
+        return
+      end
 
-		  game.destroy!
-		end
+      unless game.game_players.exists?(player_id: current_player.id)
+        render_forbidden
+        return
+      end
 
-		broadcast_waiting_games_refresh
+      unless game.game_players.count == 1
+        render plain: "Game already has two players", status: :unprocessable_entity
+        return
+      end
 
-		redirect_to play_path
-	end
-	
-	def waiting_heartbeat
-		game = Game.find(params[:id])
+      game.destroy!
+    end
 
-		unless current_player
-		  head :unauthorized
-		  return
-		end
+    broadcast_waiting_games_refresh
 
-		unless game.waiting?
-		  head :unprocessable_entity
-		  return
-		end
+    redirect_to play_path
+  end
 
-		unless game.game_players.exists?(player_id: current_player.id)
-		  head :forbidden
-		  return
-		end
+  def waiting_heartbeat
+    game = Game.find(params[:id])
 
-		game.update!(last_seen_at: Time.current)
+    unless current_player
+      head :unauthorized
+      return
+    end
 
-		Matchmaking::CleanupStaleWaitingGames.call
+    unless game.waiting?
+      head :unprocessable_entity
+      return
+    end
 
-		head :no_content
-	end
+    unless game.game_players.exists?(player_id: current_player.id)
+      head :forbidden
+      return
+    end
+
+    game.update!(last_seen_at: Time.current)
+
+    Matchmaking::CleanupStaleWaitingGames.call
+
+    head :no_content
+  end
 
   def end_turn
     @game = Game.find(params[:id])
@@ -168,59 +167,33 @@ class GamesController < ApplicationController
       return
     end
 
-		return if reject_waiting_game_action!
+    return if reject_waiting_game_action!
 
     action = GameEngine::Action.new(
       player_id: current_player_id,
       type: "end_turn"
     )
 
-    result = GameEngine::Engine.new(@game.state).call(action)
+    process_game_action(action)
+  end
 
-    unless result.success?
-      render plain: result.error, status: :unprocessable_entity
+  def surrender
+    @game = Game.find(params[:id])
+
+    unless player_in_game?(@game)
+      render_forbidden
       return
     end
 
-    @game.update!(
-			state: result.state,
-			status: result.state["status"]
-		)
+    return if reject_waiting_game_action!
 
-    broadcast_game_update(result.events)
+    action = GameEngine::Action.new(
+      player_id: current_player_id,
+      type: "surrender"
+    )
 
-    respond_after_success
+    process_game_action(action)
   end
-
-	def surrender
-		@game = Game.find(params[:id])
-		unless player_in_game?(@game)
-		  render_forbidden
-		  return
-		end
-
-		return if reject_waiting_game_action!
-
-		action = GameEngine::Action.new(
-		  player_id: current_player_id,
-		  type: "surrender"
-		)
-
-		result = GameEngine::Engine.new(@game.state).call(action)
-
-		unless result.success?
-		  render plain: result.error, status: :unprocessable_entity
-		  return
-		end
-
-		@game.update!(
-		  state: result.state,
-		  status: result.state["status"]
-		)
-
-		broadcast_game_update(result.events)
-		respond_after_success
-	end
 
   def play_card
     @game = Game.find(params[:id])
@@ -230,8 +203,8 @@ class GamesController < ApplicationController
       return
     end
 
-		return if reject_waiting_game_action!
-		
+    return if reject_waiting_game_action!
+
     action = GameEngine::Action.new(
       player_id: current_player_id,
       type: "play_card",
@@ -243,21 +216,7 @@ class GamesController < ApplicationController
       }
     )
 
-    result = GameEngine::Engine.new(@game.state).call(action)
-
-    unless result.success?
-      render plain: result.error, status: :unprocessable_entity
-      return
-    end
-
-    @game.update!(
-			state: result.state,
-			status: result.state["status"]
-		)
-
-    broadcast_game_update(result.events)
-
-    respond_after_success
+    process_game_action(action)
   end
 
   def move
@@ -267,7 +226,7 @@ class GamesController < ApplicationController
       render_forbidden
       return
     end
-    
+
     return if reject_waiting_game_action!
 
     action = GameEngine::Action.new(
@@ -285,18 +244,7 @@ class GamesController < ApplicationController
       }
     )
 
-    result = GameEngine::Engine.new(@game.state).call(action)
-
-    unless result.success?
-      render plain: result.error, status: :unprocessable_entity
-      return
-    end
-
-    @game.update!(state: result.state)
-
-    broadcast_game_update(result.events)
-
-    respond_after_success
+    process_game_action(action)
   end
 
   def attack
@@ -307,7 +255,7 @@ class GamesController < ApplicationController
       return
     end
 
-		return if reject_waiting_game_action!
+    return if reject_waiting_game_action!
 
     action = GameEngine::Action.new(
       player_id: current_player_id,
@@ -324,76 +272,62 @@ class GamesController < ApplicationController
       }
     )
 
-    result = GameEngine::Engine.new(@game.state).call(action)
+    process_game_action(action)
+  end
+
+  private
+
+  def process_game_action(action)
+    result = nil
+    waiting_game = false
+
+    @game.with_lock do
+      # Проверяем состояние игры после получения блокировки.
+      # with_lock перезагружает запись из БД и начинает транзакцию.
+      if @game.waiting? && @game.state.nil?
+        waiting_game = true
+        next
+      end
+
+      # Движок получает актуальное состояние игры.
+      result = GameEngine::Engine.new(@game.state).call(action)
+
+      # Не сохраняем состояние, если действие отклонено.
+      next unless result.success?
+
+      attributes = { state: result.state }
+
+      # Обновляем статус, если движок изменил его.
+      if result.state["status"].present? &&
+         result.state["status"] != @game.status
+        attributes[:status] = result.state["status"]
+      end
+
+      @game.update!(attributes)
+    end
+
+    if waiting_game
+      render plain: "Game has not started", status: :unprocessable_entity
+      return
+    end
 
     unless result.success?
       render plain: result.error, status: :unprocessable_entity
       return
     end
 
-    @game.update!(
-			state: result.state,
-			status: result.state["status"]
-		)
-
+    # Рассылаем обновления только после сохранения состояния.
     broadcast_game_update(result.events)
 
     respond_after_success
   end
 
-  private
-  
-	def process_game_action(action)
-		result = nil
-		waiting_game = false
+  def reject_waiting_game_action!
+    return false unless @game.waiting? && @game.state.nil?
 
-		@game.with_lock do
-		  # with_lock обновляет запись из базы данных
-		  # и удерживает блокировку до завершения транзакции.
-
-		  if @game.waiting? && @game.state.nil?
-		    waiting_game = true
-		    next
-		  end
-
-		  # Движок получает актуальное состояние уже после блокировки.
-		  result = GameEngine::Engine.new(@game.state).call(action)
-
-		  # При ошибке состояние игры не сохраняем.
-		  next unless result.success?
-
-		  attributes = { state: result.state }
-
-		  # Синхронизируем статус только при его фактическом изменении.
-		  if result.state["status"].present? &&
-		     result.state["status"] != @game.status
-		    attributes[:status] = result.state["status"]
-		  end
-
-		  @game.update!(attributes)
-		end
-
-		if waiting_game
-		  render plain: "Game has not started", status: :unprocessable_entity
-		  return
-		end
-
-		unless result.success?
-		  render plain: result.error, status: :unprocessable_entity
-		  return
-		end
-
-		broadcast_game_update(result.events)
-
-		respond_after_success
-	end
-  
-	def reject_waiting_game_action!
-		return false unless @game.waiting? && @game.state.nil?
-
-		render plain: "Game has not started", status: :unprocessable_entity
-		true
-	end
+    render plain: "Game has not started", status: :unprocessable_entity
+    true
+  end
 
   def build_targets
     return [] unless params[:target].present?
@@ -438,18 +372,18 @@ class GamesController < ApplicationController
       end
     end
   end
-  
-	def broadcast_game_refresh(game)
-		Turbo::StreamsChannel.broadcast_refresh_to(game)
-	end
-	
-	def broadcast_waiting_games_refresh(except: nil)
-		games = Game
-		  .where(status: "waiting")
-		  .where.not(id: except&.id)
 
-		games.find_each do |game|
-		  Turbo::StreamsChannel.broadcast_refresh_to(game)
-		end
-	end
+  def broadcast_game_refresh(game)
+    Turbo::StreamsChannel.broadcast_refresh_to(game)
+  end
+
+  def broadcast_waiting_games_refresh(except: nil)
+    games = Game
+      .where(status: "waiting")
+      .where.not(id: except&.id)
+
+    games.find_each do |game|
+      Turbo::StreamsChannel.broadcast_refresh_to(game)
+    end
+  end
 end
