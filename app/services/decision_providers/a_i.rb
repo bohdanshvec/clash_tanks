@@ -60,11 +60,12 @@ module DecisionProviders
         raise InvalidDecision, "AI decision payload must be a Hash"
       end
 
-      GameEngine::Action.new(
-        player_id: context.player_id,
-        type: type,
-        payload: normalize_payload(payload)
-      )
+			GameEngine::Action.new(
+				player_id: context.player_id,
+				type: type,
+				payload: normalize_payload(payload),
+				expected_state_digest: context.state_digest
+			)
     end
 
     def normalize_payload(value)

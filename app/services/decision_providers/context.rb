@@ -1,9 +1,13 @@
 module DecisionProviders
   class Context
-    attr_reader :player_id, :visible_state
+    attr_reader :player_id, :visible_state, :state_digest
 
     def initialize(state:, player_id:)
       @player_id = player_id.to_s
+
+      # Отпечаток полного состояния хранится только внутри приложения.
+      # Само полное состояние не передаётся провайдеру ИИ.
+      @state_digest = GameEngine::StateDigest.call(state)
 
       @visible_state = GameEngine::VisibleState.call(
         state: state,
@@ -11,6 +15,7 @@ module DecisionProviders
       )
 
       deep_freeze(@visible_state)
+      @state_digest.freeze
       freeze
     end
 

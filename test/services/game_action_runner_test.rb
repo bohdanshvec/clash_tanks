@@ -101,6 +101,53 @@ class GameActionRunnerTest < ActiveSupport::TestCase
     assert @game.waiting?
     assert_nil @game.state
   end
+  
+  test "rejects an AI action when the state changed after the decision" do
+    original_digest = GameEngine::StateDigest.call(@game.state)
+
+    action = GameEngine::Action.new(
+      player_id: @player.id.to_s,
+      type: "end_turn",
+      expected_state_digest: original_digest
+    )
+
+    changed_state = @game.state.deep_dup
+    changed_state["turn_number"] += 1
+
+    @game.update!(state: changed_state)
+    state_before_action = @game.reload.state.deep_dup
+
+    result = GameActionRunner.call(
+      game: @game,
+      action: action
+    )
+
+    refute_predicate result, :success?
+    assert_equal GameActionRunner::STALE_STATE_ERROR, result.error
+    assert_nil result.state
+    assert_empty result.events
+
+    assert_equal state_before_action, @game.reload.state
+  end
+
+  test "accepts an AI action when the state has not changed" do
+    digest = GameEngine::StateDigest.call(@game.state)
+
+    action = GameEngine::Action.new(
+      player_id: @player.id.to_s,
+      type: "end_turn",
+      expected_state_digest: digest
+    )
+
+    result = GameActionRunner.call(
+      game: @game,
+      action: action
+    )
+
+    assert_predicate result, :success?
+    assert_nil result.error
+    assert_equal result.state, @game.reload.state
+  end
 
   private
 

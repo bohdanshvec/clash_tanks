@@ -1,11 +1,17 @@
 module GameEngine
   class Action
-    attr_reader :player_id, :type, :payload
+    attr_reader :player_id, :type, :payload, :expected_state_digest
 
-    def initialize(player_id:, type:, payload: {})
+    def initialize(
+      player_id:,
+      type:,
+      payload: {},
+      expected_state_digest: nil
+    )
       @player_id = player_id
       @type = type
       @payload = deep_dup_and_freeze(payload)
+      @expected_state_digest = expected_state_digest&.dup&.freeze
       freeze
     end
 

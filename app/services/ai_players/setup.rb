@@ -1,7 +1,7 @@
 module AiPlayers
   class Setup
     AI_EMAIL = "ai@clash-tanks.local"
-    AI_NAME = "ИИ"
+    AI_NAME = "AI"
 
     def self.call
       new.call

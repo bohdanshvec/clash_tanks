@@ -7,19 +7,34 @@ class GamesController < ApplicationController
       return
     end
 
-    unless params[:mode] == "pvp"
-      render plain: "Game mode is not available", status: :unprocessable_entity
-      return
-    end
+		unless %w[pvp ai].include?(params[:mode])
+			render plain: "Game mode is not available", status: :unprocessable_entity
+			return
+		end
 
     deck = current_player.decks.find(params[:deck_id])
 
-    unless deck.complete?
-      render plain: "Deck is not complete", status: :unprocessable_entity
-      return
-    end
+		unless deck.complete?
+			render plain: "Deck is not complete", status: :unprocessable_entity
+			return
+		end
 
-    Matchmaking::CleanupStaleWaitingGames.call
+		if params[:mode] == "ai"
+			unless Matchmaking::AiDeckSelector.call(player_deck: deck)
+				render plain: "No compatible AI deck", status: :unprocessable_entity
+				return
+			end
+
+			game = Matchmaking::CreateAiGame.call(
+				player: current_player,
+				deck: deck
+			)
+
+			redirect_to game_path(game)
+			return
+		end
+
+		Matchmaking::CleanupStaleWaitingGames.call
 
     existing_waiting_game = current_player
       .games
@@ -74,33 +89,49 @@ class GamesController < ApplicationController
     redirect_to game_path(game)
   end
 
-  def show
-    @game = Game.find(params[:id])
+	def show
+		@game = Game.find(params[:id])
 
-    unless player_in_game?(@game)
-      render_forbidden
-      return
-    end
+		unless player_in_game?(@game)
+		  render_forbidden
+		  return
+		end
 
-    if @game.waiting?
-      @waiting_games = Game
-        .where(status: "waiting")
-        .joins(:game_players)
-        .includes(game_players: :deck)
-        .select { |game| game.game_players.size == 1 }
-        .reject { |game| game.id == @game.id }
+		if @game.waiting?
+		  @waiting_games = Game
+		    .where(status: "waiting")
+		    .joins(:game_players)
+		    .includes(game_players: :deck)
+		    .select { |game| game.game_players.size == 1 }
+		    .reject { |game| game.id == @game.id }
 
-      render :waiting
-      return
-    end
+		  render :waiting
+		  return
+		end
 
-    @current_player_id = current_player_id
+		ai_result = run_ai_turns_if_needed
 
-    @visible_state = GameEngine::VisibleState.call(
-      state: @game.state,
-      player_id: @current_player_id
-    )
-  end
+		# Получаем актуальное состояние после возможных действий ИИ.
+		@game.reload
+
+		# Если ИИ действительно выполнил действия, обновляем интерфейс
+		# обоих игроков и передаём события Stimulus.
+		events = Array(ai_result&.events)
+
+		if events.any?
+		  broadcast_game_update(events)
+
+		  # Повторное Turbo-обновление этой же страницы не требуется:
+		  # актуальное состояние будет отрисовано обычным render show.
+		end
+
+		@current_player_id = current_player_id
+
+		@visible_state = GameEngine::VisibleState.call(
+		  state: @game.state,
+		  player_id: @current_player_id
+		)
+	end
 
   def cancel_waiting
     game = Game.find(params[:id])
@@ -276,6 +307,38 @@ class GamesController < ApplicationController
   end
 
   private
+  
+  def run_ai_turns_if_needed
+    return unless @game.started?
+    return unless @game.state.present?
+
+    state = @game.state
+    current_player_id = state["current_player_id"].to_s
+
+    return if current_player_id.empty?
+
+    current_player = Player.find_by(id: current_player_id)
+
+    return unless current_player&.ai?
+
+    result = Games::RunAiTurns.call(game: @game)
+
+    unless result.success?
+      Rails.logger.error(
+        "[GamesController] AI turn failed for game ##{@game.id}: " \
+        "#{result.error}"
+      )
+    end
+
+    result
+  rescue StandardError => e
+    Rails.logger.error(
+      "[GamesController] Could not run AI turns for game ##{@game&.id}: " \
+      "#{e.class}: #{e.message}"
+    )
+
+    nil
+  end
 
   def process_game_action(action)
     result = GameActionRunner.call(
@@ -288,8 +351,26 @@ class GamesController < ApplicationController
       return
     end
 
-    # Рассылаем обновления только после успешного сохранения состояния.
-    broadcast_game_update(result.events)
+		# Создаём изменяемую копию событий успешного действия человека.
+		# Исходный массив GameActionRunner может быть заморожен.
+		events = Array(result.events).dup
+
+    @game.reload
+
+    # Выполняем действия ИИ, если сейчас его ход.
+    ai_result = run_ai_turns_if_needed
+
+    # Добавляем события всех успешно выполненных действий ИИ.
+    if ai_result
+      events.concat(Array(ai_result.events))
+    end
+
+    # Получаем окончательное состояние игры.
+    @game.reload
+
+    # Отправляем обоим игрокам обновление с итоговым состоянием
+    # и событиями, произошедшими за время обработки запроса.
+    broadcast_game_update(events)
 
     respond_after_success
   end
