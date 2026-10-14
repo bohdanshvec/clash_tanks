@@ -13,13 +13,15 @@ module GameEngine
 
         new_state = @state.deep_dup
 
-        target = new_state["field"][@targets.first[:row]][@targets.first[:column]]
+        row, column = target_position
+
+        target = new_state["field"][row][column]
         damage = @ability["damage"].to_i
 
         target["hp"] -= damage
 
         if target["hp"] <= 0
-          destroy_technique(new_state, target)
+          destroy_technique(new_state, target, row, column)
         end
 
         Result.new(
@@ -32,31 +34,45 @@ module GameEngine
       private
 
       def valid_target?
-        return false unless @targets.is_a?(Array)
-        return false unless @targets.size == 1
+        position = target_position
 
-        target = @targets.first
-
-        return false unless target.is_a?(Hash)
-        return false unless target[:row].is_a?(Integer)
-        return false unless target[:column].is_a?(Integer)
-
+        return false unless position
         return false unless GameState.valid_coordinates?(
-          row: target[:row],
-          column: target[:column]
+          row: position[0],
+          column: position[1]
         )
 
-        object = @state["field"][target[:row]][target[:column]]
+        object = @state["field"][position[0]][position[1]]
 
         object &&
           object["type"] == "technique" &&
           object["player_id"].to_s != @player_id.to_s
       end
 
-      def destroy_technique(state, technique)
-        row = @targets.first[:row]
-        column = @targets.first[:column]
+      def target_position
+        return unless @targets.is_a?(Array)
+        return unless @targets.size == 1
 
+        target = @targets.first
+
+        case target
+        when Array
+          return unless target.size == 2
+          return unless target.all? { |coordinate| coordinate.is_a?(Integer) }
+
+          target
+        when Hash
+          row = target[:row] || target["row"]
+          column = target[:column] || target["column"]
+
+          return unless row.is_a?(Integer)
+          return unless column.is_a?(Integer)
+
+          [row, column]
+        end
+      end
+
+      def destroy_technique(state, technique, row, column)
         state["players"][
           technique["player_id"].to_s
         ]["graveyard"] << technique

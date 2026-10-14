@@ -1,3 +1,5 @@
+# app/services/game_action_runner.rb
+
 class GameActionRunner
   Result = Data.define(:success?, :error, :state, :events)
 

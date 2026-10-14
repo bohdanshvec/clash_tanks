@@ -1,3 +1,5 @@
+# app/services/game_engine/visible_state.rb
+
 module GameEngine
   class VisibleState
     def self.call(state:, player_id:)

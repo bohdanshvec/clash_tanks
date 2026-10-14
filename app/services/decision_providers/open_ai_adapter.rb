@@ -1,3 +1,5 @@
+# app/services/decision_providers/open_ai_adapter.rb
+
 require "json"
 
 module DecisionProviders

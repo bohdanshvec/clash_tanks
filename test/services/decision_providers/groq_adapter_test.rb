@@ -1,196 +1,380 @@
 require "test_helper"
 
-class DecisionProvidersGroqAdapterTest < ActiveSupport::TestCase
+class DecisionProviders::GroqAdapterTest < ActiveSupport::TestCase
   FakeResponse = Struct.new(:code, :body)
 
   class FakeHttpTransport
-    attr_reader :uri, :request
+    attr_reader :uri, :request, :calls
 
     def initialize(response)
       @response = response
+      @calls = 0
     end
 
     def call(uri, request)
+      @calls += 1
       @uri = uri
       @request = request
       @response
     end
   end
 
-  test "converts a valid Groq response into a decision hash" do
-    response = FakeResponse.new(
-      "200",
-      JSON.generate(
-        choices: [
-          {
-            message: {
-              content: '{"type":"end_turn","payload":{}}'
-            }
-          }
-        ]
-      )
-    )
-
-    transport = FakeHttpTransport.new(response)
-
-    adapter = DecisionProviders::GroqAdapter.new(
-      api_key: "test-api-key",
-      model: "test-model",
-      http_transport: transport
-    )
-
-    decision = adapter.call(
+  setup do
+    @visible_state = {
+      "status" => "started",
       "current_player_id" => "1",
-      "available_actions" => {}
-    )
-
-    assert_equal(
-      {
-        "type" => "end_turn",
-        "payload" => {}
+      "players" => {
+        "1" => {
+          "hand" => []
+        }
       },
-      decision
-    )
-
-    assert_equal(
-      DecisionProviders::GroqAdapter::API_URL,
-      transport.uri.to_s
-    )
-
-    assert_equal "Bearer test-api-key", transport.request["Authorization"]
-    assert_equal "application/json", transport.request["Content-Type"]
-
-    request_body = JSON.parse(transport.request.body)
-
-    assert_equal "test-model", request_body["model"]
-    assert_equal "json_object", request_body.dig("response_format", "type")
-    assert_equal(
-      DecisionProviders::GroqAdapter::INSTRUCTIONS,
-      request_body.dig("messages", 0, "content")
-    )
-  end
-
-  test "sends the visible game state as JSON" do
-    response = FakeResponse.new(
-      "200",
-      JSON.generate(
-        choices: [
-          {
-            message: {
-              content: '{"type":"end_turn","payload":{}}'
-            }
-          }
-        ]
-      )
-    )
-
-    transport = FakeHttpTransport.new(response)
-
-    adapter = DecisionProviders::GroqAdapter.new(
-      api_key: "test-api-key",
-      http_transport: transport
-    )
-
-    visible_state = {
-      "current_player_id" => "1",
       "available_actions" => {
-        "field" => {},
+        "field" => {
+          "0,4" => {
+            "moves" => [],
+            "attacks" => [[2, 0]]
+          }
+        },
         "hand" => {}
       }
     }
 
-    adapter.call(visible_state)
-
-    request_body = JSON.parse(transport.request.body)
-    input = request_body.dig("messages", 1, "content")
-
-    assert_includes input, JSON.generate(visible_state)
+    @legal_actions = [
+      {
+        "type" => "attack",
+        "payload" => {
+          "attacker" => [0, 4],
+          "target" => [2, 0]
+        }
+      },
+      {
+        "type" => "end_turn",
+        "payload" => {}
+      }
+    ]
   end
 
-  test "raises RequestError for an unsuccessful HTTP response" do
-    response = FakeResponse.new("429", '{"error":"rate limit"}')
-    transport = FakeHttpTransport.new(response)
-
-    adapter = DecisionProviders::GroqAdapter.new(
-      api_key: "test-api-key",
-      http_transport: transport
+  test "returns the legal action selected by index zero" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":0}')
     )
 
-    error = assert_raises(
-      DecisionProviders::GroqAdapter::RequestError
-    ) do
-      adapter.call({})
-    end
+    adapter = build_adapter(transport)
 
-    assert_equal "Groq API returned HTTP 429", error.message
+    result = adapter.call(@visible_state)
+
+    assert_equal @legal_actions.first, result
+    assert_equal 1, transport.calls
   end
 
-  test "raises RequestError when the response has no decision content" do
-    response = FakeResponse.new(
-      "200",
-      JSON.generate(choices: [{ message: { content: nil } }])
+  test "returns the legal action selected by index one" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":1}')
     )
 
-    adapter = DecisionProviders::GroqAdapter.new(
-      api_key: "test-api-key",
-      http_transport: FakeHttpTransport.new(response)
-    )
+    adapter = build_adapter(transport)
 
-    assert_raises(
-      DecisionProviders::GroqAdapter::RequestError
-    ) do
-      adapter.call({})
-    end
+    result = adapter.call(@visible_state)
+
+    assert_equal @legal_actions.second, result
+    assert_equal 1, transport.calls
   end
 
-  test "raises RequestError when the decision is not a JSON object" do
-    response = FakeResponse.new(
-      "200",
-      JSON.generate(
-        choices: [
-          {
-            message: {
-              content: '["not","an","object"]'
-            }
+  test "sends the visible state without available actions and sends legal actions separately" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":0}')
+    )
+
+    adapter = build_adapter(transport, model: "test-model")
+
+    adapter.call(@visible_state)
+
+    assert_equal(
+      URI("https://api.groq.com/openai/v1/chat/completions"),
+      transport.uri
+    )
+
+    assert_equal "Bearer test-api-key",
+                 transport.request["Authorization"]
+
+    assert_equal "application/json",
+                 transport.request["Content-Type"]
+
+    body = JSON.parse(transport.request.body)
+
+    assert_equal "test-model", body["model"]
+    assert_equal "json_object", body.dig("response_format", "type")
+    assert_equal DecisionProviders::GroqAdapter::INSTRUCTIONS,
+                 body.dig("messages", 0, "content")
+
+    user_content = JSON.parse(body.dig("messages", 1, "content"))
+
+    expected_game_state = @visible_state.except("available_actions")
+
+    assert_equal expected_game_state, user_content["game_state"]
+    assert_not user_content["game_state"].key?("available_actions")
+    assert_equal @legal_actions, user_content["legal_actions"]
+  end
+
+  test "does not modify the original visible state when preparing the request" do
+    original_state = @visible_state.deep_dup
+
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":0}')
+    )
+
+    adapter = build_adapter(transport)
+
+    adapter.call(@visible_state)
+
+    assert_equal original_state, @visible_state
+    assert @visible_state.key?("available_actions")
+  end
+
+  test "logs token usage when Groq returns usage statistics" do
+    response_body = {
+      "choices" => [
+        {
+          "message" => {
+            "content" => '{"action_index":0}'
           }
-        ]
+        }
+      ],
+      "usage" => {
+        "prompt_tokens" => 1200,
+        "completion_tokens" => 10,
+        "total_tokens" => 1210
+      }
+    }.to_json
+
+    transport = FakeHttpTransport.new(
+      FakeResponse.new("200", response_body)
+    )
+
+    adapter = build_adapter(transport)
+
+    log_output = capture_log_output do
+      adapter.call(@visible_state)
+    end
+
+    assert_includes log_output, "prompt_tokens=1200"
+    assert_includes log_output, "completion_tokens=10"
+    assert_includes log_output, "total_tokens=1210"
+  end
+
+  test "continues when Groq does not return token usage statistics" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":0}')
+    )
+
+    adapter = build_adapter(transport)
+
+    result = nil
+
+    assert_nothing_raised do
+      result = adapter.call(@visible_state)
+    end
+
+    assert_equal @legal_actions.first, result
+  end
+
+  test "rejects a negative action index" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":-1}')
+    )
+
+    adapter = build_adapter(transport)
+
+    assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
+  end
+
+  test "rejects an action index outside the legal actions list" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":2}')
+    )
+
+    adapter = build_adapter(transport)
+
+    assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
+  end
+
+  test "rejects a missing action index" do
+    transport = FakeHttpTransport.new(
+      groq_response("{}")
+    )
+
+    adapter = build_adapter(transport)
+
+    assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
+  end
+
+  test "rejects a non-integer action index" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":"0"}')
+    )
+
+    adapter = build_adapter(transport)
+
+    assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
+  end
+
+  test "does not make a request when there are no legal actions" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":0}')
+    )
+
+    adapter = build_adapter(transport)
+
+    finished_state = @visible_state.merge("status" => "finished")
+
+    error = assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(finished_state)
+    end
+
+    assert_equal "No legal AI actions available", error.message
+    assert_equal 0, transport.calls
+  end
+
+  test "raises an error when Groq returns HTTP 429 without retry instructions" do
+    transport = FakeHttpTransport.new(
+      FakeResponse.new(
+        "429",
+        '{"error":{"message":"Rate limit exceeded"}}'
       )
     )
 
-    adapter = DecisionProviders::GroqAdapter.new(
-      api_key: "test-api-key",
-      http_transport: FakeHttpTransport.new(response)
+    adapter = build_adapter(transport)
+
+    error = assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
+
+    assert_match(/HTTP 429/, error.message)
+    assert_equal 1, transport.calls
+  end
+
+  test "raises an error when Groq returns a non-success HTTP status" do
+    transport = FakeHttpTransport.new(
+      FakeResponse.new("500", '{"error":{"message":"Internal error"}}')
     )
 
-    assert_raises(
-      DecisionProviders::GroqAdapter::RequestError
-    ) do
-      adapter.call({})
+    adapter = build_adapter(transport)
+
+    error = assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
+
+    assert_match(/HTTP 500/, error.message)
+    assert_equal 1, transport.calls
+  end
+
+  test "raises an error when the Groq response body is invalid JSON" do
+    transport = FakeHttpTransport.new(
+      FakeResponse.new("200", "not JSON")
+    )
+
+    adapter = build_adapter(transport)
+
+    assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
     end
   end
 
-  test "raises RequestError when the response body is invalid JSON" do
-    response = FakeResponse.new("200", "not JSON")
+  test "raises an error when the response has no decision content" do
+    response_body = {
+      "choices" => [
+        {
+          "message" => {
+            "content" => nil
+          }
+        }
+      ]
+    }.to_json
 
-    adapter = DecisionProviders::GroqAdapter.new(
-      api_key: "test-api-key",
-      http_transport: FakeHttpTransport.new(response)
+    transport = FakeHttpTransport.new(
+      FakeResponse.new("200", response_body)
     )
 
-    error = assert_raises(
-      DecisionProviders::GroqAdapter::RequestError
-    ) do
-      adapter.call({})
-    end
+    adapter = build_adapter(transport)
 
-    assert_equal "Groq API returned invalid JSON", error.message
+    assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
   end
 
-  test "raises ConfigurationError when the API key is missing" do
-    assert_raises(
-      DecisionProviders::GroqAdapter::ConfigurationError
-    ) do
+  test "raises an error when the decision is not a JSON object" do
+    transport = FakeHttpTransport.new(
+      groq_response('["not","an","object"]')
+    )
+
+    adapter = build_adapter(transport)
+
+    assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
+  end
+
+  test "raises an error when the decision content is invalid JSON" do
+    transport = FakeHttpTransport.new(
+      groq_response("not JSON")
+    )
+
+    adapter = build_adapter(transport)
+
+    assert_raises(DecisionProviders::GroqAdapter::RequestError) do
+      adapter.call(@visible_state)
+    end
+  end
+
+  test "raises a configuration error when the API key is missing" do
+    assert_raises(DecisionProviders::GroqAdapter::ConfigurationError) do
       DecisionProviders::GroqAdapter.new(api_key: nil)
     end
+  end
+
+  private
+
+  def build_adapter(transport, model: "openai/gpt-oss-20b", sleeper: nil)
+    DecisionProviders::GroqAdapter.new(
+      api_key: "test-api-key",
+      model: model,
+      http_transport: transport,
+      sleeper: sleeper
+    )
+  end
+
+  def groq_response(content, code: "200")
+    body = {
+      "choices" => [
+        {
+          "message" => {
+            "content" => content
+          }
+        }
+      ]
+    }.to_json
+
+    FakeResponse.new(code, body)
+  end
+
+  def capture_log_output
+    output = StringIO.new
+    original_logger = Rails.logger
+
+    Rails.logger = ActiveSupport::Logger.new(output)
+
+    yield
+
+    output.string
+  ensure
+    Rails.logger = original_logger
   end
 end

@@ -135,13 +135,28 @@ module Games
           provider_options[:decision_source] = @decision_source
         end
 
-        action = DecisionProviders::AI.new(**provider_options).call
+				action = DecisionProviders::AI.new(**provider_options).call
 
-        # Единственный путь применения действия — через общий исполнитель.
-        result = GameActionRunner.call(
-          game: @game,
-          action: action
-        )
+				Rails.logger.info(
+					"[Games::RunAiTurns] Game ##{@game.id}: " \
+					"AI proposed action type=#{action.type.inspect}, " \
+					"payload=#{action.payload.inspect}"
+				)
+
+				# Единственный путь применения действия — через общий исполнитель.
+				result = GameActionRunner.call(
+					game: @game,
+					action: action
+				)
+
+				unless result.success?
+					Rails.logger.error(
+						"[Games::RunAiTurns] Game ##{@game.id}: " \
+						"AI action rejected: type=#{action.type.inspect}, " \
+						"payload=#{action.payload.inspect}, " \
+						"error=#{result.error.inspect}"
+					)
+				end
 
 				unless result.success?
 					if result.error == GameActionRunner::STALE_STATE_ERROR

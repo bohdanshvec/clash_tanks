@@ -1,3 +1,5 @@
+# app/services/decision_providers/context.rb
+
 module DecisionProviders
   class Context
     attr_reader :player_id, :visible_state, :state_digest
