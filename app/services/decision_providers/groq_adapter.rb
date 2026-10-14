@@ -14,6 +14,9 @@ module DecisionProviders
     API_URL = "https://api.groq.com/openai/v1/chat/completions"
     DEFAULT_MODEL = "openai/gpt-oss-20b"
 
+    DEFAULT_REASONING_EFFORT = "low"
+    DEFAULT_MAX_COMPLETION_TOKENS = 512
+
     MAX_RATE_LIMIT_RETRIES = 3
 
     INSTRUCTIONS = <<~TEXT.freeze
@@ -53,16 +56,30 @@ module DecisionProviders
     def initialize(
       api_key: ENV["GROQ_API_KEY"],
       model: ENV.fetch("GROQ_MODEL", DEFAULT_MODEL),
+      reasoning_effort: DEFAULT_REASONING_EFFORT,
+      max_completion_tokens: DEFAULT_MAX_COMPLETION_TOKENS,
       http_transport: nil,
       sleeper: nil
     )
       @api_key = api_key
       @model = model
+      @reasoning_effort = reasoning_effort
+      @max_completion_tokens = max_completion_tokens
       @http_transport = http_transport
       @sleeper = sleeper || ->(seconds) { sleep(seconds) }
 
       if @api_key.blank?
         raise ConfigurationError, "GROQ_API_KEY is not configured"
+      end
+
+      unless %w[none low medium high].include?(@reasoning_effort)
+        raise ConfigurationError, "Invalid reasoning_effort: #{@reasoning_effort}"
+      end
+
+      unless @max_completion_tokens.is_a?(Integer) &&
+             @max_completion_tokens.positive?
+        raise ConfigurationError,
+              "max_completion_tokens must be a positive integer"
       end
     end
 
@@ -85,6 +102,8 @@ module DecisionProviders
 
       request.body = JSON.generate(
         model: @model,
+        reasoning_effort: @reasoning_effort,
+        max_completion_tokens: @max_completion_tokens,
         messages: [
           {
             role: "system",
@@ -98,9 +117,23 @@ module DecisionProviders
             )
           }
         ],
-        response_format: {
-          type: "json_object"
-        }
+				response_format: {
+					type: "json_schema",
+					json_schema: {
+						name: "ai_action_selection",
+						strict: true,
+						schema: {
+							type: "object",
+							properties: {
+								action_index: {
+								  type: "integer"
+								}
+							},
+							required: ["action_index"],
+							additionalProperties: false
+						}
+					}
+				}
       )
 
       response = send_request_with_rate_limit_retries(uri, request)
@@ -219,12 +252,27 @@ module DecisionProviders
       completion_tokens = usage["completion_tokens"]
       total_tokens = usage["total_tokens"]
 
+      reasoning_tokens = usage.dig(
+        "completion_tokens_details",
+        "reasoning_tokens"
+      )
+
+      finish_reason = data.dig(
+        "choices",
+        0,
+        "finish_reason"
+      )
+
       Rails.logger.info(
         "[GroqAdapter] Token usage: " \
         "model=#{@model}, " \
+        "reasoning_effort=#{@reasoning_effort}, " \
+        "max_completion_tokens=#{@max_completion_tokens}, " \
         "prompt_tokens=#{prompt_tokens.inspect}, " \
         "completion_tokens=#{completion_tokens.inspect}, " \
-        "total_tokens=#{total_tokens.inspect}"
+        "reasoning_tokens=#{reasoning_tokens.inspect}, " \
+        "total_tokens=#{total_tokens.inspect}, " \
+        "finish_reason=#{finish_reason.inspect}"
       )
     rescue JSON::ParserError
       Rails.logger.warn("[GroqAdapter] Could not parse token usage")

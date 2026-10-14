@@ -109,21 +109,12 @@ class GamesController < ApplicationController
 		  return
 		end
 
-		ai_result = run_ai_turns_if_needed
+		# Если сейчас ход ИИ, выполняем его действия.
+		# После каждого действия обновление отправляется игрокам отдельно.
+		run_ai_turns_if_needed(broadcast_each_action: true)
 
-		# Получаем актуальное состояние после возможных действий ИИ.
+		# Получаем актуальное состояние после действий ИИ.
 		@game.reload
-
-		# Если ИИ действительно выполнил действия, обновляем интерфейс
-		# обоих игроков и передаём события Stimulus.
-		events = Array(ai_result&.events)
-
-		if events.any?
-		  broadcast_game_update(events)
-
-		  # Повторное Turbo-обновление этой же страницы не требуется:
-		  # актуальное состояние будет отрисовано обычным render show.
-		end
 
 		@current_player_id = current_player_id
 
@@ -308,72 +299,78 @@ class GamesController < ApplicationController
 
   private
   
-  def run_ai_turns_if_needed
-    return unless @game.started?
-    return unless @game.state.present?
+	def run_ai_turns_if_needed(broadcast_each_action: false)
+		return unless @game.started?
+		return unless @game.state.present?
 
-    state = @game.state
-    current_player_id = state["current_player_id"].to_s
+		state = @game.state
+		current_player_id = state["current_player_id"].to_s
 
-    return if current_player_id.empty?
+		return if current_player_id.empty?
 
-    current_player = Player.find_by(id: current_player_id)
+		current_player = Player.find_by(id: current_player_id)
 
-    return unless current_player&.ai?
+		return unless current_player&.ai?
 
-    result = Games::RunAiTurns.call(game: @game)
+		options = { game: @game }
 
-    unless result.success?
-      Rails.logger.error(
-        "[GamesController] AI turn failed for game ##{@game.id}: " \
-        "#{result.error}"
-      )
-    end
+		if broadcast_each_action
+		  options[:on_action] = lambda do |action_events|
+		    # Сервис вызывает callback после успешного сохранения действия.
+		    # Перечитываем игру, чтобы отправить актуальное состояние.
+		    @game.reload
 
-    result
-  rescue StandardError => e
-    Rails.logger.error(
-      "[GamesController] Could not run AI turns for game ##{@game&.id}: " \
-      "#{e.class}: #{e.message}"
-    )
+		    broadcast_game_update(action_events)
+		  end
+		end
 
-    nil
-  end
+		result = Games::RunAiTurns.call(**options)
 
-  def process_game_action(action)
-    result = GameActionRunner.call(
-      game: @game,
-      action: action
-    )
+		unless result.success?
+		  Rails.logger.error(
+		    "[GamesController] AI turn failed for game ##{@game.id}: " \
+		    "#{result.error}"
+		  )
+		end
 
-    unless result.success?
-      render plain: result.error, status: :unprocessable_entity
-      return
-    end
+		result
+	rescue StandardError => e
+		Rails.logger.error(
+		  "[GamesController] Could not run AI turns for game ##{@game&.id}: " \
+		  "#{e.class}: #{e.message}"
+		)
 
-		# Создаём изменяемую копию событий успешного действия человека.
-		# Исходный массив GameActionRunner может быть заморожен.
+		nil
+	end
+
+	def process_game_action(action)
+		result = GameActionRunner.call(
+		  game: @game,
+		  action: action
+		)
+
+		unless result.success?
+		  render plain: result.error, status: :unprocessable_entity
+		  return
+		end
+
+		# Сначала публикуем результат действия человека.
+		# Это позволяет другим открытым подключениям получить
+		# обновление до завершения запросов к AI-провайдеру.
 		events = Array(result.events).dup
 
-    @game.reload
+		@game.reload
+		broadcast_game_update(events)
 
-    # Выполняем действия ИИ, если сейчас его ход.
-    ai_result = run_ai_turns_if_needed
+		# Если после действия человека ход перешёл к ИИ,
+		# каждое успешное действие ИИ будет отправлено отдельно.
+		run_ai_turns_if_needed(broadcast_each_action: true)
 
-    # Добавляем события всех успешно выполненных действий ИИ.
-    if ai_result
-      events.concat(Array(ai_result.events))
-    end
+		# Получаем окончательное состояние для ответа на запрос.
+		@game.reload
 
-    # Получаем окончательное состояние игры.
-    @game.reload
-
-    # Отправляем обоим игрокам обновление с итоговым состоянием
-    # и событиями, произошедшими за время обработки запроса.
-    broadcast_game_update(events)
-
-    respond_after_success
-  end
+		respond_after_success
+	end
 
   def reject_waiting_game_action!
     return false unless @game.waiting? && @game.state.nil?

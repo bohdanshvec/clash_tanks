@@ -172,7 +172,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert retry_result.success?, retry_result.error
     assert_equal 1, retry_result.actions_count
   end
-  
+
   test "releases the advisory lock after a successful AI turn" do
     first_result = Games::RunAiTurns.call(
       game: @game,
@@ -205,9 +205,11 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert second_result.success?, second_result.error
     assert_equal 1, second_result.actions_count
   end
-  
+
   test "preserves successful AI action events when next decision fails" do
     calls = 0
+    callback_events = []
+    callback_states = []
 
     decision_source = lambda do |_visible_state|
       calls += 1
@@ -232,13 +234,20 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
 
     result = Games::RunAiTurns.call(
       game: @game,
-      decision_source: decision_source
+      decision_source: decision_source,
+      on_action: lambda do |action_events|
+        callback_events << action_events
+        callback_states << @game.reload.state.deep_dup
+      end
     )
 
+    # Второе решение завершилось ошибкой, но первое действие
+    # должно остаться успешно применённым.
     assert_not result.success?
     assert_equal 1, result.actions_count
     assert_equal 2, calls
 
+    # Проверяем накопленные события результата сервиса.
     assert_equal 1, result.events.size
 
     attack_event = result.events.first
@@ -247,6 +256,21 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal [2, 0], attack_event.dig(:attacker, :position)
     assert_equal [0, 4], attack_event.dig(:target, :position)
 
+    # Callback должен сработать ровно один раз — после первого,
+    # успешно применённого действия.
+    assert_equal 1, callback_events.size
+    assert_equal result.events, callback_events.first
+
+    # В момент вызова callback новое состояние уже должно быть сохранено.
+    assert_equal 1, callback_states.size
+
+    callback_hq = callback_states.first.dig(
+      "field", 0, 4
+    )
+
+    assert_operator callback_hq["hp"], :<, human_hq_initial_hp
+
+    # Проверяем состояние игры после завершения цикла.
     @game.reload
 
     assert @game.started?
@@ -260,7 +284,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
 
     assert_operator human_hq["hp"], :<, human_hq_initial_hp
   end
-  
+
   test "does not execute actions when the action limit is zero" do
     provider_called = false
 
@@ -320,7 +344,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert retry_result.success?, retry_result.error
     assert_equal 1, retry_result.actions_count
   end
-  
+
   test "retries an AI decision when the game state becomes stale" do
     calls = 0
 
@@ -456,7 +480,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
       @game.state["current_player_id"].to_s
     )
   end
-  
+
   private
 
   def create_ai_game

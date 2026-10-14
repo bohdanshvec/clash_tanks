@@ -198,7 +198,7 @@ class GamesControllerAiTest < ActionDispatch::IntegrationTest
     )
   end
   
-  test "broadcasts AI action events when human opens game" do
+  test "broadcasts each AI action separately when human opens game" do
     broadcasts = []
     calls = 0
 
@@ -248,7 +248,7 @@ class GamesControllerAiTest < ActionDispatch::IntegrationTest
 
     assert_response :success
 
-    # ИИ выполнил атаку и завершил ход.
+    # ИИ выполнил атаку, затем завершил ход.
     assert_equal 2, calls
 
     @game.reload
@@ -260,10 +260,12 @@ class GamesControllerAiTest < ActionDispatch::IntegrationTest
       @game.state["current_player_id"].to_s
     )
 
-    # Контроллер отправил обновление обоим участникам.
-    assert_equal 2, broadcasts.size
+    # Каждое из двух действий отправляется обоим участникам.
+    assert_equal 4, broadcasts.size
 
     expected_streams = [
+      [@game, @human.id.to_s],
+      [@game, @ai.id.to_s],
       [@game, @human.id.to_s],
       [@game, @ai.id.to_s]
     ]
@@ -273,39 +275,53 @@ class GamesControllerAiTest < ActionDispatch::IntegrationTest
       broadcasts.map { |args, _kwargs| args.first }
     )
 
-    broadcasts.each do |args, kwargs|
-      viewer_id = args.first.last.to_s
-      locals = kwargs.fetch(:locals)
-      visible_state = locals.fetch(:visible_state)
-      events = locals.fetch(:events)
+    broadcasts.each_slice(2).with_index do |action_broadcasts, index|
+      action_broadcasts.each do |args, kwargs|
+        viewer_id = args.first.last.to_s
+        locals = kwargs.fetch(:locals)
+        visible_state = locals.fetch(:visible_state)
+        events = locals.fetch(:events)
 
-      assert_equal(
-        viewer_id,
-        locals.fetch(:current_player_id).to_s
-      )
+        assert_equal(
+          viewer_id,
+          locals.fetch(:current_player_id).to_s
+        )
 
-      assert_equal(
-        @human.id.to_s,
-        visible_state.fetch("current_player_id").to_s
-      )
+        assert_equal(
+          index.zero? ? @ai.id.to_s : @human.id.to_s,
+          visible_state.fetch("current_player_id").to_s
+        )
 
-      assert_equal 2, visible_state.fetch("turn_number")
+        assert_equal(
+          index.zero? ? 1 : 2,
+          visible_state.fetch("turn_number")
+        )
 
-      assert(
-        events.any? { |event| event[:type] == "headquarters_attacked" },
-        "Обновление должно содержать событие атаки штаба"
-      )
+        if index.zero?
+          assert(
+            events.any? do |event|
+              event[:type] == "headquarters_attacked"
+            end,
+            "Первое обновление должно содержать событие атаки штаба"
+          )
+        else
+          assert(
+            events.any? { |event| event[:type] == "turn_ended" },
+            "Второе обновление должно содержать событие завершения хода"
+          )
+        end
 
-      assert_equal "games/game", kwargs.fetch(:partial)
-      assert_equal "game-content", kwargs.fetch(:target)
+        assert_equal "games/game", kwargs.fetch(:partial)
+        assert_equal "game-content", kwargs.fetch(:target)
 
-      opponent_id =
-        viewer_id == @human.id.to_s ? @ai.id.to_s : @human.id.to_s
+        opponent_id =
+          viewer_id == @human.id.to_s ? @ai.id.to_s : @human.id.to_s
 
-      refute(
-        visible_state.fetch("players").fetch(opponent_id).key?("hand"),
-        "Игрок не должен видеть закрытую руку противника"
-      )
+        refute(
+          visible_state.fetch("players").fetch(opponent_id).key?("hand"),
+          "Игрок не должен видеть закрытую руку противника"
+        )
+      end
     end
   end
 

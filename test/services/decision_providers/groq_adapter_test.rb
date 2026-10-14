@@ -103,7 +103,7 @@ class DecisionProviders::GroqAdapterTest < ActiveSupport::TestCase
     body = JSON.parse(transport.request.body)
 
     assert_equal "test-model", body["model"]
-    assert_equal "json_object", body.dig("response_format", "type")
+    assert_equal "json_schema", body.dig("response_format", "type")
     assert_equal DecisionProviders::GroqAdapter::INSTRUCTIONS,
                  body.dig("messages", 0, "content")
 
@@ -339,6 +339,63 @@ class DecisionProviders::GroqAdapterTest < ActiveSupport::TestCase
       DecisionProviders::GroqAdapter.new(api_key: nil)
     end
   end
+  
+	test "sends reasoning optimization parameters" do
+		transport = FakeHttpTransport.new(
+		  groq_response('{"action_index":0}')
+		)
+
+		adapter = build_adapter(transport)
+
+		adapter.call(@visible_state)
+
+		body = JSON.parse(transport.request.body)
+
+		assert_equal "low", body["reasoning_effort"]
+		assert_equal 512, body["max_completion_tokens"]
+
+		assert_equal(
+			{
+				"type" => "json_schema",
+				"json_schema" => {
+				  "name" => "ai_action_selection",
+				  "strict" => true,
+				  "schema" => {
+				    "type" => "object",
+				    "properties" => {
+				      "action_index" => {
+				        "type" => "integer"
+				      }
+				    },
+				    "required" => ["action_index"],
+				    "additionalProperties" => false
+				  }
+				}
+			},
+			body["response_format"]
+		)
+	end
+
+	test "returns original legal action with optimization enabled" do
+		transport = FakeHttpTransport.new(
+		  groq_response('{"action_index":0}')
+		)
+
+		adapter = build_adapter(transport)
+
+		result = adapter.call(@visible_state)
+
+		assert_equal @legal_actions.first, result
+		assert_equal "attack", result["type"]
+
+		assert_equal(
+		  {
+		    "attacker" => [0, 4],
+		    "target" => [2, 0]
+		  },
+		  result["payload"]
+		)
+	end
 
   private
 

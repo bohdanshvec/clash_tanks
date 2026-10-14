@@ -14,23 +14,31 @@ module Games
     # Используется двухцелочисленный вариант блокировки.
     AI_TURN_LOCK_NAMESPACE = 1_129_603_401
 
-    def self.call(
-      game:,
-      max_actions: MAX_ACTIONS_PER_RUN,
-      decision_source: nil
-    )
-      new(
-        game:,
-        max_actions:,
-        decision_source:
-      ).call
-    end
+		def self.call(
+			game:,
+			max_actions: MAX_ACTIONS_PER_RUN,
+			decision_source: nil,
+			on_action: nil
+		)
+			new(
+				game:,
+				max_actions:,
+				decision_source:,
+				on_action:
+			).call
+		end
 
-    def initialize(game:, max_actions:, decision_source: nil)
-      @game = game
-      @max_actions = max_actions
-      @decision_source = decision_source
-    end
+		def initialize(
+			game:,
+			max_actions:,
+			decision_source: nil,
+			on_action: nil
+		)
+			@game = game
+			@max_actions = max_actions
+			@decision_source = decision_source
+			@on_action = on_action
+		end
 
     def call
       Game.connection_pool.with_connection do |connection|
@@ -190,8 +198,25 @@ module Games
 					)
 				end
 
-				events.concat(Array(result.events))
+				action_events = Array(result.events)
+
+				events.concat(action_events)
 				actions_count += 1
+
+				# Успешное действие уже сохранено GameActionRunner.
+				# Уведомляем вызывающий код, чтобы он мог обновить интерфейс.
+				# Ошибка отправки Turbo-обновления не должна отменять
+				# успешно применённое действие или останавливать ход ИИ.
+				if @on_action
+					begin
+						@on_action.call(action_events)
+					rescue StandardError => e
+						Rails.logger.error(
+							"[Games::RunAiTurns] Game ##{@game.id}: " \
+							"Action broadcast callback failed: #{e.class}: #{e.message}"
+						)
+					end
+				end
 
 				# Успешное действие означает, что цикл продолжился нормально.
 				stale_state_retries = 0
