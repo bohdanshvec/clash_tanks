@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_06_162052) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_160837) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,10 +88,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_162052) do
   create_table "games", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "last_seen_at"
+    t.string "mode", default: "pvp", null: false
     t.jsonb "state"
     t.string "status"
     t.datetime "updated_at", null: false
     t.index ["last_seen_at"], name: "index_games_on_last_seen_at"
+    t.index ["mode"], name: "index_games_on_mode"
   end
 
   create_table "headquarters", force: :cascade do |t|
@@ -124,6 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_162052) do
   end
 
   create_table "players", force: :cascade do |t|
+    t.boolean "ai", default: false, null: false
     t.datetime "created_at", null: false
     t.string "email"
     t.boolean "guest", default: false, null: false
@@ -131,6 +134,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_162052) do
     t.string "name"
     t.string "password_digest"
     t.datetime "updated_at", null: false
+    t.index ["ai"], name: "index_players_on_single_ai", unique: true, where: "(ai = true)"
     t.index ["email"], name: "index_players_on_email", unique: true
   end
 
