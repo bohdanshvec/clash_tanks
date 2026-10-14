@@ -2,116 +2,208 @@
 
 ## Текущая контрольная точка
 
-**Завершены:** Stage 1–14, Stage 15.1–15.17, Stage 16 — Players, Stage 17 — Deck UI, Stage 18 — Waiting / Started, **Stage 19 — Human vs Human**.
+Завершены Stage 1--14, Stage 15.1--15.17, Stage 16 --- Players, Stage 17
+--- Deck UI, Stage 18 --- Waiting / Started, Stage 19 --- Human vs
+Human, Stage 20 --- Decision Provider.
 
-**Следующий этап:** Stage 20 — Decision Provider. Его реализация ещё не начата в рамках этой контрольной точки.
+**Stage 21 --- AI в игровом процессе --- НЕ завершён.**
 
-## Последний подтверждённый результат тестов
+Последний подтверждённый пользователем полный набор тестов после
+добавления постоянного AI-игрока и его колод:
 
-```text
-bin/rails test
-450 runs, 1574 assertions, 0 failures, 0 errors, 0 skips
+``` text
+489 runs, 1786 assertions, 0 failures, 0 errors, 0 skips
 ```
 
-Перед завершением Stage 19 также выполнялись целевые тесты Engine, таймеров и GamesController:
+Отдельно подтверждены:
 
-```text
-52 runs, 432 assertions, 0 failures, 0 errors, 0 skips
+``` text
+bin/rails test test/services/ai_players/decks_setup_test.rb
+2 tests, 106 assertions, 0 failures, 0 errors, 0 skips
+
+bin/rails test test/services/ai_players
+4 tests, 114 assertions, 0 failures, 0 errors, 0 skips
 ```
 
-В завершающей проверке Stage 19 код и тесты не изменялись. Не добавлять тесты для уже проверенного поведения без конкретного пробела или ошибки.
+Эти результаты подтверждают имеющиеся тесты, но не полный lifecycle
+AI-игры. После следующих изменений кода полный набор необходимо
+запускать заново.
 
-## Реализованные игровые и технические основы
+## Завершённые этапы
 
-- `GameEngine`: Action/Result, изолированное изменение копии GameState, VisibleState и server-side AvailableActions.
-- StartGame, Draw, turns, Fuel, timers, PlayCard, Move, Attack, HQ/Platoon, FinishGame и Surrender.
-- Hidden information, события Engine и визуальные Turbo/Stimulus реакции.
-- Seed базового контента: 3 Nation, 2 Ability, 33 Card, 18 Technique, 6 Platoon, 3 Headquarters, 6 CardAbility.
-- Browser UI: selection, Drag & Drop, player perspective, finished UI, timer и Turbo updates.
-- Account/guest identity на Player и session-based authentication.
+### Stage 16 --- Players
 
-## Stage 16 — Players (завершён)
+`Player` одновременно account и игровая сущность. Реализованы
+регистрация, вход, выход, `has_secure_password`, `current_player`,
+session-based identity, header, публичные страницы, зарегистрированный
+`/statistics`, development command `bin/rails dev:create_game`.
+Отдельные `User`/Devise не используются.
 
-`Player` одновременно account и игровая сущность; реализованы регистрация, вход, выход, `has_secure_password`, `current_player`, session-based identity, header, публичные страницы, зарегистрированный `/statistics`, development command `bin/rails dev:create_game`. Отдельная модель User и Devise не используются.
+### Stage 17 --- Deck UI
 
-## Stage 17 — Deck UI (завершён)
+Реализованы `Deck`, `DeckCard`, Deck Weight, Headquarters,
+`StarterDecks::Create`, стартовые колоды для зарегистрированных и
+гостей, каталог Cards, `/decks`, preview/editor, quantity, валидации,
+create/edit/destroy и browser UI. Гость просматривает starter Deck, но
+не управляет Deck.
 
-Реализованы Deck, DeckCard, Deck Weight, Headquarters, `StarterDecks::Create`, стартовые колоды для зарегистрированных и гостей, каталог Cards, `/decks`, preview/editor, quantity, валидации, create/edit/destroy, тесты и browser UI.
+### Stage 18 --- Waiting / Started
 
-`/decks` — управление колодами; запуск игры с полной Deck выполняется через `/play`. Гость может просматривать starter Deck, но не управлять Deck.
+Реализованы `/play`, выбор полной Deck, PvP UI, создание waiting Game и
+первого GamePlayer, `FindOpponent`, безопасный `Join`, `StartGame`,
+cancel waiting, heartbeat, stale cleanup, guest lifecycle, VisibleState
+boundary и Turbo refresh. Проверен lifecycle Player/Guest → `/play` →
+waiting → Join → `StartGame` → started → first Action.
 
-## Stage 18 — Waiting / Started (завершён)
+### Stage 19 --- Human vs Human
 
-### /play и matchmaking
+Полный PvP lifecycle проверен пользователем в двух браузерах. `Move`,
+`Attack`, `PlayCard`, `EndTurn`, `Surrender` проходят через controller и
+Engine. `GameActionRunner` блокирует запись; только успешный результат
+сохраняется. Turbo рассылает каждому игроку свой `VisibleState`.
+Проверены причины завершения, пустые actions после завершения и защита
+скрытой информации. Контрольная точка при закрытии Stage 19: 450 runs /
+1574 assertions.
 
-- `/play`, выбор полной Deck, PvP, UI-кнопка AI.
-- Создание waiting Game и первого GamePlayer.
-- `Matchmaking::FindOpponent`: диапазон Deck Weight ±15%, ближайший вес, oldest tie-break, self exclusion, исключение started/finished/two-player games.
-- `Matchmaking::Join` с `with_lock`, второй GamePlayer, StartGame, waiting → started, защита от повторного Join, cancel waiting.
-- Проверен lifecycle `Player/Guest → /play → Deck → waiting → heartbeat → Join → StartGame → started → first Action`.
-- Проверены состав GamePlayer, Nation/Deck/Headquarters, начальный GameState, field/HQ, hand/deck/graveyard/platoons, resources, fuel, current player, время.
+### Stage 20 --- Decision Provider
 
-### VisibleState и Controller boundary
+Реализованы `Base`, `Context`, `Human`, `AI`, `GameEngine::Action` с
+глубоким копированием/замораживанием payload, `GameActionRunner`,
+`VisibleState`, Groq adapter и OpenAI adapter. AI проверяет формат
+ответа, нормализует JSON payload и делает максимум три попытки при
+некорректном формате. Тесты adapters не требуют реальных API-запросов.
 
-- Игрок видит собственную руку, публичные данные, свои AvailableActions, таймеры и результат игры.
-- Не раскрываются чужая рука, содержимое/порядок чужой колоды и скрытая информация о graveyard.
-- Actions для `waiting + state == nil` отклоняются: участнику 422, постороннему 403. Waiting game не поступает в Engine как started game.
+Текущая конфигурация: `AI_PROVIDER` по умолчанию `groq`, модель Groq по
+умолчанию `openai/gpt-oss-20b`; OpenAI adapter доступен как
+альтернатива. Ключи должны храниться только в переменных окружения, не в
+Git.
 
-### Waiting heartbeat и cleanup
+## Stage 21 --- AI в игровом процессе (НЕ завершён)
 
-- Heartbeat при подключении и далее каждые 10 секунд; остановка при Stimulus disconnect; session-based request и CSRF.
-- Проверены ответы heartbeat: успешное обновление, чужая игра 403, started 422, отсутствие авторизации 401.
-- `Matchmaking::CleanupStaleWaitingGames` удаляет stale waiting, сохраняет fresh waiting, started/finished и waiting с `last_seen_at == nil`; обновляет другие waiting rooms через Turbo.
-- Turbo refresh проверен при Join, создании waiting game и cleanup.
+### Что уже реализовано
 
-### Guest lifecycle
+#### База и модели
 
-- Гость создаётся при `/play` без current player, получает временный Player и три starter Deck, identity сохраняется в session.
-- Повторный `/play` использует того же гостя. Поддерживаются guest vs guest и guest vs registered.
-- Гость не управляет Deck и не использует `/statistics`; просмотр `/decks` не создаёт гостя.
-- Cleanup неактивных гостей: порог 24 часа; active waiting/started защищены; starter Deck и finished GamePlayer очищаются с сохранением исторической Game.
-- Guest browser lifecycle проверен вручную.
+-   Миграция `20261012155105_add_mode_to_games.rb`: режимы игры `pvp` и
+    `ai`.
+-   Миграция `20261012155225_add_ai_to_players.rb`: поле `players.ai`.
+-   Миграция с уникальным частичным индексом `MakeAiPlayerUnique`:
+    только один игрок с `ai = true`.
+-   `Game` имеет enum `mode` (`pvp`, `ai`), default `pvp`.
+-   `Player#ai?` возвращает признак технического игрока.
 
-## Stage 19 — Human vs Human (завершён)
+#### Постоянный AI-игрок
 
-### Подтверждённая реализация
+`app/services/ai_players/setup.rb` (`AiPlayers::Setup`): - email
+`ai@clash-tanks.local`, имя `ИИ`; - `guest: false`, `ai: true`; -
+идемпотентно возвращает существующего AI-игрока; - обрабатывает конфликт
+уникального индекса; - если email занят обычным игроком, сообщает об
+ошибке.
 
-- Полный PvP lifecycle от `/play` и waiting/Join/StartGame до действий и завершения партии неоднократно проверен пользователем в **двух независимых браузерах**.
-- `Move`, `Attack`, `PlayCard`, `EndTurn`, `Surrender` проходят через общий `GamesController#process_game_action` и GameEngine.
-- `with_lock` перечитывает актуальное состояние перед Engine; только успешный Result сохраняется в `Game.state`. Отказанные Actions не сохраняются и не вызывают Turbo update.
-- После успешного сохранения общий `broadcast_game_update` рассылает обновление обоим участникам с отдельным `GameEngine::VisibleState` для каждого.
-- `show` загружает сохранённое состояние; `show.html.erb` создаёт персональную Turbo-подписку; `_game.html.erb` использует VisibleState, а не полный Game.state. Перезагрузка страницы получает актуальный snapshot из базы.
-- Stimulus `game_events_controller.js` отвечает за взаимодействие и визуальные события, не применяет правила игры.
-- `game_timer_controller.js` отображает время с поправкой на серверное время, отсчитывает время активного игрока, отправляет `end_turn` только за активного игрока, блокирует повторный запрос в рамках экземпляра контроллера, очищает interval при disconnect и прекращает работу в finished state.
-- Проверены причины завершения: `headquarters_destroyed`, `time_expired`, `empty_deck_damage`, `surrender`; результат, пустые AvailableActions, запрет следующих Actions и защита hidden information.
-- Существующие тесты проверяют Turbo-обновления обоих игроков при завершении игры, а полный lifecycle — при переходе хода.
+#### Три постоянные AI-колоды
 
-### Итог проверки
+`app/services/ai_players/decks_setup.rb` (`AiPlayers::DecksSetup`)
+создаёт:
 
-Stage 19 закрыт после анализа Controller, интеграционных тестов, Turbo-шаблонов, Stimulus и успешного полного набора из **450 тестов / 1574 утверждений**. Новых тестов и изменений рабочего кода в заключительной проверке не потребовалось.
+  Название                           Нация        Вес
+  ---------------------------------- ---------- -----
+  `ИИ — США: лёгкая техника`         США           13
+  `ИИ — СССР: средняя техника`       СССР          22
+  `ИИ — Германия: тяжёлая техника`   Германия      28
 
-### Некритичные наблюдения (не блокируют Stage 20)
+Колоды собраны из существующих карт и штабов, полные, содержат по 10
+карт с допустимым количеством копий. Повторный вызов не дублирует колоды
+и DeckCard. Колоды принадлежат постоянному AI-игроку и должны
+использоваться повторно в разных партиях.
 
-- `game_events_controller.js` и `game_timer_controller.js` передают `player_id` в запросах, хотя сервер определяет игрока по session. Это избыточный параметр, а не используемый в показанном Controller источник identity.
-- При сетевой ошибке `fetch` автоматического `end_turn` нет повторной попытки в текущем экземпляре Stimulus controller; при переподключении экземпляр создаётся заново.
-- Turbo broadcast выполняется после транзакции с `with_lock`. При почти одновременных успешных запросах теоретически возможен порядок доставки обновлений, отличающийся от порядка сохранения. В проверенной игре проблема не воспроизведена; не вводить изменения без конкретного случая.
+#### Совместимость по весу
 
-## Архитектурные границы
+`app/services/matchmaking/ai_deck_selector.rb`
+(`Matchmaking::AiDeckSelector`): - рассматривает полные колоды игрока с
+`ai: true`; - допускает вес пользователя в пределах ±10% от AI-колоды; -
+при нескольких совпадениях выбирает ближайший вес.
 
-```text
-Decision Provider → Action → GameEngine → GameState
+Целочисленные диапазоны: - AI weight 13 → пользовательский вес 12--14; -
+AI weight 22 → 20--24; - AI weight 28 → 26--30.
+
+Случайный выбор между совместимыми колодами обсуждался как возможное
+будущее улучшение, но пока не реализован и не нужен для завершения
+текущего этапа.
+
+#### `/play`
+
+`PagesController#play` загружает полные пользовательские колоды и
+формирует `@ai_decks_by_deck_id`, вызывая selector для каждой
+пользовательской колоды.
+
+### Что ещё не реализовано
+
+1.  **UI:** `play.html.erb` в ветке зарегистрированного игрока
+    безусловно показывает кнопку «В бой --- ИИ». Нужно проверять
+    `@ai_decks_by_deck_id[deck.id]`; при отсутствии совместимой колоды
+    показывать сообщение, сохраняя PvP-кнопку.
+2.  **Стартовые колоды и гость:** `PagesController#play` вызывает
+    `ensure_guest_player!`, поэтому ветка `else` шаблона может быть
+    недостижима. В ней `deck` является хешем без `id`, поэтому
+    `@ai_decks_by_deck_id[deck.id]` неверно. Проверить intended guest
+    flow и исправить согласованно.
+3.  **Создание игры:** текущий `GamesController#create` разрешает только
+    `mode == "pvp"` и отклоняет AI-режим с `422`. Нужна серверная
+    валидация режима, принадлежности/полноты человеческой колоды и
+    совместимости AI-колоды.
+4.  **AI participants:** создать `Game(mode: "ai")` с человеком и
+    постоянным AI-игроком, добавить обоих `GamePlayer` с правильными
+    Deck/Nation/HQ и вызвать `GameEngine::StartGame`. Не создавать AI
+    player/deck на каждую игру.
+5.  **Автоматические ходы:** если первым ходит AI, вызвать его сразу
+    после старта; после действия человека запускать AI только при
+    активной игре и передаче хода ИИ.
+6.  **Выполнение AI Action:** контекст строить для AI `player_id`,
+    использовать только его `VisibleState`, все действия передавать
+    через `GameActionRunner` и Engine.
+7.  **Цикл и concurrency:** ограничить последовательные действия AI;
+    после каждого действия перепроверять статус и текущего игрока;
+    останавливать цикл при смене хода, завершении или ошибке; защититься
+    от параллельного запуска AI для одной игры и устаревшего состояния.
+8.  **Ошибки:** безопасно обрабатывать provider/API errors, timeout,
+    неверный JSON, исчерпание повторов и отказ Engine. Отклонённый
+    Action не должен сохранять состояние или считаться успешным ходом.
+9.  **UI updates/security:** использовать существующий
+    Turbo/VisibleState path; не раскрывать скрытые данные; не запускать
+    AI после окончания игры.
+10. **Тесты:** покрыть совместимость и server validation, создание/старт
+    AI-игры, первый AI-ход, ответ на ход человека, несколько действий,
+    ошибки, остановку цикла, concurrency, Turbo, hidden information,
+    guest lifecycle и регрессии PvP. Использовать fake/mock provider; не
+    делать реальные API-запросы.
+
+### Следующие файлы для проверки
+
+-   `app/controllers/games_controller.rb`
+-   `app/controllers/pages_controller.rb`
+-   `app/views/pages/play.html.erb`
+-   `app/services/matchmaking/ai_deck_selector.rb`
+-   `app/services/ai_players/setup.rb`
+-   `app/services/ai_players/decks_setup.rb`
+-   `app/services/decision_providers/a_i.rb`
+-   `app/services/decision_providers/context.rb`
+-   `app/services/decision_providers/groq_adapter.rb`
+-   `app/services/game_action_runner.rb`
+-   `app/services/game_engine/start_game.rb`
+-   тесты controller, matchmaking, AI services, provider и StartGame.
+
+Следующий практический шаг: изучить AI provider/context/adapters,
+`Matchmaking::Join` и `FindOpponent`, `ApplicationController` и
+существующие тесты; затем реализовать серверный AI create path и старт
+партии. Не переписывать controller целиком до проверки текущих
+контрактов.
+
+## Архитектурный инвариант
+
+``` text
+Decision Provider → Action → GameActionRunner → GameEngine → GameState
 ```
 
-```text
-UI → Stimulus → Controller → Action → GameEngine → GameState → VisibleState → Turbo → Stimulus
-```
-
-```text
-browser session → current_player → GamePlayer → Action.player_id → GameEngine
-```
-
-GameEngine — единственный арбитр правил. Controller, UI, Stimulus, Turbo и AI не изменяют GameState напрямую. `Result.events` передаются через Controller/Turbo для визуальных эффектов; события UI не определяют правила.
-
-## Следующий этап
-
-**Stage 20 — Decision Provider.** Спроектировать общий интерфейс источника решений для Human и будущих AI/External API/Local model. Provider получает только разрешённый VisibleState, выдаёт Action; GameEngine валидирует и применяет Action. Задачи и критерии — в `ROADMAP.md`.
+Controller организует процесс, provider выбирает действие, Engine
+валидирует и применяет его. `VisibleState` ограничивает видимые данные.
+UI и AI не применяют правила напрямую.

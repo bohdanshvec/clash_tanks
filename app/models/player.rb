@@ -23,6 +23,10 @@ class Player < ApplicationRecord
   def registered?
     !guest?
   end
+  
+	def ai?
+		ai
+	end
 
   def display_name
     name.presence || email.split("@").first
