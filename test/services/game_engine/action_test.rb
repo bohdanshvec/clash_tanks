@@ -44,4 +44,41 @@ class GameEngine::ActionTest < ActiveSupport::TestCase
     assert_predicate action, :frozen?
     assert_predicate action.payload, :frozen?
   end
+  
+	test "nested payload data is immutable" do
+		action = GameEngine::Action.new(
+		  player_id: 1,
+		  type: "move",
+		  payload: {
+		    from: [1, 1],
+		    metadata: {
+		      target: [1, 2]
+		    }
+		  }
+		)
+
+		assert_raises(FrozenError) do
+		  action.payload[:from][0] = 2
+		end
+
+		assert_raises(FrozenError) do
+		  action.payload[:metadata][:target][0] = 2
+		end
+	end
+
+	test "does not retain mutable references to original payload" do
+		payload = {
+		  from: [1, 1]
+		}
+
+		action = GameEngine::Action.new(
+		  player_id: 1,
+		  type: "move",
+		  payload: payload
+		)
+
+		payload[:from][0] = 2
+
+		assert_equal [1, 1], action.payload[:from]
+	end
 end
