@@ -24,6 +24,12 @@ class PagesController < ApplicationController
       )
       .order(:name)
       .select(&:complete?)
+      
+    @ai_decks_by_deck_id = @decks.each_with_object({}) do |deck, result|
+      result[deck.id] = Matchmaking::AiDeckSelector.call(
+        player_deck: deck
+      )
+    end
   end
 
 	def decks

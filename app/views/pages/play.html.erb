@@ -79,21 +79,21 @@
                         games_path,
                         method: :post,
                         params: {
-                          deck: deck[:name],
+                          deck_id: deck.id,
                           mode: "pvp"
-                        },
-                        disabled: true,
-                        title: "Игра для гостей будет реализована отдельно" %>
+                        } %>
 
-          <%= button_to "В бой — ИИ",
-                        games_path,
-                        method: :post,
-                        params: {
-                          deck: deck[:name],
-                          mode: "ai"
-                        },
-                        disabled: true,
-                        title: "Режим ИИ будет реализован отдельно" %>
+          <% if @ai_decks_by_deck_id[deck.id].present? %>
+            <%= button_to "В бой — ИИ",
+                          games_path,
+                          method: :post,
+                          params: {
+                            deck_id: deck.id,
+                            mode: "ai"
+                          } %>
+          <% else %>
+            <p>Нет колоды ИИ подходящего веса.</p>
+          <% end %>
         </div>
       </div>
     <% end %>
