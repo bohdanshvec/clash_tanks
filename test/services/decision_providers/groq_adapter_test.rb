@@ -80,7 +80,7 @@ class DecisionProviders::GroqAdapterTest < ActiveSupport::TestCase
     assert_equal 1, transport.calls
   end
 
-  test "sends the visible state without available actions and sends legal actions separately" do
+  test "sends the optimized visible state and legal actions separately" do
     transport = FakeHttpTransport.new(
       groq_response('{"action_index":0}')
     )
@@ -109,10 +109,26 @@ class DecisionProviders::GroqAdapterTest < ActiveSupport::TestCase
 
     user_content = JSON.parse(body.dig("messages", 1, "content"))
 
-    expected_game_state = @visible_state.except("available_actions")
+    expected_game_state = @visible_state.except(
+      "available_actions",
+      "status",
+      "turn_started_at",
+      "server_time",
+      "result"
+    )
 
     assert_equal expected_game_state, user_content["game_state"]
-    assert_not user_content["game_state"].key?("available_actions")
+
+    %w[
+      available_actions
+      status
+      turn_started_at
+      server_time
+      result
+    ].each do |key|
+      assert_not user_content["game_state"].key?(key)
+    end
+
     assert_equal @legal_actions, user_content["legal_actions"]
   end
 
@@ -129,6 +145,30 @@ class DecisionProviders::GroqAdapterTest < ActiveSupport::TestCase
 
     assert_equal original_state, @visible_state
     assert @visible_state.key?("available_actions")
+  end
+
+  test "skips Groq API when only one legal action is available" do
+    visible_state = @visible_state.deep_dup
+
+    visible_state["available_actions"]["field"] = {}
+
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":0}')
+    )
+
+    adapter = build_adapter(transport)
+
+    result = adapter.call(visible_state)
+
+    assert_equal(
+      {
+        "type" => "end_turn",
+        "payload" => {}
+      },
+      result
+    )
+
+    assert_equal 0, transport.calls
   end
 
   test "logs token usage when Groq returns usage statistics" do
@@ -339,63 +379,122 @@ class DecisionProviders::GroqAdapterTest < ActiveSupport::TestCase
       DecisionProviders::GroqAdapter.new(api_key: nil)
     end
   end
-  
-	test "sends reasoning optimization parameters" do
-		transport = FakeHttpTransport.new(
-		  groq_response('{"action_index":0}')
-		)
 
-		adapter = build_adapter(transport)
+  test "sends reasoning optimization parameters" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":0}')
+    )
 
-		adapter.call(@visible_state)
+    adapter = build_adapter(transport)
 
-		body = JSON.parse(transport.request.body)
+    adapter.call(@visible_state)
 
-		assert_equal "low", body["reasoning_effort"]
-		assert_equal 512, body["max_completion_tokens"]
+    body = JSON.parse(transport.request.body)
 
-		assert_equal(
-			{
-				"type" => "json_schema",
-				"json_schema" => {
-				  "name" => "ai_action_selection",
-				  "strict" => true,
-				  "schema" => {
-				    "type" => "object",
-				    "properties" => {
-				      "action_index" => {
-				        "type" => "integer"
-				      }
-				    },
-				    "required" => ["action_index"],
-				    "additionalProperties" => false
-				  }
-				}
-			},
-			body["response_format"]
-		)
-	end
+    assert_equal "low", body["reasoning_effort"]
+    assert_equal 512, body["max_completion_tokens"]
 
-	test "returns original legal action with optimization enabled" do
-		transport = FakeHttpTransport.new(
-		  groq_response('{"action_index":0}')
-		)
+    assert_equal(
+      {
+        "type" => "json_schema",
+        "json_schema" => {
+          "name" => "ai_action_selection",
+          "strict" => true,
+          "schema" => {
+            "type" => "object",
+            "properties" => {
+              "action_index" => {
+                "type" => "integer"
+              }
+            },
+            "required" => ["action_index"],
+            "additionalProperties" => false
+          }
+        }
+      },
+      body["response_format"]
+    )
+  end
 
-		adapter = build_adapter(transport)
+  test "returns original legal action with optimization enabled" do
+    transport = FakeHttpTransport.new(
+      groq_response('{"action_index":0}')
+    )
 
-		result = adapter.call(@visible_state)
+    adapter = build_adapter(transport)
 
-		assert_equal @legal_actions.first, result
-		assert_equal "attack", result["type"]
+    result = adapter.call(@visible_state)
 
-		assert_equal(
-		  {
-		    "attacker" => [0, 4],
-		    "target" => [2, 0]
-		  },
-		  result["payload"]
-		)
-	end
+    assert_equal @legal_actions.first, result
+    assert_equal "attack", result["type"]
+
+    assert_equal(
+      {
+        "attacker" => [0, 4],
+        "target" => [2, 0]
+      },
+      result["payload"]
+    )
+  end
+
+  test "raises InvalidJsonGeneration for json_validate_failed" do
+    response_body = {
+      error: {
+        message: "Failed to validate JSON",
+        type: "invalid_request_error",
+        code: "json_validate_failed"
+      }
+    }.to_json
+
+    transport = FakeHttpTransport.new(
+      FakeResponse.new("400", response_body)
+    )
+
+    adapter = build_adapter(transport)
+
+    error = assert_raises(
+      DecisionProviders::GroqAdapter::InvalidJsonGeneration
+    ) do
+      adapter.call(@visible_state)
+    end
+
+    assert_equal(
+      "Groq API failed to generate valid JSON",
+      error.message
+    )
+
+    assert_equal 1, transport.calls
+  end
+
+  test "does not classify other HTTP 400 errors as InvalidJsonGeneration" do
+    response_body = {
+      error: {
+        message: "Invalid request parameters",
+        type: "invalid_request_error",
+        code: "invalid_request"
+      }
+    }.to_json
+
+    transport = FakeHttpTransport.new(
+      FakeResponse.new("400", response_body)
+    )
+
+    adapter = build_adapter(transport)
+
+    error = assert_raises(
+      DecisionProviders::GroqAdapter::RequestError
+    ) do
+      adapter.call(@visible_state)
+    end
+
+    assert_instance_of(
+      DecisionProviders::GroqAdapter::RequestError,
+      error
+    )
+
+    assert_equal "Groq API returned HTTP 400", error.message
+    assert_equal 1, transport.calls
+  end
 
   private
 

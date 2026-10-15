@@ -4,27 +4,25 @@
 
 ```text
 Decision Provider → Action → GameActionRunner → GameEngine → GameState
-```
 
-`GameEngine` — единственный арбитр игровых правил. `GameEngine::Action` содержит `player_id`, `type`, `payload`. `GameEngine::Result` содержит успех/ошибку, новое состояние и events. Engine работает с копией GameState; при ошибке новое состояние не сохраняется.
-
-```text
 Browser → Controller → Decision Provider → Action → GameActionRunner → GameEngine → GameState
                                                                           ↓
 Browser ← Stimulus ← Turbo ← VisibleState ← сохранённый GameState
 ```
 
-Человек использует `DecisionProviders::Human`, AI — `DecisionProviders::AI`. Любое действие проходит через `GameActionRunner` и `GameEngine`.
+GameEngine — единственный арбитр игровых правил. `GameEngine::Action` содержит `player_id`, `type`, `payload`. `GameEngine::Result` содержит успех/ошибку, новое состояние и events. Engine работает с копией GameState; при ошибке новое состояние не сохраняется.
+
+Человек использует `DecisionProviders::Human`, AI — `DecisionProviders::AI`. Любое действие проходит через GameActionRunner и GameEngine.
 
 ## Game и GameState
 
 `Game.state` — authoritative JSONB snapshot. Основные поля: `status`, `turn_number`, `current_player_id`, `turn_started_at`, `players`, `field`, `result`. Состояние игрока: `nation_id`, `hand`, `deck`, `graveyard`, `platoons`, `resources`, `remaining_time`, `empty_deck_draw_attempts`.
 
-`GameState` не обращается к ActiveRecord. Постоянная Deck не меняется во время партии. Для waiting Game `state == nil`; AI-игра создаётся сразу в started, минуя waiting room.
+GameState не обращается к ActiveRecord. Постоянная Deck не меняется во время партии. Для waiting `Game.state == nil`; AI-игра создаётся сразу в started, минуя waiting room.
 
 `field` содержит HQ и Technique. Platoon хранится в `state["players"][player_id]["platoons"]`; четыре slots сохраняют пустые позиции после уничтожения. Логические координаты не зависят от визуальной перспективы; DOM использует `data-position="row,column"`.
 
-Runtime Technique содержит тип, идентификаторы, имя, характеристики и флаги атаки; не содержит `price`, `weight`, `card_type` или вложенный `technique`. У Technique нет Armor. Runtime Platoon содержит `firepower`, `hp`, `armor`, `fuel`. Правила — только `GAME_RULES.md`.
+Runtime Technique содержит тип, идентификаторы, имя, характеристики и флаги атаки; не содержит price, weight, card_type или вложенный technique. У Technique нет Armor. Runtime Platoon содержит firepower, hp, armor, fuel. Правила — только GAME_RULES.md.
 
 ## Decision Provider
 
@@ -32,15 +30,15 @@ Provider выбирает намерение, но не применяет иг�
 
 ### Base и Context
 
-`DecisionProviders::Base` задаёт интерфейс `call`. `DecisionProviders::Context` формирует `player_id`, `visible_state` через `GameEngine::VisibleState` и `available_actions`. Контекст рекурсивно заморожен. Provider не получает полный скрытый state.
+`DecisionProviders::Base` задаёт интерфейс `call`. `DecisionProviders::Context` формирует `player_id`, `visible_state` через `GameEngine::VisibleState` и available actions. Контекст рекурсивно заморожен. Provider не получает полный скрытый state.
 
 ### Human
 
-`DecisionProviders::Human` преобразует `move`, `attack`, `play_card`, `end_turn`, `surrender` в `GameEngine::Action`. Controller передаёт действие в `GameActionRunner`.
+`DecisionProviders::Human` преобразует move, attack, play_card, end_turn, surrender в `GameEngine::Action`. Controller передаёт действие в GameActionRunner.
 
 ### AI
 
-`DecisionProviders::AI` проверяет Hash-ответ, непустой `type`, Hash-`payload`, рекурсивно нормализует ключи JSON и создаёт Action. При некорректном формате допускается до трёх попыток (`MAX_ATTEMPTS = 3`). Формат не заменяет проверку допустимости в Engine.
+`DecisionProviders::AI` проверяет Hash-ответ, непустой type, Hash-payload, рекурсивно нормализует ключи JSON и создаёт Action. При некорректном формате допускается до трёх попыток (`MAX_ATTEMPTS = 3`). Формат не заменяет проверку допустимости в Engine.
 
 ### Groq и OpenAI
 
@@ -48,38 +46,44 @@ Provider выбирает намерение, но не применяет иг�
 
 Актуальная конфигурация Groq:
 
-- Structured Outputs: строгая JSON-схема ответа с `action_index` (не прежний свободный JSON-режим).
+- Structured Outputs: строгая JSON-схема ответа с `action_index`.
 - `reasoning_effort=low`.
 - `max_completion_tokens=512`.
 - Подменяемый HTTP transport для тестов.
 - Логи `prompt_tokens`, `completion_tokens`, `reasoning_tokens`, `total_tokens`, `finish_reason` и диагностика HTTP/rate-limit headers.
-- Ограниченные повторы HTTP 429, когда распознана положительная задержка.
+- Ограниченные повторы HTTP 429 при распознанной положительной задержке; ограниченная обработка временных сетевых ошибок.
+- Если доступно ровно одно допустимое действие, адаптер возвращает его без запроса к API.
+- Стратегическая инструкция `INSTRUCTIONS` оставлена без сокращения по решению пользователя.
 
-Исторически наблюдались HTTP 429 из-за TPM и HTTP 400 `json_validate_failed` в прежней конфигурации. Переход к Structured Outputs и ограничению completion tokens реализован и дал успешную полноценную браузерную партию; это не означает, что сетевые ошибки и лимиты полностью устранены. Следующая проверка — timeout, 429, недоступность API, восстановление игры.
+Исторически наблюдались HTTP 429 из-за TPM и HTTP 400 `json_validate_failed` в прежней конфигурации. Structured Outputs и ограничение completion tokens успешно работали в полноценной браузерной партии; это не означает, что сетевые ошибки и лимиты полностью устранены. Дальнейшая оптимизация token usage или устойчивости может быть выполнена отдельно.
 
-`DecisionProviders::OpenAiAdapter` — альтернатива через `OPENAI_API_KEY` и `OPENAI_MODEL`. `AI_PROVIDER` выбирает адаптер, default — `groq`. Адаптеры не применяют правила и не сохраняют state. Автоматические тесты используют fake/mock transport, не обращаются к реальным API и не требуют ключей.
+Временное development-логирование полного request payload не следует оставлять включённым: оно выводит всё состояние запроса, включая руку AI и legal actions, и создаёт объёмные логи. Предпочтительны usage-метрики и HTTP/rate-limit диагностика.
+
+`DecisionProviders::OpenAiAdapter` — альтернатива через `OPENAI_API_KEY` и `OPENAI_MODEL`. `AI_PROVIDER` выбирает адаптер, default — groq. Адаптеры не применяют правила и не сохраняют state. Автоматические тесты используют fake/mock transport, не обращаются к реальным API и не требуют ключей.
 
 ## Action и GameActionRunner
 
-`GameEngine::Action` содержит `player_id`, `type`, `payload`; вложенные Hash/Array копируются и замораживаются. `GameActionRunner` блокирует игру, сверяет `expected_state_digest` с актуальным состоянием, вызывает Engine и сохраняет только успешный результат. Отказанный или устаревший Action не должен менять state и вызывать успешный Turbo broadcast.
+`GameEngine::Action` содержит `player_id`, `type`, `payload`; вложенные Hash/Array копируются и замораживаются. GameActionRunner блокирует игру, сверяет `expected_state_digest` с актуальным состоянием, вызывает Engine и сохраняет только успешный результат. Отказанный или устаревший Action не должен менять state и вызывать успешный Turbo broadcast.
 
-Нельзя давать AI скрытый state, изменять Game.state напрямую, переносить правила в provider или позволять AI действовать от имени другого игрока.
+Нельзя давать AI скрытый state, изменять `Game.state` напрямую, переносить правила в provider или позволять AI действовать от имени другого игрока.
 
 ## VisibleState и AvailableActions
 
-`GameEngine::VisibleState` — разрешённая граница данных UI/AI. Игрок видит свою руку; противник — только количества карт в руке/колоде/сбросе и публичные объекты/ресурсы/время. Содержимое и порядок чужих hand/deck/graveyard скрыты. `AvailableActions` входит в VisibleState; у неактивного игрока и finished game действий нет. Engine всё равно самостоятельно валидирует Action.
+`GameEngine::VisibleState` — разрешённая граница данных UI/AI. Игрок видит свою руку; противник — только количества карт в руке/колоде/сбросе и публичные объекты/ресурсы/время. Содержимое и порядок чужих hand/deck/graveyard скрыты. AvailableActions входит в VisibleState; у неактивного игрока и finished game действий нет. Engine всё равно самостоятельно валидирует Action.
+
+`GameEngine::AvailableActions` формирует серверные подсказки для перемещений, атак, размещения техники, взводов и приказов. Эти данные не заменяют проверку действия в Engine и не должны дублироваться внутри `game_state` запроса Groq, когда `legal_actions` уже переданы отдельно.
 
 ## Модели, Deck и Ability
 
-Модели: `Game`, `Player`, `GamePlayer`, `Nation`, `Card`, `Headquarters`, `Technique`, `Platoon`, `Ability`, `CardAbility`, `Deck`, `DeckCard`.
+Модели: Game, Player, GamePlayer, Nation, Card, Headquarters, Technique, Platoon, Ability, CardAbility, Deck, DeckCard.
 
-`Player` использует `has_secure_password`, поля `email`, `name`, `password_digest`, `guest`, `ai`, `last_seen_at`, методы `guest?`, `registered?`, `ai?`, `display_name`. Отдельные User/Devise отсутствуют.
+Player использует `has_secure_password`, поля email, name, password_digest, guest, ai, last_seen_at, методы `guest?`, `registered?`, `ai?`, `display_name`. Отдельные User/Devise отсутствуют.
 
-`Game` имеет `waiting`, `started`, `finished` и режимы `pvp`, `ai`. `GamePlayer` связывает игру, игрока, нацию, колоду и штаб. `DeckCard` хранит quantity, вес Deck — сумма `card.weight * quantity`. `StarterDecks::Create.call(player)` создаёт три starter Deck; seed не создаёт игроков/колоды. Способности: `Card → CardAbility → Ability → GameEngine::Abilities::Executor`; не создавать TechniqueAbility или HeadquartersAbility.
+Game имеет waiting, started, finished и режимы pvp, ai. GamePlayer связывает игру, игрока, нацию, колоду и штаб. DeckCard хранит quantity, вес Deck — сумма `card.weight * quantity`. `StarterDecks::Create.call(player)` создаёт три starter Deck; seed не создаёт игроков/колоды. Способности: Card → CardAbility → Ability → GameEngine::Abilities::Executor; не создавать TechniqueAbility или HeadquartersAbility.
 
 ## Постоянный AI-игрок и колоды
 
-`AiPlayers::Setup` идемпотентно находит/создаёт единственного `Player` с `ai: true`, email `ai@clash-tanks.local`; частичный уникальный индекс не допускает второго. Если email занят обычным игроком, возвращается ошибка.
+`AiPlayers::Setup` идемпотентно находит/создаёт единственного Player с `ai: true`, email `ai@clash-tanks.local`; частичный уникальный индекс не допускает второго. Если email занят обычным игроком, возвращается ошибка.
 
 `AiPlayers::DecksSetup` идемпотентно готовит три полные колоды:
 
@@ -89,11 +93,11 @@ Provider выбирает намерение, но не применяет иг�
 | ИИ — СССР: средняя техника | СССР | 22 |
 | ИИ — Германия: тяжёлая техника | Германия | 28 |
 
-`StartGame` копирует/перемешивает карты в state новой партии, постоянные Deck не изменяются. `Matchmaking::AiDeckSelector` ищет полные колоды в допуске ±10%, выбирает ближайший вес. Целочисленные диапазоны человеческого веса: 12–14, 20–24, 26–30 соответственно. Случайный выбор пока не реализован. UI-проверка `/play` не заменяет серверную проверку режима, принадлежности/полноты Deck и совместимости.
+StartGame копирует/перемешивает карты в state новой партии, постоянные Deck не изменяются. `Matchmaking::AiDeckSelector` ищет полные колоды в допуске ±10%, выбирает ближайший вес. Целочисленные диапазоны человеческого веса: 12–14, 20–24, 26–30 соответственно.
 
 ## Engine, events и timers
 
-Основные сервисы: `StartGame`, `Draw`, `Turns::PreparePlayer`, `Resources::FuelCalculator`, `Move`, `Attack`, `PlayCard`, `EndTurn`, `Surrender`, `FinishGame`. Вложенные операции сохраняют события до `Result.events`; завершение игры использует единый `game_finished`. `TurnTimer` и `TurnTimerForTurn` отвечают за время; сервер проверяет общий timeout до Action, клиентский `game_timer_controller.js` отображает время и вызывает существующий `end_turn`.
+Основные сервисы: StartGame, Draw, Turns::PreparePlayer, Resources::FuelCalculator, Move, Attack, PlayCard, EndTurn, Surrender, FinishGame. Вложенные операции сохраняют события до `Result.events`; завершение игры использует единый `game_finished`. TurnTimer и TurnTimerForTurn отвечают за время; сервер проверяет общий timeout до Action, клиентский `game_timer_controller.js` отображает время и вызывает существующий end_turn.
 
 ## Games::RunAiTurns — автоматический цикл
 
@@ -105,13 +109,13 @@ Provider выбирает намерение, но не применяет иг�
 - Перед каждым решением перечитывает Game и проверяет status/current player/лимит.
 - Действия проходят `DecisionProviders::AI → GameActionRunner → GameEngine`.
 - Прекращает цикл при завершении, смене хода, ошибке или лимите; ранее сохранённые действия не откатываются при последующей ошибке.
-- **Необязательный callback `on_action`** получает events отдельного успешного действия **после его сохранения**. Callback не должен изменять state или содержать игровые правила. Тест проверяет, что состояние уже сохранено к моменту вызова.
+- Необязательный callback `on_action` получает events отдельного успешного действия **после его сохранения**. Callback не должен изменять state или содержать игровые правила. Тест проверяет, что состояние уже сохранено к моменту вызова.
 
 ## UI, Turbo и перспектива — пошаговый AI broadcast
 
-Каждый участник подписан на `[@game, current_player_id]`. `GamesController#broadcast_game_update(events)` формирует **отдельный `VisibleState` для каждого игрока** и отправляет Turbo update в `game-content`; скрытый полный state не передаётся браузеру.
+Каждый участник подписан на `[game, current_player_id]`. `GamesController#broadcast_game_update(events)` формирует **отдельный VisibleState для каждого игрока** и отправляет Turbo update в `game-content`; скрытый полный state не передаётся браузеру.
 
-**Проверенный flow после человеческого действия:**
+Проверенный flow после человеческого действия:
 
 ```text
 Human Action
@@ -130,9 +134,9 @@ Human Action
 
 `GamesController#show` также запускает AI с `broadcast_each_action: true`, если при открытии started-игры ход принадлежит AI. `run_ai_turns_if_needed` логирует ошибки и не отменяет уже сохранённые действия.
 
-**Важно:** не возвращаться к старой схеме «накопить события всех AI-действий и отправить один broadcast в конце». Не помещать Turbo в `GameActionRunner`, Engine или provider. Controller организует рассылку, Engine отвечает за правила. Поскольку AI выполняется синхронно, проверять задержки и UX при медленном API отдельно; callback сам по себе не гарантирует визуальной паузы между действиями.
+**Важно:** не возвращаться к схеме «накопить события всех AI-действий и отправить один broadcast в конце». Не помещать Turbo в GameActionRunner, Engine или provider. Controller организует рассылку, Engine отвечает за правила. AI выполняется синхронно; callback сам по себе не гарантирует визуальной паузы между действиями.
 
-Контроллерные тесты подтверждают отдельные broadcasts для `attack` и `end_turn`: два действия × два адресата = четыре отправки. Проверяются события/состояния каждого шага и отсутствие скрытой руки. В браузере пользователь подтвердил последовательное отображение действий и завершение полноценной партии, включая поражение от урона пустой колоды.
+Контроллерные тесты подтверждают отдельные broadcasts для attack и end_turn: два действия × два адресата = четыре отправки. Проверяются события/состояния каждого шага и отсутствие скрытой руки. Пользователь подтвердил в браузере последовательное отображение действий и завершение полноценной партии, включая поражение от урона пустой колоды.
 
 Waiting room использует отдельную подписку и heartbeat; stale cleanup не удаляет started/finished игры. Stimulus отвечает за ввод и визуальные события, не правила. Перспектива: свой HQ снизу слева, чужой сверху справа; state и логические координаты не меняются.
 
@@ -144,17 +148,17 @@ browser session → current_player → GamePlayer → Action.player_id → GameE
 
 Гость создаётся при `/play`, получает три starter Deck, переиспользуется в сессии; не управляет Deck и не использует `/statistics`. PvP `Matchmaking::FindOpponent` ищет waiting games с одним участником, совместимость веса ±15%, выбирает ближайший вес, затем более старую игру. `Matchmaking::Join` использует `with_lock`, создаёт второго GamePlayer и вызывает StartGame. `CleanupStaleWaitingGames` очищает только устаревшие waiting games.
 
-## Незавершённые задачи AI — Stage 21
+## Статус Stage 21
 
-Серверный AI-цикл, безопасное применение Action, пошаговый Turbo broadcast и полноценная браузерная партия **проверены**. Не считать их отсутствующими. Stage 21 ещё не завершён.
+**Stage 21 — AI в игровом процессе — завершён по решению пользователя.** Подтверждены автоматические тесты, последовательный Turbo broadcast и полноценная браузерная партия с реальным Groq. Пользователь решил оставить системную инструкцию без сокращения. Возможные будущие улучшения надёжности Groq, оптимизации токенов, стратегии или дополнительных браузерных edge cases не являются блокерами завершения Stage 21; если потребуется, к ним можно вернуться отдельно.
 
-1. **Приоритет:** надёжность Groq при HTTP 429, timeout, недоступности API, исчерпании повторов и возобновлении игры. Сначала изучить текущий код и тесты; не дублировать покрытие.
-2. Проверить `/play`: совместимость AI-кнопки и сообщение при отсутствии совместимой колоды, доступность PvP.
-3. Проверить guest/starter deck identity и передачу выбора; не предполагать, что starter deck всегда объект Deck с `id`.
-4. Сверить серверную валидацию AI create path, состав участников, StartGame и отсутствие побочных изменений при ошибке.
-5. Подтвердить отдельные браузерные сценарии: гость, зарегистрированный игрок, первый ход AI, несовместимые колоды, отсутствие PvP-регрессий. Не повторять уже подтверждённую полную AI-партию без причины.
-6. После изменений выполнить целевые тесты и полный набор, обновить PROGRESS/ROADMAP.
+Последние подтверждённые результаты:
+
+```text
+GroqAdapterTest: 23 runs, 62 assertions, 0 failures, 0 errors, 0 skips
+Full suite:      534 runs, 2029 assertions, 0 failures, 0 errors, 0 skips
+```
 
 ## Тестирование AI
 
-Fake/mock источники решений и HTTP transport. Проверять скрытые данные, правильный player_id, отсутствие прямой мутации state, отказ Engine, stale state, ошибки provider, сохранение частичных результатов, остановку цикла, advisory lock и отдельный broadcast после каждого успешного действия. Реальный API — только при отдельной ручной проверке.
+Fake/mock источники решений и HTTP transport. Проверять скрытые данные, правильный `player_id`, отсутствие прямой мутации state, отказ Engine, stale state, ошибки provider, сохранение частичных результатов, остановку цикла, advisory lock и отдельный broadcast после каждого успешного действия. Реальный API — только при отдельной ручной проверке.

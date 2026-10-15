@@ -211,6 +211,63 @@ class DecisionProvidersAITest < ActiveSupport::TestCase
       provider.call
     end
   end
+  
+	test "retries when Groq returns an invalid action index" do
+		attempts = 0
+
+		decision_source = lambda do |_visible_state|
+		  attempts += 1
+
+		  if attempts == 1
+		    raise DecisionProviders::GroqAdapter::InvalidActionIndex,
+		          "Groq API returned an invalid action index"
+		  end
+
+		  {
+		    "type" => "end_turn",
+		    "payload" => {}
+		  }
+		end
+
+		provider = DecisionProviders::AI.new(
+		  context: build_context,
+		  decision_source: decision_source
+		)
+
+		action = provider.call
+
+		assert_equal 2, attempts
+		assert_instance_of GameEngine::Action, action
+		assert_equal "1", action.player_id
+		assert_equal "end_turn", action.type
+	end
+
+	test "stops after three invalid Groq action indexes" do
+		attempts = 0
+
+		decision_source = lambda do |_visible_state|
+		  attempts += 1
+
+		  raise DecisionProviders::GroqAdapter::InvalidActionIndex,
+		        "Groq API returned an invalid action index"
+		end
+
+		provider = DecisionProviders::AI.new(
+		  context: build_context,
+		  decision_source: decision_source
+		)
+
+		error = assert_raises(ArgumentError) do
+		  provider.call
+		end
+
+		assert_equal 3, attempts
+
+		assert_includes(
+		  error.message,
+		  "AI failed to produce a valid decision after 3 attempts"
+		)
+	end
 
   private
 
