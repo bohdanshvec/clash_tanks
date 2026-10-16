@@ -31,13 +31,13 @@ module DecisionProviders
           if attempts >= MAX_ATTEMPTS
             raise ArgumentError,
                   "AI failed to produce a valid decision after " \
-                  "#{MAX_ATTEMPTS} attempts: #{error.message}"
+                  "#{MAX_ATTEMPTS} attempts (#{error.class})"
           end
 
           Rails.logger.warn(
             "[DecisionProviders::AI] Invalid decision: " \
-            "#{error.class}: #{error.message}. " \
-            "Retry #{attempts}/#{MAX_ATTEMPTS}."
+            "error_class=#{error.class}, " \
+            "retry=#{attempts}/#{MAX_ATTEMPTS}"
           )
         end
       end

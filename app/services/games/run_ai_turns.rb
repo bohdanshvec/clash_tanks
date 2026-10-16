@@ -65,10 +65,10 @@ module Games
           )
         end
       end
-    rescue StandardError => e
+    	rescue StandardError => e
       Rails.logger.error(
         "[Games::RunAiTurns] Game ##{@game&.id}: " \
-        "#{e.class}: #{e.message}"
+        "error_class=#{e.class}"
       )
 
       failure_result(
@@ -135,6 +135,37 @@ module Games
           state: state,
           player_id: current_player_id
         )
+        
+				# Диагностика доступных AI-действий.
+				# Используется только VisibleState, без скрытых данных противника.
+				visible_state = context.visible_state
+
+				legal_actions = DecisionProviders::ActionOptions.call(
+					visible_state
+				)
+
+				ai_player = visible_state.fetch(
+					"players",
+					{}
+				).fetch(current_player_id, {})
+
+				ai_hand = ai_player.fetch("hand", [])
+
+				available_hand = visible_state.fetch(
+					"available_actions",
+					{}
+				).fetch("hand", {})
+
+				Rails.logger.info(
+					"[AI Diagnostics] Game ##{@game.id}: " \
+					"turn=#{state['turn_number']}, " \
+					"resources=#{ai_player['resources']}, " \
+					"hand_size=#{ai_hand.length}, " \
+					"legal_actions_count=#{legal_actions.length}, " \
+					"legal_action_types=#{legal_actions.map { |action|
+						action['type']
+					}.tally.inspect}"
+				)
 
         # ИИ выбирает действие, но не применяет его самостоятельно.
         provider_options = { context: context }
@@ -147,8 +178,7 @@ module Games
 
 				Rails.logger.info(
 					"[Games::RunAiTurns] Game ##{@game.id}: " \
-					"AI proposed action type=#{action.type.inspect}, " \
-					"payload=#{action.payload.inspect}"
+					"AI proposed action type=#{action.type.inspect}"
 				)
 
 				# Единственный путь применения действия — через общий исполнитель.
@@ -161,7 +191,6 @@ module Games
 					Rails.logger.error(
 						"[Games::RunAiTurns] Game ##{@game.id}: " \
 						"AI action rejected: type=#{action.type.inspect}, " \
-						"payload=#{action.payload.inspect}, " \
 						"error=#{result.error.inspect}"
 					)
 				end
@@ -213,7 +242,8 @@ module Games
 					rescue StandardError => e
 						Rails.logger.error(
 							"[Games::RunAiTurns] Game ##{@game.id}: " \
-							"Action broadcast callback failed: #{e.class}: #{e.message}"
+							"Action broadcast callback failed: " \
+							"error_class=#{e.class}"
 						)
 					end
 				end

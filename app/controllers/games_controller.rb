@@ -109,19 +109,30 @@ class GamesController < ApplicationController
 		  return
 		end
 
-		# Если сейчас ход ИИ, выполняем его действия.
-		# После каждого действия обновление отправляется игрокам отдельно.
-		run_ai_turns_if_needed(broadcast_each_action: true)
-
-		# Получаем актуальное состояние после действий ИИ.
-		@game.reload
-
 		@current_player_id = current_player_id
 
 		@visible_state = GameEngine::VisibleState.call(
 		  state: @game.state,
 		  player_id: @current_player_id
 		)
+	end
+	
+	def run_ai_turn
+		@game = Game.find(params[:id])
+
+		unless player_in_game?(@game)
+		  render_forbidden
+		  return
+		end
+
+		unless @game.mode == "ai" && @game.started?
+		  head :unprocessable_entity
+		  return
+		end
+
+		run_ai_turns_if_needed(broadcast_each_action: true)
+
+		head :no_content
 	end
 
   def cancel_waiting

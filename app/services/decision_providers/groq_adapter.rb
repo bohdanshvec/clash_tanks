@@ -44,24 +44,29 @@ module DecisionProviders
 
       OBJECTIVE:
       Destroy the enemy headquarters while protecting your own.
-      Choose actions that improve your chances of winning.
+      Play aggressively, develop your army quickly, and pressure the enemy.
 
       STRATEGY:
       - Destroy the enemy headquarters immediately when possible.
       - Protect your headquarters from imminent threats.
-      - Deploy useful vehicles to defend your headquarters, control
-        the battlefield, and pressure the enemy.
+      - Favor an aggressive rush strategy: deploy vehicles early,
+        advance toward the enemy headquarters, and maintain pressure.
+      - Prioritize affordable light and medium tanks early in the game.
+        Deploying useful vehicles is usually better than saving fuel.
       - Fuel is recalculated each turn from your headquarters, vehicles,
         and platoons. Unspent fuel does not carry over.
-      - Spend fuel efficiently on useful vehicles, platoons, and orders.
-        Do not end your turn with affordable, valuable plays available.
+      - Spend available fuel on useful cards before ending your turn.
+        Never save fuel merely to afford an expensive card next turn.
       - Vehicles and platoons with positive fuel improve future income.
+        Deploy fuel-producing vehicles early when strategically useful.
+      - Prefer developing your board over ending the turn with unused fuel.
       - Focus attacks on dangerous enemy units until they are destroyed.
       - Attackers strike first. Destroying a target prevents retaliation.
       - A unit can counterattack only once per opponent's turn.
         Exploit exhausted counterattacks to minimize your losses.
       - Avoid attacks where retaliation causes unnecessary losses.
-      - Use movement to improve attacking and defensive positions.
+      - Move vehicles toward the enemy headquarters when safe.
+        Avoid passive movement that does not improve your position.
       - Light tanks can move twice. Medium tanks can move diagonally.
       - Tank destroyers fire first when attacked by ordinary tanks
         from adjacent cells.
@@ -71,8 +76,25 @@ module DecisionProviders
         without retaliation from the enemy headquarters.
       - Platoons strengthen and protect headquarters, but firing the
         headquarters consumes HP from contributing platoons.
-      - End your turn when no useful actions remain.
+      - End your turn only when no useful attacks, movements, or
+        affordable card plays remain.
       - Never surrender.
+
+      ACTION PRIORITY:
+      1. Deliver a winning attack against the enemy headquarters.
+      2. Stop immediate threats to your headquarters.
+      3. Deploy affordable, useful vehicles to strengthen your army.
+      4. Use beneficial orders and platoons.
+      5. Attack valuable enemy targets and advance toward their HQ.
+      6. End the turn only when further legal actions have no useful value.
+
+      IMPORTANT:
+      - If legal_actions contains useful play_card actions, strongly
+        prefer playing a card instead of choosing end_turn.
+      - If you have unused fuel and can deploy a useful vehicle,
+        do not choose end_turn.
+      - Do not repeatedly move units without tactical benefit.
+      - Do not waste resources on actions that provide no advantage.
 
       DECISION:
       You receive the visible game state and server-generated legal_actions.
@@ -84,7 +106,7 @@ module DecisionProviders
       The index must exist in legal_actions.
       Do not return explanations or additional fields.
     TEXT
-
+    
     def initialize(
       api_key: ENV["GROQ_API_KEY"],
       model: ENV.fetch("GROQ_MODEL", DEFAULT_MODEL),
@@ -321,7 +343,7 @@ module DecisionProviders
       if retries >= MAX_TRANSIENT_RETRIES
         Rails.logger.error(
           "[GroqAdapter] Transient network error after " \
-          "#{retries} retries: #{error.class}: #{error.message}"
+          "#{retries} retries: error_class=#{error.class}"
         )
 
         raise TransientRetryExhausted, error
@@ -377,8 +399,7 @@ module DecisionProviders
         "HTTP #{response.code}",
         "retry-after=#{response_header(response, 'retry-after').inspect}",
         "remaining-requests=#{response_header(response, 'x-ratelimit-remaining-requests').inspect}",
-        "remaining-tokens=#{response_header(response, 'x-ratelimit-remaining-tokens').inspect}",
-        "body=#{response.body.to_s.truncate(2000)}"
+        "remaining-tokens=#{response_header(response, 'x-ratelimit-remaining-tokens').inspect}"
       ].join("; ")
 
       Rails.logger.error("[GroqAdapter] #{error_details}")

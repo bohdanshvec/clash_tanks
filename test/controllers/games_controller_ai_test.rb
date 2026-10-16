@@ -151,54 +151,60 @@ class GamesControllerAiTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "retries AI turn when human opens game after provider failure" do
-    state = @game.state.deep_dup
-    state["current_player_id"] = @ai.id.to_s
-    @game.update!(state: state)
+	test "retries AI turn after provider failure" do
+		state = @game.state.deep_dup
+		state["current_player_id"] = @ai.id.to_s
+		@game.update!(state: state)
 
-    calls = 0
+		calls = 0
 
-    decision_source = lambda do |_visible_state|
-      calls += 1
+		decision_source = lambda do |_visible_state|
+		  calls += 1
 
-      if calls == 1
-        raise "Temporary external AI failure"
-      end
+		  if calls == 1
+		    raise "Temporary external AI failure"
+		  end
 
-      {
-        "type" => "end_turn",
-        "payload" => {}
-      }
-    end
+		  {
+		    "type" => "end_turn",
+		    "payload" => {}
+		  }
+		end
 
-    with_ai_decision_source(decision_source) do
-      get game_path(@game)
+		with_ai_decision_source(decision_source) do
+		  get game_path(@game)
 
-      assert_response :success
+		  assert_response :success
 
-      assert_equal(
-        @ai.id.to_s,
-        @game.reload.state["current_player_id"].to_s
-      )
+		  assert_equal 0, calls
 
-      get game_path(@game)
+		  post run_ai_turn_path(@game)
 
-      assert_response :success
-    end
+		  assert_response :no_content
 
-    assert_equal 2, calls
+		  assert_equal(
+		    @ai.id.to_s,
+		    @game.reload.state["current_player_id"].to_s
+		  )
 
-    @game.reload
+		  post run_ai_turn_path(@game)
 
-    assert @game.started?
+		  assert_response :no_content
+		end
 
-    assert_equal(
-      @human.id.to_s,
-      @game.state["current_player_id"].to_s
-    )
-  end
+		assert_equal 2, calls
+
+		@game.reload
+
+		assert @game.started?
+
+		assert_equal(
+		  @human.id.to_s,
+		  @game.state["current_player_id"].to_s
+		)
+	end
   
-  test "broadcasts each AI action separately when human opens game" do
+  test "broadcasts each AI action separately after AI turn request" do
     broadcasts = []
     calls = 0
 
@@ -236,9 +242,9 @@ class GamesControllerAiTest < ActionDispatch::IntegrationTest
     end
 
     begin
-      with_ai_decision_source(decision_source) do
-        get game_path(@game)
-      end
+			with_ai_decision_source(decision_source) do
+				post run_ai_turn_path(@game)
+			end
     ensure
       Turbo::StreamsChannel.define_singleton_method(
         :broadcast_update_to,
@@ -246,7 +252,7 @@ class GamesControllerAiTest < ActionDispatch::IntegrationTest
       )
     end
 
-    assert_response :success
+    assert_response :no_content
 
     # ИИ выполнил атаку, затем завершил ход.
     assert_equal 2, calls

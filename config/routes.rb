@@ -23,6 +23,9 @@ Rails.application.routes.draw do
 	resources :games, only: [:create]
 
   get "games/:id", to: "games#show", as: :game
+  post "games/:id/run_ai_turn",
+     to: "games#run_ai_turn",
+     as: :run_ai_turn
   post "games/:id/end_turn", to: "games#end_turn", as: :end_turn
   post "games/:id/play_card", to: "games#play_card", as: :play_card
   post "games/:id/move", to: "games#move", as: :move
