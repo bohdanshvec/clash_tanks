@@ -1,9 +1,9 @@
-<h1>Регистрация</h1>
+<h1>Реєстрація</h1>
 
 <%= form_with model: @player, url: register_path do |form| %>
   <% if @player.errors.any? %>
     <div>
-      <h2>Не удалось зарегистрироваться:</h2>
+      <h2>Не вдалося зареєструватися:</h2>
 
       <ul>
         <% @player.errors.full_messages.each do |message| %>
@@ -19,7 +19,7 @@
   </div>
 
   <div>
-    <%= form.label :name, "Имя" %>
+    <%= form.label :name, "Імʼя" %>
     <%= form.text_field :name %>
   </div>
 
@@ -34,6 +34,6 @@
   </div>
 
   <div>
-    <%= form.submit "Зарегистрироваться" %>
+    <%= form.submit "Зареєструватися" %>
   </div>
 <% end %>

@@ -3,7 +3,7 @@
 <div data-controller="waiting-room"
      data-waiting-room-url-value="<%= waiting_heartbeat_game_path(@game) %>">
 
-<h1>Ожидание соперника</h1>
+<h1>Очікування суперника</h1>
 
 <% game_player = @game.game_players.find_by(player_id: current_player.id) %>
 
@@ -13,11 +13,11 @@
 </p>
 
 <p>
-  <strong>Вес:</strong>
+  <strong>Вага:</strong>
   <%= game_player.deck.weight %>
 </p>
 
-<h2>Ожидающие игроки</h2>
+<h2>Очікуючі гравці</h2>
 
 <% if @waiting_games.any? %>
   <ul>
@@ -30,14 +30,14 @@
     <% end %>
   </ul>
 <% else %>
-  <p>Других ожидающих игроков нет.</p>
+  <p>Інших очікуючих гравців немає.</p>
 <% end %>
 
-<p>Поиск соперника...</p>
+<p>Пошук суперника...</p>
 
 <p>⌛</p>
 
-<%= button_to "Выйти из ожидания",
+<%= button_to "Вийти з очікування",
               cancel_waiting_game_path(@game),
               method: :delete %>
 

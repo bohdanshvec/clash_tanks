@@ -10,19 +10,15 @@
     <div class="deck-editor__errors">
 
       <h2>
-        Не удалось сохранить колоду:
+        Не вдалося зберегти колоду:
       </h2>
 
       <ul>
-
         <% deck.errors.full_messages.each do |message| %>
-
           <li>
             <%= message %>
           </li>
-
         <% end %>
-
       </ul>
 
     </div>
@@ -33,7 +29,7 @@
 
     <div class="deck-editor__field">
 
-      <%= form.label :name, "Название колоды" %>
+      <%= form.label :name, "Назва колоди" %>
 
       <%= form.text_field :name,
             required: true,
@@ -58,7 +54,7 @@
           </span>
 
           <small>
-            Штаб нельзя изменить после создания колоды.
+            Штаб неможливо змінити після створення колоди.
           </small>
 
         </div>
@@ -77,7 +73,7 @@
                   }
                 ]
               },
-              { prompt: "Выберите штаб" },
+              { prompt: "Виберіть штаб" },
               {
                 data: {
                   deck_editor_target: "headquarters",
@@ -89,14 +85,22 @@
 
     </div>
 
+    <div class="deck-editor__actions">
+
+      <%= form.submit "Зберегти колоду" %>
+
+      <%= link_to "Відміна", decks_path %>
+
+    </div>
+
   </section>
 
   <section class="deck-editor__summary">
 
     <strong>
-      Нация:
+      Нація:
       <span data-deck-editor-target="nation">
-        <%= deck.nation&.name || "не выбрана" %>
+        <%= deck.nation&.name || "не вибрана" %>
       </span>
     </strong>
 
@@ -107,7 +111,7 @@
     </strong>
 
     <strong>
-      Weight:
+      Вага:
       <span data-deck-editor-target="weight">0</span>
     </strong>
 
@@ -118,6 +122,20 @@
     <% cards_by_nation.each do |nation_id, cards| %>
 
       <% nation = cards.first.nation %>
+
+      <% sorted_cards = cards.sort_by do |card|
+           type_order = {
+             "technique" => 0,
+             "order" => 1,
+             "platoon" => 2
+           }
+
+           [
+             type_order.fetch(card.card_type, 99),
+             card.weight,
+             card.name
+           ]
+         end %>
 
       <div
         class="deck-editor__nation"
@@ -131,7 +149,7 @@
 
         <div class="deck-editor__card-list">
 
-          <% cards.each do |card| %>
+          <% sorted_cards.each do |card| %>
 
             <% quantity = selected_quantities[card.id] || 0 %>
 
@@ -186,13 +204,5 @@
     <% end %>
 
   </section>
-
-  <div class="deck-editor__actions">
-
-    <%= form.submit "Сохранить колоду" %>
-
-    <%= link_to "Отмена", decks_path %>
-
-  </div>
 
 <% end %>

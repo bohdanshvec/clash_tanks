@@ -1,16 +1,15 @@
-<h1>Играть</h1>
+<h1>Грати</h1>
 
 <p>
-  <strong>Бой с ИИ:</strong>
-  сразиться с искусственным интеллектом можно готовой колодой
-  с весом <strong>12–14</strong>, <strong>20–24</strong> или
-  <strong>26–30</strong>.
-  Диапазон зависит от веса одной из доступных колод ИИ.
-  Если кнопки «В бой — ИИ» нет у какой-либо колоды, значит,
-  её вес не подходит ни под один из этих диапазонов.
+  <strong>Бій з АІ:</strong>
+  грати зі штучним інтелектом можна готовою колодою з вагою
+  <strong>36–44</strong>, <strong>45–55</strong> або <strong>52–63</strong>.
+  Діапазон залежить від ваги однієї з доступних колод АІ.
+  Якщо кнопки «В бій — АІ» немає у будь-якої колоди, її
+  вага не підходить ні під один з цих діапазонів.
 </p>
 
-<h2>Мои колоды</h2>
+<h2>Мої колоди</h2>
 
 <% if @decks.any? %>
   <div class="play-decks">
@@ -19,7 +18,7 @@
         <h3><%= deck.name %></h3>
 
         <p>
-          <strong>Нация:</strong>
+          <strong>Нація:</strong>
           <%= deck.nation.name %>
         </p>
 
@@ -34,7 +33,7 @@
         </p>
 
         <div class="deck-card__actions">
-          <%= button_to "В бой — PvP",
+          <%= button_to "В бій — PvP",
                         games_path,
                         method: :post,
                         params: {
@@ -43,7 +42,7 @@
                         } %>
 
           <% if @ai_decks_by_deck_id[deck.id].present? %>
-            <%= button_to "В бой — ИИ",
+            <%= button_to "В бій — АІ",
                           games_path,
                           method: :post,
                           params: {
@@ -56,11 +55,11 @@
     <% end %>
   </div>
 <% else %>
-  <p>У вас пока нет готовых колод.</p>
+  <p>У вас поки немає готових колод.</p>
 
   <% if registered_player? %>
     <p>
-      <%= link_to "Создать колоду", new_deck_path %>
+      <%= link_to "Створити колоду", new_deck_path %>
     </p>
   <% end %>
 <% end %>

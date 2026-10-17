@@ -875,6 +875,47 @@
   flex: 1;
 }
 
+/* Заголовок страницы и кнопка создания колоды */
+
+.decks-page__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+
+  margin-bottom: 8px;
+}
+
+.decks-page__title-row h1 {
+  margin: 0;
+}
+
+/* Кнопка создания колоды */
+
+.decks-page__create-button {
+  display: inline-block;
+  box-sizing: border-box;
+
+  padding: 7px 12px;
+
+  border: 1px solid #767676;
+  border-radius: 3px;
+
+  background: #efefef;
+  color: #222;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.decks-page__create-button:hover {
+  background: #e5e5e5;
+}
+
 .decks-page__header h1 {
   margin: 0 0 8px;
 }
@@ -1197,6 +1238,8 @@
 
 .deck-editor__general {
   display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
   gap: 30px;
 
   margin-bottom: 20px;
@@ -1356,7 +1399,8 @@
   align-items: center;
   gap: 10px;
 
-  margin-top: 25px;
+  margin-top: 0;
+  padding-bottom: 1px;
 }
 
 .deck-editor__actions input,

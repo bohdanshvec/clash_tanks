@@ -60,9 +60,9 @@
 		%>
 
 		<div class="game-result">
-			<h2><%= player_won ? "Победа" : "Вы проиграли" %></h2>
+			<h2><%= player_won ? "Перемога!" : "Ви програли!" %></h2>
 
-			<%= link_to "Выйти из партии",
+			<%= link_to "Вийти з партії",
 				          root_path,
 				          class: "game-result__exit" %>
 		</div>
@@ -89,7 +89,7 @@
         <% if opponent_player %>
 
           <p>
-            Time:
+            Час:
             <span
               data-game-timer-target="gameTime"
               data-player-id="<%= opponent_player_id %>"
@@ -99,23 +99,23 @@
 
           <% if visible_state["current_player_id"].to_s == opponent_player_id %>
             <p>
-              Turn:
+              Хід:
               <span data-game-timer-target="turnTime"></span>
             </p>
           <% end %>
 
           <p>
-            Resources:
+            Ресурси:
             <%= opponent_player["resources"] %>
           </p>
 
           <p>
-            Deck:
+            Колода:
             <%= opponent_player["deck_count"] %> cards
           </p>
 
           <p>
-            Graveyard:
+            Кладовище:
             <%= opponent_player["graveyard_count"] %> cards
           </p>
 
@@ -338,12 +338,12 @@
 
         <% if current_player %>
 
-          <%= button_to "Сдаться",
+          <%= button_to "Здатися",
                         surrender_path(game),
                         method: :post %>
 
           <p>
-            Time:
+            Час:
             <span
               data-game-timer-target="gameTime"
               data-player-id="<%= current_player_id %>"
@@ -354,30 +354,30 @@
           <% if visible_state["current_player_id"].to_s == current_player_id %>
 
             <p>
-              Turn:
+              Хід:
               <span data-game-timer-target="turnTime"></span>
             </p>
 
           <% end %>
 
           <p>
-            Resources:
+            Ресурси:
             <%= current_player["resources"] %>
           </p>
 
           <p>
-            Deck:
+            Колода:
             <%= current_player["deck_count"] %> cards
           </p>
 
           <p>
-            Graveyard:
+            Кладовище:
             <%= current_player["graveyard_count"] %> cards
           </p>
 
           <% if visible_state["current_player_id"].to_s == current_player_id %>
 
-            <%= button_to "End Turn",
+            <%= button_to "Кінець ходу",
                           end_turn_path(game),
                           method: :post %>
 

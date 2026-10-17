@@ -27,17 +27,17 @@
     <header class="app-header">
 			<div class="app-header__title">
 				<%= link_to "Clash Tanks", root_path %>
-				<%= link_to "На главную", root_path, class: "app-header__home" %>
+				<%= link_to "На головну", root_path, class: "app-header__home" %>
 			</div>
 
 			<div class="app-header__player">
 				<% if registered_player? %>
 					<span><%= current_player.display_name %></span>
-					<%= button_to "Выйти", logout_path, method: :delete %>
+					<%= button_to "Вийти", logout_path, method: :delete %>
 				<% else %>
-					<span>Гость</span>
-					<%= link_to "Войти", login_path %>
-					<%= link_to "Регистрация", register_path %>
+					<span>Гість</span>
+					<%= link_to "Увійти", login_path %>
+					<%= link_to "Зареєструватися", register_path %>
 				<% end %>
 			</div>
     </header>

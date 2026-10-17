@@ -3,28 +3,32 @@
   data-controller="deck-preview"
 >
 
-  <header class="decks-page__header">
+	<header class="decks-page__header">
+		<div class="decks-page__title">
 
-    <div class="decks-page__title">
-      <h1>Колоды</h1>
+		  <div class="decks-page__title-row">
+		    <h1>Колоди</h1>
 
-      <% if registered_player? %>
-        <p>
-          Сохранённые колоды игрока:
-          <strong><%= current_player.display_name %></strong>
-        </p>
-      <% else %>
-        <p>
-          Готовые стартовые колоды для ознакомления.
-        </p>
-      <% end %>
-    </div>
+		    <% if registered_player? %>
+		      <%= link_to "Створити колоду",
+		                  new_deck_path,
+		                  class: "decks-page__create-button" %>
+		    <% end %>
+		  </div>
 
-    <% if registered_player? %>
-      <%= link_to "Создать колоду", new_deck_path %>
-    <% end %>
+		  <% if registered_player? %>
+		    <p>
+		      Збережені колоди гравця:
+		      <strong><%= current_player.display_name %></strong>
+		    </p>
+		  <% else %>
+		    <p>
+		      Готові стартові колоди для ознайомлення.
+		    </p>
+		  <% end %>
 
-  </header>
+		</div>
+	</header>
 
 
   <% if registered_player? %>
@@ -43,7 +47,7 @@
                 <h2><%= deck.name %></h2>
 
                 <p>
-                  <strong>Нация:</strong>
+                  <strong>Нація:</strong>
                   <%= deck.nation.name %>
                 </p>
 
@@ -69,7 +73,7 @@
 
               <details class="deck-card__preview">
                 <summary>
-                  Просмотр колоды
+                  Перегляд колоди
                 </summary>
 
                 <ul class="deck-card__preview-list">
@@ -195,9 +199,9 @@
 
               </details>
 
-              <%= link_to "Редактировать", edit_deck_path(deck) %>
+              <%= link_to "Редагувати", edit_deck_path(deck) %>
 
-              <%= button_to "Удалить",
+              <%= button_to "Видалити",
                             deck_path(deck),
                             method: :delete,
                             form: {
@@ -216,7 +220,7 @@
 
     <% else %>
 
-      <p>У вас пока нет сохранённых колод.</p>
+      <p>У вас поки немає збережених колод.</p>
 
     <% end %>
 
@@ -236,7 +240,7 @@
 							<h2><%= deck[:name] %></h2>
 
 							<p>
-								<strong>Нация:</strong>
+								<strong>Нація:</strong>
 								<%= deck[:nation].name %>
 							</p>
 
@@ -262,7 +266,7 @@
 
           <div class="deck-card__cards">
 
-            <h3>Состав</h3>
+            <h3>Склад</h3>
 
             <ul>
 

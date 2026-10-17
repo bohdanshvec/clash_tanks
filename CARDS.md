@@ -1,1056 +1,187 @@
 # CARDS.md
 
-Каталог базовых карт проекта **clash_tanks**.
+Каталог нового базового набора карт **clash_tanks** для украинской аудитории.
 
-Этот файл описывает конкретный игровой контент: штабы, Technique, Order и Platoon.
+**Статус:** утверждённый пользователем проект нового каталога для Stage 23; характеристики ещё предстоит перенести в seed и проверить в игре. Этот документ описывает **целевое состояние**, а не гарантирует текущее содержимое базы данных.
 
-- `GAME_RULES.md` описывает правила игры.
-- `AGENTS.md` описывает архитектуру и техническую реализацию.
-- `CARDS.md` описывает существующие карты и их характеристики.
+- `GAME_RULES.md` — правила игры.
+- `AGENTS.md` — архитектурные и технические ограничения.
+- `CARDS.md` — состав карт, характеристики и идентификаторы.
 
-При изменении характеристик карт этот файл должен обновляться вместе с seed.
+## 1. Состав набора
 
----
+| Тип | Германия | США | СССР | Всего |
+|---|---:|---:|---:|---:|
+| Штаб (`headquarters`) | 1 | 1 | 1 | 3 |
+| Техника (`technique`) | 9 | 9 | 9 | 27 |
+| Приказ (`order`) | 2 | 2 | 2 | 6 |
+| Взвод (`platoon`) | 2 | 2 | 2 | 6 |
+| **Всего** | **14** | **14** | **14** | **42** |
 
-## 1. Общая информация
+Нации в интерфейсе: **Германія, США, СРСР**. Внутренние коды наций сохраняются: `germany`, `usa`, `ussr`.
 
-В базовом наборе:
+## 2. Значение характеристик
 
-- 3 штаба;
-- 24 Technique;
-- 6 Order;
-- 6 Platoon.
+- **Weight** — вес карты при подсчёте веса колоды; не является стоимостью розыгрыша.
+- **Price** — стоимость розыгрыша. У штабов `price = nil`.
+- **HP** — запас прочности.
+- **Firepower** — сила атаки.
+- **Armor** — броня взвода. У техники отдельного поля Armor нет.
+- **Fuel** — вклад размещённого штаба, техники или активного взвода в расчёт топлива игрока; не является стоимостью розыгрыша.
+- **Ability** — действие приказа или специальное боевое правило класса техники.
+- **`—`** — поле не применяется к данному типу карты.
+- **`-`** — значение Fuel в исходной таблице указано дефисом и **требует уточнения перед изменением seed**: нельзя автоматически считать его нулём или `nil`.
 
-Всего: **39 карт**.
+### 2.1. Типы техники и перемещение
 
-Нации:
+| Обозначение | `technique_type` | `movement_type` | `movement_count` |
+|---|---|---|---:|
+| LT | `light_tank` | `orthogonal` | 2 |
+| ST | `medium_tank` | `diagonal` | 1 |
+| TT | `heavy_tank` | `orthogonal` | 1 |
+| PT-SAU | `tank_destroyer` | `orthogonal` | 1 |
+| SAU | `artillery` | `orthogonal` | 1 |
 
-- СССР;
-- Германия;
-- США.
+Для всех перечисленных карт техники базовый `attack_range = 1`. Специальная дальняя атака SAU определяется правилами игрового движка, а не только полем `attack_range`.
 
----
-
-## 2. Общие правила характеристик карт
-
-### 2.1. Weight
-
-`weight` — вес карты для колоды.
-
-Он не является стоимостью розыгрыша.
-
-### 2.2. Price
-
-`price` — стоимость розыгрыша карты.
-
-Для штабов `price` отсутствует (`nil`).
-
-### 2.3. Fuel Technique
-
-`fuel` Technique — количество Fuel, которое эта Technique добавляет при расчёте Fuel игрока, когда находится на поле.
-
-Это не стоимость розыгрыша.
-
-### 2.4. Fuel Platoon
-
-`fuel` Platoon также учитывается при расчёте Fuel игрока, когда Platoon находится в активном слоте.
-
-### 2.5. Attack Range
-
-Для всех существующих Technique:
-
-```text
-attack_range = 1
-```
-
-Для SAU (`artillery`) дальняя атака является специальным правилом и требует spotting. Она не определяется только значением `attack_range`.
-
-### 2.6. Movement
-
-Базовое соответствие:
-
-| Тип | Движение | Количество |
-|---|---|---|
-| Light Tank | orthogonal | 2 |
-| Medium Tank | diagonal | 1 |
-| Heavy Tank | orthogonal | 1 |
-| Tank Destroyer | orthogonal | 1 |
-| Artillery | orthogonal | 1 |
-
----
+**PT-SAU:** правило первого выстрела при атаке. **SAU:** дальняя атака при наличии spotting; источником spotting может быть союзная техника или штаб атакующего игрока, расположенные рядом с целью. Дальняя атака SAU не вызывает контратаку. Эти правила реализуются движком, без отдельных `CardAbility`.
 
 ## 3. Штабы
 
-Штаб является отдельной картой типа `headquarters`.
+| Nation | Card | Code | Type | Weight | Price | HP | Firepower | Fuel |
+|---|---|---|---|---:|---:|---:|---:|---:|
+| Германія | Operation „Weiß“ | `germany_headquarters` | headquarters | 1 | — | 16 | 2 | 4 |
+| США | Second front | `usa_headquarters` | headquarters | 1 | — | 17 | 1 | 6 |
+| СРСР | Західний фронт | `ussr_headquarters` | headquarters | 1 | — | 19 | 1 | 5 |
 
-Для штаба:
+Штабы не разыгрываются как обычные карты, не имеют стоимости, типа техники или параметров перемещения. Их характеристики используются при создании игрового состояния.
 
-- `price = nil`;
-- `attack_range` отсутствует;
-- movement отсутствует;
-- штаб размещается на стартовой клетке;
-- характеристики HQ становятся runtime-характеристиками штаба.
+## 4. Германія
 
-### 3.1. Германия — Operation „Weiß“
+### 4.1. Техніка
 
-| Поле | Значение |
-|---|---|
-| Code | `germany_headquarters` |
-| Nation | Германия |
-| Type | headquarters |
-| Weight | 1 |
-| Price | nil |
-| HP | 16 |
-| Firepower | 2 |
-| Fuel | 4 |
+| Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
+|---|---|---|---:|---:|---:|---:|---|---|
+| Pz.II | `germany_pz_ii` | LT | 1 | 1 | 1 | 1 | - | — |
+| Sd.222 | `germany_sd_222` | LT | 2 | 2 | 1 | 2 | - | — |
+| Pz.III Ausf. A-H | `germany_pz_iii_a_h` | ST | 3 | 2 | 3 | 2 | - | — |
+| Pz.IV Ausf. A-F1 | `germany_pz_iv_a_f1` | ST | 4 | 4 | 4 | 1 | 1 | — |
+| Jagdpanther 38(A) Hetzer | `germany_jagdpanther_38a_hetzer` | PT-SAU | 4 | 3 | 4 | 2 | 1 | Перший постріл |
+| Jagdpanther IV | `germany_jagdpanther_iv` | PT-SAU | 5 | 4 | 5 | 2 | 1 | Перший постріл |
+| Jagdpanther | `germany_jagdpanther` | PT-SAU | 6 | 5 | 6 | 2 | 2 | Перший постріл |
+| Pz.VI Tiger I | `germany_tiger_i` | TT | 7 | 6 | 7 | 2 | 1 | — |
+| Sturmpanzer IV Brummbar | `germany_sturmpanzer_iv_brummbar` | SAU | 8 | 5 | 4 | 2 | 1 | Spotting / дальня атака |
 
-### 3.2. США — Second front
+### 4.2. Накази
 
-| Поле | Значение |
-|---|---|
-| Code | `usa_headquarters` |
-| Nation | США |
-| Type | headquarters |
-| Weight | 1 |
-| Price | nil |
-| HP | 17 |
-| Firepower | 1 |
-| Fuel | 6 |
+| Card | Code | Weight | Price | Ability | Parameters |
+|---|---|---:|---:|---|---|
+| Точний постріл | `germany_tocnyj_postil` | 5 | 4 | `damage_technique` | `damage: 4` |
+| Радіоперехоплення | `germany_radioperehoplena` | 4 | 2 | `draw_cards` | `count: 2` |
 
-### 3.3. СССР — Западный фронт
+### 4.3. Взводи
 
-| Поле | Значение |
-|---|---|
-| Code | `ussr_headquarters` |
-| Nation | СССР |
-| Type | headquarters |
-| Weight | 1 |
-| Price | nil |
-| HP | 19 |
-| Firepower | 1 |
-| Fuel | 5 |
-
----
-
-## 4. Германия
-
-Всего карт Германии: **13**
-
-- 1 штаб;
-- 8 Technique;
-- 2 Order;
-- 2 Platoon.
-
-### 4.1. Pz.II Ausf. L «Luchs»
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_pz_ii_l_luchs` |
-| Nation | Германия |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 1 |
-| Price | 2 |
-| HP | 4 |
-| Firepower | 2 |
-| Fuel | 2 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 4.2. Pz.III Ausf. J
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_pz_iii_j` |
-| Nation | Германия |
-| Type | technique |
-| Technique Type | `medium_tank` |
-| Weight | 1 |
-| Price | 3 |
-| HP | 6 |
-| Firepower | 3 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | diagonal |
-| Movement Count | 1 |
-
-### 4.3. Pz.IV Ausf. H
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_pz_iv_h` |
-| Nation | Германия |
-| Type | technique |
-| Technique Type | `medium_tank` |
-| Weight | 2 |
-| Price | 4 |
-| HP | 8 |
-| Firepower | 4 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | diagonal |
-| Movement Count | 1 |
-
-### 4.4. Pz.VI Tiger I
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_tiger_i` |
-| Nation | Германия |
-| Type | technique |
-| Technique Type | `heavy_tank` |
-| Weight | 4 |
-| Price | 6 |
-| HP | 12 |
-| Firepower | 5 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-
-### 4.5. Jagdpanther
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_jagdpanther` |
-| Nation | Германия |
-| Type | technique |
-| Technique Type | `tank_destroyer` |
-| Weight | 3 |
-| Price | 5 |
-| HP | 8 |
-| Firepower | 4 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-| Special | Первый выстрел |
-
-Jagdpanther является PT-SAU.
-
-В бою PT-SAU стреляет первым согласно правилам Stage 12.
-
-### 4.6. Hummel
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_hummel` |
-| Nation | Германия |
-| Type | technique |
-| Technique Type | `artillery` |
-| Weight | 2 |
-| Price | 4 |
-| HP | 5 |
-| Firepower | 3 |
-| Fuel | 2 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-| Special | Дальняя атака при spotting |
-
-Hummel является SAU.
-
-Для дальней атаки требуется spotting.
-
-Источником spotting может быть:
-
-- союзная Technique;
-- наш штаб / штаб атакующего игрока.
-
-### 4.7. Sd.Kfz. 221 «Ausklärer»
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_sdkfz_221` |
-| Nation | Германия |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 1 |
-| Price | 1 |
-| HP | 2 |
-| Firepower | 1 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 4.8. Sd.Kfz. 234/2 «Puma»
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_sdkfz_234_2_puma` |
-| Nation | Германия |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 2 |
-| Price | 2 |
-| HP | 2 |
-| Firepower | 2 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 4.9. «Точный выстрел»
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_tocnyj_vystrel` |
-| Nation | Германия |
-| Type | order |
-| Weight | 3 |
-| Price | 4 |
-| Ability | `damage_technique` |
-| Parameters | `damage: 4` |
-
-### 4.10. «Радиоперехват»
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_radioperekhvat` |
-| Nation | Германия |
-| Type | order |
-| Weight | 2 |
-| Price | 3 |
-| Ability | `draw_cards` |
-| Parameters | `count: 2` |
-
-### 4.11. Гренадёрский взвод
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_grenaderskij_vzvod` |
-| Nation | Германия |
-| Type | platoon |
-| Weight | 2 |
-| Price | 3 |
-| HP | 6 |
-| Firepower | 2 |
-| Armor | 0 |
-| Fuel | 0 |
-
-### 4.12. Расчёт Flak 88
-
-| Поле | Значение |
-|---|---|
-| Code | `germany_flak_88` |
-| Nation | Германия |
-| Type | platoon |
-| Weight | 3 |
-| Price | 3 |
-| HP | 5 |
-| Firepower | 0 |
-| Armor | 2 |
-| Fuel | 0 |
-
-`Firepower = 0` является допустимым значением.
-
----
+| Card | Code | Weight | Price | HP | Firepower | Armor | Fuel |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Гренадерський взвод | `germany_grenaderskij_vzvod` | 4 | 4 | 6 | 2 | 0 | 0 |
+| Розрахунок Flak 88 | `germany_flak_88` | 3 | 3 | 5 | 0 | 2 | 0 |
 
 ## 5. США
 
-Всего карт США: **13**
-
-- 1 штаб;
-- 8 Technique;
-- 2 Order;
-- 2 Platoon.
-
-### 5.1. M3 Stuart
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_m3_stuart` |
-| Nation | США |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 1 |
-| Price | 2 |
-| HP | 4 |
-| Firepower | 2 |
-| Fuel | 2 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 5.2. M4 Sherman
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_m4_sherman` |
-| Nation | США |
-| Type | technique |
-| Technique Type | `medium_tank` |
-| Weight | 2 |
-| Price | 4 |
-| HP | 6 |
-| Firepower | 2 |
-| Fuel | 2 |
-| Attack Range | 1 |
-| Movement Type | diagonal |
-| Movement Count | 1 |
-
-### 5.3. M4A3E8 «Easy Eight»
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_m4a3e8_easy_eight` |
-| Nation | США |
-| Type | technique |
-| Technique Type | `medium_tank` |
-| Weight | 3 |
-| Price | 5 |
-| HP | 8 |
-| Firepower | 4 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | diagonal |
-| Movement Count | 1 |
-
-### 5.4. M26 Pershing
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_m26_pershing` |
-| Nation | США |
-| Type | technique |
-| Technique Type | `heavy_tank` |
-| Weight | 3 |
-| Price | 6 |
-| HP | 11 |
-| Firepower | 4 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-
-### 5.5. M18 Hellcat
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_m18_hellcat` |
-| Nation | США |
-| Type | technique |
-| Technique Type | `tank_destroyer` |
-| Weight | 2 |
-| Price | 6 |
-| HP | 5 |
-| Firepower | 4 |
-| Fuel | 2 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-| Special | Первый выстрел |
-
-M18 Hellcat является PT-SAU.
-
-В бою PT-SAU стреляет первым согласно правилам Stage 12.
-
-### 5.6. M7 Priest
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_m7_priest` |
-| Nation | США |
-| Type | technique |
-| Technique Type | `artillery` |
-| Weight | 2 |
-| Price | 4 |
-| HP | 5 |
-| Firepower | 2 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-| Special | Дальняя атака при spotting |
-
-M7 Priest является SAU.
-
-Для дальней атаки требуется spotting.
-
-Источником spotting может быть:
-
-- союзная Technique;
-- наш штаб / штаб атакующего игрока.
-
-### 5.7. M8 Greyhound
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_m8_greyhound` |
-| Nation | США |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 1 |
-| Price | 2 |
-| HP | 2 |
-| Firepower | 1 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 5.8. M24 Chaffee
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_m24_chaffee` |
-| Nation | США |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 2 |
-| Price | 3 |
-| HP | 3 |
-| Firepower | 1 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 5.9. «Ленд-лиз»
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_lend_liz` |
-| Nation | США |
-| Type | order |
-| Weight | 1 |
-| Price | 2 |
-| Ability | `draw_cards` |
-| Parameters | `count: 2` |
-
-### 5.10. «Огневой налёт»
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_ognevoj_nalyot` |
-| Nation | США |
-| Type | order |
-| Weight | 1 |
-| Price | 2 |
-| Ability | `damage_technique` |
-| Parameters | `damage: 2` |
-
-### 5.11. Инженерный взвод
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_inzhenernyj_vzvod` |
-| Nation | США |
-| Type | platoon |
-| Weight | 3 |
-| Price | 4 |
-| HP | 5 |
-| Firepower | 0 |
-| Armor | 3 |
-| Fuel | 0 |
-
-`Firepower = 0` является допустимым значением.
-
-### 5.12. Взвод базукометчиков
-
-| Поле | Значение |
-|---|---|
-| Code | `usa_vzvod_bazukometchikov` |
-| Nation | США |
-| Type | platoon |
-| Weight | 3 |
-| Price | 4 |
-| HP | 4 |
-| Firepower | 2 |
-| Armor | 0 |
-| Fuel | 1 |
-
----
-
-## 6. СССР
-
-Всего карт СССР: **13**
-
-- 1 штаб;
-- 8 Technique;
-- 2 Order;
-- 2 Platoon.
-
-### 6.1. Т-70
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_t_70` |
-| Nation | СССР |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 1 |
-| Price | 2 |
-| HP | 5 |
-| Firepower | 1 |
-| Fuel | 2 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 6.2. Т-34
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_t_34` |
-| Nation | СССР |
-| Type | technique |
-| Technique Type | `medium_tank` |
-| Weight | 2 |
-| Price | 4 |
-| HP | 7 |
-| Firepower | 2 |
-| Fuel | 2 |
-| Attack Range | 1 |
-| Movement Type | diagonal |
-| Movement Count | 1 |
-
-### 6.3. Т-34-85
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_t_34_85` |
-| Nation | СССР |
-| Type | technique |
-| Technique Type | `medium_tank` |
-| Weight | 3 |
-| Price | 6 |
-| HP | 8 |
-| Firepower | 3 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | diagonal |
-| Movement Count | 1 |
-
-### 6.4. ИС-2
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_is_2` |
-| Nation | СССР |
-| Type | technique |
-| Technique Type | `heavy_tank` |
-| Weight | 3 |
-| Price | 6 |
-| HP | 12 |
-| Firepower | 3 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-
-### 6.5. СУ-100
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_su_100` |
-| Nation | СССР |
-| Type | technique |
-| Technique Type | `tank_destroyer` |
-| Weight | 3 |
-| Price | 5 |
-| HP | 6 |
-| Firepower | 3 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-| Special | Первый выстрел |
-
-СУ-100 является PT-SAU.
-
-В бою PT-SAU стреляет первым согласно правилам Stage 12.
-
-### 6.6. СУ-26
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_su_26` |
-| Nation | СССР |
-| Type | technique |
-| Technique Type | `artillery` |
-| Weight | 2 |
-| Price | 6 |
-| HP | 7 |
-| Firepower | 2 |
-| Fuel | 2 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 1 |
-| Special | Дальняя атака при spotting |
-
-СУ-26 является SAU.
-
-Для дальней атаки требуется spotting.
-
-Источником spotting может быть:
-
-- союзная Technique;
-- наш штаб / штаб атакующего игрока.
-
-### 6.7. БА-64
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_ba_64` |
-| Nation | СССР |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 1 |
-| Price | 2 |
-| HP | 2 |
-| Firepower | 1 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 6.8. Т-60
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_t_60` |
-| Nation | СССР |
-| Type | technique |
-| Technique Type | `light_tank` |
-| Weight | 2 |
-| Price | 2 |
-| HP | 2 |
-| Firepower | 2 |
-| Fuel | 1 |
-| Attack Range | 1 |
-| Movement Type | orthogonal |
-| Movement Count | 2 |
-
-### 6.9. «Залп „Катюши“»
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_zalp_katyushi` |
-| Nation | СССР |
-| Type | order |
-| Weight | 2 |
-| Price | 3 |
-| Ability | `damage_technique` |
-| Parameters | `damage: 3` |
-
-### 6.10. «Пополнение»
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_popolnenie` |
-| Nation | СССР |
-| Type | order |
-| Weight | 2 |
-| Price | 2 |
-| Ability | `draw_cards` |
-| Parameters | `count: 1` |
-
-### 6.11. Стрелковый взвод
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_strelkovyj_vzvod` |
-| Nation | СССР |
-| Type | platoon |
-| Weight | 2 |
-| Price | 3 |
-| HP | 5 |
-| Firepower | 1 |
-| Armor | 0 |
-| Fuel | 0 |
-
-### 6.12. Взвод ПТР
-
-| Поле | Значение |
-|---|---|
-| Code | `ussr_vzvod_ptr` |
-| Nation | СССР |
-| Type | platoon |
-| Weight | 3 |
-| Price | 4 |
-| HP | 6 |
-| Firepower | 1 |
-| Armor | 2 |
-| Fuel | 0 |
-
----
-
-## 7. Сводная таблица Technique
-
-| Nation | Card | Type | Weight | Price | HP | Firepower | Fuel | Movement |
-|---|---|---|---|---|---|---|---|---|
-| Германия | Pz.II Ausf. L «Luchs» | LT | 1 | 2 | 4 | 2 | 2 | 2 orthogonal |
-| Германия | Pz.III Ausf. J | ST | 1 | 3 | 6 | 3 | 1 | 1 diagonal |
-| Германия | Pz.IV Ausf. H | ST | 2 | 4 | 8 | 4 | 1 | 1 diagonal |
-| Германия | Pz.VI Tiger I | TT | 4 | 6 | 12 | 5 | 1 | 1 orthogonal |
-| Германия | Jagdpanther | PT-SAU | 3 | 5 | 8 | 4 | 1 | 1 orthogonal |
-| Германия | Hummel | SAU | 2 | 4 | 5 | 3 | 2 | 1 orthogonal |
-| Германия | Sd.Kfz. 221 «Ausklärer» | LT | 1 | 1 | 2 | 1 | 1 | 2 orthogonal |
-| Германия | Sd.Kfz. 234/2 «Puma» | LT | 2 | 2 | 2 | 2 | 1 | 2 orthogonal |
-| США | M3 Stuart | LT | 1 | 2 | 4 | 2 | 2 | 2 orthogonal |
-| США | M4 Sherman | ST | 2 | 4 | 6 | 2 | 2 | 1 diagonal |
-| США | M4A3E8 «Easy Eight» | ST | 3 | 5 | 8 | 4 | 1 | 1 diagonal |
-| США | M26 Pershing | TT | 3 | 6 | 11 | 4 | 1 | 1 orthogonal |
-| США | M18 Hellcat | PT-SAU | 2 | 6 | 5 | 4 | 2 | 1 orthogonal |
-| США | M7 Priest | SAU | 2 | 4 | 5 | 2 | 1 | 1 orthogonal |
-| США | M8 Greyhound | LT | 1 | 2 | 2 | 1 | 1 | 2 orthogonal |
-| США | M24 Chaffee | LT | 2 | 3 | 3 | 1 | 1 | 2 orthogonal |
-| СССР | Т-70 | LT | 1 | 2 | 5 | 1 | 2 | 2 orthogonal |
-| СССР | Т-34 | ST | 2 | 4 | 7 | 2 | 2 | 1 diagonal |
-| СССР | Т-34-85 | ST | 3 | 6 | 8 | 3 | 1 | 1 diagonal |
-| СССР | ИС-2 | TT | 3 | 6 | 12 | 3 | 1 | 1 orthogonal |
-| СССР | СУ-100 | PT-SAU | 3 | 5 | 6 | 3 | 1 | 1 orthogonal |
-| СССР | СУ-26 | SAU | 2 | 6 | 7 | 2 | 2 | 1 orthogonal |
-| СССР | БА-64 | LT | 1 | 2 | 2 | 1 | 1 | 2 orthogonal |
-| СССР | Т-60 | LT | 2 | 2 | 2 | 2 | 1 | 2 orthogonal |
-
----
-
-## 8. Сводная таблица Order
-
-| Nation | Card | Weight | Price | Ability | Parameter |
-|---|---|---|---|---|---|
-| Германия | «Точный выстрел» | 3 | 4 | `damage_technique` | `damage: 4` |
-| Германия | «Радиоперехват» | 2 | 3 | `draw_cards` | `count: 2` |
-| США | «Ленд-лиз» | 1 | 2 | `draw_cards` | `count: 2` |
-| США | «Огневой налёт» | 1 | 2 | `damage_technique` | `damage: 2` |
-| СССР | «Залп „Катюши“» | 2 | 3 | `damage_technique` | `damage: 3` |
-| СССР | «Пополнение» | 2 | 2 | `draw_cards` | `count: 1` |
-
----
-
-## 9. Сводная таблица Platoon
-
-| Nation | Card | Weight | Price | HP | Firepower | Armor | Fuel |
-|---|---|---|---|---|---|---|---|
-| Германия | Гренадёрский взвод | 2 | 3 | 6 | 2 | 0 | 0 |
-| Германия | Расчёт Flak 88 | 3 | 3 | 5 | 0 | 2 | 0 |
-| США | Инженерный взвод | 3 | 4 | 5 | 0 | 3 | 0 |
-| США | Взвод базукометчиков | 3 | 4 | 4 | 2 | 0 | 1 |
-| СССР | Стрелковый взвод | 2 | 3 | 5 | 1 | 0 | 0 |
-| СССР | Взвод ПТР | 3 | 4 | 6 | 1 | 2 | 0 |
-
----
-
-## 10. Сводная таблица HQ
-
-| Nation | Card | Code | Weight | Price | HP | Firepower | Fuel |
-|---|---|---|---|---|---|---|---|
-| Германия | Operation „Weiß“ | `germany_headquarters` | 1 | — | 16 | 2 | 4 |
-| США | Second front | `usa_headquarters` | 1 | — | 17 | 1 | 6 |
-| СССР | Западный фронт | `ussr_headquarters` | 1 | — | 19 | 1 | 5 |
-
----
-
-## 11. Abilities
-
-В базовом наборе используются две универсальные способности.
-
-### 11.1. `damage_technique`
-
-Наносит указанное количество урона Technique.
-
-Параметр:
-
-- `damage`
-
-Используют:
-
-- Германия — «Точный выстрел»: 4;
-- США — «Огневой налёт»: 2;
-- СССР — «Залп „Катюши“»: 3.
-
-### 11.2. `draw_cards`
-
-Выполняет дополнительный Draw указанного количества карт.
-
-Параметр:
-
-- `count`
-
-Используют:
-
-- Германия — «Радиоперехват»: 2;
-- США — «Ленд-лиз»: 2;
-- СССР — «Пополнение»: 1.
-
----
-
-## 12. Специальные характеристики Technique
-
-### Light Tank
-
-Все Light Tank:
-
-- movement type: `orthogonal`;
-- movement count: `2`.
-
-Карты:
-
-- Pz.II Ausf. L «Luchs»;
-- Sd.Kfz. 221 «Ausklärer»;
-- Sd.Kfz. 234/2 «Puma»;
-- M3 Stuart;
-- M8 Greyhound;
-- M24 Chaffee;
-- Т-70;
-- БА-64;
-- Т-60.
-
-### Medium Tank
-
-Все Medium Tank:
-
-- movement type: `diagonal`;
-- movement count: `1`.
-
-Карты:
-
-- Pz.III Ausf. J;
-- Pz.IV Ausf. H;
-- M4 Sherman;
-- M4A3E8 «Easy Eight»;
-- Т-34;
-- Т-34-85.
-
-### Heavy Tank
-
-Все Heavy Tank:
-
-- movement type: `orthogonal`;
-- movement count: `1`.
-
-Карты:
-
-- Pz.VI Tiger I;
-- M26 Pershing;
-- ИС-2.
-
-### Tank Destroyer / PT-SAU
-
-Все PT-SAU:
-
-- movement type: `orthogonal`;
-- movement count: `1`;
-- имеют правило первого выстрела.
-
-Карты:
-
-- Jagdpanther;
-- M18 Hellcat;
-- СУ-100.
-
-### Artillery / SAU
-
-Все SAU:
-
-- movement type: `orthogonal`;
-- movement count: `1`;
-- могут использовать дальнюю атаку при наличии spotting;
-- дальняя атака не вызывает counterattack.
-
-Карты:
-
-- Hummel;
-- M7 Priest;
-- СУ-26.
-
----
-
-## 13. Важные ограничения
-
-- Не создавать новые карты без изменения этого файла и соответствующего seed.
-- Не менять характеристики карт только в seed без обновления `CARDS.md`.
-- `Card.code` должен оставаться стабильным после создания карты.
-- Изменение `name` не должно создавать новую карту.
-- `price` и `weight` не следует путать.
-- `Technique.fuel` и `Platoon.fuel` являются характеристиками карты/runtime-объекта, а не стоимостью розыгрыша.
-- Technique не имеет Armor.
-- Platoon может иметь `firepower = 0`.
-- HQ не имеет `price`.
-- SAU не получает отдельную Ability для spotting.
-- PT-SAU не получает отдельную Ability для первого выстрела.
-- Специальные боевые правила реализуются игровым движком, а не через Ability без необходимости.
-
----
-
-## 14. Контрольное количество
-
-Ожидаемое количество записей после seed:
+### 5.1. Техніка
+
+| Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
+|---|---|---|---:|---:|---:|---:|---:|---|
+| M3 Stuart | `usa_m3_stuart` | LT | 1 | 3 | 1 | 1 | - | — |
+| M8 Greyhound | `usa_m8_greyhound` | LT | 2 | 4 | 2 | 1 | 1 | — |
+| M3 Lee/Grant | `usa_m3_lee_grant` | ST | 3 | 4 | 3 | 1 | 1 | — |
+| M4 Sherman | `usa_m4_sherman` | ST | 4 | 5 | 3 | 2 | 1 | — |
+| M4A3E8 Easy Eight | `usa_m4a3e8_easy_eight` | ST | 4 | 6 | 4 | 2 | 1 | — |
+| M4A3E2 Jumbo | `usa_m4a3e2_jumbo` | ST | 5 | 6 | 4 | 2 | 1 | — |
+| M10 Wolverine | `usa_m10_wolverine` | PT-SAU | 6 | 7 | 5 | 2 | 1 | Перший постріл |
+| M26 Pershing | `usa_m26_pershing` | TT | 7 | 7 | 5 | 2 | 1 | — |
+| M8 HMC Scott | `usa_m8_hmc_scott` | SAU | 8 | 8 | 3 | 1 | 1 | Spotting / дальня атака |
+
+### 5.2. Накази
+
+| Card | Code | Weight | Price | Ability | Parameters |
+|---|---|---:|---:|---|---|
+| Ленд-ліз | `usa_lend_liz` | 3 | 2 | `draw_cards` | `count: 1` |
+| Вогневий наліт | `usa_vognevij_nalit` | 3 | 3 | `damage_technique` | `damage: 2` |
+
+### 5.3. Взводи
+
+| Card | Code | Weight | Price | HP | Firepower | Armor | Fuel |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Инженерний взвод | `usa_inzhenernij_vzvod` | 3 | 4 | 5 | 0 | 2 | 0 |
+| Взвод базукометників | `usa_vzvod_bazukometnikiv` | 5 | 4 | 4 | 1 | 0 | 1 |
+
+## 6. СРСР
+
+### 6.1. Техніка
+
+| Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
+|---|---|---|---:|---:|---:|---:|---:|---:|---|
+| БТ-7 | `ussr_bt_7` | LT | 1 | 2 | 1 | 1 | - | — |
+| Т-60 | `ussr_t_60` | LT | 2 | 3 | 2 | 1 | 1 | — |
+| Т-34 | `ussr_t_34` | ST | 3 | 4 | 3 | 1 | 1 | — |
+| Т-34-76 | `ussr_t_34_76` | ST | 4 | 5 | 4 | 2 | 1 | — |
+| СУ-85 | `ussr_su_85` | PT-SAU | 4 | 5 | 5 | 3 | - | Перший постріл |
+| СУ-100 | `ussr_su_100` | PT-SAU | 6 | 6 | 5 | 2 | 1 | Перший постріл |
+| T-35 | `ussr_t_35` | TT | 5 | 5 | 6 | 1 | 1 | — |
+| КВ-1 | `ussr_kv_1` | TT | 7 | 6 | 6 | 2 | 1 | — |
+| СУ-76М | `ussr_su_76m` | SAU | 8 | 6 | 3 | 1 | - | Spotting / дальня атака |
+
+### 6.2. Накази
+
+| Card | Code | Weight | Price | Ability | Parameters |
+|---|---|---:|---:|---|---|
+| Залп „Катюші“ | `ussr_zalp_katyushi` | 5 | 4 | `damage_technique` | `damage: 3` |
+| Поповнення | `ussr_popovnena` | 3 | 2 | `draw_cards` | `count: 1` |
+
+### 6.3. Взводи
+
+| Card | Code | Weight | Price | HP | Firepower | Armor | Fuel |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Стрелецький взвод | `ussr_strileckyj_vzvod` | 4 | 4 | 4 | 1 | 0 | 0 |
+| Взвод ПТР | `ussr_vzvod_ptr` | 4 | 3 | 6 | 0 | 2 | 0 |
+
+## 7. Універсальні здібності наказів
+
+Використовуються лише дві універсальні здібності:
+
+| Ability | Parameter | Дія | Карти |
+|---|---|---|---|
+| `damage_technique` | `damage` | Завдає зазначеної шкоди техніці | Точний постріл: 4; Вогневий наліт: 2; Залп „Катюші“: 3 |
+| `draw_cards` | `count` | Дозволяє добрати зазначену кількість карт | Радіоперехоплення: 2; Ленд-ліз: 1; Поповнення: 1 |
+
+## 8. Технічні обмеження та порядок оновлення
+
+1. `Card.code` — унікальний технічний ідентифікатор; назва може змінюватися без створення нової карти. У новому наборі частина кодів **навмисно змінена** — це потребує окремої міграції/очищення старих даних, а не лише повторного запуску `find_or_initialize_by`.
+2. Джерела ігрових карт: `db/seeds/cards.rb` та `db/seeds/card_abilities.rb`.
+3. Гостьові колоди задаються у `app/services/starter_decks/create.rb`, колоди ШІ — у `app/services/ai_players/decks_setup.rb`; після зміни набору їх потрібно узгодити з новими кодами та вагами.
+4. Звичайна колода містить рівно **10 карт** без штабу; кількість копій однієї карти — від **1 до 3**. Усі карти колоди належать одній нації.
+5. `Deck#weight` рахує суму `cards.weight × deck_cards.quantity` для 10 звичайних карт; вага штабу до цього значення не додається.
+6. Техніка не має `Armor`; взвод може мати `Firepower = 0`. Штаб має `Price = nil`.
+7. Перед оновленням seed необхідно визначити значення `Fuel` у п’яти позиціях, позначених `-`, та вирішити, що робити з картами старого набору, які більше не входять до каталогу.
+8. Зміни в seed повинні супроводжуватися перевіркою посилань на коди карт, складів колод, тестів і документації. Уже створені колоди не оновлюються автоматично лише через зміну їх шаблонів.
+9. Спеціальні правила PT-SAU і SAU залишаються в `GameEngine`, а не дублюються у `CardAbility`.
+
+## 9. Контрольна кількість після переходу на новий набір
 
 ```text
-Nations:       3
-Abilities:     2
-Cards:        39
-Headquarters:  3
-Techniques:   24
-Orders:        6
-Platoons:      6
-CardAbilities: 6
+Nations:        3
+Abilities:      2
+Cards:         42
+Headquarters:   3
+Techniques:    27
+Orders:         6
+Platoons:       6
+CardAbilities:  6
+
+Германія:      14 карт
+США:           14 карт
+СРСР:          14 карт
 ```
 
-Разбивка по Nation:
-
-```text
-Германия: 13 карт
-США:      13 карт
-СССР:     13 карт
-```
-
-Всего: **39 карт**.
-
----
-
-## 15. Полный каталог карт
-
-### 15.1. Штабы
-
-| Nation | Card | Code | Type | Weight | Price | HP | Firepower | Fuel |
-|---|---|---|---|---|---|---|---|---|
-| Германия | Operation „Weiß“ | `germany_headquarters` | headquarters | 1 | — | 16 | 2 | 4 |
-| США | Second front | `usa_headquarters` | headquarters | 1 | — | 17 | 1 | 6 |
-| СССР | Западный фронт | `ussr_headquarters` | headquarters | 1 | — | 19 | 1 | 5 |
-
-### 15.2. Карты
-
-| Nation | Card | Code | Type | Weight | Price | HP | Firepower | Armor | Fuel | Ability |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Германия | Pz.II Ausf. L «Luchs» | `germany_pz_ii_l_luchs` | technique / LT | 1 | 2 | 4 | 2 | — | 2 | — |
-| Германия | Pz.III Ausf. J | `germany_pz_iii_j` | technique / ST | 1 | 3 | 6 | 3 | — | 1 | — |
-| Германия | Pz.IV Ausf. H | `germany_pz_iv_h` | technique / ST | 2 | 4 | 8 | 4 | — | 1 | — |
-| Германия | Pz.VI Tiger I | `germany_tiger_i` | technique / TT | 4 | 6 | 12 | 5 | — | 1 | — |
-| Германия | Jagdpanther | `germany_jagdpanther` | technique / PT-SAU | 3 | 5 | 8 | 4 | — | 1 | Первый выстрел |
-| Германия | Hummel | `germany_hummel` | technique / SAU | 2 | 4 | 5 | 3 | — | 2 | Spotting / дальняя атака |
-| Германия | Sd.Kfz. 221 «Ausklärer» | `germany_sdkfz_221` | technique / LT | 1 | 1 | 2 | 1 | — | 1 | — |
-| Германия | Sd.Kfz. 234/2 «Puma» | `germany_sdkfz_234_2_puma` | technique / LT | 2 | 2 | 2 | 2 | — | 1 | — |
-| Германия | «Точный выстрел» | `germany_tocnyj_vystrel` | order | 3 | 4 | — | — | — | — | `damage_technique: 4` |
-| Германия | «Радиоперехват» | `germany_radioperekhvat` | order | 2 | 3 | — | — | — | — | `draw_cards: 2` |
-| Германия | Гренадёрский взвод | `germany_grenaderskij_vzvod` | platoon | 2 | 3 | 6 | 2 | 0 | 0 | — |
-| Германия | Расчёт Flak 88 | `germany_flak_88` | platoon | 3 | 3 | 5 | 0 | 2 | 0 | — |
-| США | M3 Stuart | `usa_m3_stuart` | technique / LT | 1 | 2 | 4 | 2 | — | 2 | — |
-| США | M4 Sherman | `usa_m4_sherman` | technique / ST | 2 | 4 | 6 | 2 | — | 2 | — |
-| США | M4A3E8 «Easy Eight» | `usa_m4a3e8_easy_eight` | technique / ST | 3 | 5 | 8 | 4 | — | 1 | — |
-| США | M26 Pershing | `usa_m26_pershing` | technique / TT | 3 | 6 | 11 | 4 | — | 1 | — |
-| США | M18 Hellcat | `usa_m18_hellcat` | technique / PT-SAU | 2 | 6 | 5 | 4 | — | 2 | Первый выстрел |
-| США | M7 Priest | `usa_m7_priest` | technique / SAU | 2 | 4 | 5 | 2 | — | 1 | Spotting / дальняя атака |
-| США | M8 Greyhound | `usa_m8_greyhound` | technique / LT | 1 | 2 | 2 | 1 | — | 1 | — |
-| США | M24 Chaffee | `usa_m24_chaffee` | technique / LT | 2 | 3 | 3 | 1 | — | 1 | — |
-| США | «Ленд-лиз» | `usa_lend_liz` | order | 1 | 2 | — | — | — | — | `draw_cards: 2` |
-| США | «Огневой налёт» | `usa_ognevoj_nalyot` | order | 1 | 2 | — | — | — | — | `damage_technique: 2` |
-| США | Инженерный взвод | `usa_inzhenernyj_vzvod` | platoon | 3 | 4 | 5 | 0 | 3 | 0 | — |
-| США | Взвод базукометчиков | `usa_vzvod_bazukometchikov` | platoon | 3 | 4 | 4 | 2 | 0 | 1 | — |
-| СССР | Т-70 | `ussr_t_70` | technique / LT | 1 | 2 | 5 | 1 | — | 2 | — |
-| СССР | Т-34 | `ussr_t_34` | technique / ST | 2 | 4 | 7 | 2 | — | 2 | — |
-| СССР | Т-34-85 | `ussr_t_34_85` | technique / ST | 3 | 6 | 8 | 3 | — | 1 | — |
-| СССР | ИС-2 | `ussr_is_2` | technique / TT | 3 | 6 | 12 | 3 | — | 1 | — |
-| СССР | СУ-100 | `ussr_su_100` | technique / PT-SAU | 3 | 5 | 6 | 3 | — | 1 | Первый выстрел |
-| СССР | СУ-26 | `ussr_su_26` | technique / SAU | 2 | 6 | 7 | 2 | — | 2 | Spotting / дальняя атака |
-| СССР | БА-64 | `ussr_ba_64` | technique / LT | 1 | 2 | 2 | 1 | — | 1 | — |
-| СССР | Т-60 | `ussr_t_60` | technique / LT | 2 | 2 | 2 | 2 | — | 1 | — |
-| СССР | «Залп „Катюши“» | `ussr_zalp_katyushi` | order | 2 | 3 | — | — | — | — | `damage_technique: 3` |
-| СССР | «Пополнение» | `ussr_popolnenie` | order | 2 | 2 | — | — | — | — | `draw_cards: 1` |
-| СССР | Стрелковый взвод | `ussr_strelkovyj_vzvod` | platoon | 2 | 3 | 5 | 1 | 0 | 0 | — |
-| СССР | Взвод ПТР | `ussr_vzvod_ptr` | platoon | 3 | 4 | 6 | 1 | 2 | 0 | — |
+Ці значення очікуються **після** повного переходу на новий набір і видалення/архівації застарілих карт. Просте повторне виконання поточних seed може залишити старі записи у базі.
