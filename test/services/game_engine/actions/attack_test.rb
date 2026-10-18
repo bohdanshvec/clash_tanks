@@ -1834,6 +1834,16 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
 		)
 
 		assert result.events.any? { |event| event[:type] == "game_finished" }
+		
+    attack_event = result.events.find do |event|
+      event[:type] == "headquarters_attacked"
+    end
+
+    assert_not_nil attack_event
+    assert_equal OPPONENT_ID, attack_event.dig(:attacker, :player_id)
+    assert_equal [1, 1], attack_event.dig(:attacker, :position)
+    assert_equal PLAYER_ID, attack_event.dig(:target, :player_id)
+    assert_equal [2, 0], attack_event.dig(:target, :position)
 	end
 
 	test "PTSAU does not counterattack headquarters after using counterattack" do

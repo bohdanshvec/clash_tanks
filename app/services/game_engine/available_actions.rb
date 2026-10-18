@@ -1,5 +1,3 @@
-# app/services/game_engine/available_actions.rb
-
 module GameEngine
   class AvailableActions
     def self.call(state:, player_id:)
@@ -12,22 +10,22 @@ module GameEngine
       @player = @state["players"][@player_id]
     end
 
-		def call
-			return empty_result unless @player
-			return empty_result if finished?
-			return empty_result unless current_player?
+    def call
+      return empty_result unless @player
+      return empty_result if finished?
+      return empty_result unless current_player?
 
-			{
-				"field" => field_actions,
-				"hand" => hand_actions
-			}
-		end
+      {
+        "field" => field_actions,
+        "hand" => hand_actions
+      }
+    end
 
     private
-    
-		def finished?
-			@state["status"] == "finished"
-		end
+
+    def finished?
+      @state["status"] == "finished"
+    end
 
     def empty_result
       {
@@ -70,21 +68,14 @@ module GameEngine
     def available_moves(technique, position)
       return [] if technique["movement_count"].to_i <= 0
 
-      positions = []
-
-      each_neighbor_position(position) do |target_position|
-        next unless empty_field_position?(target_position)
-
-        next unless GameEngine::Rules::TechniqueMovement.valid?(
-          technique,
-          position,
-          target_position
-        )
-
-        positions << target_position
+      GameEngine::Rules::Position.neighbors(position).select do |target_position|
+        empty_field_position?(target_position) &&
+          GameEngine::Rules::TechniqueMovement.valid?(
+            technique,
+            position,
+            target_position
+          )
       end
-
-      positions
     end
 
     def available_attacks(attacker, attacker_position)
@@ -115,84 +106,13 @@ module GameEngine
       attacker_position,
       target_position
     )
-      case attacker["type"]
-      when "technique"
-        valid_technique_attack?(
-          attacker,
-          target,
-          attacker_position,
-          target_position
-        )
-      when "headquarters"
-        valid_headquarters_attack?(
-          target,
-          attacker_position,
-          target_position
-        )
-      else
-        false
-      end
-    end
-
-    def valid_technique_attack?(
-      attacker,
-      target,
-      attacker_position,
-      target_position
-    )
-      case target["type"]
-      when "technique"
-        return true if GameEngine::Rules::AttackRange.valid?(
-          attacker,
-          attacker_position,
-          target_position
-        )
-
-        attacker["technique_type"] == "artillery" &&
-          GameEngine::Rules::Spotting.allied_unit_near?(
-            @state,
-            target_position,
-            attacker["player_id"]
-          )
-      when "headquarters"
-        return true if GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
-        )
-
-        attacker["technique_type"] == "artillery" &&
-          GameEngine::Rules::Spotting.allied_technique_near?(
-            @state,
-            target_position,
-            attacker["player_id"]
-          )
-      else
-        false
-      end
-    end
-
-    def valid_headquarters_attack?(
-      target,
-      attacker_position,
-      target_position
-    )
-      case target["type"]
-      when "headquarters"
-        true
-      when "technique"
-        return true if GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
-        )
-
-        GameEngine::Rules::Spotting.allied_technique_near?(
-          @state,
-          target_position,
-          @player_id
-        )
-      else
-        false
-      end
+      GameEngine::Rules::AttackTarget.valid?(
+        state: @state,
+        attacker: attacker,
+        target: target,
+        attacker_position: attacker_position,
+        target_position: target_position
+      )
     end
 
     # ------------------------------------------------------------------
@@ -222,28 +142,29 @@ module GameEngine
       end
     end
 
-		def available_technique_card_action(card)
-			return {
-				"type" => "technique",
-				"drop_zone" => "field",
-				"resources_sufficient" => false,
-				"positions" => []
-			} unless enough_resources?(card)
+    def available_technique_card_action(card)
+      unless enough_resources?(card)
+        return {
+          "type" => "technique",
+          "drop_zone" => "field",
+          "resources_sufficient" => false,
+          "positions" => []
+        }
+      end
 
-			{
-				"type" => "technique",
-				"drop_zone" => "field",
-				"resources_sufficient" => true,
-				"positions" => available_technique_positions
-			}
-		end
+      {
+        "type" => "technique",
+        "drop_zone" => "field",
+        "resources_sufficient" => true,
+        "positions" => available_technique_positions
+      }
+    end
 
     def available_technique_positions
       positions = []
 
       each_field_position do |position|
         next unless empty_field_position?(position)
-
         next unless adjacent_to_own_headquarters?(position)
 
         positions << position
@@ -252,21 +173,23 @@ module GameEngine
       positions
     end
 
-		def available_platoon_card_action(card)
-			return {
-				"type" => "platoon",
-				"drop_zone" => "platoon_bar",
-				"resources_sufficient" => false,
-				"slots" => []
-			} unless enough_resources?(card)
+    def available_platoon_card_action(card)
+      unless enough_resources?(card)
+        return {
+          "type" => "platoon",
+          "drop_zone" => "platoon_bar",
+          "resources_sufficient" => false,
+          "slots" => []
+        }
+      end
 
-			{
-				"type" => "platoon",
-				"drop_zone" => "platoon_bar",
-				"resources_sufficient" => true,
-				"slots" => available_platoon_slots
-			}
-		end
+      {
+        "type" => "platoon",
+        "drop_zone" => "platoon_bar",
+        "resources_sufficient" => true,
+        "slots" => available_platoon_slots
+      }
+    end
 
     def available_platoon_slots
       @player["platoons"].each_with_index.filter_map do |platoon, index|
@@ -274,47 +197,51 @@ module GameEngine
       end
     end
 
-		def available_order_card_action(card)
-			return {
-				"type" => "order",
-				"targets" => [],
-				"resources_sufficient" => false
-			} unless enough_resources?(card)
+    def available_order_card_action(card)
+      unless enough_resources?(card)
+        return {
+          "type" => "order",
+          "targets" => [],
+          "resources_sufficient" => false
+        }
+      end
 
-			abilities = card["abilities"] || []
+      abilities = card["abilities"] || []
 
-			return {
-				"type" => "order",
-				"drop_zone" => "field",
-				"resources_sufficient" => true
-			} if abilities.none? { |ability| targeted_ability?(ability) }
+      if abilities.none? { |ability| targeted_ability?(ability) }
+        return {
+          "type" => "order",
+          "drop_zone" => "field",
+          "resources_sufficient" => true
+        }
+      end
 
-			{
-				"type" => "order",
-				"targets" => available_order_targets(card),
-				"resources_sufficient" => true
-			}
-		end
+      {
+        "type" => "order",
+        "targets" => available_order_targets(card),
+        "resources_sufficient" => true
+      }
+    end
 
-		def available_order_targets(card)
-			targets = []
+    def available_order_targets(card)
+      targets = []
 
-			return targets unless card["abilities"]
+      return targets unless card["abilities"]
 
-			return targets unless card["abilities"].any? do |ability|
-				targeted_ability?(ability)
-			end
+      return targets unless card["abilities"].any? do |ability|
+        targeted_ability?(ability)
+      end
 
-			each_field_object do |object, position|
-				next unless object
-				next unless object["type"] == "technique"
-				next unless enemy_object?(object)
+      each_field_object do |object, position|
+        next unless object
+        next unless object["type"] == "technique"
+        next unless enemy_object?(object)
 
-				targets << position
-			end
+        targets << position
+      end
 
-			targets
-		end
+      targets
+    end
 
     def targeted_ability?(ability)
       ability["code"] == "damage_technique"
@@ -341,29 +268,6 @@ module GameEngine
       end
     end
 
-    def each_neighbor_position(position)
-      row = position[0]
-      column = position[1]
-
-      (-1..1).each do |row_offset|
-        (-1..1).each do |column_offset|
-          next if row_offset.zero? && column_offset.zero?
-
-          target_position = [
-            row + row_offset,
-            column + column_offset
-          ]
-
-          next unless GameState.valid_coordinates?(
-            row: target_position[0],
-            column: target_position[1]
-          )
-
-          yield target_position
-        end
-      end
-    end
-
     def object_at(position)
       @state["field"][position[0]][position[1]]
     end
@@ -372,18 +276,16 @@ module GameEngine
       object_at(position).nil?
     end
 
-		def own_object?(object)
-			object && object["player_id"].to_s == @player_id
-		end
+    def own_object?(object)
+      object && object["player_id"].to_s == @player_id
+    end
 
     def enemy_object?(object)
       !own_object?(object)
     end
 
     def adjacent_to_own_headquarters?(position)
-      each_field_position do |field_position|
-        object = object_at(field_position)
-
+      each_field_object do |object, field_position|
         next unless object
         next unless object["type"] == "headquarters"
         next unless own_object?(object)
@@ -410,3 +312,4 @@ module GameEngine
     end
   end
 end
+

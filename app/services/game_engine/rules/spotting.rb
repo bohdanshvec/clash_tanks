@@ -18,23 +18,8 @@ module GameEngine
       end
 
       def self.neighbor_objects(state, position)
-        row = position[0]
-        column = position[1]
-
-        (-1..1).flat_map do |row_offset|
-          (-1..1).filter_map do |column_offset|
-            next if row_offset.zero? && column_offset.zero?
-
-            neighbor_row = row + row_offset
-            neighbor_column = column + column_offset
-
-            next unless GameState.valid_coordinates?(
-              row: neighbor_row,
-              column: neighbor_column
-            )
-
-            state["field"][neighbor_row][neighbor_column]
-          end
+        Position.neighbors(position).filter_map do |neighbor_position|
+          state["field"][neighbor_position[0]][neighbor_position[1]]
         end
       end
 
@@ -42,3 +27,4 @@ module GameEngine
     end
   end
 end
+

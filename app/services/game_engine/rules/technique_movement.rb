@@ -12,11 +12,10 @@ module GameEngine
       end
 
       def valid?
+        return false unless Position.adjacent?(@from, @to)
+
         row_delta = (@to[0] - @from[0]).abs
         column_delta = (@to[1] - @from[1]).abs
-
-        return false if row_delta > 1 || column_delta > 1
-        return false if row_delta.zero? && column_delta.zero?
 
         case @technique["movement_type"]
         when "orthogonal"

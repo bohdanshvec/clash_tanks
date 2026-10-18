@@ -64,51 +64,13 @@ module GameEngine
         attacker_position,
         target_position
       )
-        # Headquarters may attack enemy headquarters at any distance.
-        return true if headquarters_vs_headquarters?(attacker, target)
-
-        adjacent = GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
+        GameEngine::Rules::AttackTarget.valid?(
+          state: @state,
+          attacker: attacker,
+          target: target,
+          attacker_position: attacker_position,
+          target_position: target_position
         )
-
-        # Headquarters -> Technique
-        if attacker["type"] == "headquarters"
-          return true if adjacent
-
-          return GameEngine::Rules::Spotting.allied_technique_near?(
-            @state,
-            target_position,
-            attacker["player_id"]
-          )
-        end
-
-        # Technique -> Headquarters
-        if target["type"] == "headquarters"
-          return true if adjacent
-
-          return attacker["technique_type"] == "artillery" &&
-            GameEngine::Rules::Spotting.allied_technique_near?(
-              @state,
-              target_position,
-              attacker["player_id"]
-            )
-        end
-
-        # Technique -> Technique
-        return true if GameEngine::Rules::AttackRange.valid?(
-          attacker,
-          attacker_position,
-          target_position
-        )
-
-        # Artillery may use allied spotting for a distant attack.
-        attacker["technique_type"] == "artillery" &&
-          GameEngine::Rules::Spotting.allied_unit_near?(
-            @state,
-            target_position,
-            attacker["player_id"]
-          )
       end
 
       def attack_range_error(attacker, target)
@@ -119,53 +81,6 @@ module GameEngine
         else
           "Invalid attack range"
         end
-      end
-
-      # ------------------------------------------------------------------
-      # Combat classification
-      # ------------------------------------------------------------------
-
-      def headquarters_vs_headquarters?(attacker, target)
-        attacker["type"] == "headquarters" &&
-          target["type"] == "headquarters"
-      end
-
-      def combat_type(
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        # Headquarters vs Headquarters never causes a counterattack.
-        return :ranged if headquarters_vs_headquarters?(attacker, target)
-
-        adjacent = GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
-        )
-
-        # Any other non-adjacent attack is ranged.
-        return :ranged unless adjacent
-
-        # Defending PT-SAU may shoot first.
-        return :ptsau_first if ptsau_shoots_first?(attacker, target)
-
-        # All remaining adjacent attacks use normal combat.
-        :normal
-      end
-
-      def ptsau_shoots_first?(attacker, target)
-        return false unless target["type"] == "technique"
-        return false unless target["technique_type"] == "tank_destroyer"
-
-        # PT-SAU may counterattack only once per opponent turn.
-        return false if target["has_counterattacked"]
-
-        # PT-SAU vs PT-SAU:
-        # the attacking PT-SAU shoots first.
-        return false if attacker["technique_type"] == "tank_destroyer"
-
-        true
       end
 
       # ------------------------------------------------------------------
@@ -187,11 +102,11 @@ module GameEngine
 
         attacker["has_attacked"] = true
 
-        scenario = combat_type(
-          attacker,
-          target,
-          attacker_position,
-          target_position
+        scenario = GameEngine::Rules::CombatType.call(
+          attacker: attacker,
+          target: target,
+          attacker_position: attacker_position,
+          target_position: target_position
         )
 
         case scenario
@@ -345,8 +260,8 @@ module GameEngine
             target,
             attacker,
             "headquarters_attacked",
-            attacker_position,
-            target_position
+            target_position,
+            attacker_position
           )
         end
 
@@ -487,14 +402,15 @@ module GameEngine
 
         return unless attacker
         return unless defender
-        return if defender["has_counterattacked"]
 
-        return unless GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
+        return unless GameEngine::Rules::Counterattack.allowed?(
+          attacker: attacker,
+          defender: defender,
+          attacker_position: attacker_position,
+          defender_position: target_position
         )
 
-        # The flag is set only when the counterattack is performed.
+        # Флаг выставляется только при фактическом выстреле.
         defender["has_counterattacked"] = true
 
         perform_shot(
@@ -727,3 +643,4 @@ module GameEngine
     end
   end
 end
+

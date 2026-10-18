@@ -12,6 +12,29 @@ module GameEngine
 
         [row_delta, column_delta].max == 1
       end
+
+      def self.neighbors(position)
+        row, column = position
+
+        (-1..1).flat_map do |row_offset|
+          (-1..1).filter_map do |column_offset|
+            next if row_offset.zero? && column_offset.zero?
+
+            neighbor = [
+              row + row_offset,
+              column + column_offset
+            ]
+
+            next unless GameState.valid_coordinates?(
+              row: neighbor[0],
+              column: neighbor[1]
+            )
+
+            neighbor
+          end
+        end
+      end
     end
   end
 end
+
