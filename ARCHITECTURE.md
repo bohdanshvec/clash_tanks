@@ -6,11 +6,11 @@
 Decision Provider → Action → GameActionRunner → GameEngine → GameState
 
 Browser → Controller → Decision Provider → Action → GameActionRunner → GameEngine → GameState
-                                                                          ↓
+                                                                         ↓
 Browser ← Stimulus ← Turbo ← VisibleState ← сохранённый GameState
 ```
 
-GameEngine — единственный арбитр игровых правил. `GameEngine::Action` содержит `player_id`, `type`, `payload`. `GameEngine::Result` содержит успех или ошибку, новое состояние и events. Engine работает с копией GameState; при ошибке новое состояние не сохраняется.
+GameEngine — единственный арбитр игровых правил. `GameEngine::Action` содержит `player_id`, `type`, `payload`. `GameEngine::Result` содержит результат выполнения, новое состояние и events. Engine работает с копией GameState; при ошибке новое состояние не сохраняется.
 
 Человек использует `DecisionProviders::Human`, AI — `DecisionProviders::AI`. Любое действие проходит через GameActionRunner и GameEngine.
 
@@ -30,7 +30,7 @@ GameState не обращается к ActiveRecord. Постоянная Deck �
 
 `field` содержит HQ и Technique. Platoon хранится в `state["players"][player_id]["platoons"]`; четыре slots сохраняют пустые позиции после уничтожения. Логические координаты не зависят от визуальной перспективы; DOM использует `data-position="row,column"`.
 
-Runtime Technique содержит тип, идентификаторы, имя, характеристики и флаги атаки; не содержит price, weight, card_type или вложенный technique. У Technique нет Armor. Runtime Platoon содержит firepower, hp, armor, fuel. Правила — только `GAME_RULES.md`.
+Runtime Technique содержит тип, идентификаторы, имя, характеристики и флаги атаки; не содержит `price`, `weight`, `card_type` или вложенный `technique`. У Technique нет Armor. Runtime Platoon содержит `firepower`, `hp`, `armor`, `fuel`. Правила — только `GAME_RULES.md`.
 
 ## Decision Provider
 
@@ -42,7 +42,7 @@ Provider выбирает намерение, но не применяет иг�
 
 ### Human
 
-`DecisionProviders::Human` преобразует move, attack, play_card, end_turn, surrender в `GameEngine::Action`. Controller передаёт действие в GameActionRunner.
+`DecisionProviders::Human` преобразует `move`, `attack`, `play_card`, `end_turn`, `surrender` в `GameEngine::Action`. Controller передаёт действие в GameActionRunner.
 
 ### AI
 
@@ -52,11 +52,11 @@ Provider выбирает намерение, но не применяет иг�
 
 `DecisionProviders::GroqAdapter` использует Groq Chat Completions API, `GROQ_API_KEY`, `GROQ_MODEL` (по умолчанию `openai/gpt-oss-20b`). `DecisionProviders::ActionOptions` готовит индексируемые `legal_actions`. Модели передаётся только видимое состояние без повторного `available_actions` и список разрешённых действий. Модель возвращает JSON `action_index`; адаптер валидирует индекс и выбирает исходное разрешённое действие, не создавая произвольный Action.
 
-Актуальная конфигурация Groq:
+Актуальные архитектурные требования к Groq:
 
 - Structured Outputs: строгая JSON-схема ответа с `action_index`.
 - `reasoning_effort=low`.
-- `max_completion_tokens=512`.
+- Значение `max_completion_tokens` должно соответствовать актуальной конфигурации адаптера.
 - Подменяемый HTTP transport для тестов.
 - Логирование token usage, `finish_reason` и доступных HTTP/rate-limit метрик.
 - Ограниченные повторы HTTP 429 при распознанной положительной задержке; ограниченная обработка временных сетевых ошибок.
@@ -80,6 +80,119 @@ Provider выбирает намерение, но не применяет иг�
 `GameEngine::VisibleState` — разрешённая граница данных UI/AI. Игрок видит свою руку; противник — только количества карт в руке/колоде/сбросе и публичные объекты, ресурсы и время. Содержимое и порядок чужих hand/deck/graveyard скрыты. AvailableActions входит в VisibleState; у неактивного игрока и finished game действий нет. Engine всё равно самостоятельно валидирует Action.
 
 `GameEngine::AvailableActions` формирует серверные подсказки для перемещений, атак, размещения техники, взводов и приказов. Эти данные не заменяют проверку действия в Engine и не должны дублироваться внутри `game_state` запроса Groq, когда `legal_actions` уже переданы отдельно.
+
+## Attack и контратака
+
+Боевая механика разделена по обязанностям между Action, Rules и Attacks. Рефакторинг завершён; игровые правила намеренно не менялись.
+
+### GameEngine::Actions::Attack
+
+Файл: `app/services/game_engine/actions/attack.rb`.
+
+`Attack` координирует выполнение действия атаки:
+
+- проверяет допустимость действия;
+- определяет сценарий боя через `GameEngine::Rules::CombatType`;
+- передаёт исполнение боевого сценария в `GameEngine::Attacks::CombatExecutor`;
+- формирует игровые события;
+- обрабатывает завершение партии при уничтожении штаба через существующий механизм завершения игры.
+
+`Attack` не должен снова становиться местом, в котором сосредоточена вся реализация боевых сценариев и вся механика повреждения штаба.
+
+### GameEngine::Rules::CombatType
+
+Файл: `app/services/game_engine/rules/combat_type.rb`.
+
+Определяет тип боевого сценария:
+
+- `:ranged` — дальний бой;
+- `:normal` — обычный порядок выстрелов;
+- `:ptsau_first` — специальный сценарий, в котором защищающаяся ПТ-САУ стреляет первой.
+
+Класс определяет сценарий, но не исполняет выстрелы и не должен самостоятельно изменять состояние игры.
+
+### GameEngine::Rules::Counterattack
+
+Файл: `app/services/game_engine/rules/counterattack.rb`.
+
+Проверяет допустимость контратаки, включая необходимые условия расположения объектов и ограничения на повторную контратаку.
+
+Класс определяет, разрешён ли ответный выстрел. Он не наносит урон, не исполняет боевой сценарий и не изменяет GameState.
+
+### GameEngine::Attacks::CombatExecutor
+
+Файл: `app/services/game_engine/attacks/combat_executor.rb`.
+
+Исполняет выбранный боевой сценарий:
+
+- дальний бой;
+- обычный бой;
+- бой с первым выстрелом защищающейся ПТ-САУ;
+- выстрелы участников боя;
+- допустимую контратаку с использованием проверки `Rules::Counterattack`.
+
+Исполнение боевых действий отделено от определения типа боя и проверки допустимости контратаки.
+
+### GameEngine::Attacks::HeadquartersCombat
+
+Файл: `app/services/game_engine/attacks/headquarters_combat.rb`.
+
+Инкапсулирует механику боя с участием штаба и его взводов:
+
+- расчёт огневой мощи штаба с учётом взводов;
+- нанесение повреждений взводам после выстрела штаба;
+- поглощение входящего урона бронёй взводов в порядке слотов;
+- обработку уничтоженных взводов;
+- перемещение уничтоженных взводов в graveyard;
+- сохранение пустых слотов;
+- передачу оставшегося урона штабу.
+
+### Правила, которые необходимо сохранять
+
+- Дальний бой не вызывает контратаку.
+- В обычном бою атакующий стреляет первым; после этого выживший защитник может ответить, если контратака разрешена.
+- В специальном сценарии защищающаяся ПТ-САУ стреляет первой.
+- Уничтоженный атакующий не выполняет ответный выстрел.
+- Порядок выстрелов при столкновении ПТ-САУ определяется `Rules::CombatType`.
+- Контратака штаба против штаба не выполняется.
+- Контратака возможна только при соблюдении условий правил, включая необходимое соседство.
+- Один объект не может выполнять повторную контратаку сверх установленного правилами ограничения.
+- Флаг контратаки устанавливается только при фактически выполненном ответном выстреле.
+- Уничтоженный объект не выполняет выстрел.
+- Огневая мощь штаба учитывает участвующие в ней взводы.
+- После выстрела штаба его взводы получают повреждения согласно действующим правилам.
+- Входящий урон сначала поглощается бронёй взводов в порядке слотов; оставшийся урон наносится штабу.
+- Уничтоженные взводы отправляются в graveyard, а их слоты не уплотняются.
+- Уничтожение штаба завершает партию через существующий механизм `GameEngine::FinishGame` с корректными победителем и причиной завершения.
+
+Эти ограничения описывают действующие правила и не должны изменяться в рамках дальнейшего рефакторинга без отдельного решения об изменении игровой механики.
+
+### Границы ответственности
+
+```text
+Actions::Attack
+    ├── Rules::CombatType
+    ├── Attacks::CombatExecutor
+    │       ├── Rules::Counterattack
+    │       └── Attacks::HeadquartersCombat
+    └── GameEngine::FinishGame
+```
+
+Это схема ответственности, а не утверждение о каждом внутреннем вызове. При изменении кода фактические зависимости необходимо сверять с реализацией.
+
+`GameEngine` остаётся единственным арбитром правил. Классы `Rules` определяют сценарии и допустимость действий, а классы `Attacks` исполняют боевую механику. Контроллеры, UI и AI не должны самостоятельно реализовывать правила атаки или изменять состояние игры.
+
+После рефакторинга пользователь сообщил следующие результаты тестирования:
+
+```text
+bin/rails test test/services/game_engine/actions/attack_test.rb
+58 runs, 203 assertions, 0 failures, 0 errors, 0 skips
+
+bin/rails test
+548 runs, 2061 assertions, 0 failures, 0 errors, 0 skips
+```
+
+Эти результаты подтверждают успешное прохождение указанных наборов тестов на момент их запуска.
 
 ## Модели, Deck и Ability
 
@@ -113,7 +226,9 @@ Game имеет waiting, started, finished и режимы pvp, ai. GamePlayer �
 
 ## Engine, events и timers
 
-Основные сервисы: StartGame, Draw, Turns::PreparePlayer, Resources::FuelCalculator, Move, Attack, PlayCard, EndTurn, Surrender, FinishGame. Вложенные операции сохраняют события до `Result.events`; завершение игры использует единый `game_finished`. TurnTimer и TurnTimerForTurn отвечают за время; сервер проверяет общий timeout до Action, клиентский `game_timer_controller.js` отображает время и вызывает существующий end_turn.
+Основные сервисы: StartGame, Draw, Turns::PreparePlayer, Resources::FuelCalculator, Move, Attack, PlayCard, EndTurn, Surrender, FinishGame. Вложенные операции сохраняют события до `Result.events`; завершение игры использует единый `game_finished`.
+
+TurnTimer и TurnTimerForTurn отвечают за время; сервер проверяет общий timeout до Action, клиентский `game_timer_controller.js` отображает время и вызывает существующий end_turn.
 
 ## Games::RunAiTurns — автоматический цикл
 
@@ -179,7 +294,7 @@ browser session → current_player → GamePlayer → Action.player_id → GameE
 
 Stage 21 — AI в игровом процессе — завершён по решению пользователя. Последовательный Turbo broadcast и полноценная браузерная партия с реальным Groq проверены.
 
-Stage 22 — дополнительная надёжность AI и корректировка диагностического логирования — завершён по решению пользователя. Последний подтверждённый полный набор после изменений логирования:
+Stage 22 — дополнительная надёжность AI и корректировка диагностического логирования — завершён по решению пользователя. Исторический полный набор после изменений логирования:
 
 ```text
 534 runs, 2031 assertions, 0 failures, 0 errors, 0 skips
