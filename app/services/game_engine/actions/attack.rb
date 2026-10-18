@@ -164,55 +164,57 @@ module GameEngine
       # - defending PT-SAU shoots first;
       # - if attacking Technique survives, it shoots;
       # - no counterattack after this exchange.
-      def attack_with_ptsau_first(
-        state,
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        perform_shot(
-          state,
-          target,
-          attacker,
-          attacker_position
-        )
+			def attack_with_ptsau_first(
+				state,
+				attacker,
+				target,
+				attacker_position,
+				target_position
+			)
+				target["has_counterattacked"] = true
 
-        return Result.new(
-          success: true,
-          state: state,
-          events: [
-            attack_event(
-              type: "technique_destroyed",
-              attacker: attacker,
-              target: target,
-              attacker_position: attacker_position,
-              target_position: target_position
-            )
-          ]
-        ) if attacker["hp"] <= 0
+				perform_shot(
+					state,
+					target,
+					attacker,
+					attacker_position
+				)
 
-        perform_shot(
-          state,
-          attacker,
-          target,
-          target_position
-        )
+				return Result.new(
+					success: true,
+					state: state,
+					events: [
+						attack_event(
+						  type: "technique_destroyed",
+						  attacker: attacker,
+						  target: target,
+						  attacker_position: attacker_position,
+						  target_position: target_position
+						)
+					]
+				) if attacker["hp"] <= 0
 
-        Result.new(
-          success: true,
-          state: state,
-          events: [
-            attack_event(
-              type: "technique_attacked",
-              attacker: attacker,
-              target: target,
-              attacker_position: attacker_position,
-              target_position: target_position
-            )
-          ]
-        )
-      end
+				perform_shot(
+					state,
+					attacker,
+					target,
+					target_position
+				)
+
+				Result.new(
+					success: true,
+					state: state,
+					events: [
+						attack_event(
+						  type: "technique_attacked",
+						  attacker: attacker,
+						  target: target,
+						  attacker_position: attacker_position,
+						  target_position: target_position
+						)
+					]
+				)
+			end
 
       # Technique -> HQ
       #
@@ -412,66 +414,133 @@ module GameEngine
       # Long-range:
       # - friendly Technique must be adjacent to target;
       # - no counterattack.
-      def attack_technique_target_from_headquarters(
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        return failure("Technique is out of headquarters attack range") unless
-          valid_headquarters_to_technique_attack?(
-            attacker,
-            attacker_position,
-            target_position
-          )
+			def attack_technique_target_from_headquarters(
+				attacker,
+				target,
+				attacker_position,
+				target_position
+			)
+				return failure("Technique is out of headquarters attack range") unless
+					valid_headquarters_to_technique_attack?(
+						attacker,
+						attacker_position,
+						target_position
+					)
 
-        new_state = @state.deep_dup
+				new_state = @state.deep_dup
 
-        new_attacker = object_at_in_state(
-          new_state,
-          attacker_position
-        )
+				new_attacker = object_at_in_state(
+					new_state,
+					attacker_position
+				)
 
-        new_target = object_at_in_state(
-          new_state,
-          target_position
-        )
+				new_target = object_at_in_state(
+					new_state,
+					target_position
+				)
 
-        new_attacker["has_attacked"] = true
+				new_attacker["has_attacked"] = true
 
-        perform_shot(
-          new_state,
-          new_attacker,
-          new_target,
-          target_position
-        )
+				# ПТ-САУ, ещё не использовавшая контратаку,
+				# стреляет первой по соседнему штабу.
+				if new_target["technique_type"] == "tank_destroyer" &&
+						!new_target["has_counterattacked"] &&
+						GameEngine::Rules::Position.adjacent?(
+						  attacker_position,
+						  target_position
+						)
 
-        if new_target["hp"] > 0 &&
-            GameEngine::Rules::Position.adjacent?(
-              attacker_position,
-              target_position
-            )
-          counterattack(
-            new_state,
-            attacker_position,
-            target_position
-          )
-        end
+					new_target["has_counterattacked"] = true
 
-        Result.new(
-          success: true,
-          state: new_state,
-          events: [
-            attack_event(
-              type: "headquarters_attacked",
-              attacker: new_attacker,
-              target: new_target,
-              attacker_position: attacker_position,
-              target_position: target_position
-            )
-          ]
-        )
-      end
+					perform_shot(
+						new_state,
+						new_target,
+						new_attacker,
+						attacker_position
+					)
+
+					# Если ПТ-САУ уничтожила штаб первым выстрелом,
+					# штаб уже не может атаковать.
+					if new_attacker["hp"] <= 0
+						return finish_game_after_headquarters_destruction(
+						  new_state,
+						  new_target,
+						  new_attacker,
+						  "headquarters_attacked",
+						  attacker_position,
+						  target_position
+						)
+					end
+
+					# Штаб выжил и выполняет свою атаку.
+					perform_shot(
+						new_state,
+						new_attacker,
+						new_target,
+						target_position
+					)
+
+					return Result.new(
+						success: true,
+						state: new_state,
+						events: [
+						  attack_event(
+						    type: "headquarters_attacked",
+						    attacker: new_attacker,
+						    target: new_target,
+						    attacker_position: attacker_position,
+						    target_position: target_position
+						  )
+						]
+					)
+				end
+
+				# Обычная атака штаба по технике.
+				perform_shot(
+					new_state,
+					new_attacker,
+					new_target,
+					target_position
+				)
+
+				if new_target["hp"] > 0 &&
+						GameEngine::Rules::Position.adjacent?(
+						  attacker_position,
+						  target_position
+						)
+					counterattack(
+						new_state,
+						attacker_position,
+						target_position
+					)
+				end
+
+				# Штаб мог погибнуть от обычной контратаки.
+				if new_attacker["hp"] <= 0
+					return finish_game_after_headquarters_destruction(
+						new_state,
+						new_target,
+						new_attacker,
+						"headquarters_attacked",
+						attacker_position,
+						target_position
+					)
+				end
+
+				Result.new(
+					success: true,
+					state: new_state,
+					events: [
+						attack_event(
+						  type: "headquarters_attacked",
+						  attacker: new_attacker,
+						  target: new_target,
+						  attacker_position: attacker_position,
+						  target_position: target_position
+						)
+					]
+				)
+			end
 
       def valid_headquarters_to_technique_attack?(
         attacker,
@@ -599,25 +668,26 @@ module GameEngine
       # PT-SAU
       # ------------------------------------------------------------------
 
-      def ptsau_shoots_first?(
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        return false unless target["technique_type"] == "tank_destroyer"
+			def ptsau_shoots_first?(
+				attacker,
+				target,
+				attacker_position,
+				target_position
+			)
+				return false unless target["technique_type"] == "tank_destroyer"
+				return false if target["has_counterattacked"]
 
-        return false unless %w[
-          light_tank
-          medium_tank
-          heavy_tank
-        ].include?(attacker["technique_type"])
+				return false unless %w[
+					light_tank
+					medium_tank
+					heavy_tank
+				].include?(attacker["technique_type"])
 
-        GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
-        )
-      end
+				GameEngine::Rules::Position.adjacent?(
+					attacker_position,
+					target_position
+				)
+			end
 
       # ------------------------------------------------------------------
       # Headquarters + Platoons

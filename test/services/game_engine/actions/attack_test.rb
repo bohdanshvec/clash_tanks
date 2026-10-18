@@ -486,23 +486,88 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
     assert_equal 6, result.state["field"][1][2]["hp"]
   end
 
-  test "PTSAU does not counterattack after shooting first" do
-    @state["field"][1][2]["technique_type"] = "tank_destroyer"
+	test "PTSAU uses counterattack when shooting first" do
+		@state["field"][1][2]["technique_type"] = "tank_destroyer"
 
-    action = GameEngine::Action.new(
-      player_id: PLAYER_ID,
-      type: "attack",
-      payload: {
-        attacker: [1, 1],
-        target: [1, 2]
-      }
-    )
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [1, 1],
+		    target: [1, 2]
+		  }
+		)
 
-    result = GameEngine::Actions::Attack.new(@state, action).call
+		result = GameEngine::Actions::Attack.new(@state, action).call
 
-    assert result.success?
-    refute result.state["field"][1][2]["has_counterattacked"]
-  end
+		assert result.success?, result.error
+		assert result.state["field"][1][2]["has_counterattacked"]
+	end
+	
+	test "PTSAU does not counterattack twice in one turn" do
+		@state["field"][1][2]["technique_type"] = "tank_destroyer"
+		@state["field"][1][2]["hp"] = 20
+
+		first_action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [1, 1],
+		    target: [1, 2]
+		  }
+		)
+
+		first_result = GameEngine::Actions::Attack.new(
+		  @state,
+		  first_action
+		).call
+
+		assert first_result.success?, first_result.error
+		assert_equal 7, first_result.state["field"][1][1]["hp"]
+		assert first_result.state["field"][1][2]["has_counterattacked"]
+
+		second_state = first_result.state.deep_dup
+
+		second_state["field"][0][2] = {
+		  "type" => "technique",
+		  "card_id" => 30,
+		  "player_id" => PLAYER_ID,
+		  "technique_type" => "medium_tank",
+		  "hp" => 10,
+		  "firepower" => 4,
+		  "fuel" => 2,
+		  "attack_range" => 1,
+		  "movement_count" => 1,
+		  "movement_type" => "diagonal",
+		  "has_attacked" => false,
+		  "has_counterattacked" => false
+		}
+
+		second_action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [0, 2],
+		    target: [1, 2]
+		  }
+		)
+
+		second_result = GameEngine::Actions::Attack.new(
+		  second_state,
+		  second_action
+		).call
+
+		assert second_result.success?, second_result.error
+
+		# Второй танк не получает урон от повторной контратаки.
+		assert_equal 10, second_result.state["field"][0][2]["hp"]
+
+		# ПТ-САУ уже использовала свою единственную контратаку.
+		assert second_result.state["field"][1][2]["has_counterattacked"]
+
+		# ПТ-САУ получила урон от обоих танков.
+		assert_equal 12, second_result.state["field"][1][2]["hp"]
+	end
 
   test "PTSAU versus PTSAU attacker shoots first" do
     @state["field"][1][1]["technique_type"] = "tank_destroyer"
@@ -1665,5 +1730,136 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
 
 		assert_equal "started", result.state["status"]
 		assert_nil result.state["result"]
+	end
+	
+	test "finishes game when headquarters is destroyed by counterattack" do
+		@state["field"][2][0]["hp"] = 2
+
+		@state["field"][1][1]["player_id"] = OPPONENT_ID
+		@state["field"][1][1]["hp"] = 10
+		@state["field"][1][1]["firepower"] = 3
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [2, 0],
+		    target: [1, 1]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(@state, action).call
+
+		assert result.success?, result.error
+
+		assert_equal 0, result.state["field"][2][0]["hp"]
+		assert_equal "finished", result.state["status"]
+
+		assert_equal(
+		  {
+		    "winner_id" => OPPONENT_ID,
+		    "loser_id" => PLAYER_ID,
+		    "reason" => "headquarters_destroyed"
+		  },
+		  result.state["result"]
+		)
+
+		assert result.events.any? { |event| event[:type] == "game_finished" }
+	end
+	
+	test "PTSAU shoots first when attacked by adjacent headquarters" do
+		@state["field"][1][1]["player_id"] = OPPONENT_ID
+		@state["field"][1][1]["technique_type"] = "tank_destroyer"
+		@state["field"][1][1]["hp"] = 10
+		@state["field"][1][1]["firepower"] = 3
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [2, 0],
+		    target: [1, 1]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(@state, action).call
+
+		assert result.success?, result.error
+
+		assert_equal 17, result.state["field"][2][0]["hp"]
+		assert_equal 6, result.state["field"][1][1]["hp"]
+
+		assert result.state["field"][1][1]["has_counterattacked"]
+		assert result.state["field"][2][0]["has_attacked"]
+	end
+
+	test "PTSAU destroys headquarters before headquarters can shoot" do
+		@state["field"][2][0]["hp"] = 2
+
+		@state["field"][1][1]["player_id"] = OPPONENT_ID
+		@state["field"][1][1]["technique_type"] = "tank_destroyer"
+		@state["field"][1][1]["hp"] = 10
+		@state["field"][1][1]["firepower"] = 3
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [2, 0],
+		    target: [1, 1]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(@state, action).call
+
+		assert result.success?, result.error
+
+		# ПТ-САУ уничтожает штаб первым выстрелом.
+		assert_equal 0, result.state["field"][2][0]["hp"]
+
+		# Штаб не успевает нанести ответный урон.
+		assert_equal 10, result.state["field"][1][1]["hp"]
+
+		assert result.state["field"][1][1]["has_counterattacked"]
+
+		assert_equal "finished", result.state["status"]
+
+		assert_equal(
+		  {
+		    "winner_id" => OPPONENT_ID,
+		    "loser_id" => PLAYER_ID,
+		    "reason" => "headquarters_destroyed"
+		  },
+		  result.state["result"]
+		)
+
+		assert result.events.any? { |event| event[:type] == "game_finished" }
+	end
+
+	test "PTSAU does not counterattack headquarters after using counterattack" do
+		@state["field"][1][1]["player_id"] = OPPONENT_ID
+		@state["field"][1][1]["technique_type"] = "tank_destroyer"
+		@state["field"][1][1]["hp"] = 10
+		@state["field"][1][1]["firepower"] = 3
+		@state["field"][1][1]["has_counterattacked"] = true
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [2, 0],
+		    target: [1, 1]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(@state, action).call
+
+		assert result.success?, result.error
+
+		# Штаб атакует без ответного выстрела ПТ-САУ.
+		assert_equal 20, result.state["field"][2][0]["hp"]
+		assert_equal 6, result.state["field"][1][1]["hp"]
+
+		assert result.state["field"][1][1]["has_counterattacked"]
 	end
 end
