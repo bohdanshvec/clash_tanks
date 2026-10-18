@@ -1,30 +1,6 @@
 require "test_helper"
 
 class Matchmaking::CreateAiGameTest < ActiveSupport::TestCase
-  CARD_WEIGHTS = {
-    "usa_m3_stuart" => 1,
-    "usa_m8_greyhound" => 1,
-    "usa_m24_chaffee" => 2,
-    "usa_m4_sherman" => 2,
-    "usa_lend_liz" => 1,
-    "usa_ognevoj_nalyot" => 1,
-
-    "ussr_t_34" => 2,
-    "ussr_t_34_85" => 3,
-    "ussr_is_2" => 3,
-    "ussr_t_70" => 1,
-    "ussr_zalp_katyushi" => 2,
-    "ussr_popolnenie" => 2,
-    "ussr_strelkovyj_vzvod" => 2,
-
-    "germany_tiger_i" => 4,
-    "germany_jagdpanther" => 3,
-    "germany_pz_iv_h" => 2,
-    "germany_hummel" => 2,
-    "germany_tocnyj_vystrel" => 3,
-    "germany_radioperekhvat" => 2,
-    "germany_grenaderskij_vzvod" => 2
-  }.freeze
 
   setup do
     prepare_cards
@@ -429,65 +405,9 @@ class Matchmaking::CreateAiGameTest < ActiveSupport::TestCase
 
   private
 
-  def prepare_cards
-    AiPlayers::DecksSetup::DECKS.each do |definition|
-      nation = Nation.find_or_create_by!(
-        code: definition[:nation_code]
-      ) do |record|
-        record.name = definition[:nation_code].upcase
-      end
-
-      headquarters_card = create_card(
-        code: definition[:headquarters_code],
-        nation: nation,
-        name: definition[:name],
-        card_type: "headquarters",
-        weight: 1,
-        price: nil
-      )
-
-      Headquarters.find_or_create_by!(
-        card: headquarters_card
-      ) do |headquarters|
-        headquarters.hp = 20
-        headquarters.firepower = 3
-        headquarters.fuel = 5
-      end
-
-      definition[:card_codes].each_key do |code|
-        card = create_card(
-          code: code,
-          nation: nation,
-          name: code,
-          card_type: "technique",
-          weight: CARD_WEIGHTS.fetch(code),
-          price: 1
-        )
-
-        Technique.find_or_create_by!(
-          card: card
-        ) do |technique|
-          technique.technique_type = "light_tank"
-          technique.attack_range = 1
-          technique.movement_count = 1
-          technique.movement_type = "orthogonal"
-          technique.firepower = 1
-          technique.hp = 1
-          technique.fuel = 0
-        end
-      end
-    end
-  end
-
-  def create_card(code:, nation:, name:, card_type:, weight:, price:)
-    Card.find_or_create_by!(code: code) do |card|
-      card.nation = nation
-      card.name = name
-      card.card_type = card_type
-      card.weight = weight
-      card.price = price
-    end
-  end
+	def prepare_cards
+		Rails.application.load_seed
+	end
 
   def create_player_deck
     ai_deck = @ai_decks.first

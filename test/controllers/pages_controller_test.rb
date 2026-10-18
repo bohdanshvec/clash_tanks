@@ -50,7 +50,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".deck-card", text: /Operation „Weiß“/
     assert_select ".deck-card", text: /Second front/
-    assert_select ".deck-card", text: /Западный фронт/
+    assert_select ".deck-card", text: /Західний фронт/
   end
 
   test "guest does not create any players or decks" do
@@ -83,7 +83,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".deck-card", text: /Operation „Weiß“/
     assert_select ".deck-card", text: /Second front/
-    assert_select ".deck-card", text: /Западный фронт/
+    assert_select ".deck-card", text: /Західний фронт/
   end
 
   test "logged in player can access statistics" do
@@ -120,7 +120,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 		assert_select ".deck-card", count: 3
 		assert_select ".deck-card", text: /Operation „Weiß“/
 		assert_select ".deck-card", text: /Second front/
-		assert_select ".deck-card", text: /Западный фронт/
+		assert_select ".deck-card", text: /Західний фронт/
 		assert_select ".deck-card", text: /Incomplete/, count: 0
 	end
 	
@@ -183,13 +183,9 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_not_equal stale_guest.id, session[:player_id]
   end
 
-	test "guest cannot access statistics" do
-		get play_path
-
-		assert_response :success
-
+	test "guest can access statistics leaderboard" do
 		get statistics_path
 
-		assert_redirected_to root_path
+		assert_response :success
 	end
 end

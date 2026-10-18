@@ -1,4 +1,93 @@
 <h1>Статистика</h1>
 
-<p>Розділ статистики знаходиться у розробці та буде діяти лише у зареєстрованих гравців.</p>
+<p>
+  Тут відображаються результати завершених боїв між гравцями.
+  Бої проти штучного інтелекту не враховуються.
+</p>
 
+<% if @player %>
+	<section>
+		<h2>Моя статистика</h2>
+
+		<p>
+		  Гравець:
+		  <strong><%= @player.display_name %></strong>
+		</p>
+
+		<table>
+		  <thead>
+		    <tr>
+		      <th scope="col">Проведено боїв</th>
+		      <th scope="col">Перемог</th>
+		      <th scope="col">Поразок</th>
+		      <th scope="col">Відсоток перемог</th>
+		    </tr>
+		  </thead>
+
+		  <tbody>
+		    <tr>
+		      <td><%= @player.battles_count %></td>
+		      <td><%= @player.wins_count %></td>
+		      <td><%= @player.losses_count %></td>
+		      <td>
+		        <%= number_with_precision(
+		              @player.win_rate,
+		              precision: 2
+		            ) %>%
+		      </td>
+		    </tr>
+		  </tbody>
+		</table>
+	</section>
+<% end %>
+
+<section>
+  <h2>Топ-100 гравців</h2>
+
+  <% if @leaders.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Місце</th>
+          <th scope="col">Гравець</th>
+          <th scope="col">Проведено боїв</th>
+          <th scope="col">Перемог</th>
+          <th scope="col">Поразок</th>
+          <th scope="col">Відсоток перемог</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% @leaders.each_with_index do |player, index| %>
+          <tr>
+            <td><%= index + 1 %></td>
+
+            <td>
+              <%= player.display_name %>
+
+              <% if @player && player.id == @player.id %>
+                <strong>(Ви)</strong>
+              <% end %>
+            </td>
+
+            <td><%= player.battles_count %></td>
+            <td><%= player.wins_count %></td>
+            <td><%= player.losses_count %></td>
+
+            <td>
+              <%= number_with_precision(
+                    player.win_rate,
+                    precision: 2
+                  ) %>%
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>
+      Рейтинг поки порожній.
+      Гравці з'являться тут після завершення перших боїв.
+    </p>
+  <% end %>
+</section>

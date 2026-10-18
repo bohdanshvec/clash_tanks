@@ -21,14 +21,11 @@ class GameActionRunner
     stale_state = false
 
     @game.with_lock do
-      # После получения блокировки запись игры перечитывается из БД.
       if @game.waiting? && @game.state.nil?
         waiting_game = true
         next
       end
 
-      # Проверяем актуальность состояния, на котором основывалось
-      # решение ИИ. Проверка выполняется под блокировкой.
       if @action.expected_state_digest.present?
         current_digest = GameEngine::StateDigest.call(@game.state)
 
@@ -38,20 +35,24 @@ class GameActionRunner
         end
       end
 
+      was_started = @game.started?
+
       engine_result = GameEngine::Engine.new(@game.state).call(@action)
 
-      # Отклонённое движком действие не изменяет сохранённое состояние.
       next unless engine_result.success?
 
       attributes = { state: engine_result.state }
 
-      # Синхронизируем статус игры с состоянием, возвращённым движком.
       if engine_result.state["status"].present? &&
          engine_result.state["status"] != @game.status
         attributes[:status] = engine_result.state["status"]
       end
 
       @game.update!(attributes)
+
+      if was_started && @game.finished?
+        Statistics::RecordGameResult.call(game: @game)
+      end
     end
 
     if waiting_game

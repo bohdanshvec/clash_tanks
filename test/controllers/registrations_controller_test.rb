@@ -54,7 +54,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
       [
         "Operation „Weiß“",
         "Second front",
-        "Западный фронт"
+        "Західний фронт"
       ],
       decks.map(&:name)
     )

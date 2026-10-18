@@ -60,9 +60,10 @@ class PagesController < ApplicationController
       .order(:card_type, :name)
   end
 
-  def statistics
-    redirect_to root_path unless registered_player?
-  end
+	def statistics
+		@player = current_player if registered_player?
+		@leaders = Player.statistics_leaders
+	end
 
   private
 

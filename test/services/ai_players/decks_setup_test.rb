@@ -1,30 +1,6 @@
 require "test_helper"
 
 class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
-  CARD_WEIGHTS = {
-    "usa_m3_stuart" => 1,
-    "usa_m8_greyhound" => 1,
-    "usa_m24_chaffee" => 2,
-    "usa_m4_sherman" => 2,
-    "usa_lend_liz" => 1,
-    "usa_ognevoj_nalyot" => 1,
-
-    "ussr_t_34" => 2,
-    "ussr_t_34_85" => 3,
-    "ussr_is_2" => 3,
-    "ussr_t_70" => 1,
-    "ussr_zalp_katyushi" => 2,
-    "ussr_popolnenie" => 2,
-    "ussr_strelkovyj_vzvod" => 2,
-
-    "germany_tiger_i" => 4,
-    "germany_jagdpanther" => 3,
-    "germany_pz_iv_h" => 2,
-    "germany_hummel" => 2,
-    "germany_tocnyj_vystrel" => 3,
-    "germany_radioperekhvat" => 2,
-    "germany_grenaderskij_vzvod" => 2
-  }.freeze
 
   test "creates three complete AI decks with expected weights" do
     prepare_cards
@@ -32,7 +8,7 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
     decks = AiPlayers::DecksSetup.call
 
     assert_equal 3, decks.size
-    assert_equal [13, 22, 28], decks.map(&:weight).sort
+    assert_equal [40, 50, 58], decks.map(&:weight).sort
 
     decks.each do |deck|
       assert deck.persisted?
@@ -75,33 +51,9 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
 
   private
 
-  def prepare_cards
-    AiPlayers::DecksSetup::DECKS.each do |definition|
-      nation = Nation.find_or_create_by!(code: definition[:nation_code]) do |record|
-        record.name = definition[:nation_code].upcase
-      end
-
-      create_card(
-        code: definition[:headquarters_code],
-        nation: nation,
-        name: definition[:name],
-        card_type: "headquarters",
-        weight: 1,
-        price: nil
-      )
-
-      definition[:card_codes].each_key do |code|
-        create_card(
-          code: code,
-          nation: nation,
-          name: code,
-          card_type: "technique",
-          weight: CARD_WEIGHTS.fetch(code),
-          price: 1
-        )
-      end
-    end
-  end
+	def prepare_cards
+		Rails.application.load_seed
+	end
 
   def create_card(code:, nation:, name:, card_type:, weight:, price:)
     Card.find_or_create_by!(code: code) do |card|

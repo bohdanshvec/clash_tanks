@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_160837) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_082259) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -127,15 +127,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_160837) do
 
   create_table "players", force: :cascade do |t|
     t.boolean "ai", default: false, null: false
+    t.integer "battles_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.string "email"
     t.boolean "guest", default: false, null: false
     t.datetime "last_seen_at"
+    t.integer "losses_count", default: 0, null: false
     t.string "name"
     t.string "password_digest"
     t.datetime "updated_at", null: false
+    t.integer "wins_count", default: 0, null: false
     t.index ["ai"], name: "index_players_on_single_ai", unique: true, where: "(ai = true)"
     t.index ["email"], name: "index_players_on_email", unique: true
+    t.check_constraint "battles_count >= 0", name: "players_battles_count_nonnegative"
+    t.check_constraint "losses_count >= 0", name: "players_losses_count_nonnegative"
+    t.check_constraint "wins_count >= 0", name: "players_wins_count_nonnegative"
   end
 
   create_table "techniques", force: :cascade do |t|
