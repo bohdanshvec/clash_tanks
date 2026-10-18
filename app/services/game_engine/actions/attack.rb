@@ -1,7 +1,6 @@
 module GameEngine
   module Actions
     class Attack < Base
-
       def call
         return failure("Player does not exist") unless player_exists?
         return failure("It is not player's turn") unless current_player?
@@ -20,138 +19,90 @@ module GameEngine
         return failure("Attacker does not belong to player") unless own_object?(attacker)
         return failure("Target belongs to player") if own_object?(target)
 
-        case attacker["type"]
-        when "technique"
-          attack_technique(
-            attacker,
-            target,
-            attacker_position,
-            target_position
-          )
-        when "headquarters"
-          attack_headquarters(
-            attacker,
-            target,
-            attacker_position,
-            target_position
-          )
-        else
-          failure("Invalid attacker type")
+        unless %w[technique headquarters].include?(attacker["type"])
+          return failure("Invalid attacker type")
         end
+
+        unless %w[technique headquarters].include?(target["type"])
+          return failure("Invalid target type")
+        end
+
+        if attacker["has_attacked"]
+          error = if attacker["type"] == "headquarters"
+            "Headquarters has already attacked"
+          else
+            "Technique has already attacked"
+          end
+
+          return failure(error)
+        end
+
+        unless valid_attack?(
+          attacker,
+          target,
+          attacker_position,
+          target_position
+        )
+          return failure(attack_range_error(attacker, target))
+        end
+
+        execute_attack(
+          attacker_position,
+          target_position
+        )
       end
 
       private
 
       # ------------------------------------------------------------------
-      # Technique attacks
+      # Attack validation
       # ------------------------------------------------------------------
 
-      def attack_technique(
+      def valid_attack?(
         attacker,
         target,
         attacker_position,
         target_position
       )
-        return failure("Technique has already attacked") if attacker["has_attacked"]
+        # Headquarters may attack enemy headquarters at any distance.
+        return true if headquarters_vs_headquarters?(attacker, target)
 
-        case target["type"]
-        when "technique"
-          attack_technique_target(
-            attacker,
-            target,
-            attacker_position,
-            target_position
-          )
-        when "headquarters"
-          attack_headquarters_target_from_technique(
-            attacker,
-            target,
-            attacker_position,
-            target_position
-          )
-        else
-          failure("Invalid target type")
-        end
-      end
-
-      def attack_technique_target(
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        return failure("Invalid attack range") unless valid_technique_to_technique_attack?(
-          attacker,
+        adjacent = GameEngine::Rules::Position.adjacent?(
           attacker_position,
           target_position
         )
 
-        new_state = @state.deep_dup
-        new_attacker = object_at_in_state(new_state, attacker_position)
-        new_target = object_at_in_state(new_state, target_position)
+        # Headquarters -> Technique
+        if attacker["type"] == "headquarters"
+          return true if adjacent
 
-        new_attacker["has_attacked"] = true
-
-        if ptsau_shoots_first?(
-          new_attacker,
-          new_target,
-          attacker_position,
-          target_position
-        )
-          return attack_with_ptsau_first(
-            new_state,
-            new_attacker,
-            new_target,
-            attacker_position,
-            target_position
+          return GameEngine::Rules::Spotting.allied_technique_near?(
+            @state,
+            target_position,
+            attacker["player_id"]
           )
         end
 
-        perform_shot(
-          new_state,
-          new_attacker,
-          new_target,
-          target_position
-        )
+        # Technique -> Headquarters
+        if target["type"] == "headquarters"
+          return true if adjacent
 
-        if new_target["hp"] > 0 &&
-            GameEngine::Rules::Position.adjacent?(
-              attacker_position,
-              target_position
+          return attacker["technique_type"] == "artillery" &&
+            GameEngine::Rules::Spotting.allied_technique_near?(
+              @state,
+              target_position,
+              attacker["player_id"]
             )
-          counterattack(
-            new_state,
-            attacker_position,
-            target_position
-          )
         end
 
-        Result.new(
-          success: true,
-          state: new_state,
-          events: [
-            attack_event(
-              type: "technique_attacked",
-              attacker: new_attacker,
-              target: new_target,
-              attacker_position: attacker_position,
-              target_position: target_position
-            )
-          ]
-        )
-      end
-
-      def valid_technique_to_technique_attack?(
-        attacker,
-        attacker_position,
-        target_position
-      )
+        # Technique -> Technique
         return true if GameEngine::Rules::AttackRange.valid?(
           attacker,
           attacker_position,
           target_position
         )
 
+        # Artillery may use allied spotting for a distant attack.
         attacker["technique_type"] == "artillery" &&
           GameEngine::Rules::Spotting.allied_unit_near?(
             @state,
@@ -160,244 +111,272 @@ module GameEngine
           )
       end
 
-      # PT-SAU special combat:
-      # - defending PT-SAU shoots first;
-      # - if attacking Technique survives, it shoots;
-      # - no counterattack after this exchange.
-			def attack_with_ptsau_first(
-				state,
-				attacker,
-				target,
-				attacker_position,
-				target_position
-			)
-				target["has_counterattacked"] = true
-
-				perform_shot(
-					state,
-					target,
-					attacker,
-					attacker_position
-				)
-
-				return Result.new(
-					success: true,
-					state: state,
-					events: [
-						attack_event(
-						  type: "technique_destroyed",
-						  attacker: attacker,
-						  target: target,
-						  attacker_position: attacker_position,
-						  target_position: target_position
-						)
-					]
-				) if attacker["hp"] <= 0
-
-				perform_shot(
-					state,
-					attacker,
-					target,
-					target_position
-				)
-
-				Result.new(
-					success: true,
-					state: state,
-					events: [
-						attack_event(
-						  type: "technique_attacked",
-						  attacker: attacker,
-						  target: target,
-						  attacker_position: attacker_position,
-						  target_position: target_position
-						)
-					]
-				)
-			end
-
-      # Technique -> HQ
-      #
-      # Adjacent:
-      # - normal combat;
-      # - Technique shoots first;
-      # - HQ may counterattack if it survives.
-      #
-      # Long-range:
-      # - only SAU;
-      # - friendly Technique must provide spotting near the enemy HQ;
-      # - HQ does not counterattack.
-      def attack_headquarters_target_from_technique(
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        return failure("Technique cannot attack headquarters at this range") unless
-          valid_technique_to_headquarters_attack?(
-            attacker,
-            attacker_position,
-            target_position
-          )
-
-        new_state = @state.deep_dup
-
-        new_attacker = object_at_in_state(
-          new_state,
-          attacker_position
-        )
-
-        new_target = object_at_in_state(
-          new_state,
-          target_position
-        )
-
-        new_attacker["has_attacked"] = true
-
-        perform_shot(
-          new_state,
-          new_attacker,
-          new_target,
-          target_position
-        )
-
-        if new_target["hp"] <= 0
-          return finish_game_after_headquarters_destruction(
-            new_state,
-            new_attacker,
-            new_target,
-            "headquarters_attacked",
-            attacker_position,
-            target_position
-          )
-        end
-
-        if GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
-        )
-          counterattack(
-            new_state,
-            attacker_position,
-            target_position
-          )
-        end
-
-        Result.new(
-          success: true,
-          state: new_state,
-          events: [
-            attack_event(
-              type: "headquarters_attacked",
-              attacker: new_attacker,
-              target: new_target,
-              attacker_position: attacker_position,
-              target_position: target_position
-            )
-          ]
-        )
-      end
-
-      def valid_technique_to_headquarters_attack?(
-        attacker,
-        attacker_position,
-        target_position
-      )
-        return true if GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
-        )
-
-        attacker["technique_type"] == "artillery" &&
-          GameEngine::Rules::Spotting.allied_technique_near?(
-            @state,
-            target_position,
-            attacker["player_id"]
-          )
-      end
-
-      # ------------------------------------------------------------------
-      # Headquarters attacks
-      # ------------------------------------------------------------------
-
-      def attack_headquarters(
-        attacker,
-        target,
-        attacker_position,
-        target_position
-      )
-        return failure("Headquarters has already attacked") if attacker["has_attacked"]
-
-        case target["type"]
-        when "headquarters"
-          attack_headquarters_target(
-            attacker,
-            target,
-            attacker_position,
-            target_position
-          )
-        when "technique"
-          attack_technique_target_from_headquarters(
-            attacker,
-            target,
-            attacker_position,
-            target_position
-          )
+      def attack_range_error(attacker, target)
+        if attacker["type"] == "headquarters"
+          "Technique is out of headquarters attack range"
+        elsif target["type"] == "headquarters"
+          "Technique cannot attack headquarters at this range"
         else
-          failure("Invalid target type")
+          "Invalid attack range"
         end
       end
 
-      # HQ -> HQ
-      #
-      # Headquarters may attack the enemy Headquarters at any distance.
-      # The defending HQ never counterattacks.
-      def attack_headquarters_target(
+      # ------------------------------------------------------------------
+      # Combat classification
+      # ------------------------------------------------------------------
+
+      def headquarters_vs_headquarters?(attacker, target)
+        attacker["type"] == "headquarters" &&
+          target["type"] == "headquarters"
+      end
+
+      def combat_type(
         attacker,
         target,
         attacker_position,
         target_position
       )
+        # Headquarters vs Headquarters never causes a counterattack.
+        return :ranged if headquarters_vs_headquarters?(attacker, target)
+
+        adjacent = GameEngine::Rules::Position.adjacent?(
+          attacker_position,
+          target_position
+        )
+
+        # Any other non-adjacent attack is ranged.
+        return :ranged unless adjacent
+
+        # Defending PT-SAU may shoot first.
+        return :ptsau_first if ptsau_shoots_first?(attacker, target)
+
+        # All remaining adjacent attacks use normal combat.
+        :normal
+      end
+
+      def ptsau_shoots_first?(attacker, target)
+        return false unless target["type"] == "technique"
+        return false unless target["technique_type"] == "tank_destroyer"
+
+        # PT-SAU may counterattack only once per opponent turn.
+        return false if target["has_counterattacked"]
+
+        # PT-SAU vs PT-SAU:
+        # the attacking PT-SAU shoots first.
+        return false if attacker["technique_type"] == "tank_destroyer"
+
+        true
+      end
+
+      # ------------------------------------------------------------------
+      # Execute attack
+      # ------------------------------------------------------------------
+
+      def execute_attack(attacker_position, target_position)
         new_state = @state.deep_dup
 
-        new_attacker = object_at_in_state(
+        attacker = object_at_in_state(
           new_state,
           attacker_position
         )
 
-        new_target = object_at_in_state(
+        target = object_at_in_state(
           new_state,
           target_position
         )
 
-        new_attacker["has_attacked"] = true
+        attacker["has_attacked"] = true
+
+        scenario = combat_type(
+          attacker,
+          target,
+          attacker_position,
+          target_position
+        )
+
+        case scenario
+        when :ranged
+          execute_ranged_combat(
+            new_state,
+            attacker,
+            target,
+            target_position
+          )
+        when :normal
+          execute_normal_combat(
+            new_state,
+            attacker,
+            target,
+            attacker_position,
+            target_position
+          )
+        when :ptsau_first
+          execute_ptsau_first_combat(
+            new_state,
+            attacker,
+            target,
+            attacker_position,
+            target_position
+          )
+        end
+
+        finish_attack(
+          new_state,
+          attacker,
+          target,
+          attacker_position,
+          target_position,
+          scenario
+        )
+      end
+
+      # ------------------------------------------------------------------
+      # Ranged combat
+      # ------------------------------------------------------------------
+
+      # Ranged attacks:
+      # - Headquarters -> Headquarters;
+      # - Headquarters -> Technique with spotting;
+      # - Artillery -> Technique with spotting;
+      # - Artillery -> Headquarters with spotting;
+      # - other permitted non-adjacent Technique attacks.
+      #
+      # Ranged attacks never cause counterattacks.
+      def execute_ranged_combat(
+        state,
+        attacker,
+        target,
+        target_position
+      )
+        perform_shot(
+          state,
+          attacker,
+          target,
+          target_position
+        )
+      end
+
+      # ------------------------------------------------------------------
+      # Normal adjacent combat
+      # ------------------------------------------------------------------
+
+      # The attacker shoots first.
+      #
+      # If the defender survives and has an unused counterattack,
+      # the defender shoots back.
+      def execute_normal_combat(
+        state,
+        attacker,
+        target,
+        attacker_position,
+        target_position
+      )
+        perform_shot(
+          state,
+          attacker,
+          target,
+          target_position
+        )
+
+        # A destroyed defender cannot counterattack.
+        return if target["hp"] <= 0
+
+        counterattack(
+          state,
+          attacker_position,
+          target_position
+        )
+      end
+
+      # ------------------------------------------------------------------
+      # PT-SAU adjacent combat
+      # ------------------------------------------------------------------
+
+      # A defending PT-SAU with an available counterattack
+      # shoots before the attacker.
+      #
+      # Exception:
+      # PT-SAU vs PT-SAU uses normal combat.
+      #
+      # If the attacker survives, it performs its attack.
+      def execute_ptsau_first_combat(
+        state,
+        attacker,
+        target,
+        attacker_position,
+        target_position
+      )
+        # The PT-SAU uses the common counterattack mechanism.
+        # This also sets has_counterattacked = true.
+        counterattack(
+          state,
+          attacker_position,
+          target_position
+        )
+
+        # A destroyed attacker cannot shoot.
+        return if attacker["hp"] <= 0
 
         perform_shot(
-          new_state,
-          new_attacker,
-          new_target,
+          state,
+          attacker,
+          target,
           target_position
         )
+      end
 
-        if new_target["hp"] <= 0
+      # ------------------------------------------------------------------
+      # Attack result
+      # ------------------------------------------------------------------
+
+      def finish_attack(
+        state,
+        attacker,
+        target,
+        attacker_position,
+        target_position,
+        scenario
+      )
+        # The attacking Headquarters may be destroyed
+        # by a normal or preemptive counterattack.
+        if attacker["type"] == "headquarters" && attacker["hp"] <= 0
           return finish_game_after_headquarters_destruction(
-            new_state,
-            new_attacker,
-            new_target,
+            state,
+            target,
+            attacker,
             "headquarters_attacked",
             attacker_position,
             target_position
           )
         end
 
+        # The defending Headquarters may be destroyed
+        # by an ordinary attack.
+        if target["type"] == "headquarters" && target["hp"] <= 0
+          return finish_game_after_headquarters_destruction(
+            state,
+            attacker,
+            target,
+            "headquarters_attacked",
+            attacker_position,
+            target_position
+          )
+        end
+
+        event_type = attack_event_type(
+          attacker,
+          target,
+          scenario
+        )
+
         Result.new(
           success: true,
-          state: new_state,
+          state: state,
           events: [
             attack_event(
-              type: "headquarters_attacked",
-              attacker: new_attacker,
-              target: new_target,
+              type: event_type,
+              attacker: attacker,
+              target: target,
               attacker_position: attacker_position,
               target_position: target_position
             )
@@ -405,172 +384,33 @@ module GameEngine
         )
       end
 
-      # HQ -> Technique
-      #
-      # Adjacent:
-      # - normal attack;
-      # - Technique may counterattack.
-      #
-      # Long-range:
-      # - friendly Technique must be adjacent to target;
-      # - no counterattack.
-			def attack_technique_target_from_headquarters(
-				attacker,
-				target,
-				attacker_position,
-				target_position
-			)
-				return failure("Technique is out of headquarters attack range") unless
-					valid_headquarters_to_technique_attack?(
-						attacker,
-						attacker_position,
-						target_position
-					)
+      def attack_event_type(attacker, target, scenario)
+        if attacker["type"] == "headquarters" ||
+            target["type"] == "headquarters"
+          return "headquarters_attacked"
+        end
 
-				new_state = @state.deep_dup
+        # Preserve the existing event for an attacker
+        # destroyed before firing by a defending PT-SAU.
+        if scenario == :ptsau_first && attacker["hp"] <= 0
+          return "technique_destroyed"
+        end
 
-				new_attacker = object_at_in_state(
-					new_state,
-					attacker_position
-				)
-
-				new_target = object_at_in_state(
-					new_state,
-					target_position
-				)
-
-				new_attacker["has_attacked"] = true
-
-				# ПТ-САУ, ещё не использовавшая контратаку,
-				# стреляет первой по соседнему штабу.
-				if new_target["technique_type"] == "tank_destroyer" &&
-						!new_target["has_counterattacked"] &&
-						GameEngine::Rules::Position.adjacent?(
-						  attacker_position,
-						  target_position
-						)
-
-					new_target["has_counterattacked"] = true
-
-					perform_shot(
-						new_state,
-						new_target,
-						new_attacker,
-						attacker_position
-					)
-
-					# Если ПТ-САУ уничтожила штаб первым выстрелом,
-					# штаб уже не может атаковать.
-					if new_attacker["hp"] <= 0
-						return finish_game_after_headquarters_destruction(
-						  new_state,
-						  new_target,
-						  new_attacker,
-						  "headquarters_attacked",
-						  attacker_position,
-						  target_position
-						)
-					end
-
-					# Штаб выжил и выполняет свою атаку.
-					perform_shot(
-						new_state,
-						new_attacker,
-						new_target,
-						target_position
-					)
-
-					return Result.new(
-						success: true,
-						state: new_state,
-						events: [
-						  attack_event(
-						    type: "headquarters_attacked",
-						    attacker: new_attacker,
-						    target: new_target,
-						    attacker_position: attacker_position,
-						    target_position: target_position
-						  )
-						]
-					)
-				end
-
-				# Обычная атака штаба по технике.
-				perform_shot(
-					new_state,
-					new_attacker,
-					new_target,
-					target_position
-				)
-
-				if new_target["hp"] > 0 &&
-						GameEngine::Rules::Position.adjacent?(
-						  attacker_position,
-						  target_position
-						)
-					counterattack(
-						new_state,
-						attacker_position,
-						target_position
-					)
-				end
-
-				# Штаб мог погибнуть от обычной контратаки.
-				if new_attacker["hp"] <= 0
-					return finish_game_after_headquarters_destruction(
-						new_state,
-						new_target,
-						new_attacker,
-						"headquarters_attacked",
-						attacker_position,
-						target_position
-					)
-				end
-
-				Result.new(
-					success: true,
-					state: new_state,
-					events: [
-						attack_event(
-						  type: "headquarters_attacked",
-						  attacker: new_attacker,
-						  target: new_target,
-						  attacker_position: attacker_position,
-						  target_position: target_position
-						)
-					]
-				)
-			end
-
-      def valid_headquarters_to_technique_attack?(
-        attacker,
-        attacker_position,
-        target_position
-      )
-        return true if GameEngine::Rules::Position.adjacent?(
-          attacker_position,
-          target_position
-        )
-
-        GameEngine::Rules::Spotting.allied_technique_near?(
-          @state,
-          target_position,
-          attacker["player_id"]
-        )
+        "technique_attacked"
       end
 
       # ------------------------------------------------------------------
       # Common shot / counterattack
       # ------------------------------------------------------------------
 
-      # Common shot mechanism used by:
-      # - normal attack;
-      # - counterattack;
-      # - HQ attack;
-      # - Technique attack;
-      # - second shot in PT-SAU combat.
+      # The common shot mechanism is used by:
+      # - ranged attacks;
+      # - normal adjacent attacks;
+      # - counterattacks;
+      # - PT-SAU preemptive counterattacks;
+      # - Headquarters attacks.
       #
-      # This method never starts a counterattack.
+      # This method never starts another counterattack.
       def perform_shot(
         state,
         attacker,
@@ -590,10 +430,7 @@ module GameEngine
         )
       end
 
-      def firepower_for_shot(
-        state,
-        attacker
-      )
+      def firepower_for_shot(state, attacker)
         if attacker["type"] == "headquarters"
           fire_with_headquarters(
             state,
@@ -630,6 +467,9 @@ module GameEngine
         end
       end
 
+      # A defending unit may counterattack once per opponent turn.
+      #
+      # This method is also used for the PT-SAU's first shot.
       def counterattack(
         state,
         attacker_position,
@@ -654,6 +494,7 @@ module GameEngine
           target_position
         )
 
+        # The flag is set only when the counterattack is performed.
         defender["has_counterattacked"] = true
 
         perform_shot(
@@ -663,31 +504,6 @@ module GameEngine
           attacker_position
         )
       end
-
-      # ------------------------------------------------------------------
-      # PT-SAU
-      # ------------------------------------------------------------------
-
-			def ptsau_shoots_first?(
-				attacker,
-				target,
-				attacker_position,
-				target_position
-			)
-				return false unless target["technique_type"] == "tank_destroyer"
-				return false if target["has_counterattacked"]
-
-				return false unless %w[
-					light_tank
-					medium_tank
-					heavy_tank
-				].include?(attacker["technique_type"])
-
-				GameEngine::Rules::Position.adjacent?(
-					attacker_position,
-					target_position
-				)
-			end
 
       # ------------------------------------------------------------------
       # Headquarters + Platoons

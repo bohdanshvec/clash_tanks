@@ -1862,4 +1862,37 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
 
 		assert result.state["field"][1][1]["has_counterattacked"]
 	end
+	
+	test "PTSAU shoots first when attacked by adjacent artillery" do
+		@state["field"][1][1]["technique_type"] = "artillery"
+		@state["field"][1][2]["technique_type"] = "tank_destroyer"
+
+		@state["field"][1][1]["hp"] = 3
+		@state["field"][1][2]["hp"] = 10
+
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "attack",
+		  payload: {
+		    attacker: [1, 1],
+		    target: [1, 2]
+		  }
+		)
+
+		result = GameEngine::Actions::Attack.new(
+		  @state,
+		  action
+		).call
+
+		assert result.success?, result.error
+
+		# PT-SAU shoots first and destroys the artillery.
+		assert_nil result.state["field"][1][1]
+
+		# Artillery never gets to fire.
+		assert_equal 10, result.state["field"][1][2]["hp"]
+
+		# PT-SAU has used its counterattack.
+		assert result.state["field"][1][2]["has_counterattacked"]
+	end
 end
