@@ -110,7 +110,8 @@ module GameEngine
           combat_result[:target],
           attacker_position,
           target_position,
-          scenario
+          scenario,
+          combat_result[:events]
         )
       end
 
@@ -124,7 +125,8 @@ module GameEngine
         target,
         attacker_position,
         target_position,
-        scenario
+        scenario,
+        combat_events
       )
         # Штаб атакующего может быть уничтожен ответным выстрелом.
         if attacker["type"] == "headquarters" && attacker["hp"] <= 0
@@ -134,7 +136,8 @@ module GameEngine
             attacker,
             "headquarters_attacked",
             target_position,
-            attacker_position
+            attacker_position,
+            combat_events
           )
         end
 
@@ -146,7 +149,8 @@ module GameEngine
             target,
             "headquarters_attacked",
             attacker_position,
-            target_position
+            target_position,
+            combat_events
           )
         end
 
@@ -160,7 +164,8 @@ module GameEngine
               target: target,
               attacker_position: attacker_position,
               target_position: target_position
-            )
+            ),
+            *combat_events
           ]
         )
       end
@@ -186,7 +191,8 @@ module GameEngine
         destroyed_headquarters,
         event_type,
         attacker_position,
-        target_position
+        target_position,
+        combat_events
       )
         finish_result = GameEngine::FinishGame.call(
           state: state,
@@ -208,6 +214,7 @@ module GameEngine
               attacker_position: attacker_position,
               target_position: target_position
             ),
+            *combat_events,
             *finish_result.events
           ]
         )

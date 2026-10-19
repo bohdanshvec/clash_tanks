@@ -248,11 +248,17 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal 2, calls
 
     # Проверяем накопленные события результата сервиса.
-    assert_equal 1, result.events.size
+    assert_equal(
+      [
+        "headquarters_attacked",
+        "shot_fired",
+        "damage_applied"
+      ],
+      result.events.map { |event| event[:type] }
+    )
 
     attack_event = result.events.first
 
-    assert_equal "headquarters_attacked", attack_event[:type]
     assert_equal [2, 0], attack_event.dig(:attacker, :position)
     assert_equal [0, 4], attack_event.dig(:target, :position)
 

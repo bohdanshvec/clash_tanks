@@ -1664,24 +1664,40 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
 		  result.state["result"]
 		)
 
+		attacker_data = {
+		  type: "headquarters",
+		  player_id: PLAYER_ID,
+		  card_id: 1,
+		  name: "Test HQ",
+		  position: [2, 0]
+		}
+
+		target_data = {
+		  type: "headquarters",
+		  player_id: OPPONENT_ID,
+		  card_id: 2,
+		  name: "Test HQ",
+		  position: [0, 4]
+		}
+
 		assert_equal(
 		  [
 		    {
 		      type: "headquarters_attacked",
-		      attacker: {
-		        type: "headquarters",
-		        player_id: PLAYER_ID,
-		        card_id: 1,
-		        name: "Test HQ",
-		        position: [2, 0]
-		      },
-		      target: {
-		        type: "headquarters",
-		        player_id: OPPONENT_ID,
-		        card_id: 2,
-		        name: "Test HQ",
-		        position: [0, 4]
-		      }
+		      attacker: attacker_data,
+		      target: target_data
+		    },
+		    {
+		      type: "shot_fired",
+		      attacker: attacker_data,
+		      target: target_data
+		    },
+		    {
+		      type: "damage_applied",
+		      target: target_data,
+		      damage: 4,
+		      hp_before: 4,
+		      hp_after: 0
 		    },
 		    {
 		      type: "game_finished",
