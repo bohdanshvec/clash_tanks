@@ -1,0 +1,53 @@
+/* ---------------------------------------------------------
+   Stage 17 — каталог карт
+   --------------------------------------------------------- */
+
+.cards-page {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+.cards-page__header {
+  margin-bottom: 30px;
+}
+
+.cards-page__header h1 {
+  margin: 0 0 8px;
+}
+
+.cards-page__header p {
+  margin: 0;
+}
+
+.cards-section {
+  margin-bottom: 45px;
+}
+
+.cards-section h2 {
+  margin: 0 0 15px;
+  padding-bottom: 8px;
+
+  border-bottom: 2px solid #ccc;
+}
+
+.cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.cards-grid .card {
+  flex: 0 0 150px;
+  width: 150px;
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------
+   Наведение
+   --------------------------------------------------------- */
+
+.cards-page .card:hover {
+  transform: translateY(-10px) scale(1.08);
+}

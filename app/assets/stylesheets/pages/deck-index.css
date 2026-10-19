@@ -1,0 +1,124 @@
+/* ---------------------------------------------------------
+   Stage 17.1 — список колод
+   --------------------------------------------------------- */
+
+.decks-page {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+.decks-page__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+
+  margin-bottom: 30px;
+}
+
+.decks-page__title {
+  flex: 1;
+}
+
+/* Заголовок страницы и кнопка создания колоды */
+
+.decks-page__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+
+  margin-bottom: 8px;
+}
+
+.decks-page__title-row h1 {
+  margin: 0;
+}
+
+/* Кнопка создания колоды */
+
+.decks-page__create-button {
+  display: inline-block;
+  box-sizing: border-box;
+
+  padding: 7px 12px;
+
+  border: 1px solid #767676;
+  border-radius: 3px;
+
+  background: #efefef;
+  color: #222;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.decks-page__create-button:hover {
+  background: #e5e5e5;
+}
+
+.decks-page__header h1 {
+  margin: 0 0 8px;
+}
+
+.decks-page__header p {
+  margin: 0;
+}
+
+.decks-page__header > button {
+  flex: 0 0 auto;
+  margin-top: 4px;
+}
+
+.decks-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.deck-card {
+  width: 300px;
+  box-sizing: border-box;
+
+  padding: 18px;
+
+  border: 2px solid #222;
+  border-radius: 10px;
+
+  background: #fff;
+}
+
+.deck-card h2 {
+  margin: 0 0 15px;
+}
+
+.deck-card h3 {
+  margin: 20px 0 8px;
+}
+
+.deck-card p {
+  margin: 8px 0;
+}
+
+.deck-card ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.deck-card li {
+  margin: 4px 0;
+}
+
+.deck-card__status {
+  margin-top: 20px !important;
+  font-weight: bold;
+}
+
+.decks-page__back {
+  margin-top: 30px;
+}

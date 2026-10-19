@@ -1,0 +1,123 @@
+/* ---------------------------------------------------------
+   Карты
+   --------------------------------------------------------- */
+
+.card {
+  position: relative;
+  z-index: 1;
+
+  flex: 0 0 150px;
+  width: 150px;
+  box-sizing: border-box;
+
+  padding: 8px;
+
+  border: 2px solid #222;
+  border-radius: 10px;
+
+  background: #fff;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    z-index 0s linear 0.15s;
+
+  transform-origin: center bottom;
+
+  cursor: grab;
+}
+
+.card:hover {
+  z-index: 100;
+
+  transform: translateY(-20px) scale(1.15);
+
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    z-index 0s;
+}
+
+.card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.card__header strong {
+  line-height: 1.1;
+}
+
+.card__stats {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.card__stats p {
+  margin: 0;
+  line-height: 1.15;
+}
+
+/* ---------------------------------------------------------
+   Abilities на карте
+   --------------------------------------------------------- */
+
+.card__stats ul {
+  margin: 2px 0 0;
+  padding: 0;
+
+  list-style: none;
+
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+}
+
+.card__stats li {
+  margin: 0;
+  padding: 0;
+
+  width: 100%;
+  min-width: 0;
+
+  line-height: 1.15;
+
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* ---------------------------------------------------------
+   Карточка штаба
+   --------------------------------------------------------- */
+
+.headquarters-card {
+  width: 220px;
+  min-height: 220px;
+
+  margin-bottom: 20px;
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+.headquarters-card .card__stats {
+  overflow: hidden;
+}

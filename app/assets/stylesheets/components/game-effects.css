@@ -1,0 +1,91 @@
+/* ---------------------------------------------------------
+   События игры
+   --------------------------------------------------------- */
+
+.game-event--flash {
+  animation: game-event-flash 0.5s ease;
+}
+
+@keyframes game-event-flash {
+  0% {
+    outline: 4px solid currentColor;
+  }
+
+  100% {
+    outline: 0 solid transparent;
+  }
+}
+
+.game--turn-changed {
+  transition: opacity 0.2s ease;
+}
+
+/* ---------------------------------------------------------
+   Stage 15.13.2 — выбранная карта / игровой объект
+   --------------------------------------------------------- */
+
+.game-object--selected {
+  outline: 4px solid currentColor;
+  outline-offset: 2px;
+}
+
+.game-action--selected {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   Stage 15.13.3 — доступные действия
+   --------------------------------------------------------- */
+
+.game-action--move {
+  outline: 4px dashed currentColor;
+  outline-offset: -4px;
+  cursor: pointer;
+}
+
+.game-action--attack {
+  outline: 4px solid currentColor;
+  outline-offset: -4px;
+  cursor: pointer;
+}
+
+.game-action--card {
+  outline: 4px dashed currentColor;
+  outline-offset: -4px;
+  cursor: pointer;
+}
+
+.game-action--card-target {
+  outline: 4px solid currentColor;
+  outline-offset: -4px;
+  cursor: pointer;
+}
+
+.game-action--drop-zone {
+  outline: 4px dashed currentColor;
+  outline-offset: -4px;
+}
+
+.game-object--dragging {
+  opacity: 0.6;
+  cursor: grabbing;
+}
+
+.game-action--drag-over {
+  outline: 5px solid currentColor;
+  outline-offset: -5px;
+}
+
+.game-action--hover {
+  outline: 5px solid currentColor;
+  outline-offset: -5px;
+}
+
+/* ---------------------------------------------------------
+   Stage 15.13.6 — приглушённый игровой объект
+   --------------------------------------------------------- */
+
+.game-object--muted {
+  opacity: 0.65;
+}

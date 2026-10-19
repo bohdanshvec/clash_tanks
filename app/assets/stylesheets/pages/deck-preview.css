@@ -1,0 +1,145 @@
+/* ---------------------------------------------------------
+   Stage 17.1.2 — просмотр состава сохранённой колоды
+   --------------------------------------------------------- */
+
+.deck-card__preview {
+  position: relative;
+}
+
+.deck-card__preview summary {
+  display: inline-block;
+
+  padding: 7px 12px;
+
+  border: 1px solid #767676;
+  border-radius: 3px;
+
+  background: #efefef;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.deck-card__preview summary:hover {
+  background: #e5e5e5;
+}
+
+/*
+ * Выпадающий блок содержит сразу весь состав колоды.
+ * Справа оставляем место для карточки-превью.
+ */
+
+.deck-card__preview-list {
+  position: absolute;
+
+  left: 0;
+  top: calc(100% + 5px);
+
+  z-index: 150;
+
+  width: 430px;
+
+  margin: 0;
+  padding: 8px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #aaa;
+  border-radius: 6px;
+
+  background: #fff;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  list-style: none;
+}
+
+.deck-card__preview-item {
+  position: relative;
+
+  width: 240px;
+
+  box-sizing: border-box;
+
+  padding: 6px 8px;
+
+  border-radius: 4px;
+
+  cursor: default;
+}
+
+.deck-card__preview-item:hover {
+  background: #f0f0f0;
+}
+
+.deck-card__preview-item > span {
+  display: block;
+}
+
+.deck-card__preview .deck-card__card-preview {
+  position: absolute;
+
+  left: 255px;
+  top: 50%;
+
+  z-index: 200;
+
+  margin: 0;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform: translateY(-50%) scale(0.95);
+  transform-origin: left center;
+
+  pointer-events: none;
+
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s linear 0.15s;
+}
+
+.deck-card__preview-item:hover .deck-card__card-preview {
+  opacity: 1;
+  visibility: visible;
+
+  transform: translateY(-50%) scale(1);
+
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s;
+}
+
+/* ---------------------------------------------------------
+   Stage 17 — компактные карточки-превью
+   --------------------------------------------------------- */
+
+.deck-card__card-preview .card__stats {
+  gap: 1px;
+  margin-top: 4px;
+}
+
+.deck-card__card-preview .card__stats p {
+  margin: 0;
+  line-height: 1.05;
+}
+
+.deck-card__card-preview .card__abilities {
+  margin-top: 2px;
+}
+
+.deck-card__card-preview .card__abilities > p {
+  margin: 0;
+}
+
+.deck-card__card-preview .card__stats ul {
+  margin: 1px 0 0;
+}
+
+.deck-card__card-preview .card__stats li {
+  margin: 0;
+  line-height: 1.05;
+}
