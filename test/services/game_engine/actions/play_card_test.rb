@@ -240,38 +240,73 @@ class GameEngine::Actions::PlayCardTest < ActiveSupport::TestCase
     assert_equal "Order has no abilities", result.error
   end
 
-  test "plays order and executes its ability" do
-    @state["field"][1][2] = enemy_technique
+	test "plays order and executes its ability" do
+		@state["field"][1][2] = enemy_technique
 
-    @state["players"][PLAYER_ID.to_s]["hand"] = [
-      order_card(
-        card_id: 20,
-        name: "Приказ",
-        abilities: [
-          {
-            "code" => "damage_technique",
-            "damage" => 3
-          }
-        ]
-      )
-    ]
+		@state["players"][PLAYER_ID.to_s]["hand"] = [
+		  order_card(
+		    card_id: 20,
+		    name: "Приказ",
+		    abilities: [
+		      {
+		        "code" => "damage_technique",
+		        "damage" => 3
+		      }
+		    ]
+		  )
+		]
 
-    action = GameEngine::Action.new(
-      player_id: PLAYER_ID,
-      type: "play_card",
-      payload: {
-        card_id: 20,
-        targets: [
-          { row: 1, column: 2 }
-        ]
-      }
-    )
+		action = GameEngine::Action.new(
+		  player_id: PLAYER_ID,
+		  type: "play_card",
+		  payload: {
+		    card_id: 20,
+		    targets: [
+		      { row: 1, column: 2 }
+		    ]
+		  }
+		)
 
-    result = GameEngine::Actions::PlayCard.new(@state, action).call
+		result = GameEngine::Actions::PlayCard.new(@state, action).call
 
-    assert result.success?
-    assert_equal 7, result.state["field"][1][2]["hp"]
-  end
+		assert result.success?
+		assert_equal 7, result.state["field"][1][2]["hp"]
+
+		damage_event = result.events.find do |event|
+		  event[:type] == "damage_applied"
+		end
+
+		assert_equal(
+		  {
+		    type: "order",
+		    code: "damage_technique"
+		  },
+		  damage_event[:source]
+		)
+
+		assert_equal 10, damage_event[:hp_before]
+		assert_equal 7, damage_event[:hp_after]
+		assert_equal 3, damage_event[:damage]
+
+		assert_equal(
+		  {
+		    type: "technique",
+		    player_id: OPPONENT_ID,
+		    card_id: 30,
+		    name: "Т-34",
+		    position: [1, 2]
+		  },
+		  damage_event[:target]
+		)
+
+		event_types = result.events.map { |event| event[:type] }
+
+		assert_operator(
+		  event_types.index(:damage_applied) || event_types.index("damage_applied"),
+		  :<,
+		  event_types.index(:order_played) || event_types.index("order_played")
+		)
+	end
 
   test "deducts order price after successful execution" do
     @state["field"][1][2] = enemy_technique

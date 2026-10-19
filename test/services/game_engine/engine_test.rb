@@ -87,7 +87,27 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
     assert_equal(
       [
         { type: "turn_ended" },
-        { type: "empty_deck_draw_attempt", player_id: "57", damage: 1 }
+        {
+          type: "empty_deck_draw_attempt",
+          player_id: "57",
+          damage: 1
+        },
+        {
+          type: "damage_applied",
+          source: {
+            type: "empty_deck_draw"
+          },
+          target: {
+            type: "headquarters",
+            player_id: 57,
+            card_id: 57,
+            name: "Test HQ",
+            position: [0, 4]
+          },
+          damage: 1,
+          hp_before: 20,
+          hp_after: 19
+        }
       ],
       result.events
     )

@@ -122,19 +122,39 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
     assert_equal 13, result.state["players"][PLAYER_ID.to_s]["resources"]
   end
 
-	test "passes draw events through result" do
-		result = GameEngine::Turns::PreparePlayer.call(
-		  state: @state,
-		  player_id: PLAYER_ID
-		)
+  test "passes draw events through result" do
+    result = GameEngine::Turns::PreparePlayer.call(
+      state: @state,
+      player_id: PLAYER_ID
+    )
 
-		assert_equal(
-		  [
-		    { type: "empty_deck_draw_attempt", player_id: PLAYER_ID.to_s, damage: 1 }
-		  ],
-		  result.events
-		)
-	end
+    assert_equal(
+      [
+        {
+          type: "empty_deck_draw_attempt",
+          player_id: PLAYER_ID.to_s,
+          damage: 1
+        },
+        {
+          type: "damage_applied",
+          source: {
+            type: "empty_deck_draw"
+          },
+          target: {
+            type: "headquarters",
+            player_id: PLAYER_ID,
+            card_id: PLAYER_ID,
+            name: "Test HQ",
+            position: [2, 0]
+          },
+          damage: 1,
+          hp_before: 20,
+          hp_after: 19
+        }
+      ],
+      result.events
+    )
+  end
 
   test "does not modify original state" do
     original_state = Marshal.load(Marshal.dump(@state))
@@ -148,3 +168,4 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
     refute_same @state, result.state
   end
 end
+

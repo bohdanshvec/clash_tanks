@@ -1694,6 +1694,10 @@ class GameEngine::Actions::AttackTest < ActiveSupport::TestCase
 		    },
 		    {
 		      type: "damage_applied",
+		      source: {
+		        type: "shot",
+		        attacker: attacker_data
+		      },
 		      target: target_data,
 		      damage: 4,
 		      hp_before: 4,

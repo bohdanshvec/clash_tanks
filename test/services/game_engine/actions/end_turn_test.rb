@@ -33,7 +33,27 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     assert_equal(
       [
         { type: "turn_ended" },
-        { type: "empty_deck_draw_attempt", player_id: OPPONENT_ID.to_s, damage: 1 }
+        {
+          type: "empty_deck_draw_attempt",
+          player_id: OPPONENT_ID.to_s,
+          damage: 1
+        },
+        {
+          type: "damage_applied",
+          source: {
+            type: "empty_deck_draw"
+          },
+          target: {
+            type: "headquarters",
+            player_id: OPPONENT_ID,
+            card_id: OPPONENT_ID,
+            name: "Test HQ",
+            position: [0, 4]
+          },
+          damage: 1,
+          hp_before: 20,
+          hp_after: 19
+        }
       ],
       result.events
     )
@@ -243,29 +263,30 @@ class GameEngine::Actions::EndTurnTest < ActiveSupport::TestCase
     refute timer.expired?
   end
 
-	test "keeps total remaining time separate from the two-minute turn timer" do
-		current_time = @started_at + 30
+  test "keeps total remaining time separate from the two-minute turn timer" do
+    current_time = @started_at + 30
 
-		action = GameEngine::Action.new(
-		  player_id: PLAYER_ID,
-		  type: "end_turn"
-		)
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "end_turn"
+    )
 
-		result = GameEngine::Actions::EndTurn.new(
-		  @state,
-		  action,
-		  current_time: current_time
-		).call
+    result = GameEngine::Actions::EndTurn.new(
+      @state,
+      action,
+      current_time: current_time
+    ).call
 
-		assert result.success?
+    assert result.success?
 
-		assert_equal 570, result.state["players"][PLAYER_ID.to_s]["remaining_time"]
+    assert_equal 570, result.state["players"][PLAYER_ID.to_s]["remaining_time"]
 
-		turn_timer = GameEngine::TurnTimerForTurn.new(
-		  result.state,
-		  current_time: current_time
-		)
+    turn_timer = GameEngine::TurnTimerForTurn.new(
+      result.state,
+      current_time: current_time
+    )
 
-		assert_equal 120, turn_timer.remaining_time
-	end
+    assert_equal 120, turn_timer.remaining_time
+  end
 end
+

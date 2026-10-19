@@ -58,36 +58,73 @@ module GameEngine
         }
       end
 
-			def apply_empty_deck_damage(state, player, events)
-				player["empty_deck_draw_attempts"] += 1
-				damage = player["empty_deck_draw_attempts"]
+      def apply_empty_deck_damage(state, player, events)
+        player["empty_deck_draw_attempts"] += 1
+        damage = player["empty_deck_draw_attempts"]
 
-				headquarters = headquarters_for(state)
-				headquarters["hp"] = [headquarters["hp"] - damage, 0].max
+        headquarters = headquarters_for(state)
+        hp_before = headquarters["hp"]
+        headquarters["hp"] = [hp_before - damage, 0].max
 
-				events << {
-					type: "empty_deck_draw_attempt",
-					player_id: @player_id,
-					damage: damage
-				}
+        # Причина урона: попытка добрать карту из пустой колоды.
+        events << {
+          type: "empty_deck_draw_attempt",
+          player_id: @player_id,
+          damage: damage
+        }
 
-				return unless headquarters["hp"] <= 0
+        # Универсальное событие нанесения урона.
+        events << {
+          type: "damage_applied",
+          source: {
+            type: "empty_deck_draw"
+          },
+          target: headquarters_data(state, headquarters),
+          damage: hp_before - headquarters["hp"],
+          hp_before: hp_before,
+          hp_after: headquarters["hp"]
+        }
 
-				opponent_id = opponent_id_for(state)
+        return unless headquarters["hp"] <= 0
 
-				finish_result = GameEngine::FinishGame.call(
-					state: state,
-					winner_id: opponent_id,
-					loser_id: @player_id,
-					reason: "empty_deck_damage"
-				)
+        opponent_id = opponent_id_for(state)
 
-				raise finish_result.error unless finish_result.success?
+        finish_result = GameEngine::FinishGame.call(
+          state: state,
+          winner_id: opponent_id,
+          loser_id: @player_id,
+          reason: "empty_deck_damage"
+        )
 
-				state.replace(finish_result.state)
+        raise finish_result.error unless finish_result.success?
 
-				events.concat(finish_result.events)
-			end
+        state.replace(finish_result.state)
+
+        events.concat(finish_result.events)
+      end
+
+      def headquarters_data(state, headquarters)
+        position = nil
+
+        state["field"].each_with_index do |row, row_index|
+          column_index = row.index do |object|
+            object.equal?(headquarters)
+          end
+
+          next unless column_index
+
+          position = [row_index, column_index]
+          break
+        end
+
+        {
+          type: "headquarters",
+          player_id: headquarters["player_id"],
+          card_id: headquarters["card_id"],
+          name: headquarters["name"],
+          position: position
+        }
+      end
 
       def headquarters_for(state)
         headquarters = state["field"].flatten.find do |object|

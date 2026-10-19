@@ -14,20 +14,47 @@ module GameEngine
         new_state = @state.deep_dup
 
         row, column = target_position
-
         target = new_state["field"][row][column]
-        damage = @ability["damage"].to_i
 
-        target["hp"] -= damage
+        requested_damage = @ability["damage"].to_i
+        hp_before = target["hp"]
 
-        if target["hp"] <= 0
+        target["hp"] = [hp_before - requested_damage, 0].max
+        hp_after = target["hp"]
+        actual_damage = hp_before - hp_after
+
+        target_data = object_data(target, [row, column])
+
+        source = {
+          type: "order",
+          code: @ability["code"]
+        }
+
+        events = [
+          {
+            type: "damage_applied",
+            source: source,
+            target: target_data,
+            damage: actual_damage,
+            hp_before: hp_before,
+            hp_after: hp_after
+          }
+        ]
+
+        if hp_after.zero?
           destroy_technique(new_state, target, row, column)
+
+          events << {
+            type: "technique_destroyed",
+            source: source,
+            target: target_data
+          }
         end
 
         Result.new(
           success: true,
           state: new_state,
-          events: [{ type: "technique_damaged" }]
+          events: events
         )
       end
 
@@ -70,6 +97,16 @@ module GameEngine
 
           [row, column]
         end
+      end
+
+      def object_data(object, position)
+        {
+          type: object["type"],
+          player_id: object["player_id"],
+          card_id: object["card_id"],
+          name: object["name"],
+          position: position.dup
+        }
       end
 
       def destroy_technique(state, technique, row, column)

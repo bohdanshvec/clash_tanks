@@ -84,13 +84,17 @@ module GameEngine
         target_position,
         counterattack: false
       )
+        source_data = object_data(attacker, attacker_position)
+        target_data = object_data(target, target_position)
+
         @events << {
           type: counterattack ? "counterattack_fired" : "shot_fired",
-          attacker: object_data(attacker, attacker_position),
-          target: object_data(target, target_position)
+          attacker: source_data,
+          target: target_data
         }
 
         damage = firepower_for_shot(attacker)
+
         hp_before = target["hp"]
 
         apply_shot_damage(
@@ -101,8 +105,12 @@ module GameEngine
 
         @events << {
           type: "damage_applied",
-          target: object_data(target, target_position),
-          damage: damage,
+          source: {
+            type: counterattack ? "counterattack" : "shot",
+            attacker: source_data
+          },
+          target: target_data,
+          damage: hp_before - target["hp"],
           hp_before: hp_before,
           hp_after: target["hp"]
         }
@@ -191,3 +199,4 @@ module GameEngine
     end
   end
 end
+
