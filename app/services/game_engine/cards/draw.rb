@@ -19,8 +19,8 @@ module GameEngine
         events = []
 
         @count.times do
-        	break if new_state["status"] == "finished"
-        
+          break if new_state["status"] == "finished"
+
           draw_one(new_state, events)
         end
 
@@ -63,28 +63,41 @@ module GameEngine
         damage = player["empty_deck_draw_attempts"]
 
         headquarters = headquarters_for(state)
-        hp_before = headquarters["hp"]
-        headquarters["hp"] = [hp_before - damage, 0].max
 
-        # Причина урона: попытка добрать карту из пустой колоды.
+        # Сохраняем событие попытки взять карту из пустой колоды.
         events << {
           type: "empty_deck_draw_attempt",
           player_id: @player_id,
           damage: damage
         }
 
-        # Универсальное событие нанесения урона.
+        # Используем общий механизм защиты штаба взводами.
+        # Входящий урон сначала поглощается бронёй взводов,
+        # а оставшаяся часть наносится штабу.
+        damage_result = GameEngine::Attacks::HeadquartersCombat.apply_damage(
+          state: state,
+          headquarters: headquarters,
+          damage: damage,
+          events: events
+        )
+
+        # Событие фактического урона штабу.
         events << {
           type: "damage_applied",
           source: {
             type: "empty_deck_draw"
           },
           target: headquarters_data(state, headquarters),
-          damage: hp_before - headquarters["hp"],
-          hp_before: hp_before,
-          hp_after: headquarters["hp"]
+          damage: damage_result[:headquarters_hp_before] -
+                  damage_result[:headquarters_hp_after],
+          hp_before: damage_result[:headquarters_hp_before],
+          hp_after: damage_result[:headquarters_hp_after],
+          incoming_damage: damage_result[:incoming_damage],
+          armor_absorbed: damage_result[:armor_absorbed],
+          headquarters_damage: damage_result[:headquarters_damage]
         }
 
+        # Партия заканчивается только при уничтожении штаба.
         return unless headquarters["hp"] <= 0
 
         opponent_id = opponent_id_for(state)
@@ -113,7 +126,7 @@ module GameEngine
 
           next unless column_index
 
-          position = [row_index, column_index]
+          position = [ row_index, column_index ]
           break
         end
 
@@ -137,12 +150,12 @@ module GameEngine
 
         headquarters
       end
-      
-			def opponent_id_for(state)
-				state.fetch("players").keys.find do |player_id|
-					player_id != @player_id
-				end || raise("Opponent not found")
-			end
+
+      def opponent_id_for(state)
+        state.fetch("players").keys.find do |player_id|
+          player_id != @player_id
+        end || raise("Opponent not found")
+      end
 
       def failure(error)
         Result.new(

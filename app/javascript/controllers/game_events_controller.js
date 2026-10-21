@@ -49,6 +49,10 @@ export default class extends Controller {
         this.highlightEmptyDeckDamage(event)
         break
 
+      case "platoon_damaged":
+        this.highlightPlatoonDamaged(event)
+        break
+
       default:
         break
     }
@@ -699,6 +703,19 @@ export default class extends Controller {
   highlightPlatoon(event) {
     const target = this.element.querySelector(
       `[data-platoon-slot="${event.slot}"][data-player-id="${event.player_id}"]`
+    )
+
+    this.flash(target)
+  }
+
+  highlightPlatoonDamaged(event) {
+    const platoon = event.platoon
+
+    if (!platoon) return
+    if (platoon.player_id == null || platoon.slot == null) return
+
+    const target = this.element.querySelector(
+      `[data-platoon-slot="${platoon.slot}"][data-player-id="${platoon.player_id}"]`
     )
 
     this.flash(target)

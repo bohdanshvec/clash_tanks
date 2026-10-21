@@ -132,8 +132,22 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
       [
         {
           type: "empty_deck_draw_attempt",
-          player_id: PLAYER_ID.to_s,
+          player_id: "1",
           damage: 1
+        },
+        {
+          type: "platoon_damaged",
+          platoon: {
+            type: "platoon",
+            player_id: 1,
+            card_id: 30,
+            name: nil,
+            slot: 0
+          },
+          damage: 1,
+          hp_before: 10,
+          hp_after: 9,
+          source: "headquarters_defense"
         },
         {
           type: "damage_applied",
@@ -142,14 +156,17 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
           },
           target: {
             type: "headquarters",
-            player_id: PLAYER_ID,
-            card_id: PLAYER_ID,
+            player_id: 1,
+            card_id: 1,
             name: "Test HQ",
             position: [2, 0]
           },
-          damage: 1,
+          damage: 0,
           hp_before: 20,
-          hp_after: 19
+          hp_after: 20,
+          incoming_damage: 1,
+          armor_absorbed: 1,
+          headquarters_damage: 0
         }
       ],
       result.events

@@ -86,7 +86,9 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
 
     assert_equal(
       [
-        { type: "turn_ended" },
+        {
+          type: "turn_ended"
+        },
         {
           type: "empty_deck_draw_attempt",
           player_id: "57",
@@ -106,7 +108,10 @@ class GameEngine::EngineTest < ActiveSupport::TestCase
           },
           damage: 1,
           hp_before: 20,
-          hp_after: 19
+          hp_after: 19,
+          incoming_damage: 1,
+          armor_absorbed: 0,
+          headquarters_damage: 1
         }
       ],
       result.events
