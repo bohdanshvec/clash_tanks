@@ -38,7 +38,7 @@
   gap: 15px;
 }
 
-.cards-grid .card {
+.cards-grid .game-card {
   flex: 0 0 150px;
   width: 150px;
   box-sizing: border-box;
@@ -48,6 +48,6 @@
    Наведение
    --------------------------------------------------------- */
 
-.cards-page .card:hover {
+.cards-page .game-card:hover {
   transform: translateY(-10px) scale(1.08);
 }

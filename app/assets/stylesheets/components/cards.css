@@ -2,7 +2,7 @@
    Карты
    --------------------------------------------------------- */
 
-.card {
+.game-card {
   position: relative;
   z-index: 1;
 
@@ -29,7 +29,7 @@
   cursor: grab;
 }
 
-.card:hover {
+.game-card:hover {
   z-index: 100;
 
   transform: translateY(-20px) scale(1.15);
@@ -42,18 +42,18 @@
     z-index 0s;
 }
 
-.card__header {
+.game-card__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 6px;
 }
 
-.card__header strong {
+.game-card__header strong {
   line-height: 1.1;
 }
 
-.card__stats {
+.game-card__stats {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -61,7 +61,7 @@
   margin-top: 6px;
 }
 
-.card__stats p {
+.game-card__stats p {
   margin: 0;
   line-height: 1.15;
 }
@@ -70,7 +70,7 @@
    Abilities на карте
    --------------------------------------------------------- */
 
-.card__stats ul {
+.game-card__stats ul {
   margin: 2px 0 0;
   padding: 0;
 
@@ -84,7 +84,7 @@
   overflow: hidden;
 }
 
-.card__stats li {
+.game-card__stats li {
   margin: 0;
   padding: 0;
 
@@ -118,6 +118,6 @@
   overflow: hidden;
 }
 
-.headquarters-card .card__stats {
+.headquarters-card .game-card__stats {
   overflow: hidden;
 }

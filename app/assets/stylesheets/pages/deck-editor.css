@@ -83,12 +83,12 @@
   background: transparent;
 }
 
-.deck-editor__card .card {
+.deck-editor__card .game-card {
   width: 150px;
   box-sizing: border-box;
 }
 
-.deck-editor__card .card:hover {
+.deck-editor__card .game-card:hover {
   transform: translateY(-10px) scale(1.08);
 }
 

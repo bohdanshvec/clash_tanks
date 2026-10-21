@@ -117,29 +117,29 @@
    Stage 17 — компактные карточки-превью
    --------------------------------------------------------- */
 
-.deck-card__card-preview .card__stats {
+.deck-card__card-preview .game-card__stats {
   gap: 1px;
   margin-top: 4px;
 }
 
-.deck-card__card-preview .card__stats p {
+.deck-card__card-preview .game-card__stats p {
   margin: 0;
   line-height: 1.05;
 }
 
-.deck-card__card-preview .card__abilities {
+.deck-card__card-preview .game-card__abilities {
   margin-top: 2px;
 }
 
-.deck-card__card-preview .card__abilities > p {
+.deck-card__card-preview .game-card__abilities > p {
   margin: 0;
 }
 
-.deck-card__card-preview .card__stats ul {
+.deck-card__card-preview .game-card__stats ul {
   margin: 1px 0 0;
 }
 
-.deck-card__card-preview .card__stats li {
+.deck-card__card-preview .game-card__stats li {
   margin: 0;
   line-height: 1.05;
 }

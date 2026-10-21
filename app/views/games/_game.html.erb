@@ -53,20 +53,20 @@
 
   </header>
 
-	<% if game_finished && visible_state["result"] %>
-		<%
-		  winner_id = visible_state["result"]["winner_id"].to_s
-		  player_won = winner_id == current_player_id
-		%>
+  <% if game_finished && visible_state["result"] %>
+    <%
+      winner_id = visible_state["result"]["winner_id"].to_s
+      player_won = winner_id == current_player_id
+    %>
 
-		<div class="game-result">
-			<h2><%= player_won ? "Перемога!" : "Ви програли!" %></h2>
+    <div class="game-result">
+      <h2><%= player_won ? "Перемога!" : "Ви програли!" %></h2>
 
-			<%= link_to "Вийти з партії",
-				          root_path,
-				          class: "game-result__exit" %>
-		</div>
-	<% end %>
+      <%= link_to "Вийти з партії",
+                  root_path,
+                  class: "game-result__exit" %>
+    </div>
+  <% end %>
 
   <div class="<%= "game-content game-content--muted" if game_finished %>">
 
@@ -200,17 +200,17 @@
                 cell = row[column_index]
               %>
 
-							<div class="battlefield__cell"
-									 data-position="<%= row_index %>,<%= column_index %>"
-									 <% if cell && cell["type"] == "headquarters" %>
-										 data-headquarters-player-id="<%= cell["player_id"] %>"
-									 <% end %>
-									 <% if cell &&
-												 cell["player_id"].to_s == current_player_id &&
-												 ["technique", "headquarters"].include?(cell["type"]) %>
-										 data-action="click->game-events#select"
-										 data-object-type="<%= cell["type"] %>"
-									 <% end %>>
+              <div class="battlefield__cell"
+                   data-position="<%= row_index %>,<%= column_index %>"
+                   <% if cell && cell["type"] == "headquarters" %>
+                     data-headquarters-player-id="<%= cell["player_id"] %>"
+                   <% end %>
+                   <% if cell &&
+                         cell["player_id"].to_s == current_player_id &&
+                         ["technique", "headquarters"].include?(cell["type"]) %>
+                     data-action="click->game-events#select"
+                     data-object-type="<%= cell["type"] %>"
+                   <% end %>>
 
                 <div class="cell-coordinate">
                   [<%= row_index %>, <%= column_index %>]
@@ -406,18 +406,18 @@
                   card_actions&.dig("resources_sufficient") == false
               %>
 
-              <article class="card <%= "game-object--muted" if card_muted %>"
+              <article class="game-card <%= "game-object--muted" if card_muted %>"
                        draggable="true"
                        data-action="click->game-events#select"
                        data-card-id="<%= card["card_id"] %>"
                        data-player-id="<%= current_player_id %>"
                        data-card-type="<%= card["card_type"] %>">
 
-                <header class="card__header">
+                <header class="game-card__header">
                   <strong><%= card["name"] %></strong>
                 </header>
 
-                <div class="card__stats">
+                <div class="game-card__stats">
 
                   <% if card["card_type"] == "technique" %>
 
@@ -445,7 +445,7 @@
 
                     <% abilities = card["abilities"] || [] %>
 
-                    <div class="card__abilities">
+                    <div class="game-card__abilities">
 
                       <p>Abilities:</p>
 

@@ -116,13 +116,13 @@ headquarters.each do |attributes|
   card.assign_attributes(
     nation: attributes[:nation], name: attributes[:name],
     card_type: "headquarters", weight: attributes[:weight], price: nil
-  )
+    )
   card.save!
 
   headquarters_card = Headquarters.find_or_initialize_by(card: card)
   headquarters_card.assign_attributes(
     firepower: attributes[:firepower], hp: attributes[:hp], fuel: attributes[:fuel]
-  )
+    )
   headquarters_card.save!
 end
 
@@ -131,7 +131,7 @@ techniques.each do |attributes|
   card.assign_attributes(
     nation: attributes[:nation], name: attributes[:name],
     card_type: "technique", weight: attributes[:weight], price: attributes[:price]
-  )
+    )
   card.save!
 
   technique = Technique.find_or_initialize_by(card: card)
@@ -141,7 +141,7 @@ techniques.each do |attributes|
     movement_count: attributes[:movement_count],
     movement_type: attributes[:movement_type],
     firepower: attributes[:firepower], hp: attributes[:hp], fuel: attributes[:fuel]
-  )
+    )
   technique.save!
 end
 
@@ -150,7 +150,7 @@ orders.each do |attributes|
   card.assign_attributes(
     nation: attributes[:nation], name: attributes[:name],
     card_type: "order", weight: attributes[:weight], price: attributes[:price]
-  )
+    )
   card.save!
 end
 
@@ -159,13 +159,13 @@ platoons.each do |attributes|
   card.assign_attributes(
     nation: attributes[:nation], name: attributes[:name],
     card_type: "platoon", weight: attributes[:weight], price: attributes[:price]
-  )
+    )
   card.save!
 
   platoon = Platoon.find_or_initialize_by(card: card)
   platoon.assign_attributes(
     firepower: attributes[:firepower], hp: attributes[:hp],
     armor: attributes[:armor], fuel: attributes[:fuel]
-  )
+    )
   platoon.save!
 end

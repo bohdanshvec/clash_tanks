@@ -56,6 +56,7 @@
 .deck-card__actions button:hover {
   background: #e5e5e5;
 }
+
 .deck-card__cards {
   margin-top: 20px;
 }
@@ -119,7 +120,7 @@
     visibility 0s;
 }
 
-.deck-card__card-preview .card {
+.deck-card__card-preview .game-card {
   width: 150px;
   box-sizing: border-box;
 
@@ -128,7 +129,6 @@
   transform: none;
 }
 
-.deck-card__card-preview .card:hover {
+.deck-card__card-preview .game-card:hover {
   transform: none;
 }
-

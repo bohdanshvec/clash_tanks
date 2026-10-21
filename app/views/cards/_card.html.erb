@@ -1,10 +1,10 @@
-<article class="card <%= "headquarters-card" if card.card_type == "headquarters" %>">
+<article class="game-card <%= "headquarters-card" if card.card_type == "headquarters" %>">
 
-  <header class="card__header">
+  <header class="game-card__header">
     <strong><%= card.name %></strong>
   </header>
 
-  <div class="card__stats">
+  <div class="game-card__stats">
 
     <p>
       Nation: <%= card.nation.name %>
@@ -81,7 +81,7 @@
 
     <% if card.abilities.any? %>
 
-      <div class="card__abilities">
+      <div class="game-card__abilities">
 
         <p>Abilities:</p>
 

@@ -3,33 +3,32 @@
   data-controller="deck-preview"
 >
 
-	<header class="decks-page__header">
-		<div class="decks-page__title">
+  <header class="decks-page__header">
+    <div class="decks-page__title">
 
-		  <div class="decks-page__title-row">
-		    <h1>Колоди</h1>
+      <div class="decks-page__title-row">
+        <h1>Колоди</h1>
 
-		    <% if registered_player? %>
-		      <%= link_to "Створити колоду",
-		                  new_deck_path,
-		                  class: "decks-page__create-button" %>
-		    <% end %>
-		  </div>
+        <% if registered_player? %>
+          <%= link_to "Створити колоду",
+                      new_deck_path,
+                      class: "decks-page__create-button" %>
+        <% end %>
+      </div>
 
-		  <% if registered_player? %>
-		    <p>
-		      Збережені колоди гравця:
-		      <strong><%= current_player.display_name %></strong>
-		    </p>
-		  <% else %>
-		    <p>
-		      Готові стартові колоди для ознайомлення.
-		    </p>
-		  <% end %>
+      <% if registered_player? %>
+        <p>
+          Збережені колоди гравця:
+          <strong><%= current_player.display_name %></strong>
+        </p>
+      <% else %>
+        <p>
+          Готові стартові колоди для ознайомлення.
+        </p>
+      <% end %>
 
-		</div>
-	</header>
-
+    </div>
+  </header>
 
   <% if registered_player? %>
 
@@ -94,13 +93,13 @@
 
                       <div class="deck-card__card-preview">
 
-                        <article class="card">
+                        <article class="game-card">
 
-                          <header class="card__header">
+                          <header class="game-card__header">
                             <strong><%= card.name %></strong>
                           </header>
 
-                          <div class="card__stats">
+                          <div class="game-card__stats">
 
                             <p>
                               Nation: <%= card.nation.name %>
@@ -157,7 +156,7 @@
 
                             <% elsif card.card_type == "order" %>
 
-                              <div class="card__abilities">
+                              <div class="game-card__abilities">
 
                                 <p>Abilities:</p>
 
@@ -204,10 +203,8 @@
               <%= button_to "Видалити",
                             deck_path(deck),
                             method: :delete,
-                            form: {
-                              data: {
-                                turbo_confirm: "Удалить колоду «#{deck.name}»?"
-                              }
+                            data: {
+                              turbo_confirm: "Видалити колоду?"
                             } %>
 
             </div>
@@ -224,7 +221,6 @@
 
     <% end %>
 
-
   <% else %>
 
     <div class="decks-grid">
@@ -233,36 +229,35 @@
 
         <article class="deck-card">
 
-					<header class="deck-card__header">
+          <header class="deck-card__header">
 
-						<div>
+            <div>
 
-							<h2><%= deck[:name] %></h2>
+              <h2><%= deck[:name] %></h2>
 
-							<p>
-								<strong>Нація:</strong>
-								<%= deck[:nation].name %>
-							</p>
+              <p>
+                <strong>Нація:</strong>
+                <%= deck[:nation].name %>
+              </p>
 
-							<p>
-								<strong>Штаб:</strong>
-								<%= deck[:headquarters_card].name %>
-							</p>
+              <p>
+                <strong>Штаб:</strong>
+                <%= deck[:headquarters_card].name %>
+              </p>
 
-							<p>
-								<strong>Карт:</strong>
-								<%= deck[:cards].size %> / <%= Deck::DECK_SIZE %>
-							</p>
+              <p>
+                <strong>Карт:</strong>
+                <%= deck[:cards].size %> / <%= Deck::DECK_SIZE %>
+              </p>
 
-							<p>
-								<strong>Weight:</strong>
-								<%= deck[:cards].sum(&:weight) %>
-							</p>
+              <p>
+                <strong>Weight:</strong>
+                <%= deck[:cards].sum(&:weight) %>
+              </p>
 
-						</div>
+            </div>
 
-					</header>
-
+          </header>
 
           <div class="deck-card__cards">
 
@@ -280,13 +275,13 @@
 
                   <div class="deck-card__card-preview">
 
-                    <article class="card">
+                    <article class="game-card">
 
-                      <header class="card__header">
+                      <header class="game-card__header">
                         <strong><%= card.name %></strong>
                       </header>
 
-                      <div class="card__stats">
+                      <div class="game-card__stats">
 
                         <p>
                           Nation: <%= card.nation.name %>
@@ -343,7 +338,7 @@
 
                         <% elsif card.card_type == "order" %>
 
-                          <div class="card__abilities">
+                          <div class="game-card__abilities">
 
                             <p>Abilities:</p>
 
