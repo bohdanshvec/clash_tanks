@@ -1,0 +1,19 @@
+/* Основной фон Clash Tanks */
+
+body {
+  min-height: 100vh;
+
+  background-color: #171a17;
+
+  background-image:
+    linear-gradient(
+      rgba(15, 18, 15, 0.45),
+      rgba(15, 18, 15, 0.45)
+    ),
+    url("clash_tanks_background.png");
+
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}

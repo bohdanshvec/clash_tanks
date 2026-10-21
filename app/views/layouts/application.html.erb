@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="dark">
   <head>
     <title><%= content_for(:title) || "Clash Tanks" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -20,6 +20,12 @@
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag "vendor/bootstrap.min",
+                            "data-turbo-track": "reload" %>
+
+    <%= stylesheet_link_tag "site-background",
+                        "data-turbo-track": "reload" %>
+
+    <%= stylesheet_link_tag "theme",
                             "data-turbo-track": "reload" %>
 
     <%= stylesheet_link_tag :app,
