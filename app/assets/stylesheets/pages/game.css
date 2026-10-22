@@ -11,6 +11,13 @@
   min-height: 100vh;
   box-sizing: border-box;
   padding: 20px;
+
+  background-color: #343c32;
+  background-image: url("../backgrounds/battlefield.jpeg");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 /* ---------------------------------------------------------
@@ -23,6 +30,12 @@
   gap: 24px;
   margin-bottom: 20px;
   white-space: nowrap;
+  color: #000;
+}
+
+.game-header h3,
+.game-header p {
+  color: #000;
 }
 
 .game-header h1,

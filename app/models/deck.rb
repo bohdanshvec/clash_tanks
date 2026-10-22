@@ -45,6 +45,6 @@ class Deck < ApplicationRecord
   def card_count_does_not_exceed_limit
     return if card_count <= DECK_SIZE
 
-    errors.add(:base, "cannot contain more than #{DECK_SIZE} cards")
+    errors.add(:base, "Колода не може містити більше #{DECK_SIZE} карт")
   end
 end

@@ -132,3 +132,9 @@
 .deck-card__card-preview .game-card:hover {
   transform: none;
 }
+
+/* Stage 24 — контраст текста на светлых карточках колод */
+
+.deck-card {
+  color: #202820;
+}

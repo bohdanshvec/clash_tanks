@@ -20,7 +20,7 @@ class DecksController < ApplicationController
       sync_deck_cards!
     end
 
-    redirect_to decks_path, notice: "Колода создана."
+    redirect_to decks_path, notice: "Колода створена."
   rescue ActiveRecord::RecordInvalid => error
     prepare_form_after_error(error)
     render :new, status: :unprocessable_entity
@@ -40,7 +40,7 @@ class DecksController < ApplicationController
       sync_deck_cards!
     end
 
-    redirect_to decks_path, notice: "Колода сохранена."
+    redirect_to decks_path, notice: "Колода збережена."
   rescue ActiveRecord::RecordInvalid => error
     prepare_form_after_error(error)
     render :edit, status: :unprocessable_entity
@@ -49,7 +49,7 @@ class DecksController < ApplicationController
   def destroy
     @deck.destroy!
 
-    redirect_to decks_path, notice: "Колода удалена."
+    redirect_to decks_path, notice: "Колода видалена."
   end
 
   private
@@ -98,7 +98,7 @@ class DecksController < ApplicationController
     if total > Deck::DECK_SIZE
       @deck.errors.add(
         :base,
-        "колода не может содержать больше #{Deck::DECK_SIZE} карт"
+        "Колода не може містити більше #{Deck::DECK_SIZE} карт"
       )
 
       raise ActiveRecord::RecordInvalid, @deck
