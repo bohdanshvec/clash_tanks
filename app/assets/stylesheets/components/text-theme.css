@@ -1,0 +1,204 @@
+/* =========================================================
+   Stage 24 — текстовая тема и подложки текстовых блоков
+   ========================================================= */
+
+:root {
+  --text-primary: #e6e9e3;
+  --text-heading: #e0c68d;
+  --text-secondary: #e6e9e3;
+  --text-accent: #d6dfb7;
+  --text-muted: #b9beae;
+  --text-error: #f08a81;
+
+  --text-panel-background: #303a31;
+  --text-panel-border: #59664d;
+}
+
+/* ---------------------------------------------------------
+   Общий цвет текста
+   --------------------------------------------------------- */
+
+.cards-page,
+.decks-page,
+.play-decks-page,
+.statistics-page {
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------
+   Заголовки страниц
+   Подложка применяется только к текстовым блокам.
+   --------------------------------------------------------- */
+
+.cards-page__header,
+.decks-page__header,
+.play-decks-page > h1,
+.play-decks-page > p,
+.play-decks-page > h2,
+.statistics-page > h1,
+.statistics-page > p {
+  max-width: 1500px;
+  margin-right: auto;
+  margin-left: auto;
+
+  padding: 20px 28px;
+
+  background-color: var(--text-panel-background);
+  border: 1px solid var(--text-panel-border);
+  border-radius: 10px;
+
+  color: var(--text-primary);
+}
+
+/* Основные заголовки */
+
+.cards-page__header h1,
+.decks-page__header h1,
+.play-decks-page > h1,
+.statistics-page > h1 {
+  color: var(--text-heading);
+}
+
+/* Заголовки разделов каталога */
+
+.cards-page > .cards-section > h2 {
+  max-width: 1500px;
+  margin: 28px auto 20px;
+  padding: 18px 24px;
+
+  background-color: var(--text-panel-background);
+  border: 1px solid var(--text-panel-border);
+  border-radius: 10px;
+
+  color: var(--text-heading);
+}
+
+/* Поясняющий текст */
+
+.cards-page__header p,
+.decks-page__header p,
+.play-decks-page > p,
+.statistics-page > p {
+  color: var(--text-primary);
+  line-height: 1.8;
+}
+
+/* ---------------------------------------------------------
+   Ссылки вне карточек
+   --------------------------------------------------------- */
+
+.cards-page a,
+.decks-page a,
+.play-decks-page a,
+.statistics-page a {
+  color: var(--text-accent);
+}
+
+.cards-page a:hover,
+.decks-page a:hover,
+.play-decks-page a:hover,
+.statistics-page a:hover {
+  color: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   Статистика
+   Подложка только для заголовков и пояснений.
+   Таблицы остаются без изменений.
+   --------------------------------------------------------- */
+
+.statistics-page h2 {
+  color: var(--text-heading);
+}
+
+.statistics-page table {
+  color: var(--text-primary);
+}
+
+.statistics-page th {
+  color: var(--text-heading);
+}
+
+.statistics-page td {
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------
+   Игровой интерфейс
+   --------------------------------------------------------- */
+
+.game-header,
+.game-top,
+.game-bottom {
+  color: var(--text-primary);
+}
+
+.game-header h1,
+.game-top h2,
+.game-bottom h2 {
+  color: var(--text-heading);
+}
+
+/* ---------------------------------------------------------
+   Единые отступы от шапки сайта
+   Страницы: Карти, Колоди, Грати, Статистика
+   --------------------------------------------------------- */
+
+.site-main:has(.cards-page),
+.site-main:has(.decks-page),
+.site-main:has(.play-decks-page),
+.site-main:has(.statistics-page) {
+  padding-top: 40px;
+}
+
+/* Единое положение верхнего текстового блока */
+
+.cards-page > .cards-page__header,
+.decks-page > .decks-page__header,
+.play-decks-page > .cards-page__header,
+.statistics-page > .cards-page__header {
+  margin-top: 0;
+  margin-bottom: 28px;
+}
+
+/* Убираем верхний отступ у первого заголовка внутри подложки */
+
+.cards-page__header h1,
+.decks-page__header h1,
+.play-decks-page > .cards-page__header h1,
+.statistics-page > .cards-page__header h1 {
+  margin-top: 0;
+}
+
+/* Единое расстояние между заголовком и пояснением */
+
+.cards-page__header h1,
+.decks-page__header h1,
+.play-decks-page > .cards-page__header h1,
+.statistics-page > .cards-page__header h1 {
+  margin-bottom: 16px;
+}
+
+/* Мобильные экраны */
+
+@media (max-width: 768px) {
+  .site-main:has(.cards-page),
+  .site-main:has(.decks-page),
+  .site-main:has(.play-decks-page),
+  .site-main:has(.statistics-page) {
+    padding-top: 24px;
+  }
+
+  .cards-page > .cards-page__header,
+  .decks-page > .decks-page__header,
+  .play-decks-page > .cards-page__header,
+  .statistics-page > .cards-page__header {
+    margin-bottom: 20px;
+  }
+}
+@media (max-width: 768px) {
+  .site-main:has(.play-decks-page),
+  .site-main:has(.statistics-page) {
+    padding-top: 24px;
+  }
+}

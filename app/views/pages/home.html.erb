@@ -1,23 +1,30 @@
-<h1>Clash Tanks</h1>
+<% content_for :title, "Clash Tanks — Головна" %>
 
-<nav>
-  <p>
-    <%= link_to "Правила игри", rules_path %>
-  </p>
-  
-  <p>
-    <%= link_to "Карти", cards_path %>
-  </p>
+<div class="home-page">
+  <section class="home-hero" aria-labelledby="home-title">
 
-  <p>
-    <%= link_to "Грати", play_path %>
-  </p>
+    <div class="home-hero__content">
+      <span class="home-hero__eyebrow">
+        ТАКТИЧНА КАРТКОВА СТРАТЕГІЯ
+      </span>
 
-  <p>
-    <%= link_to "Колоди", decks_path %>
-  </p>
-  
-  <p>
-    <%= link_to "Статистика", statistics_path %>
-  </p>
-</nav>
+      <h1 id="home-title" class="home-hero__title">
+        CLASH TANKS
+      </h1>
+
+      <p class="home-hero__description">
+        Командуй бойовою технікою, розігруй карти
+        та веди свої війська до перемоги.
+      </p>
+
+      <div class="home-hero__actions">
+        <%= link_to "РОЗПОЧАТИ ГРУ", play_path,
+                    class: "home-hero__button home-hero__button--primary" %>
+
+        <%= link_to "ПРАВИЛА ГРИ", rules_path,
+                    class: "home-hero__button home-hero__button--secondary" %>
+      </div>
+    </div>
+
+  </section>
+</div>

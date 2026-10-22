@@ -1,65 +1,69 @@
-<h1>Грати</h1>
+<main class="play-decks-page">
+  <header class="cards-page__header">
+    <h1>Грати</h1>
 
-<p>
-  <strong>Бій з АІ:</strong>
-  грати зі штучним інтелектом можна готовою колодою з вагою
-  <strong>36–44</strong>, <strong>45–55</strong> або <strong>52–63</strong>.
-  Діапазон залежить від ваги однієї з доступних колод АІ.
-  Якщо кнопки «В бій — АІ» немає у будь-якої колоди, її
-  вага не підходить ні під один з цих діапазонів.
-</p>
+    <p>
+      <strong>Бій з АІ:</strong>
+      грати зі штучним інтелектом можна готовою колодою з вагою
+      <strong>36–44</strong>, <strong>45–55</strong> або <strong>52–63</strong>.
+      Діапазон залежить від ваги однієї з доступних колод АІ.
+      Якщо кнопки «В бій — АІ» немає у будь-якої колоди, її
+      вага не підходить ні під один з цих діапазонів.
+    </p>
+  </header>
 
-<h2>Мої колоди</h2>
+  <h2>Мої колоди</h2>
 
-<% if @decks.any? %>
-  <div class="play-decks">
-    <% @decks.each do |deck| %>
-      <div class="deck-card">
-        <h3><%= deck.name %></h3>
+  <% if @decks.any? %>
+    <div class="play-decks">
+      <% @decks.each do |deck| %>
+        <div class="deck-card">
+          <h3><%= deck.name %></h3>
 
-        <p>
-          <strong>Нація:</strong>
-          <%= deck.nation.name %>
-        </p>
+          <p>
+            <strong>Нація:</strong>
+            <%= deck.nation.name %>
+          </p>
 
-        <p>
-          <strong>Штаб:</strong>
-          <%= deck.headquarters_card.name %>
-        </p>
+          <p>
+            <strong>Штаб:</strong>
+            <%= deck.headquarters_card.name %>
+          </p>
 
-        <p>
-          <strong>Вес:</strong>
-          <%= deck.weight %>
-        </p>
+          <p>
+            <strong>Вес:</strong>
+            <%= deck.weight %>
+          </p>
 
-        <div class="deck-card__actions">
-          <%= button_to "В бій — PvP",
-                        games_path,
-                        method: :post,
-                        params: {
-                          deck_id: deck.id,
-                          mode: "pvp"
-                        } %>
-
-          <% if @ai_decks_by_deck_id[deck.id].present? %>
-            <%= button_to "В бій — АІ",
+          <div class="deck-card__actions">
+            <%= button_to "В бій — PvP",
                           games_path,
                           method: :post,
                           params: {
                             deck_id: deck.id,
-                            mode: "ai"
+                            mode: "pvp"
                           } %>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-  </div>
-<% else %>
-  <p>У вас поки немає готових колод.</p>
 
-  <% if registered_player? %>
-    <p>
-      <%= link_to "Створити колоду", new_deck_path %>
-    </p>
+            <% if @ai_decks_by_deck_id[deck.id].present? %>
+              <%= button_to "В бій — АІ",
+                            games_path,
+                            method: :post,
+                            params: {
+                              deck_id: deck.id,
+                              mode: "ai"
+                            } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p>У вас поки немає готових колод.</p>
+
+    <% if registered_player? %>
+      <p>
+        <%= link_to "Створити колоду", new_deck_path %>
+      </p>
+    <% end %>
   <% end %>
-<% end %>
+</main>

@@ -1,0 +1,193 @@
+/* =========================================================
+   Clash Tanks — главная страница
+   Stage 24
+   ========================================================= */
+
+.home-page {
+  min-height: calc(100vh - var(--ct-header-height, 76px));
+}
+
+/* Основной экран */
+
+.home-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: calc(100vh - var(--ct-header-height, 76px));
+
+  padding: 64px 24px;
+}
+
+/* Центральная композиция */
+
+.home-hero__content {
+  width: min(100%, 760px);
+
+  padding: 48px 52px;
+
+  text-align: center;
+
+  background: linear-gradient(
+    135deg,
+    rgba(24, 31, 24, 0.91),
+    rgba(35, 44, 34, 0.84)
+  );
+
+  border: 1px solid rgba(194, 175, 122, 0.65);
+  border-radius: 12px;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Надпись над названием */
+
+.home-hero__eyebrow {
+  display: block;
+
+  margin-bottom: 18px;
+
+  color: #d7c18c;
+
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 4px;
+}
+
+/* Название игры */
+
+.home-hero__title {
+  margin: 0 0 24px;
+
+  color: #e9d4a0;
+
+  font-size: clamp(42px, 7vw, 82px);
+  font-weight: 900;
+  letter-spacing: 5px;
+  line-height: 1.1;
+
+  text-shadow:
+    0 3px 0 #51472f,
+    0 8px 18px rgba(0, 0, 0, 0.7);
+}
+
+/* Описание */
+
+.home-hero__description {
+  max-width: 580px;
+  margin: 0 auto 36px;
+
+  color: #e1e5dc;
+
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.7;
+}
+
+/* Кнопки */
+
+.home-hero__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  gap: 16px;
+}
+
+.home-hero__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 210px;
+  min-height: 54px;
+
+  padding: 14px 24px;
+
+  border: 1px solid transparent;
+  border-radius: 6px;
+
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Основная кнопка */
+
+.home-hero__button--primary {
+  color: #1c241b;
+  background-color: #c9b27a;
+  border-color: #e0ca93;
+}
+
+.home-hero__button--primary:hover,
+.home-hero__button--primary:focus-visible {
+  color: #111811;
+  background-color: #e0ca93;
+  transform: translateY(-2px);
+}
+
+/* Второстепенная кнопка */
+
+.home-hero__button--secondary {
+  color: #e9d4a0;
+  background-color: rgba(25, 33, 25, 0.8);
+  border-color: #a18e60;
+}
+
+.home-hero__button--secondary:hover,
+.home-hero__button--secondary:focus-visible {
+  color: #ffffff;
+  background-color: #465343;
+  transform: translateY(-2px);
+}
+
+/* Адаптация для мобильных экранов */
+
+@media (max-width: 768px) {
+  .home-hero {
+    padding: 32px 16px;
+  }
+
+  .home-hero__content {
+    padding: 36px 24px;
+  }
+
+  .home-hero__eyebrow {
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  .home-hero__title {
+    letter-spacing: 2px;
+  }
+
+  .home-hero__actions {
+    flex-direction: column;
+  }
+
+  .home-hero__button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__button {
+    transition: none;
+  }
+
+  .home-hero__button:hover,
+  .home-hero__button:focus-visible {
+    transform: none;
+  }
+}

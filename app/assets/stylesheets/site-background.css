@@ -1,16 +1,26 @@
-/* Основной фон Clash Tanks */
+/*
+ * Clash Tanks — фон обычных страниц.
+ *
+ * Фоновое изображение используется только
+ * в основной области страницы.
+ *
+ * Header имеет собственное оформление.
+ */
 
 body {
   min-height: 100vh;
+  margin: 0;
 
   background-color: #171a17;
+}
 
-  background-image:
-    linear-gradient(
-      rgba(15, 18, 15, 0.45),
-      rgba(15, 18, 15, 0.45)
-    ),
-    url("clash_tanks_background.png");
+/* Основная область сайта */
+
+.site-main {
+  min-height: calc(100vh - var(--ct-header-height, 76px));
+
+  background-color: #171a17;
+  background-image: url("backgrounds/site_background.png");
 
   background-position: center center;
   background-repeat: no-repeat;

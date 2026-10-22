@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-bs-theme="dark">
+<html>
   <head>
     <title><%= content_for(:title) || "Clash Tanks" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -35,24 +35,66 @@
   </head>
 
   <body>
-    <header class="app-header">
-			<div class="app-header__title">
-				<%= link_to "Clash Tanks", root_path %>
-				<%= link_to "На головну", root_path, class: "app-header__home" %>
-			</div>
+    <header class="app-header" role="banner">
+      <div class="app-header__inner">
 
-			<div class="app-header__player">
-				<% if registered_player? %>
-					<span><%= current_player.display_name %></span>
-					<%= button_to "Вийти", logout_path, method: :delete %>
-				<% else %>
-					<span>Гість</span>
-					<%= link_to "Увійти", login_path %>
-					<%= link_to "Зареєструватися", register_path %>
-				<% end %>
-			</div>
+        <div class="app-header__brand">
+        <%= link_to "CLASH TANKS", root_path, class: "app-header__logo" %>
+
+        <%= link_to "Головна", root_path,
+                    class: "app-header__nav-link app-header__nav-link--home #{'app-header__nav-link--active' if current_page?(root_path)}",
+                    aria: (current_page?(root_path) ? { current: "page" } : {}) %>
+      </div>
+
+      <nav class="app-header__nav" aria-label="Основна навігація">
+
+        <%= link_to "Правила", rules_path,
+                    class: "app-header__nav-link #{'app-header__nav-link--active' if current_page?(rules_path)}",
+                    aria: (current_page?(rules_path) ? { current: "page" } : {}) %>
+
+        <%= link_to "Карти", cards_path,
+                    class: "app-header__nav-link #{'app-header__nav-link--active' if request.path.start_with?('/cards')}",
+                    aria: (request.path.start_with?('/cards') ? { current: "page" } : {}) %>
+
+        <%= link_to "Грати", play_path,
+                    class: "app-header__nav-link app-header__nav-link--play #{'app-header__nav-link--active' if current_page?(play_path)}",
+                    aria: (current_page?(play_path) ? { current: "page" } : {}) %>
+
+        <%= link_to "Колоди", decks_path,
+                    class: "app-header__nav-link #{'app-header__nav-link--active' if request.path.start_with?('/decks')}",
+                    aria: (request.path.start_with?('/decks') ? { current: "page" } : {}) %>
+            
+        <%= link_to "Статистика", statistics_path,
+                    class: "app-header__nav-link #{'app-header__nav-link--active' if current_page?(statistics_path)}",
+                    aria: (current_page?(statistics_path) ? { current: "page" } : {}) %>
+
+      </nav>
+
+        <div class="app-header__player">
+          <% if registered_player? %>
+            <span class="app-header__username">
+              <%= current_player.display_name %>
+            </span>
+
+            <%= button_to "Вийти", logout_path,
+                          method: :delete,
+                          class: "app-header__logout" %>
+          <% else %>
+            <span class="app-header__guest">Гість</span>
+
+            <%= link_to "Увійти", login_path,
+                        class: "app-header__auth-link" %>
+
+            <%= link_to "Реєстрація", register_path,
+                        class: "app-header__auth-link" %>
+          <% end %>
+        </div>
+
+      </div>
     </header>
 
-    <%= yield %>
+    <main class="site-main <%= 'site-main--rules' if controller_name == 'pages' && action_name == 'rules' %>">
+      <%= yield %>
+    </main>
   </body>
 </html>

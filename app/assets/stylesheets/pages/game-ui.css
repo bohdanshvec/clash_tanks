@@ -115,3 +115,55 @@
   align-items: center;
   gap: 16px;
 }
+
+/* =========================================================
+   Stage 24 — основное оформление Header
+   ========================================================= */
+
+:root {
+  --ct-header-height: 76px;
+  --ct-header-bg: #202720;
+  --ct-header-border: #65704d;
+  --ct-header-text: #e6e9e3;
+}
+
+/* Header не использует фоновую иллюстрацию сайта */
+
+.app-header {
+  position: relative;
+  z-index: 20;
+
+  min-height: var(--ct-header-height);
+  box-sizing: border-box;
+
+  margin-bottom: 0;
+
+  background-color: var(--ct-header-bg);
+  background-image: none;
+
+  border-bottom: 2px solid var(--ct-header-border);
+
+  color: var(--ct-header-text);
+}
+
+/* Название проекта */
+
+.app-header__title {
+  color: var(--ct-header-text);
+}
+
+/* Ссылки Header */
+
+.app-header__title a {
+  color: var(--ct-header-text);
+}
+
+.app-header__title a:hover {
+  color: #bfd18e;
+}
+
+/* Информация об игроке */
+
+.app-header__player {
+  color: var(--ct-header-text);
+}

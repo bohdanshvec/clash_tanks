@@ -9,3 +9,6 @@
 @import "components/battlefield.css";
 @import "components/game-effects.css";
 @import "pages/game-ui.css";
+@import "pages/rules.css";
+@import "pages/home.css";
+@import "components/text-theme.css";

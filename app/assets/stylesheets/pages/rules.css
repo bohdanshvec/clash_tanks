@@ -1,0 +1,210 @@
+/* =========================================================
+   Clash Tanks — страница правил
+   Stage 24
+   ========================================================= */
+
+/* Отдельный фон страницы правил */
+
+.site-main--rules {
+  background-color: #252b25;
+  background-image: none;
+  background-attachment: scroll;
+
+  padding: 40px 24px 64px;
+
+  color: #e6e9e3;
+}
+
+/* Основной заголовок */
+
+.site-main--rules > h1 {
+  max-width: 1500px;
+  margin: 0 auto 24px;
+
+  color: #e0c68d;
+
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Вступительный текст */
+
+.site-main--rules > p {
+  max-width: 1500px;
+  margin: 0 auto 28px;
+
+  font-size: 17px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+/* Оглавление */
+
+.site-main--rules > nav {
+  max-width: 1500px;
+  margin: 0 auto 32px;
+  padding: 28px 32px;
+
+  background-color: #303a31;
+
+  border: 1px solid #59664d;
+  border-radius: 10px;
+}
+
+.site-main--rules > nav h2 {
+  margin-bottom: 20px;
+
+  color: #e0c68d;
+}
+
+.site-main--rules > nav ol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 10px 32px;
+
+  padding-left: 24px;
+  margin-bottom: 0;
+}
+
+.site-main--rules > nav a {
+  color: #d6dfb7;
+  text-decoration: none;
+}
+
+.site-main--rules > nav a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* Разделы правил */
+
+.site-main--rules > section {
+  max-width: 1500px;
+  margin: 0 auto 24px;
+  padding: 32px 36px;
+
+  background-color: #303a31;
+
+  border: 1px solid #59664d;
+  border-radius: 10px;
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.site-main--rules > section h2 {
+  margin-bottom: 20px;
+
+  color: #e0c68d;
+
+  font-size: 26px;
+}
+
+.site-main--rules > section h3 {
+  margin-top: 24px;
+  margin-bottom: 14px;
+
+  color: #d6dfb7;
+
+  font-size: 21px;
+}
+
+.site-main--rules > section p,
+.site-main--rules > section li {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.site-main--rules > section p {
+  margin-bottom: 16px;
+}
+
+.site-main--rules > section strong {
+  color: #ffffff;
+}
+
+.site-main--rules > section ul,
+.site-main--rules > section ol {
+  padding-left: 26px;
+}
+
+/* Таблицы внутри правил */
+
+.site-main--rules table {
+  width: 100%;
+  margin: 20px 0;
+
+  border-collapse: collapse;
+  color: #e6e9e3;
+}
+
+.site-main--rules th,
+.site-main--rules td {
+  padding: 12px 14px;
+
+  border: 1px solid #59664d;
+
+  text-align: left;
+  vertical-align: top;
+}
+
+.site-main--rules th {
+  background-color: #465343;
+  color: #ffffff;
+}
+
+.site-main--rules td {
+  background-color: #354035;
+}
+
+/* Ссылки */
+
+.site-main--rules > section a {
+  color: #d6dfb7;
+}
+
+.site-main--rules > section a:hover {
+  color: #ffffff;
+}
+
+/* Якорные ссылки */
+
+.site-main--rules section[id] {
+  scroll-margin-top: 24px;
+}
+
+/* Адаптация для мобильных экранов */
+
+@media (max-width: 768px) {
+  .site-main--rules {
+    padding: 24px 12px 40px;
+  }
+
+  .site-main--rules > nav,
+  .site-main--rules > section {
+    padding: 22px 18px;
+  }
+
+  .site-main--rules > nav ol {
+    grid-template-columns: 1fr;
+  }
+
+  .site-main--rules > section h2 {
+    font-size: 22px;
+  }
+
+  .site-main--rules > section h3 {
+    font-size: 19px;
+  }
+
+  .site-main--rules > section p,
+  .site-main--rules > section li {
+    font-size: 15px;
+  }
+
+  .site-main--rules table {
+    display: block;
+    overflow-x: auto;
+  }
+}
