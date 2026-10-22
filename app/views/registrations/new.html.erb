@@ -1,39 +1,89 @@
-<h1>Реєстрація</h1>
+<main class="auth-page">
+  <section class="auth-panel" aria-labelledby="auth-title">
+    <header class="auth-panel__header">
+      <h1 id="auth-title">Реєстрація</h1>
+      <p>Створіть обліковий запис, щоб розпочати гру.</p>
+    </header>
 
-<%= form_with model: @player, url: register_path do |form| %>
-  <% if @player.errors.any? %>
-    <div>
-      <h2>Не вдалося зареєструватися:</h2>
+    <% if @player.errors.any? %>
+      <div class="auth-alert auth-alert--error" role="alert">
+        <strong>Не вдалося зареєструватися</strong>
 
-      <ul>
-        <% @player.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+        <ul>
+          <% @player.errors.each do |error| %>
+            <li>
+              <%= error.attribute == :base ? error.message : "#{@player.class.human_attribute_name(error.attribute)} #{error.message}" %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
 
-  <div>
-    <%= form.label :email, "Email" %>
-    <%= form.email_field :email, required: true, autofocus: true %>
-  </div>
+    <%= form_with model: @player,
+                  url: register_path,
+                  class: "auth-form" do |form| %>
 
-  <div>
-    <%= form.label :name, "Імʼя" %>
-    <%= form.text_field :name %>
-  </div>
+      <div class="auth-form__group">
+        <%= form.label :email, "Електронна пошта", class: "auth-form__label" %>
 
-  <div>
-    <%= form.label :password, "Пароль" %>
-    <%= form.password_field :password, required: true %>
-  </div>
+        <%= form.email_field :email,
+              class: "form-control auth-form__input",
+              required: true,
+              autofocus: true,
+              autocomplete: "email",
+              placeholder: "example@email.com",
+              aria: { invalid: @player.errors[:email].any? } %>
+      </div>
 
-  <div>
-    <%= form.label :password_confirmation, "Подтверждение пароля" %>
-    <%= form.password_field :password_confirmation, required: true %>
-  </div>
+      <div class="auth-form__group">
+        <%= form.label :name, "Ім’я", class: "auth-form__label" %>
 
-  <div>
-    <%= form.submit "Зареєструватися" %>
-  </div>
-<% end %>
+        <%= form.text_field :name,
+              class: "form-control auth-form__input",
+              autocomplete: "nickname",
+              placeholder: "Ваше ім’я у грі" %>
+
+        <small class="auth-form__hint">
+          Якщо залишити поле порожнім, використовуватиметься частина email.
+        </small>
+      </div>
+
+      <div class="auth-form__group">
+        <%= form.label :password, "Пароль", class: "auth-form__label" %>
+
+        <%= form.password_field :password,
+              class: "form-control auth-form__input",
+              required: true,
+              minlength: 8,
+              autocomplete: "new-password",
+              placeholder: "Введіть пароль",
+              aria: { invalid: @player.errors[:password].any? } %>
+
+        <small class="auth-form__hint">
+          Мінімум 8 символів.
+        </small>
+      </div>
+
+      <div class="auth-form__group">
+        <%= form.label :password_confirmation,
+              "Підтвердження пароля",
+              class: "auth-form__label" %>
+
+        <%= form.password_field :password_confirmation,
+              class: "form-control auth-form__input",
+              required: true,
+              autocomplete: "new-password",
+              placeholder: "Повторіть пароль",
+              aria: { invalid: @player.errors[:password_confirmation].any? } %>
+      </div>
+
+      <%= form.submit "Зареєструватися",
+            class: "btn btn-primary auth-form__submit" %>
+    <% end %>
+
+    <footer class="auth-panel__footer">
+      <p>Вже маєте обліковий запис?</p>
+      <%= link_to "Увійти", login_path, class: "auth-panel__link" %>
+    </footer>
+  </section>
+</main>

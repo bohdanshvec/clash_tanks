@@ -9,7 +9,7 @@ class SessionsController < ApplicationController
       session[:player_id] = player.id
       redirect_to root_path
     else
-      flash.now[:alert] = "Неверный email или пароль."
+      flash.now[:alert] = "Неправильна електронна пошта або пароль."
       render :new, status: :unprocessable_entity
     end
   end

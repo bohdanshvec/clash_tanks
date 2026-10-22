@@ -94,6 +94,12 @@
     </header>
 
     <main class="site-main <%= 'site-main--rules' if controller_name == 'pages' && action_name == 'rules' %>">
+      <% if flash[:notice].present? %>
+        <div class="site-notice" role="status">
+          <%= flash[:notice] %>
+        </div>
+      <% end %>
+
       <%= yield %>
     </main>
   </body>

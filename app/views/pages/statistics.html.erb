@@ -9,89 +9,139 @@
   </header>
 
   <% if @player %>
-  	<section>
-  		<h2>Моя статистика</h2>
+    <section class="statistics-section">
+      <div class="statistics-section__header">
+        <h2>Моя статистика</h2>
 
-  		<p>
-  		  Гравець:
-  		  <strong><%= @player.display_name %></strong>
-  		</p>
+        <p class="statistics-section__subtitle">
+          Гравець:
+          <strong><%= @player.display_name %></strong>
+        </p>
+      </div>
 
-  		<table>
-  		  <thead>
-  		    <tr>
-  		      <th scope="col">Проведено боїв</th>
-  		      <th scope="col">Перемог</th>
-  		      <th scope="col">Поразок</th>
-  		      <th scope="col">Відсоток перемог</th>
-  		    </tr>
-  		  </thead>
+      <div class="statistics-summary">
+        <div class="statistics-summary__card">
+          <span class="statistics-summary__label">
+            Проведено боїв
+          </span>
 
-  		  <tbody>
-  		    <tr>
-  		      <td><%= @player.battles_count %></td>
-  		      <td><%= @player.wins_count %></td>
-  		      <td><%= @player.losses_count %></td>
-  		      <td>
-  		        <%= number_with_precision(
-  		              @player.win_rate,
-  		              precision: 2
-  		            ) %>%
-  		      </td>
-  		    </tr>
-  		  </tbody>
-  		</table>
-  	</section>
+          <strong class="statistics-summary__value">
+            <%= @player.battles_count %>
+          </strong>
+        </div>
+
+        <div class="statistics-summary__card statistics-summary__card--wins">
+          <span class="statistics-summary__label">
+            Перемог
+          </span>
+
+          <strong class="statistics-summary__value">
+            <%= @player.wins_count %>
+          </strong>
+        </div>
+
+        <div class="statistics-summary__card statistics-summary__card--losses">
+          <span class="statistics-summary__label">
+            Поразок
+          </span>
+
+          <strong class="statistics-summary__value">
+            <%= @player.losses_count %>
+          </strong>
+        </div>
+
+        <div class="statistics-summary__card statistics-summary__card--rate">
+          <span class="statistics-summary__label">
+            Відсоток перемог
+          </span>
+
+          <strong class="statistics-summary__value">
+            <%= number_with_precision(
+                  @player.win_rate,
+                  precision: 2
+                ) %>%
+          </strong>
+        </div>
+      </div>
+    </section>
   <% end %>
 
-  <section>
-    <h2>Топ-100 гравців</h2>
+  <section class="statistics-section">
+    <div class="statistics-section__header">
+      <h2>Топ-100 гравців</h2>
+
+      <p class="statistics-section__subtitle">
+        Рейтинг гравців за результатами завершених PvP-боїв.
+      </p>
+    </div>
 
     <% if @leaders.any? %>
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Місце</th>
-            <th scope="col">Гравець</th>
-            <th scope="col">Проведено боїв</th>
-            <th scope="col">Перемог</th>
-            <th scope="col">Поразок</th>
-            <th scope="col">Відсоток перемог</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <% @leaders.each_with_index do |player, index| %>
+      <div class="statistics-table-wrapper">
+        <table class="statistics-table">
+          <thead>
             <tr>
-              <td><%= index + 1 %></td>
-
-              <td>
-                <%= player.display_name %>
-
-                <% if @player && player.id == @player.id %>
-                  <strong>(Ви)</strong>
-                <% end %>
-              </td>
-
-              <td><%= player.battles_count %></td>
-              <td><%= player.wins_count %></td>
-              <td><%= player.losses_count %></td>
-
-              <td>
-                <%= number_with_precision(
-                      player.win_rate,
-                      precision: 2
-                    ) %>%
-              </td>
+              <th scope="col">Місце</th>
+              <th scope="col">Гравець</th>
+              <th scope="col">Проведено боїв</th>
+              <th scope="col">Перемог</th>
+              <th scope="col">Поразок</th>
+              <th scope="col">Відсоток перемог</th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            <% @leaders.each_with_index do |player, index| %>
+              <%
+                current_player_row = @player && player.id == @player.id
+
+                row_classes = []
+                row_classes << "statistics-table__row--current" if current_player_row
+                row_classes << "statistics-table__row--first" if index == 0
+                row_classes << "statistics-table__row--second" if index == 1
+                row_classes << "statistics-table__row--third" if index == 2
+              %>
+
+              <tr class="<%= row_classes.join(' ') %>">
+                <td class="statistics-table__position">
+                  <span class="statistics-table__rank">
+                    <%= index + 1 %>
+                  </span>
+                </td>
+
+                <td class="statistics-table__player">
+                  <span class="statistics-table__player-name">
+                    <%= player.display_name %>
+                  </span>
+
+                  <% if current_player_row %>
+                    <span class="statistics-table__you">
+                      Ви
+                    </span>
+                  <% end %>
+                </td>
+
+                <td><%= player.battles_count %></td>
+                <td><%= player.wins_count %></td>
+                <td><%= player.losses_count %></td>
+
+                <td class="statistics-table__rate">
+                  <%= number_with_precision(
+                        player.win_rate,
+                        precision: 2
+                      ) %>%
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     <% else %>
-      <p>
-        Рейтинг поки порожній.
-        Гравці з'являться тут після завершення перших боїв.
-      </p>
+      <div class="statistics-empty">
+        <p>
+          Рейтинг поки порожній.
+          Гравці з'являться тут після завершення перших боїв.
+        </p>
+      </div>
     <% end %>
   </section>
 </main>

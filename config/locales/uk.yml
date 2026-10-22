@@ -1,0 +1,40 @@
+uk:
+  activerecord:
+    models:
+      player: "Гравець"
+
+    attributes:
+      player:
+        email: "Електронна пошта"
+        name: "Ім’я"
+        password: "Пароль"
+        password_confirmation: "Підтвердження пароля"
+
+    errors:
+      models:
+        player:
+          attributes:
+            email:
+              blank: "не може бути порожньою"
+              invalid: "має неправильний формат"
+              taken: "вже використовується"
+
+            password:
+              blank: "не може бути порожнім"
+              too_short: "занадто короткий (мінімум %{count} символів)"
+
+            password_confirmation:
+              confirmation: "не збігається з паролем"
+
+  errors:
+    format: "%{attribute} %{message}"
+
+    messages:
+      blank: "не може бути порожнім"
+      invalid: "має неправильний формат"
+      taken: "вже використовується"
+      too_short: "занадто короткий (мінімум %{count} символів)"
+      confirmation: "не збігається з %{attribute}"
+      record_invalid: "Помилка перевірки даних: %{errors}"
+      inclusion: "не входить до переліку допустимих значень"
+      required: "має бути вказано"

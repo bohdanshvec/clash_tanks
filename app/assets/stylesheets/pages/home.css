@@ -191,3 +191,25 @@
     transform: none;
   }
 }
+
+/* =========================================================
+   Stage 24 — уведомление на главной странице
+   ========================================================= */
+
+/*
+ * Уведомление не должно схлопывать верхний отступ
+ * основного контейнера и создавать полосу над фоном.
+ */
+
+.site-main:has(> .site-notice) {
+  display: flow-root;
+  padding-top: 20px;
+}
+
+.site-main:has(> .site-notice) .home-page {
+  min-height: auto;
+}
+
+.site-main:has(> .site-notice) .home-hero {
+  min-height: calc(100vh - var(--ct-header-height, 76px) - 110px);
+}

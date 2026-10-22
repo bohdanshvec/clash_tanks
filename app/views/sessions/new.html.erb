@@ -1,23 +1,53 @@
-<h1>Вхід</h1>
+<main class="auth-page">
+  <section class="auth-panel" aria-labelledby="auth-title">
+    <header class="auth-panel__header">
+      <h1 id="auth-title">Вхід</h1>
+      <p>Увійдіть до свого облікового запису Clash Tanks.</p>
+    </header>
 
-<%= form_with url: login_path do |form| %>
-  <% if flash[:alert] %>
-    <div>
-      <%= flash[:alert] %>
-    </div>
-  <% end %>
+    <% if flash[:alert].present? %>
+      <div class="auth-alert auth-alert--error" role="alert">
+        <strong>Помилка входу</strong>
+        <p><%= flash[:alert] %></p>
+      </div>
+    <% end %>
 
-  <div>
-    <%= form.label :email, "Email" %>
-    <%= form.email_field :email, required: true, autofocus: true %>
-  </div>
+    <%= form_with url: login_path, class: "auth-form" do |form| %>
+      <div class="auth-form__group">
+        <%= form.label :email,
+              "Електронна пошта",
+              class: "auth-form__label" %>
 
-  <div>
-    <%= form.label :password, "Пароль" %>
-    <%= form.password_field :password, required: true %>
-  </div>
+        <%= form.email_field :email,
+              value: params[:email],
+              class: "form-control auth-form__input",
+              required: true,
+              autofocus: true,
+              autocomplete: "email",
+              placeholder: "example@email.com" %>
+      </div>
 
-  <div>
-    <%= form.submit "Увійти" %>
-  </div>
-<% end %>
+      <div class="auth-form__group">
+        <%= form.label :password,
+              "Пароль",
+              class: "auth-form__label" %>
+
+        <%= form.password_field :password,
+              class: "form-control auth-form__input",
+              required: true,
+              autocomplete: "current-password",
+              placeholder: "Введіть пароль" %>
+      </div>
+
+      <%= form.submit "Увійти",
+            class: "btn btn-primary auth-form__submit" %>
+    <% end %>
+
+    <footer class="auth-panel__footer">
+      <p>Ще не маєте облікового запису?</p>
+      <%= link_to "Зареєструватися",
+            register_path,
+            class: "auth-panel__link" %>
+    </footer>
+  </section>
+</main>

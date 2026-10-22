@@ -16,6 +16,7 @@
   border-radius: 10px;
 
   background: #fff;
+  color: #202820;
 
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
 
@@ -116,6 +117,8 @@
   flex-direction: column;
 
   overflow: hidden;
+
+  color: #202820;
 }
 
 .headquarters-card .game-card__stats {

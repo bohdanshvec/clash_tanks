@@ -122,3 +122,73 @@
 .decks-page__back {
   margin-top: 30px;
 }
+
+/* =========================================================
+   Stage 24 — оформление страницы колод
+   ========================================================= */
+
+/* Заголовок и кнопка создания */
+
+.decks-page__title-row {
+  width: 100%;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.decks-page__create-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+
+  min-height: 44px;
+  padding: 11px 20px;
+
+  color: #1c241b;
+  background: linear-gradient(135deg, #e0ca93, #b4a16a);
+
+  border: 1px solid #e0ca93;
+  border-radius: 7px;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.decks-page__create-button:hover {
+  color: #111811;
+  background: #e9d4a0;
+  border-color: #f1dba9;
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+
+  transform: translateY(-2px);
+}
+
+.decks-page__create-button:focus-visible {
+  outline: 3px solid #f1dba9;
+  outline-offset: 3px;
+}
+
+/* Адаптация для узких экранов */
+
+@media (max-width: 480px) {
+  .decks-page__title-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .decks-page__create-button {
+    max-width: 100%;
+  }
+}

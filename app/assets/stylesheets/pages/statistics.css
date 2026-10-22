@@ -1,0 +1,428 @@
+/* =========================================================
+   Stage 24 — Statistics Page
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   Основная область
+   --------------------------------------------------------- */
+
+.statistics-page {
+  box-sizing: border-box;
+
+  width: 100%;
+  max-width: 1500px;
+
+  margin: 0 auto;
+  padding: 0 20px 50px;
+
+  color: var(--text-primary, #e6e9e3);
+}
+
+/* ---------------------------------------------------------
+   Секции статистики
+   --------------------------------------------------------- */
+
+.statistics-section {
+  margin-bottom: 32px;
+}
+
+.statistics-section__header {
+  margin-bottom: 18px;
+  padding: 20px 24px;
+
+  background: #303a31;
+  border: 1px solid #59664d;
+  border-radius: 10px;
+}
+
+.statistics-section__header h2 {
+  margin: 0 0 10px;
+
+  color: #e0c68d;
+
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.statistics-section__subtitle {
+  margin: 0;
+
+  color: #c9d0c2;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.statistics-section__subtitle strong {
+  color: #e0c68d;
+}
+
+/* ---------------------------------------------------------
+   Личная статистика
+   --------------------------------------------------------- */
+
+.statistics-summary {
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+.statistics-summary__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 145px;
+
+  padding: 22px 14px;
+
+  text-align: center;
+
+  background: #303a31;
+  border: 1px solid #59664d;
+  border-radius: 10px;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.statistics-summary__card:hover {
+  background: #394638;
+  border-color: #a99b70;
+}
+
+.statistics-summary__label {
+  margin-bottom: 16px;
+
+  color: #c9d0c2;
+
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.statistics-summary__value {
+  color: #e0c68d;
+
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Победы */
+
+.statistics-summary__card--wins
+.statistics-summary__value {
+  color: #a8d39b;
+}
+
+/* Поражения */
+
+.statistics-summary__card--losses
+.statistics-summary__value {
+  color: #df9c91;
+}
+
+/* Процент побед */
+
+.statistics-summary__card--rate
+.statistics-summary__value {
+  color: #e0c68d;
+}
+
+/* ---------------------------------------------------------
+   Контейнер таблицы
+   --------------------------------------------------------- */
+
+.statistics-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+
+  background: #303a31;
+
+  border: 1px solid #59664d;
+  border-radius: 10px;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------------------------------------------------------
+   Таблица рейтинга
+   --------------------------------------------------------- */
+
+.statistics-page .statistics-table {
+  width: 100%;
+  min-width: 720px;
+
+  margin: 0;
+
+  border-collapse: collapse;
+  border-spacing: 0;
+
+  color: #e6e9e3;
+  background: transparent;
+
+  font-size: 0.95rem;
+}
+
+/* Заголовки столбцов */
+
+.statistics-page .statistics-table thead {
+  background: #242e27;
+}
+
+.statistics-page .statistics-table th {
+  padding: 17px 14px;
+
+  color: #e0c68d;
+
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+
+  border-bottom: 2px solid #777b57;
+}
+
+/* Ячейки */
+
+.statistics-page .statistics-table td {
+  padding: 14px;
+
+  color: #e6e9e3;
+
+  text-align: center;
+  vertical-align: middle;
+
+  border-bottom: 1px solid #4b584a;
+}
+
+/* Чередование строк */
+
+.statistics-table tbody tr:nth-child(even) {
+  background: #354035;
+}
+
+.statistics-table tbody tr:nth-child(odd) {
+  background: #303a31;
+}
+
+/* Наведение */
+
+.statistics-table tbody tr:hover {
+  background: #455344;
+}
+
+/* Последняя строка */
+
+.statistics-page .statistics-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---------------------------------------------------------
+   Место в рейтинге
+   --------------------------------------------------------- */
+
+.statistics-table__position {
+  width: 85px;
+}
+
+.statistics-table__rank {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 36px;
+  min-height: 36px;
+
+  padding: 4px;
+
+  color: #e6e9e3;
+
+  font-weight: 700;
+
+  border-radius: 6px;
+}
+
+/* Первое место */
+
+.statistics-table__row--first
+.statistics-table__rank {
+  color: #282b22;
+  background: #d8b65d;
+}
+
+/* Второе место */
+
+.statistics-table__row--second
+.statistics-table__rank {
+  color: #282b22;
+  background: #c4c9ca;
+}
+
+/* Третье место */
+
+.statistics-table__row--third
+.statistics-table__rank {
+  color: #282b22;
+  background: #bd8863;
+}
+
+/* ---------------------------------------------------------
+   Имя игрока
+   --------------------------------------------------------- */
+
+.statistics-page .statistics-table
+.statistics-table__player {
+  text-align: left;
+}
+
+.statistics-table__player-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Метка текущего игрока */
+
+.statistics-table__you {
+  display: inline-block;
+
+  margin-left: 8px;
+  padding: 3px 8px;
+
+  color: #e0c68d;
+  background: #47513c;
+
+  border: 1px solid #a99b70;
+  border-radius: 5px;
+
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------
+   Текущий игрок в рейтинге
+   --------------------------------------------------------- */
+
+.statistics-table tbody
+tr.statistics-table__row--current {
+  background: #46543e;
+}
+
+.statistics-page .statistics-table
+tr.statistics-table__row--current td {
+  border-top: 1px solid #a99b70;
+  border-bottom: 1px solid #a99b70;
+}
+
+.statistics-table tbody
+tr.statistics-table__row--current:hover {
+  background: #526348;
+}
+
+/* ---------------------------------------------------------
+   Процент побед
+   --------------------------------------------------------- */
+
+.statistics-page .statistics-table
+.statistics-table__rate {
+  color: #d6dfb7;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------
+   Пустой рейтинг
+   --------------------------------------------------------- */
+
+.statistics-empty {
+  padding: 28px;
+
+  background: #303a31;
+
+  border: 1px solid #59664d;
+  border-radius: 10px;
+}
+
+.statistics-empty p {
+  margin: 0;
+
+  color: #c9d0c2;
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------------------
+   Планшеты
+   --------------------------------------------------------- */
+
+@media (max-width: 992px) {
+  .statistics-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statistics-summary__card {
+    min-height: 130px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Мобильные устройства
+   --------------------------------------------------------- */
+
+@media (max-width: 576px) {
+  .statistics-page {
+    padding: 0 12px 30px;
+  }
+
+  .statistics-section {
+    margin-bottom: 24px;
+  }
+
+  .statistics-section__header {
+    padding: 16px;
+  }
+
+  .statistics-section__header h2 {
+    font-size: 1.25rem;
+  }
+
+  .statistics-summary {
+    gap: 10px;
+  }
+
+  .statistics-summary__card {
+    min-height: 115px;
+    padding: 16px 8px;
+  }
+
+  .statistics-summary__label {
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+  }
+
+  .statistics-summary__value {
+    font-size: 1.65rem;
+  }
+
+  .statistics-page .statistics-table {
+    font-size: 0.85rem;
+  }
+
+  .statistics-page .statistics-table th,
+  .statistics-page .statistics-table td {
+    padding: 12px 10px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Уменьшение анимаций по настройкам системы
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .statistics-summary__card {
+    transition: none;
+  }
+}

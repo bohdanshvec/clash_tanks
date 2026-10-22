@@ -1,4 +1,6 @@
 class RegistrationsController < ApplicationController
+  around_action :use_ukrainian_locale
+
   def new
     @player = Player.new
   end
@@ -11,12 +13,16 @@ class RegistrationsController < ApplicationController
       StarterDecks::Create.call(@player)
     end
 
-    redirect_to root_path, notice: "Регистрация успешно завершена."
+    redirect_to root_path, notice: "Реєстрацію успішно завершено."
   rescue ActiveRecord::RecordInvalid
     render :new, status: :unprocessable_entity
   end
 
   private
+
+  def use_ukrainian_locale(&action)
+    I18n.with_locale(:uk, &action)
+  end
 
   def player_params
     params.expect(player: [:email, :name, :password, :password_confirmation])
