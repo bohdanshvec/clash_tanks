@@ -1,8 +1,7 @@
 <div
-  data-controller="ai-turn game-fullscreen"
+  data-controller="ai-turn"
   data-ai-turn-url-value="<%= run_ai_turn_path(@game) %>"
   data-ai-turn-enabled-value="<%= @game.mode == "ai" %>"
-  data-game-fullscreen-target="container"
 >
   <%= turbo_stream_from [@game, @current_player_id] %>
 

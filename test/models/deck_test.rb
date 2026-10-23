@@ -364,7 +364,7 @@ class DeckTest < ActiveSupport::TestCase
     end
 
     assert_not deck.valid?
-    assert_includes deck.errors[:base], "cannot contain more than 10 cards"
+    assert_includes deck.errors[:base], "Колода не може містити більше 10 карт"
   end
 
   private

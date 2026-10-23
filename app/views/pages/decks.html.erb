@@ -70,10 +70,35 @@
 
             <div class="deck-card__actions">
 
-              <details class="deck-card__preview">
-                <summary>
-                  Перегляд колоди
-                </summary>
+              <button
+                type="button"
+                class="deck-card__preview-button"
+                data-action="click->deck-preview#open"
+              >
+                Перегляд колоди
+              </button>
+
+              <dialog
+                class="deck-card__preview-dialog"
+                aria-labelledby="deck-preview-title-<%= deck.id %>"
+                data-action="click->deck-preview#closeOnBackdrop"
+              >
+
+                <div class="deck-card__preview-dialog-header">
+
+                  <h2 id="deck-preview-title-<%= deck.id %>">
+                    Склад колоди: <%= deck.name %>
+                  </h2>
+
+                  <button
+                    type="button"
+                    class="deck-card__preview-close"
+                    data-action="click->deck-preview#close"
+                  >
+                    Закрити
+                  </button>
+
+                </div>
 
                 <ul class="deck-card__preview-list">
 
@@ -196,7 +221,7 @@
 
                 </ul>
 
-              </details>
+              </dialog>
 
               <%= link_to "Редагувати", edit_deck_path(deck) %>
 

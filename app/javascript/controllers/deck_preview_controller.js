@@ -1,25 +1,26 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  connect() {
-    this.handleDocumentClick = this.handleDocumentClick.bind(this)
+  open(event) {
+    const deckCard = event.currentTarget.closest(".deck-card")
+    const dialog = deckCard?.querySelector(".deck-card__preview-dialog")
 
-    document.addEventListener("click", this.handleDocumentClick)
+    if (dialog && !dialog.open) {
+      dialog.showModal()
+    }
   }
 
-  disconnect() {
-    document.removeEventListener("click", this.handleDocumentClick)
+  close(event) {
+    const dialog = event.currentTarget.closest("dialog")
+
+    if (dialog?.open) {
+      dialog.close()
+    }
   }
 
-  handleDocumentClick(event) {
-    const clickedPreview = event.target.closest(".deck-card__preview")
-
-    this.element
-      .querySelectorAll(".deck-card__preview[open]")
-      .forEach((preview) => {
-        if (preview !== clickedPreview) {
-          preview.removeAttribute("open")
-        }
-      })
+  closeOnBackdrop(event) {
+    if (event.target === event.currentTarget) {
+      event.currentTarget.close()
+    }
   }
 }

@@ -95,6 +95,15 @@ class DecksController < ApplicationController
 
     total = quantities.values.sum
 
+    if total.zero?
+      @deck.errors.add(
+        :base,
+        "Колода повинна містити щонайменше 1 карту"
+      )
+
+      raise ActiveRecord::RecordInvalid, @deck
+    end
+
     if total > Deck::DECK_SIZE
       @deck.errors.add(
         :base,
