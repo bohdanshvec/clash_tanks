@@ -1,5 +1,4 @@
 class GamesController < ApplicationController
-  layout "game"
 
   def create
     unless current_player

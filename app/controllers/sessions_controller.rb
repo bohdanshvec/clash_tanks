@@ -7,7 +7,7 @@ class SessionsController < ApplicationController
 
     if player&.authenticate(params[:password])
       session[:player_id] = player.id
-      redirect_to root_path
+      redirect_to root_path, status: :see_other
     else
       flash.now[:alert] = "Неправильна електронна пошта або пароль."
       render :new, status: :unprocessable_entity
@@ -16,6 +16,6 @@ class SessionsController < ApplicationController
   
 	def destroy
 		reset_session
-		redirect_to root_path
+		redirect_to root_path, status: :see_other
 	end
 end

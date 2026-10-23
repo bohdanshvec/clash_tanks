@@ -20,7 +20,7 @@ export default class extends Controller {
       if (document.fullscreenElement) {
         await document.exitFullscreen()
       } else {
-        await this.element.requestFullscreen()
+        await document.documentElement.requestFullscreen()
       }
     } catch (error) {
       console.error("Fullscreen error:", error)
@@ -28,7 +28,8 @@ export default class extends Controller {
   }
 
   updateButton() {
-    const active = document.fullscreenElement === this.element
+    const active =
+      document.fullscreenElement === document.documentElement
 
     if (this.hasButtonTarget) {
       this.buttonTarget.textContent = active

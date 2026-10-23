@@ -34,7 +34,10 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body data-controller="site-fullscreen">
+  <body
+    class="<%= 'game-page' if controller_name == 'games' %>"
+    data-controller="site-fullscreen"
+  >
     <header class="app-header" role="banner">
       <div class="app-header__inner">
 

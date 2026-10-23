@@ -13,7 +13,7 @@ class RegistrationsController < ApplicationController
       StarterDecks::Create.call(@player)
     end
 
-    redirect_to root_path, notice: "Реєстрацію успішно завершено."
+    redirect_to root_path, notice: "Реєстрацію успішно завершено.", status: :see_other
   rescue ActiveRecord::RecordInvalid
     render :new, status: :unprocessable_entity
   end

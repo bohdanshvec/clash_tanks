@@ -198,3 +198,19 @@
   outline: 2px solid #e9d4a0;
   outline-offset: 3px;
 }
+
+/* =========================================================
+   Stage 24 — игровой экран без общей навигации
+   ========================================================= */
+
+body.game-page > .app-header {
+  display: none;
+}
+
+body.game-page > .site-main {
+  min-height: 100vh;
+}
+
+body.game-page .game {
+  min-height: 100vh;
+}
