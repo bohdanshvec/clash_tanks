@@ -51,6 +51,16 @@
     <p>Turn: <%= visible_state["turn_number"] %></p>
     <p>Current player: <%= visible_state["current_player_id"] %></p>
 
+    <button
+      type="button"
+      class="game-fullscreen-button"
+      data-game-fullscreen-target="button"
+      data-action="click->game-fullscreen#toggle"
+      aria-pressed="false"
+    >
+      На весь екран
+    </button>
+
   </header>
 
   <% if game_finished && visible_state["result"] %>

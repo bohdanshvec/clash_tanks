@@ -21,7 +21,7 @@
   margin: 0;
 
   text-align: center;
-  color: #202820;
+  color: #e9d4a0;
 }
 
 /* ---------------------------------------------------------
@@ -167,4 +167,34 @@
 
 .app-header__player {
   color: var(--ct-header-text);
+}
+
+/* =========================================================
+   Stage 24 — общий полноэкранный режим сайта
+   ========================================================= */
+
+.app-header__fullscreen {
+  padding: 8px 12px;
+
+  background-color: #303a31;
+  color: #e9d4a0;
+
+  border: 1px solid #a18e60;
+  border-radius: 6px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.app-header__fullscreen:hover {
+  background-color: #465343;
+  color: #ffffff;
+}
+
+.app-header__fullscreen:focus-visible {
+  outline: 2px solid #e9d4a0;
+  outline-offset: 3px;
 }

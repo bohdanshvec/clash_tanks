@@ -34,7 +34,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body data-controller="site-fullscreen">
     <header class="app-header" role="banner">
       <div class="app-header__inner">
 
@@ -71,6 +71,17 @@
       </nav>
 
         <div class="app-header__player">
+
+          <button
+            type="button"
+            class="app-header__fullscreen"
+            data-site-fullscreen-target="button"
+            data-action="click->site-fullscreen#toggle"
+            aria-pressed="false"
+          >
+            На весь екран
+          </button>
+
           <% if registered_player? %>
             <span class="app-header__username">
               <%= current_player.display_name %>
