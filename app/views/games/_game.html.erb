@@ -15,6 +15,8 @@
     visible_state["field"][2][0]&.dig("player_id")&.to_s == current_player_id
 
   game_finished = visible_state["status"] == "finished"
+
+  nation_codes_by_id = Nation.pluck(:id, :code).to_h
 %>
 
 <main class="game <%= "game--finished" if game_finished %>"
@@ -222,17 +224,15 @@
                      data-object-type="<%= cell["type"] %>"
                    <% end %>>
 
-                <div class="cell-coordinate">
-                  [<%= row_index %>, <%= column_index %>]
-                </div>
-
                 <% if cell %>
 
-                  <div class="cell-object">
+                  <div class="cell-object <%= "cell-object--headquarters" if cell["type"] == "headquarters" %>">
 
-                    <strong>
-                      <%= cell["name"] %>
-                    </strong>
+                    <% unless cell["type"] == "headquarters" %>
+                      <strong>
+                        <%= cell["name"] %>
+                      </strong>
+                    <% end %>
 
                     <% if cell["type"] == "technique" %>
 
@@ -265,27 +265,94 @@
 
                     <% elsif cell["type"] == "headquarters" %>
 
-                      <p>HP: <%= cell["hp"] %></p>
-                      <p>Firepower: <%= cell["firepower"] %></p>
-                      <p>Fuel: <%= cell["fuel"] %></p>
+                      <%
+                        headquarters_player =
+                          visible_state["players"][cell["player_id"].to_s]
 
-                      <p>
-                        Attacked:
-                        <%= cell["has_attacked"] ? "Yes" : "No" %>
-                      </p>
+                        headquarters_nation =
+                          nation_codes_by_id[headquarters_player["nation_id"].to_i]
 
-                      <p>
-                        Counterattacked:
-                        <%= cell["has_counterattacked"] ? "Yes" : "No" %>
-                      </p>
+                        supported_headquarters_nations =
+                          %w[usa ussr germany]
+
+                        is_current_players_object =
+                          cell["player_id"].to_s == visible_state["current_player_id"].to_s
+
+                        firepower_available =
+                          if is_current_players_object
+                            !cell["has_attacked"]
+                          else
+                            !cell["has_counterattacked"]
+                          end
+                      %>
+
+                      <% if supported_headquarters_nations.include?(headquarters_nation) %>
+
+                        <div class="headquarters-field"
+                             title="<%= cell["name"] %>"
+                             data-headquarters-nation="<%= headquarters_nation %>">
+
+                          <div class="headquarters-field__illustration">
+
+                            <%= image_tag(
+                              "headquarters/#{headquarters_nation}_field_picture_headquarters.png",
+                              alt: "",
+                              draggable: false
+                            ) %>
+
+                          </div>
+
+                          <%= image_tag(
+                            "headquarters/#{headquarters_nation}_field_border_headquarters.png",
+                            class: "headquarters-field__frame",
+                            alt: "",
+                            draggable: false
+                          ) %>
+
+                          <div class="headquarters-field__stats">
+
+                            <span class="headquarters-field__stat headquarters-field__stat--firepower <%= "headquarters-field__stat--ready" if firepower_available %>"
+                                  title="Вогнева міць">
+                              <%= cell["firepower"] %>
+                            </span>
+
+                            <span class="headquarters-field__stat headquarters-field__stat--hp"
+                                  title="Міцність">
+                              <%= cell["hp"] %>
+                            </span>
+
+                            <span class="headquarters-field__stat headquarters-field__stat--fuel"
+                                  title="Пальне">
+                              <%= cell["fuel"] %>
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                      <% else %>
+
+                        <strong><%= cell["name"] %></strong>
+
+                        <p>HP: <%= cell["hp"] %></p>
+                        <p>Firepower: <%= cell["firepower"] %></p>
+                        <p>Fuel: <%= cell["fuel"] %></p>
+
+                        <p>
+                          Attacked:
+                          <%= cell["has_attacked"] ? "Yes" : "No" %>
+                        </p>
+
+                        <p>
+                          Counterattacked:
+                          <%= cell["has_counterattacked"] ? "Yes" : "No" %>
+                        </p>
+
+                      <% end %>
 
                     <% end %>
 
                   </div>
-
-                <% else %>
-
-                  <span>Empty</span>
 
                 <% end %>
 
