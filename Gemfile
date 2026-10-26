@@ -40,7 +40,7 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 
-gem "openai", "~> 0.101.1"
+gem "openai", "~> 0.111.0"
 
 gem "dotenv-rails", groups: [:development, :test]
 
