@@ -104,11 +104,11 @@ orders = [
 
 platoons = [
   { code: "germany_grenaderskij_vzvod", nation: nations[:germany], name: "Гренадерський взвод", weight: 4, price: 4, hp: 6, firepower: 2, armor: 0, fuel: 0 },
-  { code: "germany_flak_88", nation: nations[:germany], name: "Розрахунок Flak 88", weight: 3, price: 3, hp: 5, firepower: 0, armor: 2, fuel: 0 },
+  { code: "germany_betone_ukripleniy", nation: nations[:germany], name: "Бетонне укріплення", weight: 3, price: 3, hp: 5, firepower: 0, armor: 2, fuel: 0 },
   { code: "usa_inzhenernij_vzvod", nation: nations[:usa], name: "Инженерний взвод", weight: 3, price: 4, hp: 5, firepower: 0, armor: 2, fuel: 0 },
   { code: "usa_vzvod_bazukometnikiv", nation: nations[:usa], name: "Взвод базукометників", weight: 5, price: 4, hp: 4, firepower: 1, armor: 0, fuel: 1 },
   { code: "ussr_strileckyj_vzvod", nation: nations[:ussr], name: "Стрелецький взвод", weight: 4, price: 4, hp: 4, firepower: 1, armor: 0, fuel: 0 },
-  { code: "ussr_vzvod_ptr", nation: nations[:ussr], name: "Взвод ПТР", weight: 4, price: 3, hp: 6, firepower: 0, armor: 2, fuel: 0 }
+  { code: "ussr_dot", nation: nations[:ussr], name: "ДОТ", weight: 4, price: 3, hp: 6, firepower: 0, armor: 2, fuel: 0 }
 ]
 
 headquarters.each do |attributes|

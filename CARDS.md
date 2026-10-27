@@ -84,7 +84,7 @@
 | Card | Code | Weight | Price | HP | Firepower | Armor | Fuel |
 |---|---|---:|---:|---:|---:|---:|---:|
 | Гренадерський взвод | `germany_grenaderskij_vzvod` | 4 | 4 | 6 | 2 | 0 | 0 |
-| Розрахунок Flak 88 | `germany_flak_88` | 3 | 3 | 5 | 0 | 2 | 0 |
+| Бетонне укріплення | `germany_betone_ukripleniy` | 3 | 3 | 5 | 0 | 2 | 0 |
 
 ## 5. США
 
@@ -121,7 +121,7 @@
 ### 6.1. Техніка
 
 | Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
-|---|---|---|---:|---:|---:|---:|---:|---:|---|
+|---|---|---|---:|---:|---:|---:|---:|---|
 | БТ-7 | `ussr_bt_7` | LT | 1 | 2 | 1 | 1 | - | — |
 | Т-60 | `ussr_t_60` | LT | 2 | 3 | 2 | 1 | 1 | — |
 | Т-34 | `ussr_t_34` | ST | 3 | 4 | 3 | 1 | 1 | — |
@@ -144,7 +144,7 @@
 | Card | Code | Weight | Price | HP | Firepower | Armor | Fuel |
 |---|---|---:|---:|---:|---:|---:|---:|
 | Стрелецький взвод | `ussr_strileckyj_vzvod` | 4 | 4 | 4 | 1 | 0 | 0 |
-| Взвод ПТР | `ussr_vzvod_ptr` | 4 | 3 | 6 | 0 | 2 | 0 |
+| ДОТ | `ussr_dot` | 4 | 3 | 6 | 0 | 2 | 0 |
 
 ## 7. Універсальні здібності наказів
 
