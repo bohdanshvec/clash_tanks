@@ -33,7 +33,7 @@ module AiPlayers
           "germany_jagdpanther_iv" => 1,
           "germany_jagdpanther_38a_hetzer" => 2,
           "germany_pz_iv_a_f1" => 3,
-          "germany_tocnyj_postil" => 1
+          "germany_tocnyj_postril" => 1
         }
       }
     ].freeze

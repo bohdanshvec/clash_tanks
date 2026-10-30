@@ -76,7 +76,7 @@
 
 | Card | Code | Weight | Price | Ability | Parameters |
 |---|---|---:|---:|---|---|
-| Точний постріл | `germany_tocnyj_postil` | 5 | 4 | `damage_technique` | `damage: 4` |
+| Точний постріл | `germany_tocnyj_postril` | 5 | 4 | `damage_technique` | `damage: 4` |
 | Радіоперехоплення | `germany_radioperehoplena` | 4 | 2 | `draw_cards` | `count: 2` |
 
 ### 4.3. Взводи

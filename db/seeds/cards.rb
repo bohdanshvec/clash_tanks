@@ -94,7 +94,7 @@ techniques = technique_rows.map do |code, nation_code, name, technique_type, wei
 end
 
 orders = [
-  { code: "germany_tocnyj_postil", nation: nations[:germany], name: "Точний постріл", weight: 5, price: 4 },
+  { code: "germany_tocnyj_postril", nation: nations[:germany], name: "Точний постріл", weight: 5, price: 4 },
   { code: "germany_radioperehoplena", nation: nations[:germany], name: "Радіоперехоплення", weight: 4, price: 2 },
   { code: "usa_lend_liz", nation: nations[:usa], name: "Ленд-ліз", weight: 3, price: 2 },
   { code: "usa_vognevij_nalit", nation: nations[:usa], name: "Вогневий наліт", weight: 3, price: 3 },

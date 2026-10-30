@@ -13,7 +13,7 @@ module StarterDecks
         	germany_jagdpanther
         	germany_tiger_i
         	germany_sturmpanzer_iv_brummbar
-        	germany_tocnyj_postil
+        	germany_tocnyj_postril
         	germany_grenaderskij_vzvod
         ]
       },
