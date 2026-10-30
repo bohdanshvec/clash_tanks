@@ -282,7 +282,7 @@
                           cell["movement_count"].to_i
 
                         movement_remaining =
-                          [movement_limit - movement_count, 0].max
+                          movement_count.clamp(0, movement_limit)
 
                         technique_type_names = {
                           "light_tank" => "Легкий танк",
@@ -344,7 +344,7 @@
 
                             <% movement_limit.times do |index| %>
 
-                              <span class="technique-field__wheel <%= "technique-field__wheel--ready" if index < movement_remaining %>"></span>
+                              <span class="technique-field__wheel <%= "technique-field__wheel--ready" if technique_is_current_players_object && index < movement_remaining %>"></span>
 
                             <% end %>
 
