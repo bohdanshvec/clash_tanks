@@ -8,6 +8,7 @@
 @import "pages/game.css";
 @import "components/battlefield.css";
 @import "components/headquarters-field.css";
+@import "components/technique-field.css";
 @import "components/game-effects.css";
 @import "pages/game-ui.css";
 @import "pages/rules.css";

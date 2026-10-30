@@ -16,14 +16,11 @@ module ApplicationHelper
 
     code = code.to_s
 
-    unless code.match?(/\A[a-zA-Z0-9_]+\z/)
+    unless code.match?(/\A[\p{L}\p{N}_]+\z/u)
       raise ArgumentError, "Invalid card code: #{code.inspect}"
     end
 
-    # Remove the nation prefix if it is present.
     code = code.delete_prefix("#{nation}_")
-
-    # Some card codes also contain the card type.
     code = code.delete_prefix("#{type}_")
 
     if code.empty?

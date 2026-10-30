@@ -17,6 +17,11 @@
   game_finished = visible_state["status"] == "finished"
 
   nation_codes_by_id = Nation.pluck(:id, :code).to_h
+
+  card_codes_by_id =
+    Card.where(card_type: %w[headquarters technique])
+        .pluck(:id, :code)
+        .to_h
 %>
 
 <main class="game <%= "game--finished" if game_finished %>"
@@ -226,9 +231,9 @@
 
                 <% if cell %>
 
-                  <div class="cell-object <%= "cell-object--headquarters" if cell["type"] == "headquarters" %>">
+                  <div class="cell-object <%= "cell-object--headquarters" if cell["type"] == "headquarters" %> <%= "cell-object--technique" if cell["type"] == "technique" %>">
 
-                    <% unless cell["type"] == "headquarters" %>
+                    <% unless %w[headquarters technique].include?(cell["type"]) %>
                       <strong>
                         <%= cell["name"] %>
                       </strong>
@@ -236,25 +241,146 @@
 
                     <% if cell["type"] == "technique" %>
 
-                      <p>Technique: <%= cell["technique_type"] %></p>
-                      <p>HP: <%= cell["hp"] %></p>
-                      <p>Firepower: <%= cell["firepower"] %></p>
-                      <p>Fuel: <%= cell["fuel"] %></p>
+                      <%
+                        technique_nation =
+                          nation_codes_by_id[cell["nation_id"].to_i]
 
-                      <p>
-                        Attacked:
-                        <%= cell["has_attacked"] ? "Yes" : "No" %>
-                      </p>
+                        technique_card_code =
+                          card_codes_by_id[cell["card_id"].to_i]
 
-                      <p>
-                        Counterattacked:
-                        <%= cell["has_counterattacked"] ? "Yes" : "No" %>
-                      </p>
+                        technique_type = cell["technique_type"].to_s
 
-                      <p>
-                        Moves:
-                        <%= cell["movement_count"] %>/<%= cell["movement_limit"] %>
-                      </p>
+                        supported_technique_types =
+                          %w[
+                            light_tank
+                            medium_tank
+                            heavy_tank
+                            tank_destroyer
+                            artillery
+                          ]
+
+                        technique_image_available =
+                          %w[usa germany ussr].include?(technique_nation) &&
+                          technique_card_code.present? &&
+                          supported_technique_types.include?(technique_type)
+
+                        technique_is_current_players_object =
+                          cell["player_id"].to_s ==
+                            visible_state["current_player_id"].to_s
+
+                        technique_firepower_available =
+                          if technique_is_current_players_object
+                            !cell["has_attacked"]
+                          else
+                            !cell["has_counterattacked"]
+                          end
+
+                        movement_limit =
+                          cell["movement_limit"].to_i
+
+                        movement_count =
+                          cell["movement_count"].to_i
+
+                        movement_remaining =
+                          [movement_limit - movement_count, 0].max
+
+                        technique_type_names = {
+                          "light_tank" => "Легкий танк",
+                          "medium_tank" => "Середній танк",
+                          "heavy_tank" => "Важкий танк",
+                          "tank_destroyer" => "ПТ-САУ",
+                          "artillery" => "САУ"
+                        }
+                      %>
+
+                      <% if technique_image_available %>
+
+                        <div class="technique-field"
+                             title="<%= cell["name"] %>"
+                             data-technique-nation="<%= technique_nation %>"
+                             data-technique-type="<%= technique_type %>">
+
+                          <div class="technique-field__illustration">
+
+                            <%= image_tag(
+                              card_image_path(
+                                nation: technique_nation,
+                                display: "field",
+                                type: "technique",
+                                code: technique_card_code
+                              ),
+                              alt: "",
+                              draggable: false
+                            ) %>
+
+                          </div>
+
+                          <%= image_tag(
+                            card_border_path(
+                              nation: technique_nation,
+                              display: "field",
+                              type: "technique"
+                            ),
+                            class: "technique-field__frame",
+                            alt: "",
+                            draggable: false
+                          ) %>
+
+                          <div class="technique-field__name">
+                            <%= cell["name"] %>
+                          </div>
+
+                          <div class="technique-field__type technique-field__type--<%= technique_type %>"
+                               title="<%= technique_type_names[technique_type] %>"
+                               aria-label="<%= technique_type_names[technique_type] %>">
+
+                            <span class="technique-field__type-symbol"></span>
+
+                          </div>
+
+                          <div class="technique-field__movement"
+                               title="Залишилось переміщень: <%= movement_remaining %> із <%= movement_limit %>"
+                               aria-label="Залишилось переміщень: <%= movement_remaining %> із <%= movement_limit %>">
+
+                            <% movement_limit.times do |index| %>
+
+                              <span class="technique-field__wheel <%= "technique-field__wheel--ready" if index < movement_remaining %>"></span>
+
+                            <% end %>
+
+                          </div>
+
+                          <div class="technique-field__stats">
+
+                            <span class="technique-field__stat technique-field__stat--firepower <%= "technique-field__stat--ready" if technique_firepower_available %>"
+                                  title="Вогнева міць">
+                              <%= cell["firepower"] %>
+                            </span>
+
+                            <span class="technique-field__stat technique-field__stat--hp"
+                                  title="Міцність">
+                              <%= cell["hp"] %>
+                            </span>
+
+                            <span class="technique-field__stat technique-field__stat--fuel"
+                                  title="Пальне">
+                              <%= cell["fuel"] %>
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                      <% else %>
+
+                        <strong><%= cell["name"] %></strong>
+
+                        <p>Тип: <%= cell["technique_type"] %></p>
+                        <p>Міцність: <%= cell["hp"] %></p>
+                        <p>Вогнева міць: <%= cell["firepower"] %></p>
+                        <p>Пальне: <%= cell["fuel"] %></p>
+
+                      <% end %>
 
                     <% elsif cell["type"] == "platoon" %>
 
@@ -275,6 +401,9 @@
                         supported_headquarters_nations =
                           %w[usa ussr germany]
 
+                        headquarters_card_code =
+                          card_codes_by_id[cell["card_id"].to_i]
+
                         is_current_players_object =
                           cell["player_id"].to_s == visible_state["current_player_id"].to_s
 
@@ -286,7 +415,7 @@
                           end
                       %>
 
-                      <% if supported_headquarters_nations.include?(headquarters_nation) %>
+                      <% if supported_headquarters_nations.include?(headquarters_nation) && headquarters_card_code.present? %>
 
                         <div class="headquarters-field"
                              title="<%= cell["name"] %>"
@@ -295,7 +424,12 @@
                           <div class="headquarters-field__illustration">
 
                             <%= image_tag(
-                              "headquarters/#{headquarters_nation}_field_picture_headquarters.png",
+                              card_image_path(
+                                nation: headquarters_nation,
+                                display: "field",
+                                type: "headquarters",
+                                code: headquarters_card_code
+                              ),
                               alt: "",
                               draggable: false
                             ) %>
@@ -303,7 +437,11 @@
                           </div>
 
                           <%= image_tag(
-                            "headquarters/#{headquarters_nation}_field_border_headquarters.png",
+                            card_border_path(
+                              nation: headquarters_nation,
+                              display: "field",
+                              type: "headquarters"
+                            ),
                             class: "headquarters-field__frame",
                             alt: "",
                             draggable: false
