@@ -67,26 +67,6 @@
         dragend->game-events#dragEnd
       ">
 
-  <header class="game-header">
-
-    <h3>Clash Tanks</h3>
-
-    <p>Status: <%= visible_state["status"] %></p>
-    <p>Turn: <%= visible_state["turn_number"] %></p>
-    <p>Current player: <%= visible_state["current_player_id"] %></p>
-
-    <button
-      type="button"
-      class="app-header__fullscreen"
-      data-site-fullscreen-target="button"
-      data-action="click->site-fullscreen#toggle"
-      aria-pressed="false"
-    >
-      На весь екран
-    </button>
-
-  </header>
-
   <% if game_finished && visible_state["result"] %>
     <%
       winner_id = visible_state["result"]["winner_id"].to_s
@@ -104,63 +84,84 @@
 
   <div class="<%= "game-content game-content--muted" if game_finished %>">
 
+    <%# Верхняя строка: количество карт соперника и полноэкранный режим. %>
     <section class="game-top">
 
       <div class="game-top__hand">
-
         <% if opponent_player %>
-
           <p class="opponent-hand-count">
-            Opponent hand: <%= opponent_player["hand_count"] %> cards
+            У суперника <%= opponent_player["hand_count"] %> карт в руці
           </p>
-
         <% end %>
-
       </div>
 
-      <aside class="game-top__info info-window">
-
-        <% if opponent_player %>
-
-          <p>
-            Час:
-            <span
-              data-game-timer-target="gameTime"
-              data-player-id="<%= opponent_player_id %>"
-              data-remaining-time="<%= opponent_player["remaining_time"] %>"
-            ></span>
-          </p>
-
-          <% if visible_state["current_player_id"].to_s == opponent_player_id %>
-            <p>
-              Хід:
-              <span data-game-timer-target="turnTime"></span>
-            </p>
-          <% end %>
-
-          <p>
-            Ресурси:
-            <%= opponent_player["resources"] %>
-          </p>
-
-          <p>
-            Колода:
-            <%= opponent_player["deck_count"] %> cards
-          </p>
-
-          <p>
-            Кладовище:
-            <%= opponent_player["graveyard_count"] %> cards
-          </p>
-
-        <% end %>
-
-      </aside>
+      <button
+        type="button"
+        class="app-header__fullscreen"
+        data-site-fullscreen-target="button"
+        data-action="click->site-fullscreen#toggle"
+        aria-pressed="false"
+      >
+        На весь екран
+      </button>
 
     </section>
 
     <section class="game-board">
 
+      <%# Информация текущего игрока. %>
+      <aside class="game-board__player-info game-board__player-info--own">
+
+        <div class="game-board__action game-board__action--surrender">
+          <%= button_to "Здатися",
+                        surrender_path(game),
+                        method: :post %>
+        </div>
+
+        <% if current_player %>
+
+          <p class="game-board__info-item">
+            <span class="game-board__info-label">Час</span>
+            <strong
+              data-game-timer-target="gameTime"
+              data-player-id="<%= current_player_id %>"
+              data-remaining-time="<%= current_player["remaining_time"] %>"
+            ></strong>
+          </p>
+
+          <p class="game-board__info-item">
+            <span class="game-board__info-label">Хід</span>
+
+            <% if visible_state["current_player_id"].to_s == current_player_id %>
+              <strong data-game-timer-target="turnTime"></strong>
+            <% else %>
+              <strong>—</strong>
+            <% end %>
+          </p>
+
+          <p class="game-board__info-item">
+            <span class="game-board__info-label">Колода</span>
+            <strong><%= current_player["deck_count"] %></strong>
+          </p>
+
+          <p class="game-board__info-item">
+            <span class="game-board__info-label">Ресурси</span>
+            <strong><%= current_player["resources"] %></strong>
+          </p>
+
+          <% if visible_state["current_player_id"].to_s == current_player_id %>
+            <div class="game-board__action game-board__action--end-turn">
+              <%= button_to "Кінець ходу",
+                            end_turn_path(game),
+                            method: :post %>
+            </div>
+          <% end %>
+
+        <% end %>
+
+      </aside>
+
+      <%# Взводы текущего игрока. %>
       <aside class="game-board__left platoon-bar"
              data-platoon-bar
              data-player-id="<%= current_player_id %>">
@@ -199,6 +200,7 @@
                 %>
 
                 <% if platoon_image_available %>
+
                   <div class="platoon-field platoon-field--own"
                        title="<%= platoon["name"] %>">
 
@@ -256,12 +258,15 @@
                     </div>
 
                   </div>
+
                 <% else %>
+
                   <strong><%= platoon["name"] %></strong>
                   <p>HP: <%= platoon["hp"] %></p>
                   <p>Firepower: <%= platoon["firepower"] %></p>
                   <p>Armor: <%= platoon["armor"] %></p>
                   <p>Fuel: <%= platoon["fuel"] %></p>
+
                 <% end %>
               <% end %>
 
@@ -273,6 +278,7 @@
 
       </aside>
 
+      <%# Центральное игровое поле. %>
       <section class="game-board__field">
 
         <div class="battlefield">
@@ -386,10 +392,10 @@
 
                       <% if technique_image_available %>
 
-                      <div class="technique-field <%= technique_is_own ? "technique-field--own" : "technique-field--enemy" %>"
-                           title="<%= cell["name"] %>"
-                           data-technique-nation="<%= technique_nation %>"
-                           data-technique-type="<%= technique_type %>">
+                        <div class="technique-field <%= technique_is_own ? "technique-field--own" : "technique-field--enemy" %>"
+                             title="<%= cell["name"] %>"
+                             data-technique-nation="<%= technique_nation %>"
+                             data-technique-type="<%= technique_type %>">
 
                           <div class="technique-field__illustration">
 
@@ -598,6 +604,7 @@
 
       </section>
 
+      <%# Взводы соперника. %>
       <aside class="game-board__right platoon-bar"
              data-platoon-bar
              data-player-id="<%= opponent_player_id %>">
@@ -636,6 +643,7 @@
                 %>
 
                 <% if platoon_image_available %>
+
                   <div class="platoon-field platoon-field--enemy"
                        title="<%= platoon["name"] %>">
 
@@ -693,12 +701,15 @@
                     </div>
 
                   </div>
+
                 <% else %>
+
                   <strong><%= platoon["name"] %></strong>
                   <p>HP: <%= platoon["hp"] %></p>
                   <p>Firepower: <%= platoon["firepower"] %></p>
                   <p>Armor: <%= platoon["armor"] %></p>
                   <p>Fuel: <%= platoon["fuel"] %></p>
+
                 <% end %>
               <% end %>
 
@@ -710,62 +721,47 @@
 
       </aside>
 
-    </section>
+      <%# Информация соперника. %>
+      <aside class="game-board__player-info game-board__player-info--enemy">
 
-    <section class="game-bottom">
+        <% if opponent_player %>
 
-      <aside class="game-bottom__info info-window">
-
-        <% if current_player %>
-
-          <%= button_to "Здатися",
-                        surrender_path(game),
-                        method: :post %>
-
-          <p>
-            Час:
-            <span
+          <p class="game-board__info-item">
+            <span class="game-board__info-label">Час</span>
+            <strong
               data-game-timer-target="gameTime"
-              data-player-id="<%= current_player_id %>"
-              data-remaining-time="<%= current_player["remaining_time"] %>"
-            ></span>
+              data-player-id="<%= opponent_player_id %>"
+              data-remaining-time="<%= opponent_player["remaining_time"] %>"
+            ></strong>
           </p>
 
-          <% if visible_state["current_player_id"].to_s == current_player_id %>
+          <p class="game-board__info-item">
+            <span class="game-board__info-label">Хід</span>
 
-            <p>
-              Хід:
-              <span data-game-timer-target="turnTime"></span>
-            </p>
-
-          <% end %>
-
-          <p>
-            Ресурси:
-            <%= current_player["resources"] %>
+            <% if visible_state["current_player_id"].to_s == opponent_player_id %>
+              <strong data-game-timer-target="turnTime"></strong>
+            <% else %>
+              <strong>—</strong>
+            <% end %>
           </p>
 
-          <p>
-            Колода:
-            <%= current_player["deck_count"] %> cards
+          <p class="game-board__info-item">
+            <span class="game-board__info-label">Колода</span>
+            <strong><%= opponent_player["deck_count"] %></strong>
           </p>
 
-          <p>
-            Кладовище:
-            <%= current_player["graveyard_count"] %> cards
+          <p class="game-board__info-item">
+            <span class="game-board__info-label">Ресурси</span>
+            <strong><%= opponent_player["resources"] %></strong>
           </p>
-
-          <% if visible_state["current_player_id"].to_s == current_player_id %>
-
-            <%= button_to "Кінець ходу",
-                          end_turn_path(game),
-                          method: :post %>
-
-          <% end %>
 
         <% end %>
 
       </aside>
+
+    </section>
+
+    <section class="game-bottom">
 
       <div class="game-bottom__hand">
 

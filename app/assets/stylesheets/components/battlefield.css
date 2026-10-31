@@ -3,22 +3,29 @@
    --------------------------------------------------------- */
 
 .game-board {
-  --battlefield-width: min(900px, calc(100vw - 240px));
-  --platoon-slot-size: calc(var(--battlefield-width) * 3 / 20);
+  --battlefield-width: min(
+    900px,
+    calc((100vw - 340px) / 1.3)
+  );
+
+  --platoon-slot-size: calc(
+    var(--battlefield-width) * 3 / 20
+  );
 
   display: grid;
 
   grid-template-columns:
+    145px
     var(--platoon-slot-size)
     var(--battlefield-width)
-    var(--platoon-slot-size);
+    var(--platoon-slot-size)
+    145px;
 
   justify-content: center;
   align-items: stretch;
 
   gap: 10px;
 }
-
 /* ---------------------------------------------------------
    Боковые панели взводов
    --------------------------------------------------------- */
