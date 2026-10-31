@@ -39,6 +39,12 @@
   pointer-events: none;
 }
 
+/* Зеркальное отображение иллюстрации техники противника */
+
+.technique-field--enemy .technique-field__illustration img {
+  transform: scaleX(-1);
+}
+
 /* Прозрачная рамка */
 
 .technique-field__frame {
@@ -97,6 +103,13 @@
   box-sizing: border-box;
   background: #e32b2b;
   border: 1px solid #6f0909;
+}
+
+/* Эмблема своей техники — зелёная */
+
+.technique-field--own .technique-field__type-symbol {
+  background: #32cd32;
+  border-color: #176b17;
 }
 
 /* ЛТ — ромб */
@@ -212,9 +225,20 @@
   transform: translate(-50%, -50%);
 }
 
-/* Неиспользованное перемещение */
+/* ---------------------------------------------------------
+   Доступные перемещения своей техники — зелёные
+   --------------------------------------------------------- */
 
-.technique-field__wheel--ready {
+.technique-field--own .technique-field__wheel--ready {
+  color: #32cd32;
+}
+
+
+/* ---------------------------------------------------------
+   Доступные перемещения техники противника — красные
+   --------------------------------------------------------- */
+
+.technique-field--enemy .technique-field__wheel--ready {
   color: #ff3030;
 }
 
@@ -266,10 +290,22 @@
   top: 89%;
 }
 
-/* Доступная атака или контратака */
+/* Доступная атака или контратака своей техники */
 
-.technique-field__stat--ready {
+.technique-field--own .technique-field__stat--ready {
+  color: #32cd32;
+
+  text-shadow:
+    1px 1px 2px #000,
+    -1px -1px 2px #000,
+    0 0 4px rgba(50, 205, 50, 0.45);
+}
+
+/* Доступная атака или контратака техники противника */
+
+.technique-field--enemy .technique-field__stat--ready {
   color: #ff3030;
+
   text-shadow:
     1px 1px 2px #000,
     -1px -1px 2px #000,

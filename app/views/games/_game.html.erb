@@ -268,6 +268,9 @@
                           cell["player_id"].to_s ==
                             visible_state["current_player_id"].to_s
 
+                        technique_is_own =
+                          cell["player_id"].to_s == current_player_id
+
                         technique_firepower_available =
                           if technique_is_current_players_object
                             !cell["has_attacked"]
@@ -295,10 +298,10 @@
 
                       <% if technique_image_available %>
 
-                        <div class="technique-field"
-                             title="<%= cell["name"] %>"
-                             data-technique-nation="<%= technique_nation %>"
-                             data-technique-type="<%= technique_type %>">
+                      <div class="technique-field <%= technique_is_own ? "technique-field--own" : "technique-field--enemy" %>"
+                           title="<%= cell["name"] %>"
+                           data-technique-nation="<%= technique_nation %>"
+                           data-technique-type="<%= technique_type %>">
 
                           <div class="technique-field__illustration">
 
@@ -407,6 +410,9 @@
                         is_current_players_object =
                           cell["player_id"].to_s == visible_state["current_player_id"].to_s
 
+                        is_own_headquarters =
+                          cell["player_id"].to_s == current_player_id
+
                         firepower_available =
                           if is_current_players_object
                             !cell["has_attacked"]
@@ -417,7 +423,7 @@
 
                       <% if supported_headquarters_nations.include?(headquarters_nation) && headquarters_card_code.present? %>
 
-                        <div class="headquarters-field"
+                        <div class="headquarters-field <%= is_own_headquarters ? "headquarters-field--own" : "headquarters-field--enemy" %>"
                              title="<%= cell["name"] %>"
                              data-headquarters-nation="<%= headquarters_nation %>">
 
