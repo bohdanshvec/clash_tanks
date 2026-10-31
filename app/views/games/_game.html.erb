@@ -69,16 +69,43 @@
 
   <% if game_finished && visible_state["result"] %>
     <%
-      winner_id = visible_state["result"]["winner_id"].to_s
+      game_result = visible_state["result"]
+
+      winner_id = game_result["winner_id"].to_s
       player_won = winner_id == current_player_id
+
+      finish_reason = game_result["reason"]
+
+      finish_reason_text =
+        case finish_reason
+        when "surrender"
+          player_won ? "Суперник здався" : "Ви здалися"
+
+        when "headquarters_destroyed", "empty_deck_damage"
+          player_won ? "Штаб суперника знищено" : "Ваш штаб знищено"
+
+        when "time_expired"
+          player_won ? "У суперника закінчився час" : "У вас закінчився час"
+
+        else
+          "Партію завершено"
+        end
     %>
 
     <div class="game-result">
-      <h2><%= player_won ? "Перемога!" : "Ви програли!" %></h2>
+
+      <h2>
+        <%= player_won ? "Перемога!" : "Ви програли!" %>
+      </h2>
 
       <%= link_to "Вийти з партії",
                   root_path,
                   class: "game-result__exit" %>
+
+      <p class="game-result__reason">
+        <%= finish_reason_text %>
+      </p>
+
     </div>
   <% end %>
 

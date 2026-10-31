@@ -1,31 +1,43 @@
 /* ---------------------------------------------------------
    Центральная игровая зона
+   Адаптивная геометрия пяти колонок
    --------------------------------------------------------- */
 
 .game-board {
   --battlefield-width: min(
     900px,
-    calc((100vw - 340px) / 1.3)
+    calc((100vw - 60px) / 1.62)
+  );
+
+  --battlefield-height: calc(
+    var(--battlefield-width) * 3 / 5
   );
 
   --platoon-slot-size: calc(
     var(--battlefield-width) * 3 / 20
   );
 
+  --player-info-width: calc(
+    var(--battlefield-width) * 145 / 900
+  );
+
   display: grid;
 
   grid-template-columns:
-    145px
+    var(--player-info-width)
     var(--platoon-slot-size)
     var(--battlefield-width)
     var(--platoon-slot-size)
-    145px;
+    var(--player-info-width);
+
+  grid-template-rows: var(--battlefield-height);
 
   justify-content: center;
   align-items: stretch;
 
-  gap: 10px;
+  gap: clamp(2px, 0.7vw, 10px);
 }
+
 /* ---------------------------------------------------------
    Боковые панели взводов
    --------------------------------------------------------- */
@@ -47,7 +59,8 @@
 
 .platoon-bar {
   width: 100%;
-  height: 100%;
+  height: var(--battlefield-height);
+  min-height: 0;
 
   box-sizing: border-box;
 
@@ -71,8 +84,6 @@
   width: 100%;
   min-width: 0;
   min-height: 0;
-
-  aspect-ratio: 1 / 1;
 
   box-sizing: border-box;
 
