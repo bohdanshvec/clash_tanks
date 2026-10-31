@@ -161,6 +161,106 @@
   color: var(--text-heading);
 }
 
+/* =========================================================
+   Stage 24 — страница ожидания соперника
+   ========================================================= */
+
+.waiting-page {
+  box-sizing: border-box;
+
+  width: 100%;
+  padding: 40px;
+
+  color: var(--text-primary);
+}
+
+/* Заголовки */
+
+.waiting-page h1,
+.waiting-page h2 {
+  color: var(--text-heading);
+}
+
+/* Основной текст */
+
+.waiting-page p,
+.waiting-page li,
+.waiting-page strong {
+  color: var(--text-primary);
+}
+
+/* Отступы между элементами */
+
+.waiting-page h1 {
+  margin-bottom: 24px;
+}
+
+.waiting-page h2 {
+  margin-top: 28px;
+  margin-bottom: 16px;
+}
+
+/* Сообщение о поиске соперника */
+
+.waiting-page > p {
+  line-height: 1.8;
+}
+
+/* ---------------------------------------------------------
+   Кнопка выхода из ожидания
+   --------------------------------------------------------- */
+
+.waiting-page form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 46px;
+  padding: 12px 28px;
+
+  background-color: #303a31;
+  color: #e0c68d;
+
+  border: 1px solid #a18e60;
+  border-radius: 8px;
+
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Наведение */
+
+.waiting-page form button:hover {
+  background-color: #465343;
+  border-color: #e0c68d;
+  color: #ffffff;
+
+  transform: translateY(-2px);
+}
+
+/* Нажатие */
+
+.waiting-page form button:active {
+  background-color: #252e26;
+  transform: translateY(0);
+}
+
+/* Управление с клавиатуры */
+
+.waiting-page form button:focus-visible {
+  outline: 2px solid #e0c68d;
+  outline-offset: 3px;
+}
+
 /* ---------------------------------------------------------
    Мобильные экраны
    --------------------------------------------------------- */
@@ -176,5 +276,15 @@
   .page-title-panel {
     margin-bottom: 20px;
     padding: 16px 20px;
+  }
+
+    /* Страница ожидания */
+
+  .waiting-page {
+    padding: 24px 20px;
+  }
+
+  .waiting-page form button {
+    max-width: 100%;
   }
 }

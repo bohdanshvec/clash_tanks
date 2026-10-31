@@ -19,9 +19,26 @@
   nation_codes_by_id = Nation.pluck(:id, :code).to_h
 
   card_codes_by_id =
-    Card.where(card_type: %w[headquarters technique])
+    Card.where(card_type: %w[headquarters technique platoon])
         .pluck(:id, :code)
         .to_h
+
+  headquarters_by_player_id =
+    visible_state["field"]
+      .flatten
+      .compact
+      .select { |cell| cell["type"] == "headquarters" }
+      .index_by { |cell| cell["player_id"].to_s }
+
+  headquarters_firepower_available_by_player_id =
+    headquarters_by_player_id.transform_values do |headquarters|
+      if headquarters["player_id"].to_s ==
+         visible_state["current_player_id"].to_s
+        !headquarters["has_attacked"]
+      else
+        !headquarters["has_counterattacked"]
+      end
+    end
 %>
 
 <main class="game <%= "game--finished" if game_finished %>"
@@ -160,21 +177,92 @@
                        data-armor="<%= platoon["armor"].to_i %>"
                      <% end %>>
 
-              <span>Slot <%= index %></span>
-
               <% if platoon %>
+                <%
+                  platoon_nation =
+                    nation_codes_by_id[platoon["nation_id"].to_i]
 
-                <strong><%= platoon["name"] %></strong>
+                  platoon_card_code =
+                    card_codes_by_id[platoon["card_id"].to_i]
 
-                <p>HP: <%= platoon["hp"] %></p>
-                <p>Firepower: <%= platoon["firepower"] %></p>
-                <p>Armor: <%= platoon["armor"] %></p>
-                <p>Fuel: <%= platoon["fuel"] %></p>
+                  platoon_variant =
+                    if platoon["firepower"].to_i > 0
+                      "attack"
+                    elsif platoon["armor"].to_i > 0
+                      "defense"
+                    end
 
-              <% else %>
+                  platoon_image_available =
+                    %w[usa germany ussr].include?(platoon_nation) &&
+                    platoon_card_code.present? &&
+                    platoon_variant.present?
+                %>
 
-                <span>Empty</span>
+                <% if platoon_image_available %>
+                  <div class="platoon-field platoon-field--own"
+                       title="<%= platoon["name"] %>">
 
+                    <div class="platoon-field__illustration">
+                      <%= image_tag(
+                        card_image_path(
+                          nation: platoon_nation,
+                          display: "field",
+                          type: "platoon",
+                          code: platoon_card_code
+                        ),
+                        alt: "",
+                        draggable: false
+                      ) %>
+                    </div>
+
+                    <%= image_tag(
+                      card_border_path(
+                        nation: platoon_nation,
+                        display: "field",
+                        type: "platoon",
+                        variant: platoon_variant
+                      ),
+                      class: "platoon-field__frame",
+                      alt: "",
+                      draggable: false
+                    ) %>
+
+                    <div class="platoon-field__name">
+                      <%= platoon["name"] %>
+                    </div>
+
+                    <div class="platoon-field__type"
+                         title="<%= platoon_variant == "attack" ? "Атакувальний взвод" : "Захисний взвод" %>">
+                      <span class="platoon-field__type-symbol platoon-field__type-symbol--<%= platoon_variant %>"></span>
+                    </div>
+
+                    <div class="platoon-field__stats">
+
+                      <span class="platoon-field__stat platoon-field__stat--primary <%= "platoon-field__stat--ready" if platoon_variant == "attack" && headquarters_firepower_available_by_player_id[current_player_id] %>"
+                            title="<%= platoon_variant == "attack" ? "Вогнева міць" : "Броня" %>">
+                        <%= platoon_variant == "attack" ? platoon["firepower"] : platoon["armor"] %>
+                      </span>
+
+                      <span class="platoon-field__stat platoon-field__stat--hp"
+                            title="Міцність">
+                        <%= platoon["hp"] %>
+                      </span>
+
+                      <span class="platoon-field__stat platoon-field__stat--fuel"
+                            title="Пальне">
+                        <%= platoon["fuel"] %>
+                      </span>
+
+                    </div>
+
+                  </div>
+                <% else %>
+                  <strong><%= platoon["name"] %></strong>
+                  <p>HP: <%= platoon["hp"] %></p>
+                  <p>Firepower: <%= platoon["firepower"] %></p>
+                  <p>Armor: <%= platoon["armor"] %></p>
+                  <p>Fuel: <%= platoon["fuel"] %></p>
+                <% end %>
               <% end %>
 
             </article>
@@ -526,21 +614,92 @@
                        data-armor="<%= platoon["armor"].to_i %>"
                      <% end %>>
 
-              <span>Slot <%= index %></span>
-
               <% if platoon %>
+                <%
+                  platoon_nation =
+                    nation_codes_by_id[platoon["nation_id"].to_i]
 
-                <strong><%= platoon["name"] %></strong>
+                  platoon_card_code =
+                    card_codes_by_id[platoon["card_id"].to_i]
 
-                <p>HP: <%= platoon["hp"] %></p>
-                <p>Firepower: <%= platoon["firepower"] %></p>
-                <p>Armor: <%= platoon["armor"] %></p>
-                <p>Fuel: <%= platoon["fuel"] %></p>
+                  platoon_variant =
+                    if platoon["firepower"].to_i > 0
+                      "attack"
+                    elsif platoon["armor"].to_i > 0
+                      "defense"
+                    end
 
-              <% else %>
+                  platoon_image_available =
+                    %w[usa germany ussr].include?(platoon_nation) &&
+                    platoon_card_code.present? &&
+                    platoon_variant.present?
+                %>
 
-                <span>Empty</span>
+                <% if platoon_image_available %>
+                  <div class="platoon-field platoon-field--enemy"
+                       title="<%= platoon["name"] %>">
 
+                    <div class="platoon-field__illustration">
+                      <%= image_tag(
+                        card_image_path(
+                          nation: platoon_nation,
+                          display: "field",
+                          type: "platoon",
+                          code: platoon_card_code
+                        ),
+                        alt: "",
+                        draggable: false
+                      ) %>
+                    </div>
+
+                    <%= image_tag(
+                      card_border_path(
+                        nation: platoon_nation,
+                        display: "field",
+                        type: "platoon",
+                        variant: platoon_variant
+                      ),
+                      class: "platoon-field__frame",
+                      alt: "",
+                      draggable: false
+                    ) %>
+
+                    <div class="platoon-field__name">
+                      <%= platoon["name"] %>
+                    </div>
+
+                    <div class="platoon-field__type"
+                         title="<%= platoon_variant == "attack" ? "Атакувальний взвод" : "Захисний взвод" %>">
+                      <span class="platoon-field__type-symbol platoon-field__type-symbol--<%= platoon_variant %>"></span>
+                    </div>
+
+                    <div class="platoon-field__stats">
+
+                      <span class="platoon-field__stat platoon-field__stat--primary <%= "platoon-field__stat--ready" if platoon_variant == "attack" && headquarters_firepower_available_by_player_id[opponent_player_id] %>"
+                            title="<%= platoon_variant == "attack" ? "Вогнева міць" : "Броня" %>">
+                        <%= platoon_variant == "attack" ? platoon["firepower"] : platoon["armor"] %>
+                      </span>
+
+                      <span class="platoon-field__stat platoon-field__stat--hp"
+                            title="Міцність">
+                        <%= platoon["hp"] %>
+                      </span>
+
+                      <span class="platoon-field__stat platoon-field__stat--fuel"
+                            title="Пальне">
+                        <%= platoon["fuel"] %>
+                      </span>
+
+                    </div>
+
+                  </div>
+                <% else %>
+                  <strong><%= platoon["name"] %></strong>
+                  <p>HP: <%= platoon["hp"] %></p>
+                  <p>Firepower: <%= platoon["firepower"] %></p>
+                  <p>Armor: <%= platoon["armor"] %></p>
+                  <p>Fuel: <%= platoon["fuel"] %></p>
+                <% end %>
               <% end %>
 
             </article>

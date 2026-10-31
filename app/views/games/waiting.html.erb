@@ -1,6 +1,7 @@
 <%= turbo_stream_from @game %>
 
-<div data-controller="waiting-room"
+<div class="waiting-page"
+     data-controller="waiting-room"
      data-waiting-room-url-value="<%= waiting_heartbeat_game_path(@game) %>">
 
 <h1>Очікування суперника</h1>
