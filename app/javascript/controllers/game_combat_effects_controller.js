@@ -13,6 +13,15 @@ export default class extends Controller {
     this.processing = false
     this.lastGameElement = null
     this.animations = new Set()
+    this.destroyedVisuals = new Map()
+
+    this.boundBeforeStreamRender =
+      this.beforeStreamRender.bind(this)
+
+    document.addEventListener(
+      "turbo:before-stream-render",
+      this.boundBeforeStreamRender
+    )
 
     this.observer = new MutationObserver(() => {
       this.consumeCurrentGame()
@@ -47,6 +56,11 @@ export default class extends Controller {
   }
 
   disconnect() {
+    document.removeEventListener(
+      "turbo:before-stream-render",
+      this.boundBeforeStreamRender
+    )
+
     this.observer?.disconnect()
 
     this.interactionEvents?.forEach((eventName) => {
@@ -65,6 +79,68 @@ export default class extends Controller {
 
     this.queue = []
     this.setLocked(false)
+
+    this.destroyedVisuals?.clear()
+  }
+
+  // --------------------------------------------------
+  // Сохранение уничтожаемой техники до Turbo-обновления
+  // --------------------------------------------------
+
+  beforeStreamRender(event) {
+    const stream = event.target
+
+    if (!(stream instanceof Element)) return
+
+    if (stream.getAttribute("target") !== this.element.id) {
+      return
+    }
+
+    if (stream.getAttribute("action") !== "update") {
+      return
+    }
+
+    const template = stream.querySelector("template")
+    const incomingGame = template?.content.querySelector(".game")
+
+    if (!incomingGame) return
+
+    let events = []
+
+    try {
+      events = JSON.parse(
+        incomingGame.dataset.gameEventsEventsValue || "[]"
+      )
+    } catch (error) {
+      console.error(
+        "[Game Combat Effects] Invalid incoming events:",
+        error
+      )
+
+      return
+    }
+
+    const destroyedEvents = events.filter(
+      (item) => item.type === "technique_destroyed"
+    )
+
+    destroyedEvents.forEach((destroyedEvent) => {
+      const position = destroyedEvent.target?.position
+      const key = this.positionKey(position)
+
+      if (!key) return
+
+      const cell = this.findCell(position)
+      const object = cell?.querySelector(".cell-object")
+
+      if (!object) return
+
+      const queue = this.destroyedVisuals.get(key) || []
+
+      queue.push(object.cloneNode(true))
+
+      this.destroyedVisuals.set(key, queue)
+    })
   }
 
   // --------------------------------------------------
@@ -100,13 +176,49 @@ export default class extends Controller {
     const combatEvents = events.filter((event) => {
       return [
         "shot_fired",
-        "counterattack_fired"
+        "counterattack_fired",
+        "technique_destroyed"
       ].includes(event.type)
     })
 
     if (combatEvents.length === 0) return
 
-    this.queue.push(...combatEvents)
+    combatEvents.forEach((event) => {
+      if (event.type === "technique_destroyed") {
+        const key = this.positionKey(
+          event.target?.position
+        )
+
+        if (key) {
+          const visuals = this.destroyedVisuals.get(key) || []
+
+          event.destroyedVisual = visuals.shift() || null
+
+          if (visuals.length > 0) {
+            this.destroyedVisuals.set(key, visuals)
+          } else {
+            this.destroyedVisuals.delete(key)
+          }
+        }
+
+        // Возвращаем сохранённую картинку на поле сразу,
+        // до запуска анимаций выстрела и попадания.
+        const cell = this.findCell(event.target?.position)
+        const visual = event.destroyedVisual
+
+        if (cell && visual) {
+          visual.classList.add(
+            "game-combat-effect--destroyed-object"
+          )
+
+          visual.setAttribute("aria-hidden", "true")
+
+          cell.appendChild(visual)
+        }
+      }
+
+      this.queue.push(event)
+    })
 
     if (!this.processing) {
       this.playQueue()
@@ -127,7 +239,14 @@ export default class extends Controller {
       while (this.queue.length > 0) {
         const event = this.queue.shift()
 
-        await this.animateShot(event)
+        if (
+          event.type === "shot_fired" ||
+          event.type === "counterattack_fired"
+        ) {
+          await this.animateShot(event)
+        } else if (event.type === "technique_destroyed") {
+          await this.animateTechniqueDestroyed(event)
+        }
       }
     } finally {
       this.processing = false
@@ -214,6 +333,172 @@ export default class extends Controller {
 
     // Вспышка попадания в центре клетки цели.
     await this.animateImpact(targetCell)
+  }
+
+  // --------------------------------------------------
+  // Уничтожение техники — огонь, дым и исчезновение
+  // --------------------------------------------------
+
+  async animateTechniqueDestroyed(event) {
+    const position = event.target?.position
+
+    if (!position) return
+
+    const cell = this.findCell(position)
+    const visual = event.destroyedVisual
+
+    if (!cell || !visual || !cell.contains(visual)) return
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    // При включённом уменьшении движения —
+    // только короткое плавное исчезновение.
+    if (reducedMotion) {
+      await this.playAnimation(
+        visual,
+        [
+          { opacity: 1 },
+          { opacity: 0 }
+        ],
+        {
+          duration: 180,
+          easing: "ease-out"
+        }
+      )
+
+      visual.remove()
+      return
+    }
+
+    // Создаём визуальные слои огня и дыма.
+    const fire = document.createElement("div")
+    fire.className = "game-combat-effect--destruction-fire"
+    fire.setAttribute("aria-hidden", "true")
+
+    const smoke = document.createElement("div")
+    smoke.className = "game-combat-effect--destruction-smoke"
+    smoke.setAttribute("aria-hidden", "true")
+
+    cell.appendChild(fire)
+    cell.appendChild(smoke)
+
+    // 1. Короткий импульс от попадания.
+    const impulse = this.playAnimation(
+      visual,
+      [
+        {
+          transform: "translateX(0) scale(1)",
+          filter: "brightness(1)"
+        },
+        {
+          transform: "translateX(-3px) scale(1.015)",
+          filter: "brightness(1.8)"
+        },
+        {
+          transform: "translateX(2px) scale(0.99)",
+          filter: "brightness(1.35)"
+        },
+        {
+          transform: "translateX(0) scale(1)",
+          filter: "brightness(1)"
+        }
+      ],
+      {
+        duration: 220,
+        easing: "ease-out"
+      }
+    )
+
+    await impulse
+
+    // 2. Огонь появляется на корпусе.
+    // 3. Танковая иллюстрация темнеет и исчезает.
+    // 4. Дым поднимается и рассеивается.
+    await Promise.all([
+      this.playAnimation(
+        visual,
+        [
+          {
+            opacity: 1,
+            filter: "brightness(1) saturate(1)"
+          },
+          {
+            opacity: 1,
+            filter: "brightness(0.75) saturate(0.7)"
+          },
+          {
+            opacity: 0.75,
+            filter: "brightness(0.35) saturate(0.35)"
+          },
+          {
+            opacity: 0,
+            filter: "brightness(0.15) saturate(0)"
+          }
+        ],
+        {
+          duration: 780,
+          easing: "ease-in"
+        }
+      ),
+
+      this.playAnimation(
+        fire,
+        [
+          {
+            opacity: 0,
+            transform: "scale(0.35)"
+          },
+          {
+            opacity: 0.95,
+            transform: "scale(1.05)"
+          },
+          {
+            opacity: 0.85,
+            transform: "scale(1.15)"
+          },
+          {
+            opacity: 0,
+            transform: "scale(1.35)"
+          }
+        ],
+        {
+          duration: 680,
+          easing: "ease-out"
+        }
+      ),
+
+      this.playAnimation(
+        smoke,
+        [
+          {
+            opacity: 0,
+            transform: "translateY(12%) scale(0.65)"
+          },
+          {
+            opacity: 0.7,
+            transform: "translateY(0) scale(0.9)"
+          },
+          {
+            opacity: 0.55,
+            transform: "translateY(-12%) scale(1.15)"
+          },
+          {
+            opacity: 0,
+            transform: "translateY(-35%) scale(1.5)"
+          }
+        ],
+        {
+          duration: 1050,
+          easing: "ease-out"
+        }
+      )
+    ])
+
+    visual.remove()
+    fire.remove()
+    smoke.remove()
   }
 
   // --------------------------------------------------
@@ -458,6 +743,12 @@ export default class extends Controller {
 
     event.preventDefault()
     event.stopImmediatePropagation()
+  }
+
+  positionKey(position) {
+    if (!Array.isArray(position)) return null
+
+    return `${position[0]},${position[1]}`
   }
 
   // --------------------------------------------------
