@@ -120,6 +120,30 @@ export default class extends Controller {
       return
     }
 
+    // При уничтожении штаба временно скрываем результат игры.
+    // Покажем его после завершения анимации.
+    const headquartersDestroyed = events.some((item) => {
+      return (
+        item.type === "game_finished" &&
+        [
+          "headquarters_destroyed",
+          "empty_deck_damage"
+        ].includes(item.reason)
+      )
+    })
+
+    if (headquartersDestroyed) {
+      const result = incomingGame.querySelector(".game-result")
+
+      if (result) {
+        result.style.display = "none"
+      }
+
+      incomingGame
+        .querySelector(".game-content--muted")
+        ?.classList.remove("game-content--muted")
+    }
+
     const destroyedEvents = events.filter(
       (item) => item.type === "technique_destroyed"
     )
@@ -173,12 +197,35 @@ export default class extends Controller {
   }
 
   enqueueEvents(events) {
+    const headquartersAttack = events.find((event) => {
+      return (
+        event.type === "headquarters_attacked" &&
+        event.target?.type === "headquarters"
+      )
+    })
+
+    // При уничтожении штаба пустой колодой
+    // координаты находятся в damage_applied.
+    const emptyDeckDamage = events.find((event) => {
+      return (
+        event.type === "damage_applied" &&
+        event.source?.type === "empty_deck_draw" &&
+        event.target?.type === "headquarters"
+      )
+    })
+
     const combatEvents = events.filter((event) => {
       return [
         "shot_fired",
         "counterattack_fired",
         "technique_destroyed"
-      ].includes(event.type)
+      ].includes(event.type) || (
+        event.type === "game_finished" &&
+        [
+          "headquarters_destroyed",
+          "empty_deck_damage"
+        ].includes(event.reason)
+      )
     })
 
     if (combatEvents.length === 0) return
@@ -217,6 +264,26 @@ export default class extends Controller {
         }
       }
 
+      if (
+        event.type === "game_finished" &&
+        [
+          "headquarters_destroyed",
+          "empty_deck_damage"
+        ].includes(event.reason)
+      ) {
+        if (event.reason === "empty_deck_damage") {
+          // Координаты штаба берём из фактического
+          // события нанесения урона пустой колодой.
+          event.destroyedHeadquartersPosition =
+            emptyDeckDamage?.target?.position
+        } else {
+          // При боевом уничтожении штаба координаты
+          // берём из события атаки штаба.
+          event.destroyedHeadquartersPosition =
+            headquartersAttack?.target?.position
+        }
+      }
+
       this.queue.push(event)
     })
 
@@ -246,6 +313,14 @@ export default class extends Controller {
           await this.animateShot(event)
         } else if (event.type === "technique_destroyed") {
           await this.animateTechniqueDestroyed(event)
+        } else if (
+          event.type === "game_finished" &&
+          [
+            "headquarters_destroyed",
+            "empty_deck_damage"
+          ].includes(event.reason)
+        ) {
+          await this.animateHeadquartersDestroyed(event)
         }
       }
     } finally {
@@ -336,7 +411,7 @@ export default class extends Controller {
   }
 
   // --------------------------------------------------
-  // Уничтожение техники — огонь, дым и исчезновение
+  // Уничтожение техники
   // --------------------------------------------------
 
   async animateTechniqueDestroyed(event) {
@@ -349,6 +424,49 @@ export default class extends Controller {
 
     if (!cell || !visual || !cell.contains(visual)) return
 
+    await this.animateDestroyedVisual(cell, visual)
+  }
+
+  // --------------------------------------------------
+  // Уничтожение штаба
+  // --------------------------------------------------
+
+  async animateHeadquartersDestroyed(event) {
+    const position = event.destroyedHeadquartersPosition
+
+    if (!position) {
+      this.revealGameResult()
+      return
+    }
+
+    const cell = this.findCell(position)
+
+    const visual = cell?.querySelector(
+      ".cell-object--headquarters"
+    )
+
+    if (!cell || !visual) {
+      this.revealGameResult()
+      return
+    }
+
+    visual.classList.add(
+      "game-combat-effect--destroyed-object"
+    )
+
+    visual.setAttribute("aria-hidden", "true")
+
+    await this.animateDestroyedVisual(cell, visual)
+
+    // Показываем результат только после уничтожения штаба.
+    this.revealGameResult()
+  }
+
+  // --------------------------------------------------
+  // Общая анимация уничтожения объекта
+  // --------------------------------------------------
+
+  async animateDestroyedVisual(cell, visual) {
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches
@@ -374,18 +492,24 @@ export default class extends Controller {
 
     // Создаём визуальные слои огня и дыма.
     const fire = document.createElement("div")
-    fire.className = "game-combat-effect--destruction-fire"
+
+    fire.className =
+      "game-combat-effect--destruction-fire"
+
     fire.setAttribute("aria-hidden", "true")
 
     const smoke = document.createElement("div")
-    smoke.className = "game-combat-effect--destruction-smoke"
+
+    smoke.className =
+      "game-combat-effect--destruction-smoke"
+
     smoke.setAttribute("aria-hidden", "true")
 
     cell.appendChild(fire)
     cell.appendChild(smoke)
 
     // 1. Короткий импульс от попадания.
-    const impulse = this.playAnimation(
+    await this.playAnimation(
       visual,
       [
         {
@@ -411,10 +535,8 @@ export default class extends Controller {
       }
     )
 
-    await impulse
-
-    // 2. Огонь появляется на корпусе.
-    // 3. Танковая иллюстрация темнеет и исчезает.
+    // 2. Огонь появляется на объекте.
+    // 3. Изображение темнеет и исчезает.
     // 4. Дым поднимается и рассеивается.
     await Promise.all([
       this.playAnimation(
@@ -499,6 +621,18 @@ export default class extends Controller {
     visual.remove()
     fire.remove()
     smoke.remove()
+  }
+
+  // --------------------------------------------------
+  // Отображение результата завершённой игры
+  // --------------------------------------------------
+
+  revealGameResult() {
+    const result = this.element.querySelector(".game-result")
+
+    if (result) {
+      result.style.removeProperty("display")
+    }
   }
 
   // --------------------------------------------------
