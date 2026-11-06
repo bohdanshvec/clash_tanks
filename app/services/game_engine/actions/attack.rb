@@ -159,7 +159,7 @@ module GameEngine
           state: state,
           events: [
             attack_event(
-              type: attack_event_type(attacker, target, scenario),
+              type: attack_event_type(attacker, target),
               attacker: attacker,
               target: target,
               attacker_position: attacker_position,
@@ -170,16 +170,10 @@ module GameEngine
         )
       end
 
-      def attack_event_type(attacker, target, scenario)
+      def attack_event_type(attacker, target)
         if attacker["type"] == "headquarters" ||
             target["type"] == "headquarters"
           return "headquarters_attacked"
-        end
-
-        # Сохраняем существующий тип события, когда
-        # защищающаяся ПТ-САУ уничтожила атакующего первой.
-        if scenario == :ptsau_first && attacker["hp"] <= 0
-          return "technique_destroyed"
         end
 
         "technique_attacked"

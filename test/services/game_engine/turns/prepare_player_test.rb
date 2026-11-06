@@ -147,7 +147,7 @@ class GameEngine::Turns::PreparePlayerTest < ActiveSupport::TestCase
           damage: 1,
           hp_before: 10,
           hp_after: 9,
-          source: "headquarters_defense"
+          source: "empty_deck_draw"
         },
         {
           type: "damage_applied",
