@@ -14,6 +14,7 @@ export default class extends Controller {
     this.lastGameElement = null
     this.animations = new Set()
     this.destroyedVisuals = new Map()
+    this.destroyedPlatoonVisuals = new Map()
 
     this.boundBeforeStreamRender =
       this.beforeStreamRender.bind(this)
@@ -81,6 +82,7 @@ export default class extends Controller {
     this.setLocked(false)
 
     this.destroyedVisuals?.clear()
+    this.destroyedPlatoonVisuals?.clear()
   }
 
   // --------------------------------------------------
@@ -165,6 +167,31 @@ export default class extends Controller {
 
       this.destroyedVisuals.set(key, queue)
     })
+
+    // Сохраняем изображения уничтожаемых взводов
+    // до замены игрового DOM через Turbo.
+    const destroyedPlatoons = events.filter(
+      (item) => item.type === "platoon_destroyed"
+    )
+
+    destroyedPlatoons.forEach((destroyedEvent) => {
+      const playerId = destroyedEvent.platoon?.player_id
+      const slotIndex = destroyedEvent.platoon?.slot
+
+      if (playerId == null || !Number.isInteger(slotIndex)) return
+
+      const slot = this.findPlatoonSlot(playerId, slotIndex)
+      const visual = slot?.querySelector(".platoon-field")
+
+      if (!slot || !visual) return
+
+      const key = this.platoonKey(playerId, slotIndex)
+      const queue = this.destroyedPlatoonVisuals.get(key) || []
+
+      queue.push(visual.cloneNode(true))
+
+      this.destroyedPlatoonVisuals.set(key, queue)
+    })
   }
 
   // --------------------------------------------------
@@ -218,7 +245,8 @@ export default class extends Controller {
       return [
         "shot_fired",
         "counterattack_fired",
-        "technique_destroyed"
+        "technique_destroyed",
+        "platoon_destroyed"
       ].includes(event.type) || (
         event.type === "game_finished" &&
         [
@@ -261,6 +289,41 @@ export default class extends Controller {
           visual.setAttribute("aria-hidden", "true")
 
           cell.appendChild(visual)
+        }
+      }
+
+      if (event.type === "platoon_destroyed") {
+        const playerId = event.platoon?.player_id
+        const slotIndex = event.platoon?.slot
+
+        if (playerId == null || !Number.isInteger(slotIndex)) {
+          return
+        }
+
+        const key = this.platoonKey(playerId, slotIndex)
+        const visuals = this.destroyedPlatoonVisuals.get(key) || []
+
+        event.destroyedVisual = visuals.shift() || null
+
+        if (visuals.length > 0) {
+          this.destroyedPlatoonVisuals.set(key, visuals)
+        } else {
+          this.destroyedPlatoonVisuals.delete(key)
+        }
+
+        // Возвращаем изображение уничтоженного взвода
+        // в освободившийся слот до запуска анимации.
+        const slot = this.findPlatoonSlot(playerId, slotIndex)
+        const visual = event.destroyedVisual
+
+        if (slot && visual) {
+          visual.classList.add(
+            "game-combat-effect--destroyed-object"
+          )
+
+          visual.setAttribute("aria-hidden", "true")
+
+          slot.appendChild(visual)
         }
       }
 
@@ -313,6 +376,8 @@ export default class extends Controller {
           await this.animateShot(event)
         } else if (event.type === "technique_destroyed") {
           await this.animateTechniqueDestroyed(event)
+        } else if (event.type === "platoon_destroyed") {
+          await this.animatePlatoonDestroyed(event)
         } else if (
           event.type === "game_finished" &&
           [
@@ -428,6 +493,30 @@ export default class extends Controller {
   }
 
   // --------------------------------------------------
+  // Уничтожение взвода
+  // --------------------------------------------------
+
+  async animatePlatoonDestroyed(event) {
+    const playerId = event.platoon?.player_id
+    const slotIndex = event.platoon?.slot
+    const visual = event.destroyedVisual
+
+    if (playerId == null || !Number.isInteger(slotIndex) || !visual) {
+      return
+    }
+
+    const slot = this.findPlatoonSlot(playerId, slotIndex)
+
+    if (!slot || !slot.contains(visual)) return
+
+    await this.animateDestroyedVisual(
+      slot,
+      visual,
+      true
+    )
+  }
+
+  // --------------------------------------------------
   // Уничтожение штаба
   // --------------------------------------------------
 
@@ -466,7 +555,7 @@ export default class extends Controller {
   // Общая анимация уничтожения объекта
   // --------------------------------------------------
 
-  async animateDestroyedVisual(cell, visual) {
+  async animateDestroyedVisual(cell, visual, compact = false) {
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches
@@ -496,12 +585,24 @@ export default class extends Controller {
     fire.className =
       "game-combat-effect--destruction-fire"
 
+    if (compact) {
+      fire.classList.add(
+        "game-combat-effect--platoon-fire"
+      )
+    }
+
     fire.setAttribute("aria-hidden", "true")
 
     const smoke = document.createElement("div")
 
     smoke.className =
       "game-combat-effect--destruction-smoke"
+
+    if (compact) {
+      smoke.classList.add(
+        "game-combat-effect--platoon-smoke"
+      )
+    }
 
     smoke.setAttribute("aria-hidden", "true")
 
@@ -511,24 +612,43 @@ export default class extends Controller {
     // 1. Короткий импульс от попадания.
     await this.playAnimation(
       visual,
-      [
-        {
-          transform: "translateX(0) scale(1)",
-          filter: "brightness(1)"
-        },
-        {
-          transform: "translateX(-3px) scale(1.015)",
-          filter: "brightness(1.8)"
-        },
-        {
-          transform: "translateX(2px) scale(0.99)",
-          filter: "brightness(1.35)"
-        },
-        {
-          transform: "translateX(0) scale(1)",
-          filter: "brightness(1)"
-        }
-      ],
+      compact
+        ? [
+            {
+              transform: "translateX(0) scale(1)",
+              filter: "brightness(1)"
+            },
+            {
+              transform: "translateX(-1px) scale(1.01)",
+              filter: "brightness(1.8)"
+            },
+            {
+              transform: "translateX(1px) scale(0.995)",
+              filter: "brightness(1.35)"
+            },
+            {
+              transform: "translateX(0) scale(1)",
+              filter: "brightness(1)"
+            }
+          ]
+        : [
+            {
+              transform: "translateX(0) scale(1)",
+              filter: "brightness(1)"
+            },
+            {
+              transform: "translateX(-3px) scale(1.015)",
+              filter: "brightness(1.8)"
+            },
+            {
+              transform: "translateX(2px) scale(0.99)",
+              filter: "brightness(1.35)"
+            },
+            {
+              transform: "translateX(0) scale(1)",
+              filter: "brightness(1)"
+            }
+          ],
       {
         duration: 220,
         easing: "ease-out"
@@ -877,6 +997,25 @@ export default class extends Controller {
 
     event.preventDefault()
     event.stopImmediatePropagation()
+  }
+
+  // --------------------------------------------------
+  // Работа со слотами взводов
+  // --------------------------------------------------
+
+  platoonKey(playerId, slotIndex) {
+    return `${playerId}:${slotIndex}`
+  }
+
+  findPlatoonSlot(playerId, slotIndex) {
+    return Array.from(
+      this.element.querySelectorAll(".platoon-slot")
+    ).find((slot) => {
+      return (
+        slot.dataset.playerId === String(playerId) &&
+        slot.dataset.platoonSlot === String(slotIndex)
+      )
+    }) || null
   }
 
   positionKey(position) {
