@@ -1,3 +1,4 @@
+
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
@@ -86,6 +87,85 @@ export default class extends Controller {
   }
 
   // --------------------------------------------------
+  // Сохранение старых значений HP до Turbo-обновления
+  // --------------------------------------------------
+
+  preserveDamageHp(events, incomingGame) {
+    const preserved = new Set()
+
+    events.forEach((event) => {
+      let key = null
+      let currentStat = null
+
+      if (
+        event.type === "damage_applied" &&
+        event.damage > 0
+      ) {
+        const target = event.target
+        const position = target?.position
+
+        if (!position) return
+
+        let selector = null
+
+        if (target.type === "headquarters") {
+          selector = ".headquarters-field__stat--hp"
+        } else if (target.type === "technique") {
+          selector = ".technique-field__stat--hp"
+        }
+
+        if (!selector) return
+
+        key = `field:${position.join(",")}:${selector}`
+
+        const cell = incomingGame.querySelector(
+          `.battlefield__cell[data-position="${position[0]},${position[1]}"]`
+        )
+
+        currentStat = cell?.querySelector(selector)
+      }
+
+      if (
+        event.type === "platoon_damaged" &&
+        event.damage > 0
+      ) {
+        const playerId = event.platoon?.player_id
+        const slotIndex = event.platoon?.slot
+
+        if (playerId == null || !Number.isInteger(slotIndex)) {
+          return
+        }
+
+        key = `platoon:${playerId}:${slotIndex}`
+
+        const slot = Array.from(
+          incomingGame.querySelectorAll(".platoon-slot")
+        ).find((element) => {
+          return (
+            element.dataset.playerId === String(playerId) &&
+            element.dataset.platoonSlot === String(slotIndex)
+          )
+        })
+
+        currentStat = slot?.querySelector(
+          ".platoon-field__stat--hp"
+        )
+      }
+
+      if (!key || !currentStat || preserved.has(key)) return
+
+      if (event.hp_before == null) return
+
+      // Оставляем старое значение до завершения анимации.
+      // Если объект получает несколько повреждений,
+      // сохраняем HP перед первым повреждением.
+      currentStat.textContent = String(event.hp_before)
+
+      preserved.add(key)
+    })
+  }
+
+  // --------------------------------------------------
   // Сохранение уничтожаемой техники до Turbo-обновления
   // --------------------------------------------------
 
@@ -121,6 +201,9 @@ export default class extends Controller {
 
       return
     }
+
+    // Сохраняем прежние значения HP до обновления DOM.
+    this.preserveDamageHp(events, incomingGame)
 
     // При уничтожении штаба временно скрываем результат игры.
     // Покажем его после завершения анимации.
@@ -241,8 +324,9 @@ export default class extends Controller {
       )
     })
 
-    // Выбираем одно фактическое событие получения урона
-    // от пустой колоды: сначала взвод, затем штаб.
+    // Выбираем одно событие для существующей вспышки
+    // около счётчика колоды.
+    // Остальные события урона также попадут в очередь.
     const emptyDeckDamageEvent = events.find((event) => {
       return (
         event.type === "platoon_damaged" &&
@@ -259,19 +343,29 @@ export default class extends Controller {
     })
 
     const combatEvents = events.filter((event) => {
-      return [
-        "shot_fired",
-        "counterattack_fired",
-        "technique_destroyed",
-        "platoon_destroyed"
-      ].includes(event.type) ||
-      event === emptyDeckDamageEvent ||
-      (
-        event.type === "game_finished" &&
+      const isDamageEvent = [
+        "damage_applied",
+        "platoon_damaged"
+      ].includes(event.type)
+
+      return (
         [
-          "headquarters_destroyed",
-          "empty_deck_damage"
-        ].includes(event.reason)
+          "shot_fired",
+          "counterattack_fired",
+          "technique_destroyed",
+          "platoon_destroyed"
+        ].includes(event.type) ||
+        (
+          isDamageEvent &&
+          event.damage > 0
+        ) ||
+        (
+          event.type === "game_finished" &&
+          [
+            "headquarters_destroyed",
+            "empty_deck_damage"
+          ].includes(event.reason)
+        )
       )
     })
 
@@ -392,17 +486,29 @@ export default class extends Controller {
       while (this.queue.length > 0) {
         const event = this.queue.shift()
 
+        // Существующая вспышка при опустевшей колоде.
+        if (event.emptyDeckBurst) {
+          await this.animateEmptyDeckDamage(event)
+        }
+
         if (
           event.type === "shot_fired" ||
           event.type === "counterattack_fired"
         ) {
           await this.animateShot(event)
+
+        } else if (
+          event.type === "damage_applied" ||
+          event.type === "platoon_damaged"
+        ) {
+          await this.animateDamage(event)
+
         } else if (event.type === "technique_destroyed") {
           await this.animateTechniqueDestroyed(event)
+
         } else if (event.type === "platoon_destroyed") {
           await this.animatePlatoonDestroyed(event)
-        } else if (event.emptyDeckBurst) {
-          await this.animateEmptyDeckDamage(event)
+
         } else if (
           event.type === "game_finished" &&
           [
@@ -501,6 +607,114 @@ export default class extends Controller {
   }
 
   // --------------------------------------------------
+  // Получение урона и изменение HP
+  // --------------------------------------------------
+
+  async animateDamage(event) {
+    if (event.damage <= 0) return
+
+    if (
+      event.hp_before == null ||
+      event.hp_after == null
+    ) {
+      return
+    }
+
+    let hpElement = null
+
+    if (event.type === "platoon_damaged") {
+      const playerId = event.platoon?.player_id
+      const slotIndex = event.platoon?.slot
+
+      if (playerId == null || !Number.isInteger(slotIndex)) {
+        return
+      }
+
+      const slot = this.findPlatoonSlot(playerId, slotIndex)
+
+      hpElement = slot?.querySelector(
+        ".platoon-field__stat--hp"
+      )
+
+    } else if (event.type === "damage_applied") {
+      const target = event.target
+      const position = target?.position
+
+      if (!position) return
+
+      const cell = this.findCell(position)
+
+      if (target.type === "headquarters") {
+        hpElement = cell?.querySelector(
+          ".headquarters-field__stat--hp"
+        )
+      } else if (target.type === "technique") {
+        hpElement = cell?.querySelector(
+          ".technique-field__stat--hp"
+        )
+      }
+    }
+
+    if (!hpElement) return
+
+    // На время анимации сохраняем прежнее значение.
+    hpElement.textContent = String(event.hp_before)
+
+    // Сначала разлом щита.
+    await this.animateShieldBreak(hpElement)
+
+    // Только после завершения эффекта меняем HP.
+    hpElement.textContent = String(event.hp_after)
+  }
+
+  // --------------------------------------------------
+  // Разлом щита при получении урона
+  // --------------------------------------------------
+
+  async animateShieldBreak(hpElement) {
+    const burst = document.createElement("span")
+
+    burst.className =
+      "game-combat-effect--shield-break"
+
+    burst.setAttribute("aria-hidden", "true")
+
+    hpElement.appendChild(burst)
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    await this.playAnimation(
+      burst,
+      [
+        {
+          opacity: 0,
+          transform: "translate(-50%, -50%) scale(0.15) rotate(-15deg)"
+        },
+        {
+          opacity: 1,
+          transform: "translate(-50%, -50%) scale(1.2) rotate(10deg)"
+        },
+        {
+          opacity: 0.8,
+          transform: "translate(-50%, -50%) scale(0.9) rotate(25deg)"
+        },
+        {
+          opacity: 0,
+          transform: "translate(-50%, -50%) scale(1.5) rotate(40deg)"
+        }
+      ],
+      {
+        duration: reducedMotion ? 160 : 430,
+        easing: "ease-out"
+      }
+    )
+
+    burst.remove()
+  }
+
+  // --------------------------------------------------
   // Уничтожение техники
   // --------------------------------------------------
 
@@ -542,7 +756,7 @@ export default class extends Controller {
   }
 
   // --------------------------------------------------
-  // Урон штабу от пустой колоды
+  // Урон от пустой колоды
   // --------------------------------------------------
 
   async animateEmptyDeckDamage(event) {
