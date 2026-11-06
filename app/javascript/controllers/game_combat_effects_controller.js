@@ -73,11 +73,16 @@ export default class extends Controller {
       )
     })
 
+    // Отменяем все активные анимации.
     this.animations?.forEach((animation) => {
       animation.cancel()
     })
 
     this.animations?.clear()
+
+    // Удаляем стрелку направления перемещения.
+    this.moveDirectionArrow?.remove()
+    this.moveDirectionArrow = null
 
     this.queue = []
     this.setLocked(false)
@@ -350,6 +355,7 @@ export default class extends Controller {
 
       return (
         [
+          "technique_moved",
           "shot_fired",
           "counterattack_fired",
           "technique_destroyed",
@@ -473,6 +479,210 @@ export default class extends Controller {
   }
 
   // --------------------------------------------------
+  // Определение выбранного направления перемещения
+  // --------------------------------------------------
+
+  handleMoveDirectionClick(event) {
+    const target = event.target
+
+    if (!(target instanceof Element)) return
+
+    const targetCell = target.closest(
+      ".battlefield__cell.game-action--move"
+    )
+
+    if (!targetCell || !this.element.contains(targetCell)) {
+      return
+    }
+
+    // Источником может быть только собственная техника.
+    const sourceCell = this.element.querySelector(
+      ".battlefield__cell.game-object--selected[data-object-type='technique']"
+    )
+
+    if (!sourceCell) return
+
+    this.showMoveDirectionArrow(sourceCell, targetCell)
+  }
+
+  // --------------------------------------------------
+  // Анимация направления перемещения техники
+  // --------------------------------------------------
+
+  async showMoveDirectionArrow(sourceCell, targetCell) {
+    const battlefield = this.element.querySelector(".battlefield")
+
+    if (!battlefield) return
+
+    const battlefieldRect = battlefield.getBoundingClientRect()
+    const sourceRect = sourceCell.getBoundingClientRect()
+    const targetRect = targetCell.getBoundingClientRect()
+
+    if (
+      !battlefieldRect.width ||
+      !battlefieldRect.height
+    ) {
+      return
+    }
+
+    // Убираем предыдущую стрелку.
+    this.moveDirectionArrow?.remove()
+
+    const sourceX =
+      sourceRect.left + sourceRect.width / 2
+
+    const sourceY =
+      sourceRect.top + sourceRect.height / 2
+
+    const targetX =
+      targetRect.left + targetRect.width / 2
+
+    const targetY =
+      targetRect.top + targetRect.height / 2
+
+    const deltaX = targetX - sourceX
+    const deltaY = targetY - sourceY
+
+    const distance = Math.hypot(deltaX, deltaY)
+
+    if (distance === 0) return
+
+    const directionX = deltaX / distance
+    const directionY = deltaY / distance
+
+    // Стрелка не закрывает полностью изображения объектов.
+    const startOffset =
+      Math.min(sourceRect.width, sourceRect.height) * 0.12
+
+    const endOffset =
+      Math.min(targetRect.width, targetRect.height) * 0.30
+
+    const x1 = sourceX + directionX * startOffset
+    const y1 = sourceY + directionY * startOffset
+
+    const x2 = targetX - directionX * endOffset
+    const y2 = targetY - directionY * endOffset
+
+    const svgNamespace = "http://www.w3.org/2000/svg"
+
+    const arrow = document.createElementNS(
+      svgNamespace,
+      "svg"
+    )
+
+    arrow.classList.add("game-move-direction-arrow")
+
+    arrow.setAttribute(
+      "viewBox",
+      `0 0 ${window.innerWidth} ${window.innerHeight}`
+    )
+
+    arrow.setAttribute("preserveAspectRatio", "none")
+    arrow.setAttribute("aria-hidden", "true")
+
+    // Наконечник стрелки.
+    const defs = document.createElementNS(
+      svgNamespace,
+      "defs"
+    )
+
+    const marker = document.createElementNS(
+      svgNamespace,
+      "marker"
+    )
+
+    marker.setAttribute("id", "game-move-direction-arrow-head")
+    marker.setAttribute("viewBox", "0 0 12 12")
+    marker.setAttribute("refX", "10")
+    marker.setAttribute("refY", "6")
+    marker.setAttribute("markerWidth", "12")
+    marker.setAttribute("markerHeight", "12")
+    marker.setAttribute("orient", "auto")
+
+    const arrowHead = document.createElementNS(
+      svgNamespace,
+      "path"
+    )
+
+    arrowHead.setAttribute(
+      "d",
+      "M 0 0 L 12 6 L 0 12 L 3 6 Z"
+    )
+
+    arrowHead.setAttribute("fill", "#a5ff79")
+
+    marker.appendChild(arrowHead)
+    defs.appendChild(marker)
+    arrow.appendChild(defs)
+
+    // Внешнее зелёное свечение.
+    const glow = document.createElementNS(
+      svgNamespace,
+      "line"
+    )
+
+    glow.classList.add(
+      "game-move-direction-arrow__glow"
+    )
+
+    // Основная стрелка.
+    const line = document.createElementNS(
+      svgNamespace,
+      "line"
+    )
+
+    line.classList.add(
+      "game-move-direction-arrow__line"
+    )
+
+    ;[glow, line].forEach((element) => {
+      element.setAttribute("x1", x1)
+      element.setAttribute("y1", y1)
+      element.setAttribute("x2", x2)
+      element.setAttribute("y2", y2)
+    })
+
+    line.setAttribute(
+      "marker-end",
+      "url(#game-move-direction-arrow-head)"
+    )
+
+    arrow.appendChild(glow)
+    arrow.appendChild(line)
+
+    document.body.appendChild(arrow)
+
+    this.moveDirectionArrow = arrow
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    await this.playAnimation(
+      arrow,
+      [
+        { opacity: 0 },
+        { opacity: 1, offset: 0.12 },
+        { opacity: 0.15, offset: 0.25 },
+        { opacity: 1, offset: 0.38 },
+        { opacity: 0.15, offset: 0.51 },
+        { opacity: 1, offset: 0.66 },
+        { opacity: 0 }
+      ],
+      {
+        duration: reducedMotion ? 250 : 1150,
+        easing: "ease-in-out"
+      }
+    )
+
+    arrow.remove()
+
+    if (this.moveDirectionArrow === arrow) {
+      this.moveDirectionArrow = null
+    }
+  }
+
+  // --------------------------------------------------
   // Очередь боевых эффектов
   // --------------------------------------------------
 
@@ -491,7 +701,10 @@ export default class extends Controller {
           await this.animateEmptyDeckDamage(event)
         }
 
-        if (
+        if (event.type === "technique_moved") {
+          await this.animateMoveDirection(event)
+
+        } else if (
           event.type === "shot_fired" ||
           event.type === "counterattack_fired"
         ) {
@@ -527,6 +740,27 @@ export default class extends Controller {
         this.playQueue()
       }
     }
+  }
+
+  // --------------------------------------------------
+  // Направление перемещения техники
+  // --------------------------------------------------
+
+  async animateMoveDirection(event) {
+    const from = event.from
+    const to = event.to
+
+    if (!from || !to) return
+
+    const sourceCell = this.findCell(from)
+    const targetCell = this.findCell(to)
+
+    if (!sourceCell || !targetCell) return
+
+    await this.showMoveDirectionArrow(
+      sourceCell,
+      targetCell
+    )
   }
 
   // --------------------------------------------------
