@@ -307,3 +307,51 @@
 .game-combat-effect--platoon-smoke {
   filter: blur(4px);
 }
+
+/* ---------------------------------------------------------
+   Вспышка урона штабу от пустой колоды
+   --------------------------------------------------------- */
+
+/* Счётчик колоды служит точкой привязки эффекта */
+
+.game-board__info-item strong[data-deck-count-player-id] {
+  position: relative;
+  display: inline-block;
+}
+
+/* Небольшой взрыв поверх нуля */
+
+.game-combat-effect--empty-deck-burst {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 2.3em;
+  height: 2.3em;
+
+  z-index: 2;
+
+  pointer-events: none;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      #fffde2 0%,
+      #fff0a0 14%,
+      #ffb83f 30%,
+      #f46a27 48%,
+      rgba(180, 55, 25, 0.65) 62%,
+      transparent 76%
+    );
+
+  box-shadow:
+    0 0 7px rgba(255, 220, 115, 0.95),
+    0 0 15px rgba(255, 115, 35, 0.75);
+
+  filter: blur(0.5px);
+
+  will-change: transform, opacity;
+}

@@ -241,13 +241,32 @@ export default class extends Controller {
       )
     })
 
+    // Выбираем одно фактическое событие получения урона
+    // от пустой колоды: сначала взвод, затем штаб.
+    const emptyDeckDamageEvent = events.find((event) => {
+      return (
+        event.type === "platoon_damaged" &&
+        event.source === "empty_deck_draw" &&
+        event.damage > 0
+      )
+    }) || events.find((event) => {
+      return (
+        event.type === "damage_applied" &&
+        event.source?.type === "empty_deck_draw" &&
+        event.target?.type === "headquarters" &&
+        event.damage > 0
+      )
+    })
+
     const combatEvents = events.filter((event) => {
       return [
         "shot_fired",
         "counterattack_fired",
         "technique_destroyed",
         "platoon_destroyed"
-      ].includes(event.type) || (
+      ].includes(event.type) ||
+      event === emptyDeckDamageEvent ||
+      (
         event.type === "game_finished" &&
         [
           "headquarters_destroyed",
@@ -259,6 +278,10 @@ export default class extends Controller {
     if (combatEvents.length === 0) return
 
     combatEvents.forEach((event) => {
+      if (event === emptyDeckDamageEvent) {
+        event.emptyDeckBurst = true
+      }
+
       if (event.type === "technique_destroyed") {
         const key = this.positionKey(
           event.target?.position
@@ -378,6 +401,8 @@ export default class extends Controller {
           await this.animateTechniqueDestroyed(event)
         } else if (event.type === "platoon_destroyed") {
           await this.animatePlatoonDestroyed(event)
+        } else if (event.emptyDeckBurst) {
+          await this.animateEmptyDeckDamage(event)
         } else if (
           event.type === "game_finished" &&
           [
@@ -514,6 +539,73 @@ export default class extends Controller {
       visual,
       true
     )
+  }
+
+  // --------------------------------------------------
+  // Урон штабу от пустой колоды
+  // --------------------------------------------------
+
+  async animateEmptyDeckDamage(event) {
+    if (event.damage <= 0) return
+
+    const playerId =
+      event.platoon?.player_id ??
+      event.target?.player_id
+
+    if (playerId == null) return
+
+    const deckCount = Array.from(
+      this.element.querySelectorAll(
+        "[data-deck-count-player-id]"
+      )
+    ).find((element) => {
+      return (
+        element.dataset.deckCountPlayerId === String(playerId)
+      )
+    })
+
+    if (!deckCount) return
+
+    const burst = document.createElement("span")
+
+    burst.className =
+      "game-combat-effect--empty-deck-burst"
+
+    burst.setAttribute("aria-hidden", "true")
+
+    deckCount.appendChild(burst)
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    await this.playAnimation(
+      burst,
+      [
+        {
+          opacity: 0,
+          transform: "translate(-50%, -50%) scale(0.15) rotate(-15deg)"
+        },
+        {
+          opacity: 1,
+          transform: "translate(-50%, -50%) scale(1.2) rotate(10deg)"
+        },
+        {
+          opacity: 0.8,
+          transform: "translate(-50%, -50%) scale(0.9) rotate(25deg)"
+        },
+        {
+          opacity: 0,
+          transform: "translate(-50%, -50%) scale(1.5) rotate(40deg)"
+        }
+      ],
+      {
+        duration: reducedMotion ? 160 : 430,
+        easing: "ease-out"
+      }
+    )
+
+    burst.remove()
   }
 
   // --------------------------------------------------

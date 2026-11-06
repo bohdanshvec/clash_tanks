@@ -5,8 +5,18 @@ module GameEngine
         new(state, events: events).firepower_for_shot(headquarters)
       end
 
-      def self.apply_damage(state:, headquarters:, damage:, events: nil)
-        new(state, events: events).apply_damage(headquarters, damage)
+      def self.apply_damage(
+        state:,
+        headquarters:,
+        damage:,
+        events: nil,
+        source: "headquarters_defense"
+      )
+        new(state, events: events).apply_damage(
+          headquarters,
+          damage,
+          source: source
+        )
       end
 
       def initialize(state, events: nil)
@@ -32,7 +42,11 @@ module GameEngine
       # Оставшийся урон получает штаб.
       #
       # Возвращает сведения о распределении урона.
-      def apply_damage(headquarters, damage)
+      def apply_damage(
+        headquarters,
+        damage,
+        source: "headquarters_defense"
+      )
         hp_before = headquarters["hp"]
 
         if damage <= 0
@@ -72,7 +86,7 @@ module GameEngine
             absorbed_damage,
             platoon_hp_before,
             platoon["hp"],
-            "headquarters_defense"
+            source
           )
 
           next unless platoon["hp"] <= 0

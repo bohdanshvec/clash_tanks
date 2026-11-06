@@ -78,7 +78,8 @@ module GameEngine
           state: state,
           headquarters: headquarters,
           damage: damage,
-          events: events
+          events: events,
+          source: "empty_deck_draw"
         )
 
         # Событие фактического урона штабу.

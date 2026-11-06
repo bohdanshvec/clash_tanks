@@ -168,7 +168,9 @@
 
           <p class="game-board__info-item">
             <span class="game-board__info-label">Колода</span>
-            <strong><%= current_player["deck_count"] %></strong>
+            <strong data-deck-count-player-id="<%= current_player_id %>">
+              <%= current_player["deck_count"] %>
+            </strong>
           </p>
 
           <p class="game-board__info-item">
@@ -774,7 +776,9 @@
 
           <p class="game-board__info-item">
             <span class="game-board__info-label">Колода</span>
-            <strong><%= opponent_player["deck_count"] %></strong>
+            <strong data-deck-count-player-id="<%= opponent_player_id %>">
+              <%= opponent_player["deck_count"] %>
+            </strong>
           </p>
 
           <p class="game-board__info-item">
