@@ -21,6 +21,98 @@
 }
 
 /* ---------------------------------------------------------
+   Боевые эффекты внутри клеток игрового поля
+   --------------------------------------------------------- */
+
+.game-combat-effect {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  z-index: 100;
+
+  display: block;
+
+  pointer-events: none;
+}
+
+/* Вспышка выстрела */
+
+.game-combat-effect--muzzle {
+  width: 28%;
+  aspect-ratio: 1 / 1;
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    #fffbd5 0%,
+    #ffd36b 24%,
+    rgba(255, 125, 35, 0.7) 48%,
+    transparent 72%
+  );
+
+  filter: blur(1px);
+
+  box-shadow:
+    0 0 8px rgba(255, 190, 75, 0.9),
+    0 0 16px rgba(255, 105, 25, 0.6);
+}
+
+/* Летящий снаряд */
+
+.game-combat-effect--projectile {
+  width: 20px;
+  height: 4px;
+
+  border-radius: 50%;
+
+  background: linear-gradient(
+    90deg,
+    rgba(255, 120, 30, 0),
+    #ff9d35 35%,
+    #fff4bd 100%
+  );
+
+  box-shadow:
+    0 0 4px #ff9d35,
+    0 0 8px rgba(255, 130, 35, 0.8);
+}
+
+/* Вспышка попадания */
+
+.game-combat-effect--impact {
+  width: 38%;
+  aspect-ratio: 1 / 1;
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    #fffbdc 0%,
+    #ffd16b 18%,
+    #f47b32 38%,
+    rgba(180, 55, 25, 0.65) 58%,
+    transparent 76%
+  );
+
+  filter: blur(1px);
+
+  box-shadow:
+    0 0 8px rgba(255, 190, 75, 0.9),
+    0 0 18px rgba(230, 85, 30, 0.65);
+}
+
+/* Уменьшенное движение */
+
+@media (prefers-reduced-motion: reduce) {
+  .game-combat-effect {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------
    Stage 15.13.2 — выбранная карта / игровой объект
    --------------------------------------------------------- */
 

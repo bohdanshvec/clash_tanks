@@ -5,7 +5,10 @@
 >
   <%= turbo_stream_from [@game, @current_player_id] %>
 
-  <div id="game-content">
+  <div
+    id="game-content"
+    data-controller="game-combat-effects"
+  >
     <%= render "game",
                game: @game,
                visible_state: @visible_state,
