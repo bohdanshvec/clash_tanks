@@ -760,7 +760,9 @@ export default class extends Controller {
   // --------------------------------------------------
 
   async animateEmptyDeckDamage(event) {
-    if (event.damage <= 0) return
+    const damage = Number(event.damage)
+
+    if (!Number.isFinite(damage) || damage <= 0) return
 
     const playerId =
       event.platoon?.player_id ??
@@ -780,6 +782,11 @@ export default class extends Controller {
 
     if (!deckCount) return
 
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    // 1. Существующая вспышка на счётчике пустой колоды.
     const burst = document.createElement("span")
 
     burst.className =
@@ -788,10 +795,6 @@ export default class extends Controller {
     burst.setAttribute("aria-hidden", "true")
 
     deckCount.appendChild(burst)
-
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches
 
     await this.playAnimation(
       burst,
@@ -820,6 +823,46 @@ export default class extends Controller {
     )
 
     burst.remove()
+
+    // 2. После вспышки показываем величину нанесённого урона.
+    const damageNumber = document.createElement("span")
+
+    damageNumber.className =
+      "game-combat-effect--empty-deck-damage-number"
+
+    damageNumber.textContent = String(damage)
+
+    damageNumber.setAttribute("aria-hidden", "true")
+
+    deckCount.appendChild(damageNumber)
+
+    await this.playAnimation(
+      damageNumber,
+      [
+        {
+          opacity: 0,
+          transform: "translate(-50%, -50%) scale(0.65)"
+        },
+        {
+          opacity: 1,
+          transform: "translate(-50%, -50%) scale(1.2)"
+        },
+        {
+          opacity: 1,
+          transform: "translate(-50%, -60%) scale(1)"
+        },
+        {
+          opacity: 0,
+          transform: "translate(-50%, -90%) scale(1.15)"
+        }
+      ],
+      {
+        duration: reducedMotion ? 450 : 850,
+        easing: "ease-out"
+      }
+    )
+
+    damageNumber.remove()
   }
 
   // --------------------------------------------------
