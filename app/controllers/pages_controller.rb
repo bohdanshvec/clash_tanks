@@ -118,6 +118,12 @@ class PagesController < ApplicationController
         )
         .where(code: definition[:card_codes])
         .sort_by { |card| definition[:card_codes].index(card.code) }
+
+      {
+        name: definition[:name],
+        headquarters_card: headquarters_card,
+        cards: cards
+      }
     end
   end
 end

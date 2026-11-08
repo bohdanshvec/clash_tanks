@@ -70,7 +70,7 @@
 
                   <span>Карт</span>
 
-                  <strong class="<%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
+                  <strong class="deck-card__count <%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
                     <%= card_count %>/<%= Deck::DECK_SIZE %>
                   </strong>
 
@@ -164,7 +164,7 @@
 
                 <span>Карт</span>
 
-                <strong class="<%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
+                <strong class="deck-card__count <%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
                   <%= card_count %>/<%= Deck::DECK_SIZE %>
                 </strong>
 

@@ -59,4 +59,27 @@ class SeedsTest < ActiveSupport::TestCase
     assert_equal 3, Headquarters.count
     assert_equal 6, CardAbility.count
   end
+
+  test "creates permanent AI player and three complete AI decks" do
+    ai_player = Player.find_by!(ai: true)
+
+    assert_equal AiPlayers::Setup::AI_EMAIL, ai_player.email
+    assert_equal 3, ai_player.decks.count
+    assert_equal [40, 50, 58], ai_player.decks.map(&:weight).sort
+
+    ai_player.decks.each do |deck|
+      assert deck.complete?
+      assert_equal 10, deck.card_count
+    end
+  end
+
+  test "does not create duplicate AI player or decks when seeds run repeatedly" do
+    assert_no_difference -> { Player.where(ai: true).count } do
+      assert_no_difference -> {
+        Deck.joins(:player).where(players: { ai: true }).count
+      } do
+        load Rails.root.join("db/seeds.rb")
+      end
+    end
+  end
 end

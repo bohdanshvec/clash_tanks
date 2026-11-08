@@ -164,7 +164,7 @@
   position: absolute;
 
   left: 255px;
-  top: 50%;
+  top: 0;
 
   z-index: 200;
 
@@ -173,14 +173,16 @@
   opacity: 0;
   visibility: hidden;
 
-  transform: translateY(-50%) scale(0.95);
-  transform-origin: left center;
+  transform:
+    translateY(var(--deck-preview-offset-y, 0px))
+    scale(var(--deck-preview-scale, 1));
+
+  transform-origin: left top;
 
   pointer-events: none;
 
   transition:
     opacity 0.15s ease,
-    transform 0.15s ease,
     visibility 0s linear 0.15s;
 }
 
@@ -188,11 +190,8 @@
   opacity: 1;
   visibility: visible;
 
-  transform: translateY(-50%) scale(1);
-
   transition:
     opacity 0.15s ease,
-    transform 0.15s ease,
     visibility 0s;
 }
 
@@ -247,14 +246,13 @@
   .deck-card__preview-dialog .deck-card__card-preview {
     left: auto;
     right: 0;
-    top: calc(100% + 4px);
+    top: 0;
 
-    transform: translateY(4px) scale(0.95);
-    transform-origin: top right;
-  }
+    transform:
+      translateY(var(--deck-preview-offset-y, 0px))
+      scale(var(--deck-preview-scale, 1));
 
-  .deck-card__preview-item:hover .deck-card__card-preview {
-    transform: translateY(0) scale(1);
+    transform-origin: right top;
   }
 }
 
