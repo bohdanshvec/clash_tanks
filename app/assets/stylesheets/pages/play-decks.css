@@ -1,22 +1,51 @@
-/* ---------------------------------------------------------
-   Stage 18 — выбор колоды для игры
-   --------------------------------------------------------- */
+
+/* =========================================================
+   Stage 18 — страница выбора колоды для боя
+   ========================================================= */
+
+/* Основная область */
+
+.play-decks-page {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 20px 20px;
+}
+
+/* Заголовок списка колод */
+
+.play-decks-page__section-title {
+  margin: 0 0 20px;
+
+  color: var(--text-heading);
+}
+
+/* Сетка колод */
 
 .play-decks {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 12px;
+  gap: 30px 24px;
 }
 
-.play-decks .deck-card {
-  width: 300px;
-  box-sizing: border-box;
+/* Кнопки запуска боя */
 
-  padding: 18px;
+.play-decks .deck-card__actions {
+  margin-top: 0;
+}
 
-  border: 2px solid #222;
-  border-radius: 10px;
+.play-decks .deck-card__actions form {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
 
-  background: #fff;
+/* Адаптивность */
+
+@media (max-width: 600px) {
+  .play-decks-page {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
 }

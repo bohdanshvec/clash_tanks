@@ -12,30 +12,45 @@
     </p>
   </header>
 
-  <h2>Мої колоди</h2>
+  <h2 class="play-decks-page__section-title">Мої колоди</h2>
 
   <% if @decks.any? %>
+
     <div class="play-decks">
+
       <% @decks.each do |deck| %>
-        <div class="deck-card">
-          <h3><%= deck.name %></h3>
 
-          <p>
-            <strong>Нація:</strong>
-            <%= deck.nation.name %>
-          </p>
+        <article class="deck-card">
 
-          <p>
-            <strong>Штаб:</strong>
-            <%= deck.headquarters_card.name %>
-          </p>
+          <div class="deck-card__headquarters">
 
-          <p>
-            <strong>Вес:</strong>
-            <%= deck.weight %>
-          </p>
+            <%= render "cards/card",
+                       card: deck.headquarters_card %>
+
+          </div>
+
+          <section class="deck-card__info">
+
+            <h2>
+              <%= deck.name %>
+            </h2>
+
+            <div class="deck-card__metrics">
+
+              <p class="deck-card__metric">
+                <span>Вага</span>
+
+                <strong>
+                  <%= deck.weight %>
+                </strong>
+              </p>
+
+            </div>
+
+          </section>
 
           <div class="deck-card__actions">
+
             <%= button_to "В бій — PvP",
                           games_path,
                           method: :post,
@@ -53,11 +68,17 @@
                               mode: "ai"
                             } %>
             <% end %>
+
           </div>
-        </div>
+
+        </article>
+
       <% end %>
+
     </div>
+
   <% else %>
+
     <p>У вас поки немає готових колод.</p>
 
     <% if registered_player? %>
@@ -65,5 +86,6 @@
         <%= link_to "Створити колоду", new_deck_path %>
       </p>
     <% end %>
+
   <% end %>
 </main>
