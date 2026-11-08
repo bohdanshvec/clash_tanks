@@ -59,8 +59,10 @@
   margin: 0 0 12px;
 }
 
+
 /* ---------------------------------------------------------
    Карточки редактора
+   Геометрия соответствует странице «Карти»
    --------------------------------------------------------- */
 
 .deck-editor__card-list {
@@ -68,29 +70,69 @@
   flex-wrap: wrap;
   align-items: flex-start;
 
-  gap: 15px;
+  gap: 20px;
 }
 
 .deck-editor__card {
-  flex: 0 0 150px;
-  width: 150px;
+  position: relative;
+
+  flex: 0 0 255px;
+  width: 255px;
 
   box-sizing: border-box;
 
   padding: 0;
+  margin: 0;
 
   border: none;
   background: transparent;
 }
 
-.deck-editor__card .game-card {
-  width: 150px;
+/* Общий компонент карточки */
+
+.deck-editor__card .catalog-card {
+  width: 255px;
+  flex: 0 0 255px;
+
   box-sizing: border-box;
 }
 
-.deck-editor__card .game-card:hover {
-  transform: translateY(-10px) scale(1.08);
+/* Наведение */
+
+.deck-editor__card .catalog-card:hover {
+  transform: translateY(-15px) scale(1.4);
 }
+
+/* Адаптивность */
+
+@media (max-width: 600px) {
+  .deck-editor__card-list {
+    gap: 12px;
+  }
+
+  .deck-editor__card {
+    flex-basis: min(255px, calc(50vw - 24px));
+    width: min(255px, calc(50vw - 24px));
+  }
+
+  .deck-editor__card .catalog-card {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .deck-editor__card .catalog-card:hover {
+    transform: translateY(-8px) scale(1.2);
+  }
+}
+
+@media (max-width: 380px) {
+  .deck-editor__card {
+    flex-basis: 100%;
+    width: 100%;
+    max-width: 255px;
+  }
+}
+
 
 /* ---------------------------------------------------------
    Количество карт

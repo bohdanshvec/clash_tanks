@@ -37,28 +37,62 @@
 
 /* Кнопка создания колоды */
 
+/* Кнопка создания колоды */
+
 .decks-page__create-button {
-  display: inline-block;
-  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
 
-  padding: 7px 12px;
+  min-height: 58px;
+  padding: 15px 32px;
 
-  border: 1px solid #767676;
-  border-radius: 3px;
+  color: #151a18;
+  background: linear-gradient(
+    135deg,
+    #f0dca8,
+    #d1b875
+  );
 
-  background: #efefef;
-  color: #222;
+  border: 2px solid #e0c68d;
+  border-radius: 9px;
 
   font-family: inherit;
-  font-size: 14px;
+  font-size: 18px;
+  font-weight: 900;
   line-height: 1.2;
+  letter-spacing: 0.3px;
+  text-align: center;
   text-decoration: none;
 
-  cursor: pointer;
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .decks-page__create-button:hover {
-  background: #e5e5e5;
+  color: #101510;
+
+  background: linear-gradient(
+    135deg,
+    #f8e8bd,
+    #e0c68d
+  );
+
+  border-color: #f1dba9;
+
+  box-shadow:
+    0 7px 20px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(224, 198, 141, 0.2);
+
+  transform: translateY(-3px);
 }
 
 .decks-page__header h1 {
