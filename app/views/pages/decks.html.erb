@@ -1,12 +1,15 @@
+
 <div
   class="decks-page"
   data-controller="deck-preview"
 >
 
   <header class="decks-page__header page-title-panel">
+
     <div class="decks-page__title">
 
       <div class="decks-page__title-row">
+
         <h1>Колоди</h1>
 
         <% if registered_player? %>
@@ -14,20 +17,26 @@
                       new_deck_path,
                       class: "decks-page__create-button" %>
         <% end %>
+
       </div>
 
       <% if registered_player? %>
+
         <p>
           Збережені колоди гравця:
           <strong><%= current_player.display_name %></strong>
         </p>
+
       <% else %>
+
         <p>
           Готові стартові колоди для ознайомлення.
         </p>
+
       <% end %>
 
     </div>
+
   </header>
 
   <% if registered_player? %>
@@ -38,35 +47,48 @@
 
         <% @decks.each do |deck| %>
 
+          <% card_count = deck.card_count %>
+
           <article class="deck-card">
 
-            <header class="deck-card__header">
+            <div class="deck-card__headquarters">
 
-              <div>
-                <h2><%= deck.name %></h2>
+              <%= render "cards/card",
+                         card: deck.headquarters_card %>
 
-                <p>
-                  <strong>Нація:</strong>
-                  <%= deck.nation.name %>
+            </div>
+
+            <section class="deck-card__info">
+
+              <h2>
+                <%= deck.name %>
+              </h2>
+
+              <div class="deck-card__metrics">
+
+                <p class="deck-card__metric">
+
+                  <span>Карт</span>
+
+                  <strong class="<%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
+                    <%= card_count %>/<%= Deck::DECK_SIZE %>
+                  </strong>
+
                 </p>
 
-                <p>
-                  <strong>Штаб:</strong>
-                  <%= deck.headquarters_card.name %>
+                <p class="deck-card__metric">
+
+                  <span>Вага</span>
+
+                  <strong>
+                    <%= deck.weight %>
+                  </strong>
+
                 </p>
 
-                <p>
-                  <strong>Карт:</strong>
-                  <%= deck.card_count %> / <%= Deck::DECK_SIZE %>
-                </p>
-
-                <p>
-                  <strong>Weight:</strong>
-                  <%= deck.weight %>
-                </p>
               </div>
 
-            </header>
+            </section>
 
             <div class="deck-card__actions">
 
@@ -75,164 +97,30 @@
                 class="deck-card__preview-button"
                 data-action="click->deck-preview#open"
               >
-                Перегляд колоди
+                Переглянути
               </button>
 
-              <dialog
-                class="deck-card__preview-dialog"
-                aria-labelledby="deck-preview-title-<%= deck.id %>"
-                data-action="click->deck-preview#closeOnBackdrop"
-              >
-
-                <div class="deck-card__preview-dialog-header">
-
-                  <h2 id="deck-preview-title-<%= deck.id %>">
-                    Склад колоди: <%= deck.name %>
-                  </h2>
-
-                  <button
-                    type="button"
-                    class="deck-card__preview-close"
-                    data-action="click->deck-preview#close"
-                  >
-                    Закрити
-                  </button>
-
-                </div>
-
-                <ul class="deck-card__preview-list">
-
-                  <% deck.deck_cards.includes(:card).each do |deck_card| %>
-
-                    <% card = deck_card.card %>
-
-                    <li class="deck-card__preview-item">
-
-                      <span>
-                        <%= card.name %>
-
-                        <% if deck_card.quantity > 1 %>
-                          × <%= deck_card.quantity %>
-                        <% end %>
-                      </span>
-
-                      <div class="deck-card__card-preview">
-
-                        <article class="game-card">
-
-                          <header class="game-card__header">
-                            <strong><%= card.name %></strong>
-                          </header>
-
-                          <div class="game-card__stats">
-
-                            <p>
-                              Nation: <%= card.nation.name %>
-                            </p>
-
-                            <p>
-                              Type: <%= card.card_type %>
-                            </p>
-
-                            <p>
-                              Weight: <%= card.weight %>
-                            </p>
-
-                            <p>
-                              Price: <%= card.price %>
-                            </p>
-
-                            <% if card.card_type == "technique" && card.technique %>
-
-                              <p>
-                                Technique:
-                                <%= card.technique.technique_type %>
-                              </p>
-
-                              <p>
-                                HP: <%= card.technique.hp %>
-                              </p>
-
-                              <p>
-                                Firepower: <%= card.technique.firepower %>
-                              </p>
-
-                              <p>
-                                Fuel: <%= card.technique.fuel %>
-                              </p>
-
-                            <% elsif card.card_type == "platoon" && card.platoon %>
-
-                              <p>
-                                HP: <%= card.platoon.hp %>
-                              </p>
-
-                              <p>
-                                Firepower: <%= card.platoon.firepower %>
-                              </p>
-
-                              <p>
-                                Armor: <%= card.platoon.armor %>
-                              </p>
-
-                              <p>
-                                Fuel: <%= card.platoon.fuel %>
-                              </p>
-
-                            <% elsif card.card_type == "order" %>
-
-                              <div class="game-card__abilities">
-
-                                <p>Abilities:</p>
-
-                                <% if card.abilities.any? %>
-
-                                  <ul>
-
-                                    <% card.abilities.each do |ability| %>
-
-                                      <li>
-                                        <%= ability.name %>
-                                      </li>
-
-                                    <% end %>
-
-                                  </ul>
-
-                                <% else %>
-
-                                  <p>none</p>
-
-                                <% end %>
-
-                              </div>
-
-                            <% end %>
-
-                          </div>
-
-                        </article>
-
-                      </div>
-
-                    </li>
-
-                  <% end %>
-
-                </ul>
-
-              </dialog>
-
-              <%= link_to "Редагувати", edit_deck_path(deck) %>
+              <%= link_to "Редагувати",
+                          edit_deck_path(deck),
+                          class: "deck-card__edit-button" %>
 
               <%= button_to "Видалити",
                             deck_path(deck),
                             method: :delete,
+                            form_class: "deck-card__delete-form",
+                            class: "deck-card__delete-button",
                             data: {
                               turbo_confirm: "Видалити колоду?"
                             } %>
 
             </div>
+
+            <%= render "decks/preview_dialog",
+                       dialog_id: "deck-#{deck.id}",
+                       title: deck.name,
+                       cards: deck.deck_cards.map { |deck_card|
+                         [deck_card.card, deck_card.quantity]
+                       } %>
 
           </article>
 
@@ -252,158 +140,66 @@
 
       <% @starter_decks.each do |deck| %>
 
+        <% headquarters_card = deck[:headquarters_card] %>
+        <% card_count = deck[:cards].size %>
+
         <article class="deck-card">
 
-          <header class="deck-card__header">
+          <div class="deck-card__headquarters">
 
-            <div>
+            <%= render "cards/card",
+                       card: headquarters_card %>
 
-              <h2><%= deck[:name] %></h2>
+          </div>
 
-              <p>
-                <strong>Нація:</strong>
-                <%= deck[:nation].name %>
+          <section class="deck-card__info">
+
+            <h2>
+              <%= deck[:name] %>
+            </h2>
+
+            <div class="deck-card__metrics">
+
+              <p class="deck-card__metric">
+
+                <span>Карт</span>
+
+                <strong class="<%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
+                  <%= card_count %>/<%= Deck::DECK_SIZE %>
+                </strong>
+
               </p>
 
-              <p>
-                <strong>Штаб:</strong>
-                <%= deck[:headquarters_card].name %>
-              </p>
+              <p class="deck-card__metric">
 
-              <p>
-                <strong>Карт:</strong>
-                <%= deck[:cards].size %> / <%= Deck::DECK_SIZE %>
-              </p>
+                <span>Вага</span>
 
-              <p>
-                <strong>Weight:</strong>
-                <%= deck[:cards].sum(&:weight) %>
+                <strong>
+                  <%= deck[:cards].sum(&:weight) %>
+                </strong>
+
               </p>
 
             </div>
 
-          </header>
+          </section>
 
-          <div class="deck-card__cards">
+          <div class="deck-card__actions">
 
-            <h3>Склад</h3>
-
-            <ul>
-
-              <% deck[:cards].each do |card| %>
-
-                <li class="deck-card__card">
-
-                  <span>
-                    <%= card.name %>
-                  </span>
-
-                  <div class="deck-card__card-preview">
-
-                    <article class="game-card">
-
-                      <header class="game-card__header">
-                        <strong><%= card.name %></strong>
-                      </header>
-
-                      <div class="game-card__stats">
-
-                        <p>
-                          Nation: <%= card.nation.name %>
-                        </p>
-
-                        <p>
-                          Type: <%= card.card_type %>
-                        </p>
-
-                        <p>
-                          Weight: <%= card.weight %>
-                        </p>
-
-                        <p>
-                          Price: <%= card.price %>
-                        </p>
-
-                        <% if card.card_type == "technique" && card.technique %>
-
-                          <p>
-                            Technique:
-                            <%= card.technique.technique_type %>
-                          </p>
-
-                          <p>
-                            HP: <%= card.technique.hp %>
-                          </p>
-
-                          <p>
-                            Firepower: <%= card.technique.firepower %>
-                          </p>
-
-                          <p>
-                            Fuel: <%= card.technique.fuel %>
-                          </p>
-
-                        <% elsif card.card_type == "platoon" && card.platoon %>
-
-                          <p>
-                            HP: <%= card.platoon.hp %>
-                          </p>
-
-                          <p>
-                            Firepower: <%= card.platoon.firepower %>
-                          </p>
-
-                          <p>
-                            Armor: <%= card.platoon.armor %>
-                          </p>
-
-                          <p>
-                            Fuel: <%= card.platoon.fuel %>
-                          </p>
-
-                        <% elsif card.card_type == "order" %>
-
-                          <div class="game-card__abilities">
-
-                            <p>Abilities:</p>
-
-                            <% if card.abilities.any? %>
-
-                              <ul>
-
-                                <% card.abilities.each do |ability| %>
-
-                                  <li>
-                                    <%= ability.name %>
-                                  </li>
-
-                                <% end %>
-
-                              </ul>
-
-                            <% else %>
-
-                              <p>none</p>
-
-                            <% end %>
-
-                          </div>
-
-                        <% end %>
-
-                      </div>
-
-                    </article>
-
-                  </div>
-
-                </li>
-
-              <% end %>
-
-            </ul>
+            <button
+              type="button"
+              class="deck-card__preview-button"
+              data-action="click->deck-preview#open"
+            >
+              Переглянути
+            </button>
 
           </div>
+
+          <%= render "decks/preview_dialog",
+                     dialog_id: "starter-#{headquarters_card.id}",
+                     title: deck[:name],
+                     cards: deck[:cards].map { |card| [card, 1] } %>
 
         </article>
 

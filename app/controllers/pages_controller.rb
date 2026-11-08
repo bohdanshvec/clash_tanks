@@ -34,21 +34,25 @@ class PagesController < ApplicationController
 
 	def decks
 		if registered_player?
-		  @decks = current_player.decks
-		    .includes(
-		      :nation,
-		      :headquarters_card,
-		      deck_cards: {
-		        card: [
-		          :nation,
-		          :technique,
-		          :platoon,
-		          :headquarters,
-		          :abilities
-		        ]
-		      }
-		    )
-		    .order(:name)
+      @decks = current_player.decks
+        .includes(
+          :nation,
+          headquarters_card: [
+            :nation,
+            :headquarters
+          ],
+          deck_cards: {
+            card: [
+              :nation,
+              :technique,
+              :platoon,
+              :headquarters,
+              :abilities,
+              { card_abilities: :ability }
+            ]
+          }
+        )
+        .order(:name)
 		else
 		  @starter_decks = starter_decks
 		end
@@ -64,7 +68,18 @@ class PagesController < ApplicationController
         :abilities,
         card_abilities: :ability
       )
-      .order(:card_type, :name)
+      .order(
+        Arel.sql(
+          "CASE card_type
+            WHEN 'technique' THEN 1
+            WHEN 'platoon' THEN 2
+            WHEN 'order' THEN 3
+            ELSE 4
+          END"
+        ),
+        :weight,
+        :name
+      )
   end
 
 	def statistics
@@ -98,17 +113,11 @@ class PagesController < ApplicationController
           :technique,
           :platoon,
           :headquarters,
-          :abilities
+          :abilities,
+          { card_abilities: :ability }
         )
         .where(code: definition[:card_codes])
         .sort_by { |card| definition[:card_codes].index(card.code) }
-
-      {
-        name: definition[:name],
-        nation: headquarters_card.nation,
-        headquarters_card: headquarters_card,
-        cards: cards
-      }
     end
   end
 end

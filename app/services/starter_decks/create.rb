@@ -6,15 +6,15 @@ module StarterDecks
         headquarters_code: "germany_headquarters_operation_weiß",
         card_codes: %w[
         	germany_sd_222
-        	germany_pz_iii_a_h
-        	germany_pz_iv_a_f1
-        	germany_jagdpanther_38a_hetzer
+        	germany_pz_iii_ausf
+        	germany_pz_iv_ausf
+        	germany_hetzer
         	germany_jagdpanther_iv
         	germany_jagdpanther
         	germany_tiger_i
-        	germany_sturmpanzer_iv_brummbar
-        	germany_tocnyj_postril
-        	germany_grenaderskij_vzvod
+        	germany_sturmpanzer_iv
+        	germany_postril
+        	germany_grenaderi
         ]
       },
       {
@@ -24,13 +24,13 @@ module StarterDecks
         	usa_m8_greyhound
         	usa_m3_lee_grant
         	usa_m4_sherman
-        	usa_m4a3e8_easy_eight
-        	usa_m4a3e2_jumbo
+        	usa_m4a3e8
+        	usa_m4a3e2
         	usa_m10_wolverine
         	usa_m26_pershing
         	usa_m8_hmc_scott
         	usa_vognevij_nalit
-        	usa_inzhenernij_vzvod        
+        	usa_inzheneri        
         ]
       },
       {
@@ -46,7 +46,7 @@ module StarterDecks
           ussr_kv_1
           ussr_su_76m
           ussr_zalp_katyushi
-          ussr_strileckyj_vzvod
+          ussr_strilci
         ]
       }
     ].freeze

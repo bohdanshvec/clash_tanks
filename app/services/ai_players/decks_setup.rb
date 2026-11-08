@@ -7,7 +7,7 @@ module AiPlayers
         headquarters_code: "usa_headquarters_second_front",
         card_codes: {
           "usa_m4_sherman" => 1,
-          "usa_m4a3e2_jumbo" => 3,
+          "usa_m4a3e2" => 3,
           "usa_m10_wolverine" => 3,
           "usa_m26_pershing" => 3
         }
@@ -31,9 +31,9 @@ module AiPlayers
           "germany_tiger_i" => 2,
           "germany_jagdpanther" => 1,
           "germany_jagdpanther_iv" => 1,
-          "germany_jagdpanther_38a_hetzer" => 2,
-          "germany_pz_iv_a_f1" => 3,
-          "germany_tocnyj_postril" => 1
+          "germany_hetzer" => 2,
+          "germany_pz_iv_ausf" => 3,
+          "germany_postril" => 1
         }
       }
     ].freeze

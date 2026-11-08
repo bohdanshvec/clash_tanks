@@ -64,27 +64,27 @@
 |---|---|---|---:|---:|---:|---:|---|---|
 | Pz.II | `germany_pz_ii` | LT | 1 | 1 | 1 | 1 | - | — |
 | Sd.222 | `germany_sd_222` | LT | 2 | 2 | 1 | 2 | - | — |
-| Pz.III Ausf. A-H | `germany_pz_iii_a_h` | ST | 3 | 2 | 3 | 2 | - | — |
-| Pz.IV Ausf. A-F1 | `germany_pz_iv_a_f1` | ST | 4 | 4 | 4 | 1 | 1 | — |
-| Jagdpanther 38(A) Hetzer | `germany_jagdpanther_38a_hetzer` | PT-SAU | 4 | 3 | 4 | 2 | 1 | Перший постріл |
+| Pz.III Ausf | `germany_pz_iii_ausf` | ST | 3 | 2 | 3 | 2 | - | — |
+| Pz.IV Ausf | `germany_pz_iv_ausf` | ST | 4 | 4 | 4 | 1 | 1 | — |
+| Hetzer | `germany_hetzer` | PT-SAU | 4 | 3 | 4 | 2 | 1 | Перший постріл |
 | Jagdpanther IV | `germany_jagdpanther_iv` | PT-SAU | 5 | 4 | 5 | 2 | 1 | Перший постріл |
 | Jagdpanther | `germany_jagdpanther` | PT-SAU | 6 | 5 | 6 | 2 | 2 | Перший постріл |
 | Pz.VI Tiger I | `germany_tiger_i` | TT | 7 | 6 | 7 | 2 | 1 | — |
-| Sturmpanzer IV Brummbar | `germany_sturmpanzer_iv_brummbar` | SAU | 8 | 5 | 4 | 2 | 1 | Spotting / дальня атака |
+| Sturmpanzer IV | `germany_sturmpanzer_iv` | SAU | 8 | 5 | 4 | 2 | 1 | Spotting / дальня атака |
 
 ### 4.2. Накази
 
 | Card | Code | Weight | Price | Ability | Parameters |
 |---|---|---:|---:|---|---|
-| Точний постріл | `germany_tocnyj_postril` | 5 | 4 | `damage_technique` | `damage: 4` |
-| Радіоперехоплення | `germany_radioperehoplena` | 4 | 2 | `draw_cards` | `count: 2` |
+| Постріл | `germany_postril` | 5 | 4 | `damage_technique` | `damage: 4` |
+| Шифрування | `germany_shifruvanny` | 4 | 2 | `draw_cards` | `count: 2` |
 
 ### 4.3. Взводи
 
 | Card | Code | Weight | Price | HP | Firepower | Armor | Fuel |
 |---|---|---:|---:|---:|---:|---:|---:|
-| Гренадерський взвод | `germany_grenaderskij_vzvod` | 4 | 4 | 6 | 2 | 0 | 0 |
-| Бетонне укріплення | `germany_betone_ukripleniy` | 3 | 3 | 5 | 0 | 2 | 0 |
+| Гренадери | `germany_grenaderi` | 4 | 4 | 6 | 2 | 0 | 0 |
+| Укріплення | `germany_ukripleniy` | 3 | 3 | 5 | 0 | 2 | 0 |
 
 ## 5. США
 
@@ -96,8 +96,8 @@
 | M8 Greyhound | `usa_m8_greyhound` | LT | 2 | 4 | 2 | 1 | 1 | — |
 | M3 Lee/Grant | `usa_m3_lee_grant` | ST | 3 | 4 | 3 | 1 | 1 | — |
 | M4 Sherman | `usa_m4_sherman` | ST | 4 | 5 | 3 | 2 | 1 | — |
-| M4A3E8 Easy Eight | `usa_m4a3e8_easy_eight` | ST | 4 | 6 | 4 | 2 | 1 | — |
-| M4A3E2 Jumbo | `usa_m4a3e2_jumbo` | ST | 5 | 6 | 4 | 2 | 1 | — |
+| M4A3E8 | `usa_m4a3e8` | ST | 4 | 6 | 4 | 2 | 1 | — |
+| M4A3E2 | `usa_m4a3e2` | ST | 5 | 6 | 4 | 2 | 1 | — |
 | M10 Wolverine | `usa_m10_wolverine` | PT-SAU | 6 | 7 | 5 | 2 | 1 | Перший постріл |
 | M26 Pershing | `usa_m26_pershing` | TT | 7 | 7 | 5 | 2 | 1 | — |
 | M8 HMC Scott | `usa_m8_hmc_scott` | SAU | 8 | 8 | 3 | 1 | 1 | Spotting / дальня атака |
@@ -113,8 +113,8 @@
 
 | Card | Code | Weight | Price | HP | Firepower | Armor | Fuel |
 |---|---|---:|---:|---:|---:|---:|---:|
-| Инженерний взвод | `usa_inzhenernij_vzvod` | 3 | 4 | 5 | 0 | 2 | 0 |
-| Взвод базукометників | `usa_vzvod_bazukometnikiv` | 5 | 4 | 4 | 1 | 0 | 1 |
+| Инженери | `usa_inzheneri` | 3 | 4 | 5 | 0 | 2 | 0 |
+| Базукометники | `usa_bazukometniki` | 5 | 4 | 4 | 1 | 0 | 1 |
 
 ## 6. СРСР
 
@@ -143,7 +143,7 @@
 
 | Card | Code | Weight | Price | HP | Firepower | Armor | Fuel |
 |---|---|---:|---:|---:|---:|---:|---:|
-| Стрелецький взвод | `ussr_strileckyj_vzvod` | 4 | 4 | 4 | 1 | 0 | 0 |
+| Стрільці | `ussr_strilci` | 4 | 4 | 4 | 1 | 0 | 0 |
 | ДОТ | `ussr_dot` | 4 | 3 | 6 | 0 | 2 | 0 |
 
 ## 7. Універсальні здібності наказів

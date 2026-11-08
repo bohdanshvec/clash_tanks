@@ -57,9 +57,12 @@
 
     <% unless is_headquarters %>
 
-      <span class="catalog-card__weight">
+    <div class="catalog-card__weight">
+      <span>Level</span>
+      <span class="catalog-card__weight-value">
         <%= card.weight %>
       </span>
+    </div>
 
     <% end %>
 
@@ -88,9 +91,12 @@
     <% end %>
 
     <% unless is_headquarters %>
-      <span class="catalog-card__price">
-        <%= card.price %>
-      </span>
+      <div class="catalog-card__price">
+        <%= image_tag "icons/fuel_canister.png",
+          class: "catalog-card__price-icon",
+          alt: "" %>
+        <span><%= card.price %></span>
+      </div>
     <% end %>
 
     <div class="catalog-card__name">

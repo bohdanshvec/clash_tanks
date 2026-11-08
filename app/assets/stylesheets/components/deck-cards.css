@@ -138,3 +138,92 @@
 .deck-card {
   color: #202820;
 }
+
+/* =========================================================
+   Кнопки действий на карточке колоды
+   ========================================================= */
+
+.deck-card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  margin-top: 0;
+}
+
+.deck-card__actions .deck-card__preview-button {
+  grid-column: 1 / -1;
+}
+
+.deck-card__actions a,
+.deck-card__actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 39px;
+
+  padding: 9px 8px;
+
+  background: #303a31;
+  color: #e0c68d;
+
+  border: 1px solid #65704d;
+  border-radius: 6px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  text-decoration: none;
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.deck-card__actions a:hover,
+.deck-card__actions button:hover {
+  background: #465343;
+  color: #ffffff;
+  border-color: #d1bd83;
+}
+
+.deck-card__actions .deck-card__preview-button {
+  min-height: 42px;
+
+  background: linear-gradient(135deg, #e0ca93, #b4a16a);
+  color: #192119;
+
+  border-color: #d1bd83;
+}
+
+.deck-card__actions .deck-card__preview-button:hover {
+  background: #e9d4a0;
+  color: #111811;
+  border-color: #f1dba9;
+}
+
+.deck-card__actions .deck-card__delete-form {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.deck-card__actions .deck-card__delete-button {
+  color: #f08a81;
+  border-color: #76504b;
+}
+
+.deck-card__actions .deck-card__delete-button:hover {
+  background: #51332f;
+  color: #ffffff;
+  border-color: #b85c50;
+}

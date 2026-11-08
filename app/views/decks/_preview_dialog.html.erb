@@ -1,0 +1,48 @@
+<dialog
+  id="deck-preview-<%= dialog_id %>"
+  class="deck-card__preview-dialog"
+  aria-labelledby="deck-preview-title-<%= dialog_id %>"
+  data-action="click->deck-preview#closeOnBackdrop"
+>
+
+  <div class="deck-card__preview-dialog-header">
+
+    <h2 id="deck-preview-title-<%= dialog_id %>">
+      Склад колоди: <%= title %>
+    </h2>
+
+    <button
+      type="button"
+      class="deck-card__preview-close"
+      data-action="click->deck-preview#close"
+    >
+      Закрити
+    </button>
+
+  </div>
+
+  <ul class="deck-card__preview-list">
+
+    <% cards.each do |card, quantity| %>
+
+      <li class="deck-card__preview-item">
+
+        <span>
+          <%= card.name %>
+
+          <% if quantity > 1 %>
+            × <%= quantity %>
+          <% end %>
+        </span>
+
+        <div class="deck-card__card-preview">
+          <%= render "cards/card", card: card %>
+        </div>
+
+      </li>
+
+    <% end %>
+
+  </ul>
+
+</dialog>

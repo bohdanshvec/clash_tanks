@@ -48,20 +48,20 @@ movement = {
 technique_rows = [
   ["germany_pz_ii", :germany, "Pz.II", "light_tank", 1, 1, 1, 1, 0],
   ["germany_sd_222", :germany, "Sd.222", "light_tank", 2, 2, 1, 2, 0],
-  ["germany_pz_iii_a_h", :germany, "Pz.III Ausf. A-H", "medium_tank", 3, 2, 3, 2, 0],
-  ["germany_pz_iv_a_f1", :germany, "Pz.IV Ausf. A-F1", "medium_tank", 4, 4, 4, 1, 1],
-  ["germany_jagdpanther_38a_hetzer", :germany, "Jagdpanther 38(A) Hetzer", "tank_destroyer", 4, 3, 4, 2, 1],
+  ["germany_pz_iii_ausf", :germany, "Pz.III Ausf", "medium_tank", 3, 2, 3, 2, 0],
+  ["germany_pz_iv_ausf", :germany, "Pz.IV Ausf", "medium_tank", 4, 4, 4, 1, 1],
+  ["germany_hetzer", :germany, "Hetzer", "tank_destroyer", 4, 3, 4, 2, 1],
   ["germany_jagdpanther_iv", :germany, "Jagdpanther IV", "tank_destroyer", 5, 4, 5, 2, 1],
   ["germany_jagdpanther", :germany, "Jagdpanther", "tank_destroyer", 6, 5, 6, 2, 2],
   ["germany_tiger_i", :germany, "Pz.VI Tiger I", "heavy_tank", 7, 6, 7, 2, 1],
-  ["germany_sturmpanzer_iv_brummbar", :germany, "Sturmpanzer IV Brummbar", "artillery", 8, 5, 4, 2, 1],
+  ["germany_sturmpanzer_iv", :germany, "Sturmpanzer IV", "artillery", 8, 5, 4, 2, 1],
 
   ["usa_m3_stuart", :usa, "M3 Stuart", "light_tank", 1, 3, 1, 1, 0],
   ["usa_m8_greyhound", :usa, "M8 Greyhound", "light_tank", 2, 4, 2, 1, 1],
   ["usa_m3_lee_grant", :usa, "M3 Lee/Grant", "medium_tank", 3, 4, 3, 1, 1],
   ["usa_m4_sherman", :usa, "M4 Sherman", "medium_tank", 4, 5, 3, 2, 1],
-  ["usa_m4a3e8_easy_eight", :usa, "M4A3E8 Easy Eight", "medium_tank", 4, 6, 4, 2, 0],
-  ["usa_m4a3e2_jumbo", :usa, "M4A3E2 Jumbo", "medium_tank", 5, 6, 4, 2, 1],
+  ["usa_m4a3e8", :usa, "M4A3E8", "medium_tank", 4, 6, 4, 2, 0],
+  ["usa_m4a3e2", :usa, "M4A3E2", "medium_tank", 5, 6, 4, 2, 1],
   ["usa_m10_wolverine", :usa, "M10 Wolverine", "tank_destroyer", 6, 7, 5, 2, 1],
   ["usa_m26_pershing", :usa, "M26 Pershing", "heavy_tank", 7, 7, 5, 2, 1],
   ["usa_m8_hmc_scott", :usa, "M8 HMC Scott", "artillery", 8, 8, 3, 1, 1],
@@ -94,8 +94,8 @@ techniques = technique_rows.map do |code, nation_code, name, technique_type, wei
 end
 
 orders = [
-  { code: "germany_tocnyj_postril", nation: nations[:germany], name: "Точний постріл", weight: 5, price: 4 },
-  { code: "germany_radioperehoplena", nation: nations[:germany], name: "Радіоперехоплення", weight: 4, price: 2 },
+  { code: "germany_postril", nation: nations[:germany], name: "Постріл", weight: 5, price: 4 },
+  { code: "germany_shifruvanny", nation: nations[:germany], name: "Шифрування", weight: 4, price: 2 },
   { code: "usa_lend_liz", nation: nations[:usa], name: "Ленд-ліз", weight: 3, price: 2 },
   { code: "usa_vognevij_nalit", nation: nations[:usa], name: "Вогневий наліт", weight: 3, price: 3 },
   { code: "ussr_zalp_katyushi", nation: nations[:ussr], name: "Залп „Катюші“", weight: 5, price: 4 },
@@ -103,11 +103,11 @@ orders = [
 ]
 
 platoons = [
-  { code: "germany_grenaderskij_vzvod", nation: nations[:germany], name: "Гренадерський взвод", weight: 4, price: 4, hp: 6, firepower: 2, armor: 0, fuel: 0 },
-  { code: "germany_betone_ukripleniy", nation: nations[:germany], name: "Бетонне укріплення", weight: 3, price: 3, hp: 5, firepower: 0, armor: 2, fuel: 0 },
-  { code: "usa_inzhenernij_vzvod", nation: nations[:usa], name: "Инженерний взвод", weight: 3, price: 4, hp: 5, firepower: 0, armor: 2, fuel: 0 },
-  { code: "usa_vzvod_bazukometnikiv", nation: nations[:usa], name: "Взвод базукометників", weight: 5, price: 4, hp: 4, firepower: 1, armor: 0, fuel: 1 },
-  { code: "ussr_strileckyj_vzvod", nation: nations[:ussr], name: "Стрелецький взвод", weight: 4, price: 4, hp: 4, firepower: 1, armor: 0, fuel: 0 },
+  { code: "germany_grenaderi", nation: nations[:germany], name: "Гренадери", weight: 4, price: 4, hp: 6, firepower: 2, armor: 0, fuel: 0 },
+  { code: "germany_ukripleniy", nation: nations[:germany], name: "Укріплення", weight: 3, price: 3, hp: 5, firepower: 0, armor: 2, fuel: 0 },
+  { code: "usa_inzheneri", nation: nations[:usa], name: "Инженери", weight: 3, price: 4, hp: 5, firepower: 0, armor: 2, fuel: 0 },
+  { code: "usa_bazukometniki", nation: nations[:usa], name: "Базукометники", weight: 5, price: 4, hp: 4, firepower: 1, armor: 0, fuel: 1 },
+  { code: "ussr_strilci", nation: nations[:ussr], name: "Стрільці", weight: 4, price: 4, hp: 4, firepower: 1, armor: 0, fuel: 0 },
   { code: "ussr_dot", nation: nations[:ussr], name: "ДОТ", weight: 4, price: 3, hp: 6, firepower: 0, armor: 2, fuel: 0 }
 ]
 

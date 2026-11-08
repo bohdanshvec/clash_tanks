@@ -407,3 +407,44 @@
     font-size: 12px;
   }
 }
+
+/* =========================================================
+   Полноразмерные карточки из каталога в окне просмотра
+   ========================================================= */
+
+.deck-card__card-preview .catalog-card {
+  width: 255px;
+  flex: 0 0 255px;
+
+  margin: 0;
+}
+
+/* Не увеличиваем карточку повторно внутри предварительного просмотра */
+
+.deck-card__card-preview .catalog-card:hover {
+  transform: none;
+  filter: none;
+}
+
+/* Кнопка закрытия модального окна */
+
+.deck-card__preview-dialog .deck-card__preview-close {
+  background: #202824;
+  color: #e0c68d;
+
+  border: 1px solid #65704d;
+  border-radius: 6px;
+
+  font-weight: 700;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.deck-card__preview-dialog .deck-card__preview-close:hover {
+  background: #465343;
+  color: #ffffff;
+  border-color: #d1bd83;
+}

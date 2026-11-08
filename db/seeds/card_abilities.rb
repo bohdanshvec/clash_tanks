@@ -4,8 +4,8 @@ abilities = {
 }
 
 card_abilities = [
-  { card_code: "germany_tocnyj_postril", ability: abilities[:damage_technique], parameters: { damage: 4 } },
-  { card_code: "germany_radioperehoplena", ability: abilities[:draw_cards], parameters: { count: 2 } },
+  { card_code: "germany_postril", ability: abilities[:damage_technique], parameters: { damage: 4 } },
+  { card_code: "germany_shifruvanny", ability: abilities[:draw_cards], parameters: { count: 2 } },
   { card_code: "usa_lend_liz", ability: abilities[:draw_cards], parameters: { count: 1 } },
   { card_code: "usa_vognevij_nalit", ability: abilities[:damage_technique], parameters: { damage: 2 } },
   { card_code: "ussr_zalp_katyushi", ability: abilities[:damage_technique], parameters: { damage: 3 } },
