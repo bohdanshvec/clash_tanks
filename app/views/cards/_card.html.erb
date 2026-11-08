@@ -1,101 +1,167 @@
-<article class="game-card <%= "headquarters-card" if card.card_type == "headquarters" %>">
 
-  <header class="game-card__header">
-    <strong><%= card.name %></strong>
-  </header>
+<%
+  is_headquarters = card.card_type == "headquarters"
 
-  <div class="game-card__stats">
+  platoon_variant =
+    if card.card_type == "platoon"
+      card.platoon&.firepower.to_i.positive? ? "attack" : "defense"
+    end
 
-    <p>
-      Nation: <%= card.nation.name %>
-    </p>
+  border_variant =
+    case card.card_type
+    when "technique"
+      "ability" if card.abilities.any?
+    when "platoon"
+      platoon_variant
+    end
 
-    <% if card.card_type == "headquarters" && card.headquarters %>
+  image_path = card_image_path(
+    nation: card.nation.code,
+    display: "card",
+    type: card.card_type,
+    code: card.code
+  )
 
-      <p>
-        HP: <%= card.headquarters.hp %>
-      </p>
+  border_path = card_border_path(
+    nation: card.nation.code,
+    display: is_headquarters ? "card" : "deck",
+    type: card.card_type,
+    variant: border_variant
+  )
 
-      <p>
-        Firepower: <%= card.headquarters.firepower %>
-      </p>
+  order_descriptions = card.card_abilities.filter_map do |card_ability|
+    parameters = card_ability.parameters.to_h
 
-      <p>
-        Fuel: <%= card.headquarters.fuel %>
-      </p>
+    case card_ability.ability.code
+    when "damage_technique"
+      damage = parameters["damage"]
+      "Завдає техніці #{damage} од. шкоди" if damage.present?
+    when "draw_cards"
+      count = parameters["count"]
+      "Добрати карт: #{count}" if count.present?
+    end
+  end
+%>
 
-    <% else %>
+<article class="catalog-card catalog-card--<%= card.card_type %>">
 
-      <p>
-        Type: <%= card.card_type %>
-      </p>
+  <div class="catalog-card__image">
 
-      <p>
-        Weight: <%= card.weight %>
-      </p>
+    <%= image_tag image_path,
+      class: "catalog-card__illustration",
+      alt: card.name %>
 
-      <p>
-        Price: <%= card.price %>
-      </p>
+    <%= image_tag border_path,
+      class: "catalog-card__frame",
+      alt: "" %>
 
-      <% if card.card_type == "technique" && card.technique %>
+    <% unless is_headquarters %>
 
-        <p>
-          Technique:
-          <%= card.technique.technique_type %>
-        </p>
-
-        <p>
-          HP: <%= card.technique.hp %>
-        </p>
-
-        <p>
-          Firepower: <%= card.technique.firepower %>
-        </p>
-
-        <p>
-          Fuel: <%= card.technique.fuel %>
-        </p>
-
-      <% elsif card.card_type == "platoon" && card.platoon %>
-
-        <p>
-          HP: <%= card.platoon.hp %>
-        </p>
-
-        <p>
-          Firepower: <%= card.platoon.firepower %>
-        </p>
-
-        <p>
-          Armor: <%= card.platoon.armor %>
-        </p>
-
-        <p>
-          Fuel: <%= card.platoon.fuel %>
-        </p>
-
-      <% end %>
+      <span class="catalog-card__weight">
+        <%= card.weight %>
+      </span>
 
     <% end %>
 
-    <% if card.abilities.any? %>
+    <% if card.card_type == "technique" && card.technique %>
 
-      <div class="game-card__abilities">
+      <div class="catalog-card__type catalog-card__type--technique">
+        <span class="catalog-card__technique-symbol catalog-card__technique-symbol--<%= card.technique.technique_type %>"></span>
+      </div>
 
-        <p>Abilities:</p>
+    <% elsif card.card_type == "platoon" && card.platoon %>
 
-        <ul>
+      <div class="catalog-card__type catalog-card__type--platoon">
+        <% if platoon_variant == "attack" %>
+          <span class="catalog-card__platoon-symbol catalog-card__platoon-symbol--attack"></span>
+        <% else %>
+          <span class="catalog-card__platoon-symbol catalog-card__platoon-symbol--defense"></span>
+        <% end %>
+      </div>
 
-          <% card.abilities.each do |ability| %>
+    <% elsif card.card_type == "order" %>
 
-            <li>
-              <%= ability.name %>
-            </li>
+      <div class="catalog-card__type catalog-card__type--order">
+        <span class="catalog-card__scroll-symbol"></span>
+      </div>
 
+    <% end %>
+
+    <% unless is_headquarters %>
+      <span class="catalog-card__price">
+        <%= card.price %>
+      </span>
+    <% end %>
+
+    <div class="catalog-card__name">
+      <%= card.name %>
+    </div>
+
+    <% if card.card_type == "headquarters" && card.headquarters %>
+
+      <div class="catalog-card__stats catalog-card__stats--headquarters">
+
+        <span class="catalog-card__stat">
+          <%= card.headquarters.firepower %>
+        </span>
+
+        <span class="catalog-card__stat">
+          <%= card.headquarters.hp %>
+        </span>
+
+        <span class="catalog-card__stat">
+          <%= card.headquarters.fuel %>
+        </span>
+
+      </div>
+
+    <% elsif card.card_type == "technique" && card.technique %>
+
+      <div class="catalog-card__stats">
+
+        <span class="catalog-card__stat">
+          <%= card.technique.firepower %>
+        </span>
+
+        <span class="catalog-card__stat">
+          <%= card.technique.hp %>
+        </span>
+
+        <span class="catalog-card__stat">
+          <%= card.technique.fuel %>
+        </span>
+
+      </div>
+
+    <% elsif card.card_type == "platoon" && card.platoon %>
+
+      <div class="catalog-card__stats">
+
+        <span class="catalog-card__stat">
+          <%= platoon_variant == "attack" ? card.platoon.firepower : card.platoon.armor %>
+        </span>
+
+        <span class="catalog-card__stat">
+          <%= card.platoon.hp %>
+        </span>
+
+        <span class="catalog-card__stat">
+          <%= card.platoon.fuel %>
+        </span>
+
+      </div>
+
+    <% elsif card.card_type == "order" %>
+
+      <div class="catalog-card__description">
+
+        <% if order_descriptions.any? %>
+          <% order_descriptions.each do |description| %>
+            <p><%= description %></p>
           <% end %>
-
-        </ul>
+        <% else %>
+          <p><%= card.abilities.map(&:name).to_sentence %></p>
+        <% end %>
 
       </div>
 

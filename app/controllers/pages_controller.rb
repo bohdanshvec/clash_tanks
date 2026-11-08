@@ -56,7 +56,14 @@ class PagesController < ApplicationController
 
   def cards
     @cards = Card
-      .includes(:nation, :technique, :platoon, :headquarters, :abilities)
+      .includes(
+        :nation,
+        :technique,
+        :platoon,
+        :headquarters,
+        :abilities,
+        card_abilities: :ability
+      )
       .order(:card_type, :name)
   end
 

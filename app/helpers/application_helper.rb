@@ -3,6 +3,8 @@ module ApplicationHelper
   CARD_IMAGE_TYPES = %w[headquarters technique order platoon].freeze
   CARD_IMAGE_DISPLAYS = %w[field card].freeze
 
+  CARD_BORDER_DISPLAYS = %w[field card deck hand].freeze
+
   CARD_BORDER_VARIANTS = {
     "headquarters" => %w[ability],
     "technique" => %w[ability],
@@ -34,7 +36,12 @@ module ApplicationHelper
 
   def card_border_path(nation:, display:, type:, variant: nil)
     nation, display, type =
-      validate_card_image_options!(nation, display, type)
+      validate_card_image_options!(
+        nation,
+        display,
+        type,
+        allowed_displays: CARD_BORDER_DISPLAYS
+      )
 
     variant = variant.to_s.presence
 
@@ -44,14 +51,25 @@ module ApplicationHelper
 
     suffix = variant ? "_#{variant}" : ""
 
-    filename = "#{nation}_#{display}_#{type}#{suffix}_border.png"
+    filename =
+      case display
+      when "deck", "hand"
+        "#{nation}_card_#{type}#{suffix}_border_#{display}.png"
+      else
+        "#{nation}_#{display}_#{type}#{suffix}_border.png"
+      end
 
     "cards/#{nation}/#{type}/#{filename}"
   end
 
   private
 
-  def validate_card_image_options!(nation, display, type)
+  def validate_card_image_options!(
+    nation,
+    display,
+    type,
+    allowed_displays: CARD_IMAGE_DISPLAYS
+  )
     nation = nation.to_s
     display = display.to_s
     type = type.to_s
@@ -60,7 +78,7 @@ module ApplicationHelper
       raise ArgumentError, "Invalid card nation: #{nation.inspect}"
     end
 
-    unless CARD_IMAGE_DISPLAYS.include?(display)
+    unless allowed_displays.include?(display)
       raise ArgumentError, "Invalid card display: #{display.inspect}"
     end
 
