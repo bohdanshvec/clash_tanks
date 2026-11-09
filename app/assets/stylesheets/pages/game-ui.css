@@ -383,6 +383,32 @@ body.game-page .game {
   border-bottom: 1px solid rgba(233, 212, 160, 0.3);
 }
 
+/* Прогноз ресурсов от объектов на поле */
+
+.game-board__fuel-on-field {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  color: #d6c69f;
+
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+
+  text-shadow: 1px 1px 2px #000;
+}
+
+.game-board__fuel-on-field strong {
+  color: #e9d4a0;
+
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 /* Разделение информации */
 
 .game-board__info-item:not(:last-child) {

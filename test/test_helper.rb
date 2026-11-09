@@ -34,9 +34,9 @@ module ActiveSupport
       )
     end
 
-    def create_headquarters_card(nation:, name: "Test HQ")
+    def create_headquarters_card(nation:, name: "Test HQ", code: nil)
       card = Card.create!(
-        code: "#{nation.code}_#{name.parameterize(separator: "_")}_#{SecureRandom.hex(4)}",
+        code: code || "#{nation.code}_#{name.parameterize(separator: "_")}_#{SecureRandom.hex(4)}",
         nation: nation,
         name: name,
         card_type: "headquarters",
@@ -54,40 +54,47 @@ module ActiveSupport
       card
     end
     
-		def create_complete_deck(player:, name: "Test Deck")
-			nation = Nation.create!(
-				name: "Test Nation #{SecureRandom.hex(4)}",
-				code: "test_#{SecureRandom.hex(4)}"
-			)
+    def create_complete_deck(
+      player:,
+      name: "Test Deck",
+      nation_code: "usa",
+      headquarters_code: nil
+    )
+      nation = Nation.find_or_create_by!(code: nation_code) do |record|
+        record.name = nation_code.upcase
+      end
 
-			headquarters_card = create_headquarters_card(nation: nation)
+      headquarters_card = create_headquarters_card(
+        nation: nation,
+        code: headquarters_code
+      )
 
-			deck = Deck.create!(
-				player: player,
-				nation: nation,
-				name: name,
-				headquarters_card: headquarters_card
-			)
+      deck = Deck.create!(
+        player: player,
+        nation: nation,
+        name: name,
+        headquarters_card: headquarters_card
+      )
 
-			10.times do |index|
-				card = Card.create!(
-				  code: "#{nation.code}_card_#{index}_#{SecureRandom.hex(4)}",
-				  nation: nation,
-				  name: "Test Card #{index}",
-				  card_type: "order",
-				  weight: 1,
-				  price: 1
-				)
+      10.times do |index|
+        card = Card.create!(
+          code: "#{nation.code}_card_#{index}_#{SecureRandom.hex(4)}",
+          nation: nation,
+          name: "Test Card #{index}",
+          card_type: "order",
+          weight: 1,
+          price: 1
+        )
 
-				DeckCard.create!(
-				  deck: deck,
-				  card: card,
-				  quantity: 1
-				)
-			end
+        DeckCard.create!(
+          deck: deck,
+          card: card,
+          quantity: 1
+        )
+      end
 
-			deck
-		end
+      deck
+    end
 
     def create_deck(player:, nation:, name: "Test Deck", headquarters_card: nil)
       headquarters_card ||= create_headquarters_card(nation: nation)

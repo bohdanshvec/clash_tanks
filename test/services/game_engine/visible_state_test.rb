@@ -112,6 +112,62 @@ class GameEngine::VisibleStateTest < ActiveSupport::TestCase
 		assert_equal 400, opponent["remaining_time"]
 	end
 
+  test "shows field fuel forecast for both players" do
+    @state["field"][2][0] = {
+      "type" => "headquarters",
+      "player_id" => 1,
+      "fuel" => 5
+    }
+
+    @state["field"][0][4] = {
+      "type" => "headquarters",
+      "player_id" => 2,
+      "fuel" => 6
+    }
+
+    @state["field"][1][1] = {
+      "type" => "technique",
+      "player_id" => 1,
+      "fuel" => 2,
+      "firepower" => 0,
+      "armor" => 1,
+      "attack_range" => 1
+    }
+
+    @state["field"][1][2] = {
+      "type" => "technique",
+      "player_id" => 2,
+      "fuel" => 3,
+      "firepower" => 0,
+      "armor" => 1,
+      "attack_range" => 1
+    }
+
+    @state["players"]["1"]["platoons"][0] = {
+      "fuel" => 4
+    }
+
+    @state["players"]["2"]["platoons"][0] = {
+      "fuel" => 5
+    }
+
+    visible_for_player_1 = GameEngine::VisibleState.call(
+      state: @state,
+      player_id: 1
+    )
+
+    visible_for_player_2 = GameEngine::VisibleState.call(
+      state: @state,
+      player_id: 2
+    )
+
+    assert_equal 11, visible_for_player_1["players"]["1"]["fuel_on_field"]
+    assert_equal 14, visible_for_player_1["players"]["2"]["fuel_on_field"]
+
+    assert_equal 11, visible_for_player_2["players"]["1"]["fuel_on_field"]
+    assert_equal 14, visible_for_player_2["players"]["2"]["fuel_on_field"]
+  end
+
   test "keeps public game state visible" do
     visible_state = GameEngine::VisibleState.call(
       state: @state,

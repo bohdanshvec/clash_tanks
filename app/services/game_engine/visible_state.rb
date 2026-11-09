@@ -34,40 +34,49 @@ module GameEngine
 			)
 		end
 
-    def visible_players
-      @state.fetch("players").to_h do |player_id, player_state|
-        if player_id.to_s == @player_id
-          [player_id, visible_own_player(player_state)]
-        else
-          [player_id, visible_opponent_player(player_state)]
-        end
-      end
-    end
-
-		def visible_own_player(player_state)
-			{
-				"nation_id" => player_state["nation_id"],
-				"hand" => player_state["hand"].deep_dup,
-				"deck_count" => player_state["deck"].length,
-				"platoons" => player_state["platoons"].deep_dup,
-				"resources" => player_state["resources"],
-				"remaining_time" => player_state["remaining_time"],
-				"empty_deck_draw_attempts" => player_state["empty_deck_draw_attempts"],
-				"graveyard_count" => player_state["graveyard"].length
-			}
+		def visible_players
+		  @state.fetch("players").to_h do |player_id, player_state|
+		    if player_id.to_s == @player_id
+		      [player_id, visible_own_player(player_state, player_id)]
+		    else
+		      [player_id, visible_opponent_player(player_state, player_id)]
+		    end
+		  end
 		end
 
-		def visible_opponent_player(player_state)
-			{
-				"nation_id" => player_state["nation_id"],
-				"hand_count" => player_state["hand"].length,
-				"deck_count" => player_state["deck"].length,
-				"resources" => player_state["resources"],
-				"remaining_time" => player_state["remaining_time"],
-				"empty_deck_draw_attempts" => player_state["empty_deck_draw_attempts"],
-				"platoons" => player_state["platoons"].deep_dup,
-				"graveyard_count" => player_state["graveyard"].length
-			}
+		def visible_own_player(player_state, player_id)
+		  {
+		    "nation_id" => player_state["nation_id"],
+		    "hand" => player_state["hand"].deep_dup,
+		    "deck_count" => player_state["deck"].length,
+		    "platoons" => player_state["platoons"].deep_dup,
+		    "resources" => player_state["resources"],
+		    "fuel_on_field" => fuel_on_field(player_id),
+		    "remaining_time" => player_state["remaining_time"],
+		    "empty_deck_draw_attempts" => player_state["empty_deck_draw_attempts"],
+		    "graveyard_count" => player_state["graveyard"].length
+		  }
+		end
+
+		def visible_opponent_player(player_state, player_id)
+		  {
+		    "nation_id" => player_state["nation_id"],
+		    "hand_count" => player_state["hand"].length,
+		    "deck_count" => player_state["deck"].length,
+		    "resources" => player_state["resources"],
+		    "fuel_on_field" => fuel_on_field(player_id),
+		    "remaining_time" => player_state["remaining_time"],
+		    "empty_deck_draw_attempts" => player_state["empty_deck_draw_attempts"],
+		    "platoons" => player_state["platoons"].deep_dup,
+		    "graveyard_count" => player_state["graveyard"].length
+		  }
+		end
+
+		def fuel_on_field(player_id)
+		  GameEngine::Resources::FuelCalculator.call(
+		    state: @state,
+		    player_id: player_id
+		  )
 		end
   end
 end

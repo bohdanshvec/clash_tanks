@@ -203,6 +203,11 @@
 
               <span><%= current_player["resources"] %></span>
             </strong>
+
+            <span class="game-board__fuel-on-field">
+              <span>on field</span>
+              <strong><%= current_player["fuel_on_field"] %></strong>
+            </span>
           </p>
 
           <% if visible_state["current_player_id"].to_s == current_player_id %>
@@ -845,6 +850,11 @@
 
               <span><%= opponent_player["resources"] %></span>
             </strong>
+
+            <span class="game-board__fuel-on-field">
+              <span>on field</span>
+              <strong><%= opponent_player["fuel_on_field"] %></strong>
+            </span>
           </p>
 
         <% end %>
