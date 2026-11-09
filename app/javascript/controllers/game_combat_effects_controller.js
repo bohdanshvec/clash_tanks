@@ -1,4 +1,3 @@
-
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
@@ -83,6 +82,11 @@ export default class extends Controller {
     // Удаляем стрелку направления перемещения.
     this.moveDirectionArrow?.remove()
     this.moveDirectionArrow = null
+
+    // Удаляем временные слои эффектов приказов.
+    this.element
+      .querySelectorAll(".game-order-effect-layer")
+      .forEach((element) => element.remove())
 
     this.queue = []
     this.setLocked(false)
@@ -375,9 +379,67 @@ export default class extends Controller {
       )
     })
 
-    if (combatEvents.length === 0) return
+    // Отдельно выбираем события розыгрыша приказов.
+    const orderEvents = events.filter((event) => {
+      return event.type === "order_played"
+    })
 
-    combatEvents.forEach((event) => {
+    if (
+      combatEvents.length === 0 &&
+      orderEvents.length === 0
+    ) {
+      return
+    }
+
+    // Сервер отправляет order_played после событий
+    // выполнения способности. Визуально приказ должен
+    // показываться первым, до урона и уничтожения.
+    const queuedEvents = [
+      ...orderEvents,
+      ...combatEvents
+    ]
+
+    queuedEvents.forEach((event) => {
+      // ------------------------------------------------
+      // Подготовка визуальных данных приказа
+      // ------------------------------------------------
+
+      if (event.type === "order_played") {
+        const preview = Array.from(
+          this.element.querySelectorAll(
+            "[data-order-preview-card-id]"
+          )
+        ).find((element) => {
+          return (
+            element.dataset.orderPreviewCardId ===
+            String(event.card_id)
+          )
+        })
+
+        event.orderCardVisual =
+          preview?.querySelector(".catalog-card")?.cloneNode(true) || null
+
+        event.orderAbilityCodes =
+          preview?.dataset.orderAbilityCodes?.split(" ") || []
+
+        // Получаем координаты цели из фактического
+        // события нанесения урона приказом.
+        const damageEvent = events.find((item) => {
+          return (
+            item.type === "damage_applied" &&
+            item.source?.type === "order" &&
+            item.source?.code === "damage_technique"
+          )
+        })
+
+        event.orderTargetPosition =
+          damageEvent?.target?.position || null
+      }
+
+      // ------------------------------------------------
+      // Существующая обработка боевых событий
+      // ------------------------------------------------
+
       if (event === emptyDeckDamageEvent) {
         event.emptyDeckBurst = true
       }
@@ -696,6 +758,12 @@ export default class extends Controller {
       while (this.queue.length > 0) {
         const event = this.queue.shift()
 
+        // Сначала показываем визуальный розыгрыш приказа.
+        if (event.type === "order_played") {
+          await this.animateOrderPlayed(event)
+          continue
+        }
+
         // Существующая вспышка при опустевшей колоде.
         if (event.emptyDeckBurst) {
           await this.animateEmptyDeckDamage(event)
@@ -739,6 +807,210 @@ export default class extends Controller {
       if (this.queue.length > 0) {
         this.playQueue()
       }
+    }
+  }
+
+  // --------------------------------------------------
+  // Розыгрыш приказа
+  // --------------------------------------------------
+
+  async animateOrderPlayed(event) {
+    const field = this.element.querySelector(
+      ".game-board__field"
+    )
+
+    if (!field) return
+
+    // 1. Показываем вертикальную карту приказа.
+    if (event.orderCardVisual) {
+      const overlay = document.createElement("div")
+
+      overlay.className = "game-order-effect-layer"
+      overlay.setAttribute("aria-hidden", "true")
+
+      const card = event.orderCardVisual
+
+      card.classList.add("game-order-effect__card")
+
+      overlay.appendChild(card)
+      field.appendChild(overlay)
+
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches
+
+      try {
+        await this.playAnimation(
+          card,
+          reducedMotion
+            ? [
+                { opacity: 1 },
+                { opacity: 1 }
+              ]
+            : [
+                {
+                  opacity: 0,
+                  transform: "scale(0.9)"
+                },
+                {
+                  opacity: 1,
+                  transform: "scale(1)"
+                },
+                {
+                  opacity: 1,
+                  transform: "scale(1)"
+                },
+                {
+                  opacity: 0,
+                  transform: "scale(1.04)"
+                }
+              ],
+          {
+            duration: 700,
+            easing: "ease-in-out"
+          }
+        )
+      } finally {
+        overlay.remove()
+      }
+    }
+
+    // 2. Определяем способность приказа.
+    if (event.orderAbilityCodes?.includes("damage_technique")) {
+      await this.animateOrderTarget(
+        event.orderTargetPosition
+      )
+    } else if (
+      event.orderAbilityCodes?.includes("draw_cards")
+    ) {
+      await this.animateOrderFanCards()
+    }
+  }
+
+  // --------------------------------------------------
+  // Красная мишень над техникой
+  // --------------------------------------------------
+
+  async animateOrderTarget(position) {
+    if (!position) return
+
+    const cell = this.findCell(position)
+    if (!cell) return
+
+    const target = document.createElement("div")
+
+    target.className =
+      "game-combat-effect game-combat-effect--order-target"
+
+    target.setAttribute("aria-hidden", "true")
+
+    cell.appendChild(target)
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    try {
+      await this.playAnimation(
+        target,
+        reducedMotion
+          ? [
+              { opacity: 1 },
+              { opacity: 1 }
+            ]
+          : [
+              {
+                opacity: 0,
+                transform: "translate(-50%, -50%) scale(0.45)"
+              },
+              {
+                opacity: 1,
+                transform: "translate(-50%, -50%) scale(1.1)"
+              },
+              {
+                opacity: 1,
+                transform: "translate(-50%, -50%) scale(1)"
+              },
+              {
+                opacity: 0,
+                transform: "translate(-50%, -50%) scale(1.15)"
+              }
+            ],
+        {
+          duration: 300,
+          easing: "ease-out"
+        }
+      )
+    } finally {
+      target.remove()
+    }
+  }
+
+  // --------------------------------------------------
+  // Веер карт при розыгрыше приказа добора
+  // --------------------------------------------------
+
+  async animateOrderFanCards() {
+    const field = this.element.querySelector(
+      ".game-board__field"
+    )
+
+    const source = this.element.querySelector(
+      "[data-game-order-fan-cards]"
+    )
+
+    if (!field || !source) return
+
+    const overlay = document.createElement("div")
+
+    overlay.className = "game-order-effect-layer"
+    overlay.setAttribute("aria-hidden", "true")
+
+    const fan = source.cloneNode(true)
+
+    fan.removeAttribute("data-game-order-fan-cards")
+    fan.className = "game-order-effect__fan"
+
+    overlay.appendChild(fan)
+    field.appendChild(overlay)
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    try {
+      await this.playAnimation(
+        fan,
+        reducedMotion
+          ? [
+              { opacity: 1 },
+              { opacity: 1 }
+            ]
+          : [
+              {
+                opacity: 0,
+                transform: "scale(0.8)"
+              },
+              {
+                opacity: 1,
+                transform: "scale(1.05)"
+              },
+              {
+                opacity: 1,
+                transform: "scale(1)"
+              },
+              {
+                opacity: 0,
+                transform: "scale(1.1)"
+              }
+            ],
+        {
+          duration: 300,
+          easing: "ease-out"
+        }
+      )
+    } finally {
+      overlay.remove()
     }
   }
 
@@ -919,33 +1191,35 @@ export default class extends Controller {
       "(prefers-reduced-motion: reduce)"
     ).matches
 
-    await this.playAnimation(
-      burst,
-      [
+    try {
+      await this.playAnimation(
+        burst,
+        [
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(0.15) rotate(-15deg)"
+          },
+          {
+            opacity: 1,
+            transform: "translate(-50%, -50%) scale(1.2) rotate(10deg)"
+          },
+          {
+            opacity: 0.8,
+            transform: "translate(-50%, -50%) scale(0.9) rotate(25deg)"
+          },
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(1.5) rotate(40deg)"
+          }
+        ],
         {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(0.15) rotate(-15deg)"
-        },
-        {
-          opacity: 1,
-          transform: "translate(-50%, -50%) scale(1.2) rotate(10deg)"
-        },
-        {
-          opacity: 0.8,
-          transform: "translate(-50%, -50%) scale(0.9) rotate(25deg)"
-        },
-        {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(1.5) rotate(40deg)"
+          duration: reducedMotion ? 160 : 300,
+          easing: "ease-out"
         }
-      ],
-      {
-        duration: reducedMotion ? 160 : 300,
-        easing: "ease-out"
-      }
-    )
-
-    burst.remove()
+      )
+    } finally {
+      burst.remove()
+    }
   }
 
   // --------------------------------------------------
@@ -1030,33 +1304,35 @@ export default class extends Controller {
 
     deckCount.appendChild(burst)
 
-    await this.playAnimation(
-      burst,
-      [
+    try {
+      await this.playAnimation(
+        burst,
+        [
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(0.15) rotate(-15deg)"
+          },
+          {
+            opacity: 1,
+            transform: "translate(-50%, -50%) scale(1.2) rotate(10deg)"
+          },
+          {
+            opacity: 0.8,
+            transform: "translate(-50%, -50%) scale(0.9) rotate(25deg)"
+          },
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(1.5) rotate(40deg)"
+          }
+        ],
         {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(0.15) rotate(-15deg)"
-        },
-        {
-          opacity: 1,
-          transform: "translate(-50%, -50%) scale(1.2) rotate(10deg)"
-        },
-        {
-          opacity: 0.8,
-          transform: "translate(-50%, -50%) scale(0.9) rotate(25deg)"
-        },
-        {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(1.5) rotate(40deg)"
+          duration: reducedMotion ? 160 : 300,
+          easing: "ease-out"
         }
-      ],
-      {
-        duration: reducedMotion ? 160 : 300,
-        easing: "ease-out"
-      }
-    )
-
-    burst.remove()
+      )
+    } finally {
+      burst.remove()
+    }
 
     // 2. После вспышки показываем величину нанесённого урона.
     const damageNumber = document.createElement("span")
@@ -1070,33 +1346,35 @@ export default class extends Controller {
 
     deckCount.appendChild(damageNumber)
 
-    await this.playAnimation(
-      damageNumber,
-      [
+    try {
+      await this.playAnimation(
+        damageNumber,
+        [
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(0.65)"
+          },
+          {
+            opacity: 1,
+            transform: "translate(-50%, -50%) scale(1.2)"
+          },
+          {
+            opacity: 1,
+            transform: "translate(-50%, -60%) scale(1)"
+          },
+          {
+            opacity: 0,
+            transform: "translate(-50%, -90%) scale(1.15)"
+          }
+        ],
         {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(0.65)"
-        },
-        {
-          opacity: 1,
-          transform: "translate(-50%, -50%) scale(1.2)"
-        },
-        {
-          opacity: 1,
-          transform: "translate(-50%, -60%) scale(1)"
-        },
-        {
-          opacity: 0,
-          transform: "translate(-50%, -90%) scale(1.15)"
+          duration: reducedMotion ? 450 : 500,
+          easing: "ease-out"
         }
-      ],
-      {
-        duration: reducedMotion ? 450 : 500,
-        easing: "ease-out"
-      }
-    )
-
-    damageNumber.remove()
+      )
+    } finally {
+      damageNumber.remove()
+    }
   }
 
   // --------------------------------------------------
@@ -1374,29 +1652,31 @@ export default class extends Controller {
       "game-combat-effect--muzzle"
     )
 
-    await this.playAnimation(
-      flash,
-      [
+    try {
+      await this.playAnimation(
+        flash,
+        [
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(0.3)"
+          },
+          {
+            opacity: 1,
+            transform: "translate(-50%, -50%) scale(1.2)"
+          },
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(0.5)"
+          }
+        ],
         {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(0.3)"
-        },
-        {
-          opacity: 1,
-          transform: "translate(-50%, -50%) scale(1.2)"
-        },
-        {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(0.5)"
+          duration: this.constructor.EFFECTS.muzzle,
+          easing: "ease-out"
         }
-      ],
-      {
-        duration: this.constructor.EFFECTS.muzzle,
-        easing: "ease-out"
-      }
-    )
-
-    flash.remove()
+      )
+    } finally {
+      flash.remove()
+    }
   }
 
   // --------------------------------------------------
@@ -1416,19 +1696,21 @@ export default class extends Controller {
       `calc(-50% + ${offset.y}px)) ` +
       `rotate(${angle}deg)`
 
-    await this.playAnimation(
-      projectile,
-      [
-        { transform: start, opacity: 1 },
-        { transform: end, opacity: 0.2 }
-      ],
-      {
-        duration: this.constructor.EFFECTS.projectile,
-        easing: "ease-in"
-      }
-    )
-
-    projectile.remove()
+    try {
+      await this.playAnimation(
+        projectile,
+        [
+          { transform: start, opacity: 1 },
+          { transform: end, opacity: 0.2 }
+        ],
+        {
+          duration: this.constructor.EFFECTS.projectile,
+          easing: "ease-in"
+        }
+      )
+    } finally {
+      projectile.remove()
+    }
   }
 
   // --------------------------------------------------
@@ -1448,19 +1730,21 @@ export default class extends Controller {
 
     const end = `translate(-50%, -50%) rotate(${angle}deg)`
 
-    await this.playAnimation(
-      projectile,
-      [
-        { transform: start, opacity: 0.2 },
-        { transform: end, opacity: 1 }
-      ],
-      {
-        duration: this.constructor.EFFECTS.impactProjectile,
-        easing: "ease-out"
-      }
-    )
-
-    projectile.remove()
+    try {
+      await this.playAnimation(
+        projectile,
+        [
+          { transform: start, opacity: 0.2 },
+          { transform: end, opacity: 1 }
+        ],
+        {
+          duration: this.constructor.EFFECTS.impactProjectile,
+          easing: "ease-out"
+        }
+      )
+    } finally {
+      projectile.remove()
+    }
   }
 
   // --------------------------------------------------
@@ -1473,31 +1757,33 @@ export default class extends Controller {
       "game-combat-effect--impact"
     )
 
-    await this.playAnimation(
-      impact,
-      [
+    try {
+      await this.playAnimation(
+        impact,
+        [
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(0.2)"
+          },
+          {
+            opacity: 1,
+            transform: "translate(-50%, -50%) scale(1.2)"
+          },
+          {
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(1.8)"
+          }
+        ],
         {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(0.2)"
-        },
-        {
-          opacity: 1,
-          transform: "translate(-50%, -50%) scale(1.2)"
-        },
-        {
-          opacity: 0,
-          transform: "translate(-50%, -50%) scale(1.8)"
+          duration: window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+          ).matches ? 140 : this.constructor.EFFECTS.impact,
+          easing: "ease-out"
         }
-      ],
-      {
-        duration: window.matchMedia(
-          "(prefers-reduced-motion: reduce)"
-        ).matches ? 140 : this.constructor.EFFECTS.impact,
-        easing: "ease-out"
-      }
-    )
-
-    impact.remove()
+      )
+    } finally {
+      impact.remove()
+    }
   }
 
   // --------------------------------------------------

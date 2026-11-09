@@ -26,6 +26,16 @@
       card_abilities: :ability
     ).index_by(&:id)
 
+  order_preview_cards =
+    events.filter_map do |event|
+      event_type = event[:type] || event["type"]
+      next unless event_type.to_s == "order_played"
+
+      card_id = event[:card_id] || event["card_id"]
+
+      cards_by_id[card_id.to_i]
+    end.uniq(&:id)
+
   card_codes_by_id =
     cards_by_id.transform_values(&:code)
 
@@ -349,6 +359,36 @@
 
       <%# Центральное игровое поле. %>
       <section class="game-board__field">
+
+        <%# Скрытые копии разыгрываемых приказов для анимации обоим игрокам. %>
+        <div class="game-order-card-previews" hidden>
+
+          <% order_preview_cards.each do |order_card| %>
+
+            <div
+              data-order-preview-card-id="<%= order_card.id %>"
+              data-order-ability-codes="<%= order_card.card_abilities.map { |item| item.ability.code }.join(" ") %>"
+            >
+              <%= render "cards/card",
+                         card: order_card,
+                         display: "deck" %>
+            </div>
+
+          <% end %>
+
+        </div>
+
+        <%# Изображение веера карт для приказа добора. %>
+        <div class="game-order-assets" hidden>
+
+          <%= image_tag(
+            "icons/fan_cards_for_order.png",
+            data: { game_order_fan_cards: true },
+            alt: "",
+            draggable: false
+          ) %>
+
+        </div>
 
         <div class="battlefield">
 

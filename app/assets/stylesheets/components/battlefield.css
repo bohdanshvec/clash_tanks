@@ -123,6 +123,7 @@
   width: 100%;
   min-width: 0;
   color: #e9d4a0;
+  position: relative;
 }
 
 .game-board__field h2 {
