@@ -4,9 +4,9 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static EFFECTS = {
     muzzle: 100,
-    projectile: 210,
-    impactProjectile: 180,
-    impact: 220
+    projectile: 150,
+    impactProjectile: 130,
+    impact: 130
   }
 
   connect() {
@@ -670,7 +670,7 @@ export default class extends Controller {
         { opacity: 0 }
       ],
       {
-        duration: reducedMotion ? 250 : 1150,
+        duration: reducedMotion ? 250 : 600,
         easing: "ease-in-out"
       }
     )
@@ -940,7 +940,7 @@ export default class extends Controller {
         }
       ],
       {
-        duration: reducedMotion ? 160 : 430,
+        duration: reducedMotion ? 160 : 300,
         easing: "ease-out"
       }
     )
@@ -1051,7 +1051,7 @@ export default class extends Controller {
         }
       ],
       {
-        duration: reducedMotion ? 160 : 430,
+        duration: reducedMotion ? 160 : 300,
         easing: "ease-out"
       }
     )
@@ -1091,7 +1091,7 @@ export default class extends Controller {
         }
       ],
       {
-        duration: reducedMotion ? 450 : 850,
+        duration: reducedMotion ? 450 : 500,
         easing: "ease-out"
       }
     )
@@ -1233,7 +1233,7 @@ export default class extends Controller {
             }
           ],
       {
-        duration: 220,
+        duration: 150,
         easing: "ease-out"
       }
     )
@@ -1263,7 +1263,7 @@ export default class extends Controller {
           }
         ],
         {
-          duration: 780,
+          duration: 450,
           easing: "ease-in"
         }
       ),
@@ -1289,7 +1289,7 @@ export default class extends Controller {
           }
         ],
         {
-          duration: 680,
+          duration: 450,
           easing: "ease-out"
         }
       ),
@@ -1315,7 +1315,7 @@ export default class extends Controller {
           }
         ],
         {
-          duration: 1050,
+          duration: 500,
           easing: "ease-out"
         }
       )
