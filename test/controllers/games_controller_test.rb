@@ -1269,8 +1269,17 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 		first_player = create_player
 		second_player = create_player(email: "second@example.com")
 
-		first_deck = create_complete_deck(player: first_player)
-		second_deck = create_complete_deck(player: second_player)
+    first_deck = create_complete_deck(
+      player: first_player,
+      nation_code: "usa",
+      headquarters_code: "usa_headquarters_second_front"
+    )
+
+    second_deck = create_complete_deck(
+      player: second_player,
+      nation_code: "germany",
+      headquarters_code: "germany_headquarters_operation_weiß"
+    )
 
 		# Player 1 входит в игру через /play.
 		post login_path, params: {

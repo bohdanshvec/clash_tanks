@@ -58,16 +58,19 @@ module ActiveSupport
       player:,
       name: "Test Deck",
       nation_code: "usa",
-      headquarters_code: nil
+      headquarters_code: nil,
+      card_codes: nil
     )
       nation = Nation.find_or_create_by!(code: nation_code) do |record|
         record.name = nation_code.upcase
       end
 
-      headquarters_card = create_headquarters_card(
-        nation: nation,
-        code: headquarters_code
-      )
+      headquarters_card =
+        if headquarters_code
+          Card.find_by!(code: headquarters_code)
+        else
+          create_headquarters_card(nation: nation)
+        end
 
       deck = Deck.create!(
         player: player,
@@ -76,21 +79,33 @@ module ActiveSupport
         headquarters_card: headquarters_card
       )
 
-      10.times do |index|
-        card = Card.create!(
-          code: "#{nation.code}_card_#{index}_#{SecureRandom.hex(4)}",
-          nation: nation,
-          name: "Test Card #{index}",
-          card_type: "order",
-          weight: 1,
-          price: 1
-        )
+      if card_codes
+        card_codes.each do |card_code|
+          card = Card.find_by!(code: card_code)
 
-        DeckCard.create!(
-          deck: deck,
-          card: card,
-          quantity: 1
-        )
+          DeckCard.create!(
+            deck: deck,
+            card: card,
+            quantity: 1
+          )
+        end
+      else
+        10.times do |index|
+          card = Card.create!(
+            code: "#{nation.code}_card_#{index}_#{SecureRandom.hex(4)}",
+            nation: nation,
+            name: "Test Card #{index}",
+            card_type: "order",
+            weight: 1,
+            price: 1
+          )
+
+          DeckCard.create!(
+            deck: deck,
+            card: card,
+            quantity: 1
+          )
+        end
       end
 
       deck
