@@ -416,6 +416,16 @@
                         movement_remaining =
                           movement_count.clamp(0, movement_limit)
 
+                        technique_has_available_actions =
+                          technique_firepower_available ||
+                          (
+                            technique_is_current_players_object &&
+                            movement_remaining.positive?
+                          )
+
+                        technique_muted =
+                          !technique_has_available_actions
+
                         technique_type_names = {
                           "light_tank" => "Легкий танк",
                           "medium_tank" => "Середній танк",
@@ -427,7 +437,7 @@
 
                       <% if technique_image_available %>
 
-                        <div class="technique-field <%= technique_is_own ? "technique-field--own" : "technique-field--enemy" %>"
+                        <div class="technique-field <%= technique_is_own ? "technique-field--own" : "technique-field--enemy" %> <%= "game-object--muted" if technique_muted %>"
                              title="<%= cell["name"] %>"
                              data-technique-nation="<%= technique_nation %>"
                              data-technique-type="<%= technique_type %>">
@@ -548,11 +558,14 @@
                           else
                             !cell["has_counterattacked"]
                           end
+
+                        headquarters_muted =
+                          !firepower_available
                       %>
 
                       <% if supported_headquarters_nations.include?(headquarters_nation) && headquarters_card_code.present? %>
 
-                        <div class="headquarters-field <%= is_own_headquarters ? "headquarters-field--own" : "headquarters-field--enemy" %>"
+                        <div class="headquarters-field <%= is_own_headquarters ? "headquarters-field--own" : "headquarters-field--enemy" %> <%= "game-object--muted" if headquarters_muted %>"
                              title="<%= cell["name"] %>"
                              data-headquarters-nation="<%= headquarters_nation %>">
 
