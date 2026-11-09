@@ -1,5 +1,11 @@
 
 <%
+  display_context = local_assigns.fetch(:display, "deck")
+  hand_context = display_context == "hand"
+
+  hand_player_id = local_assigns[:player_id]
+  muted = local_assigns.fetch(:muted, false)
+
   is_headquarters = card.card_type == "headquarters"
 
   platoon_variant =
@@ -24,7 +30,7 @@
 
   border_path = card_border_path(
     nation: card.nation.code,
-    display: is_headquarters ? "card" : "deck",
+    display: is_headquarters ? "card" : display_context,
     type: card.card_type,
     variant: border_variant
   )
@@ -41,28 +47,45 @@
       "Добрати карт: #{count}" if count.present?
     end
   end
+
+  article_classes = [
+    "catalog-card",
+    "catalog-card--#{card.card_type}"
+  ]
+
+  article_classes << "catalog-card--hand" if hand_context
+  article_classes << "game-object--muted" if muted
 %>
 
-<article class="catalog-card catalog-card--<%= card.card_type %>">
+<article class="<%= article_classes.join(" ") %>"
+         <% if hand_context %>
+           draggable="true"
+           data-action="click->game-events#select"
+           data-card-id="<%= card.id %>"
+           data-player-id="<%= hand_player_id %>"
+           data-card-type="<%= card.card_type %>"
+         <% end %>>
 
   <div class="catalog-card__image">
 
     <%= image_tag image_path,
       class: "catalog-card__illustration",
-      alt: card.name %>
+      alt: card.name,
+      draggable: false %>
 
     <%= image_tag border_path,
       class: "catalog-card__frame",
-      alt: "" %>
+      alt: "",
+      draggable: false %>
 
     <% unless is_headquarters %>
 
-    <div class="catalog-card__weight">
-      <span>Level</span>
-      <span class="catalog-card__weight-value">
-        <%= card.weight %>
-      </span>
-    </div>
+      <div class="catalog-card__weight">
+        <span>Level</span>
+        <span class="catalog-card__weight-value">
+          <%= card.weight %>
+        </span>
+      </div>
 
     <% end %>
 
@@ -75,11 +98,13 @@
     <% elsif card.card_type == "platoon" && card.platoon %>
 
       <div class="catalog-card__type catalog-card__type--platoon">
+
         <% if platoon_variant == "attack" %>
           <span class="catalog-card__platoon-symbol catalog-card__platoon-symbol--attack"></span>
         <% else %>
           <span class="catalog-card__platoon-symbol catalog-card__platoon-symbol--defense"></span>
         <% end %>
+
       </div>
 
     <% elsif card.card_type == "order" %>
@@ -91,12 +116,18 @@
     <% end %>
 
     <% unless is_headquarters %>
+
       <div class="catalog-card__price">
+
         <%= image_tag "icons/fuel_canister.png",
           class: "catalog-card__price-icon",
-          alt: "" %>
+          alt: "",
+          draggable: false %>
+
         <span><%= card.price %></span>
+
       </div>
+
     <% end %>
 
     <div class="catalog-card__name">
@@ -162,11 +193,15 @@
       <div class="catalog-card__description">
 
         <% if order_descriptions.any? %>
+
           <% order_descriptions.each do |description| %>
             <p><%= description %></p>
           <% end %>
+
         <% else %>
+
           <p><%= card.abilities.map(&:name).to_sentence %></p>
+
         <% end %>
 
       </div>

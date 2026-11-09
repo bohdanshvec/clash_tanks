@@ -205,3 +205,38 @@
 .hand--bottom {
   justify-content: center;
 }
+
+/* =========================================================
+   Stage 24 — вертикальные карточки в руке игрока
+   ========================================================= */
+
+.hand .catalog-card {
+  flex: 0 0 150px;
+  width: 150px;
+
+  box-sizing: border-box;
+
+  transform-origin: center bottom;
+
+  cursor: grab;
+}
+
+/* Увеличение карточки при наведении */
+
+.hand .catalog-card:hover {
+  z-index: 100;
+
+  transform: translateY(-20px) scale(1.15);
+
+  filter: brightness(1.08);
+
+  transition:
+    transform 0.25s ease,
+    filter 0.2s ease;
+}
+
+/* Перетаскивание */
+
+.hand .catalog-card:active {
+  cursor: grabbing;
+}

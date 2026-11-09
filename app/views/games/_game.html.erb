@@ -18,10 +18,16 @@
 
   nation_codes_by_id = Nation.pluck(:id, :code).to_h
 
+  cards_by_id =
+    Card.includes(
+      :nation,
+      :technique,
+      :platoon,
+      card_abilities: :ability
+    ).index_by(&:id)
+
   card_codes_by_id =
-    Card.where(card_type: %w[headquarters technique platoon])
-        .pluck(:id, :code)
-        .to_h
+    cards_by_id.transform_values(&:code)
 
   headquarters_by_player_id =
     visible_state["field"]
@@ -794,123 +800,60 @@
 
     <section class="game-bottom">
 
-      <div class="game-bottom__hand">
+    <div class="game-bottom__hand">
 
-        <% if current_player %>
+      <% if current_player %>
 
-          <div class="hand hand--bottom"
-               style="--hand-count: <%= current_player["hand"].length %>;">
+        <div class="hand hand--bottom"
+             style="--hand-count: <%= current_player["hand"].length %>;">
 
-            <% current_player["hand"].each do |card| %>
+          <% current_player["hand"].each do |hand_card| %>
 
-              <%
-                card_actions =
-                  visible_state["available_actions"]
-                    .dig("hand", card["card_id"].to_s)
+            <%
+              card_actions =
+                visible_state["available_actions"]
+                  .dig("hand", hand_card["card_id"].to_s)
 
-                card_muted =
-                  visible_state["current_player_id"].to_s != current_player_id ||
-                  card_actions&.dig("resources_sufficient") == false
-              %>
+              card_muted =
+                visible_state["current_player_id"].to_s != current_player_id ||
+                card_actions&.dig("resources_sufficient") == false
 
-              <article class="game-card <%= "game-object--muted" if card_muted %>"
+              card_record =
+                cards_by_id[hand_card["card_id"].to_i]
+            %>
+
+            <% if card_record %>
+
+              <%= render "cards/card",
+                         card: card_record,
+                         display: "hand",
+                         player_id: current_player_id,
+                         muted: card_muted %>
+
+            <% else %>
+
+              <%# Резервное отображение при отсутствии записи карты в БД. %>
+
+              <article class="game-card game-object--muted"
                        draggable="true"
                        data-action="click->game-events#select"
-                       data-card-id="<%= card["card_id"] %>"
+                       data-card-id="<%= hand_card["card_id"] %>"
                        data-player-id="<%= current_player_id %>"
-                       data-card-type="<%= card["card_type"] %>">
+                       data-card-type="<%= hand_card["card_type"] %>">
 
-                <header class="game-card__header">
-                  <strong><%= card["name"] %></strong>
-                </header>
-
-                <div class="game-card__stats">
-
-                  <% if card["card_type"] == "technique" %>
-
-                    <p>Type: <%= card["card_type"] %></p>
-
-                    <p>
-                      Technique type:
-                      <%= card.dig("technique", "technique_type") %>
-                    </p>
-
-                    <p>Price: <%= card["price"] %></p>
-                    <p>HP: <%= card.dig("technique", "hp") %></p>
-
-                    <p>
-                      Firepower:
-                      <%= card.dig("technique", "firepower") %>
-                    </p>
-
-                    <p>Fuel: <%= card.dig("technique", "fuel") %></p>
-
-                  <% elsif card["card_type"] == "order" %>
-
-                    <p>Type: <%= card["card_type"] %></p>
-                    <p>Price: <%= card["price"] %></p>
-
-                    <% abilities = card["abilities"] || [] %>
-
-                    <div class="game-card__abilities">
-
-                      <p>Abilities:</p>
-
-                      <% if abilities.any? %>
-
-                        <ul>
-
-                          <% abilities.each do |ability| %>
-
-                            <li>
-                              <%= ability["code"] %>
-
-                              <% if ability["code"] == "damage_technique" %>
-                                — Damage: <%= ability["damage"] %>
-                              <% elsif ability["code"] == "draw_cards" %>
-                                — Cards: <%= ability["count"] %>
-                              <% end %>
-                            </li>
-
-                          <% end %>
-
-                        </ul>
-
-                      <% else %>
-
-                        <p>none</p>
-
-                      <% end %>
-
-                    </div>
-
-                  <% elsif card["card_type"] == "platoon" %>
-
-                    <p>Type: <%= card["card_type"] %></p>
-                    <p>Price: <%= card["price"] %></p>
-                    <p>HP: <%= card.dig("platoon", "hp") %></p>
-
-                    <p>
-                      Firepower:
-                      <%= card.dig("platoon", "firepower") %>
-                    </p>
-
-                    <p>Armor: <%= card.dig("platoon", "armor") %></p>
-                    <p>Fuel: <%= card.dig("platoon", "fuel") %></p>
-
-                  <% end %>
-
-                </div>
+                <strong><%= hand_card["name"] %></strong>
 
               </article>
 
             <% end %>
 
-          </div>
+          <% end %>
 
-        <% end %>
+        </div>
 
-      </div>
+      <% end %>
+
+    </div>
 
     </section>
 
