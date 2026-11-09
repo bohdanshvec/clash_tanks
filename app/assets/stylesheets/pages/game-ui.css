@@ -658,29 +658,38 @@ body.game-page .game {
    Stage 24 — иконки колоды и ресурсов
    ========================================================= */
 
-.game-board__info-value {
-  display: inline-flex;
-  flex-direction: row;
+.game-board__info-item > strong.game-board__info-value {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  grid-auto-flow: row;
+
   align-items: center;
   justify-content: center;
-  gap: 7px;
+
+  column-gap: 14px;
+
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
 
   line-height: 1;
   white-space: nowrap;
 }
 
-.game-board__info-icon {
+.game-board__info-item > strong.game-board__info-value > img.game-board__info-icon {
   display: block;
 
   width: clamp(17px, 1.8vw, 25px);
   height: clamp(17px, 1.8vw, 25px);
 
-  flex: 0 0 auto;
+  max-width: none;
   object-fit: contain;
 }
 
-.game-board__info-value > span {
-  display: inline-flex;
+.game-board__info-item > strong.game-board__info-value > span {
+  display: flex;
   align-items: center;
+  justify-content: center;
+
   line-height: 1;
 }
