@@ -633,3 +633,54 @@ body.game-page .game {
   min-height: clamp(30px, 4.5vw, 64px);
   font-size: clamp(10px, 1.2vw, 17px);
 }
+
+/* =========================================================
+   Stage 24 — прогноз урона от пустой колоды
+   ========================================================= */
+
+.game-board__deck-count {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+}
+
+.game-board__deck-damage {
+  color: #e05252;
+  font-size: 0.65em;
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 2px;
+  text-shadow: 0 0 4px rgba(224, 82, 82, 0.45);
+}
+
+/* =========================================================
+   Stage 24 — иконки колоды и ресурсов
+   ========================================================= */
+
+.game-board__info-value {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.game-board__info-icon {
+  display: block;
+
+  width: clamp(17px, 1.8vw, 25px);
+  height: clamp(17px, 1.8vw, 25px);
+
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.game-board__info-value > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}

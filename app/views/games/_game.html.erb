@@ -174,14 +174,35 @@
 
           <p class="game-board__info-item">
             <span class="game-board__info-label">Колода</span>
-            <strong data-deck-count-player-id="<%= current_player_id %>">
-              <%= current_player["deck_count"] %>
+
+            <strong
+              class="game-board__info-value"
+              data-deck-count-player-id="<%= current_player_id %>"
+            >
+              <%= image_tag(
+                "icons/fan_of_cards.png",
+                class: "game-board__info-icon",
+                alt: "",
+                draggable: false
+              ) %>
+
+              <span><%= current_player["deck_count"] %></span>
             </strong>
           </p>
 
           <p class="game-board__info-item">
             <span class="game-board__info-label">Ресурси</span>
-            <strong><%= current_player["resources"] %></strong>
+
+            <strong class="game-board__info-value">
+              <%= image_tag(
+                "icons/barrels.png",
+                class: "game-board__info-icon",
+                alt: "",
+                draggable: false
+              ) %>
+
+              <span><%= current_player["resources"] %></span>
+            </strong>
           </p>
 
           <% if visible_state["current_player_id"].to_s == current_player_id %>
@@ -795,14 +816,35 @@
 
           <p class="game-board__info-item">
             <span class="game-board__info-label">Колода</span>
-            <strong data-deck-count-player-id="<%= opponent_player_id %>">
-              <%= opponent_player["deck_count"] %>
+
+            <strong
+              class="game-board__info-value"
+              data-deck-count-player-id="<%= opponent_player_id %>"
+            >
+              <%= image_tag(
+                "icons/fan_of_cards.png",
+                class: "game-board__info-icon",
+                alt: "",
+                draggable: false
+              ) %>
+
+              <span><%= opponent_player["deck_count"] %></span>
             </strong>
           </p>
 
           <p class="game-board__info-item">
             <span class="game-board__info-label">Ресурси</span>
-            <strong><%= opponent_player["resources"] %></strong>
+
+            <strong class="game-board__info-value">
+              <%= image_tag(
+                "icons/barrels.png",
+                class: "game-board__info-icon",
+                alt: "",
+                draggable: false
+              ) %>
+
+              <span><%= opponent_player["resources"] %></span>
+            </strong>
           </p>
 
         <% end %>

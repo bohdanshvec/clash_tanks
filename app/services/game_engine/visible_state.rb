@@ -64,6 +64,7 @@ module GameEngine
 				"deck_count" => player_state["deck"].length,
 				"resources" => player_state["resources"],
 				"remaining_time" => player_state["remaining_time"],
+				"empty_deck_draw_attempts" => player_state["empty_deck_draw_attempts"],
 				"platoons" => player_state["platoons"].deep_dup,
 				"graveyard_count" => player_state["graveyard"].length
 			}
