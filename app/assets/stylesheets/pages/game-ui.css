@@ -400,11 +400,11 @@ body.game-page .game {
   text-shadow: 1px 1px 2px #000;
 }
 
-.game-board__fuel-on-field strong {
+.game-board__info-item .game-board__fuel-on-field strong {
   color: #e9d4a0;
 
   font-family: Arial, sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1.2;
 }
@@ -664,9 +664,9 @@ body.game-page .game {
    Stage 24 — прогноз урона от пустой колоды
    ========================================================= */
 
-.game-board__deck-count {
+.game-board__info-item > strong.game-board__info-value > .game-board__deck-count {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: center;
   gap: 4px;
 }

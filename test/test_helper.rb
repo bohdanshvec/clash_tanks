@@ -67,7 +67,11 @@ module ActiveSupport
 
       headquarters_card =
         if headquarters_code
-          Card.find_by!(code: headquarters_code)
+          Card.find_by(code: headquarters_code) ||
+            create_headquarters_card(
+              nation: nation,
+              code: headquarters_code
+            )
         else
           create_headquarters_card(nation: nation)
         end

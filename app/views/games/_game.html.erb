@@ -186,7 +186,15 @@
                 draggable: false
               ) %>
 
-              <span><%= current_player["deck_count"] %></span>
+              <span class="game-board__deck-count">
+                <span><%= current_player["deck_count"] %></span>
+
+                <% if current_player["deck_count"].zero? %>
+                  <span class="game-board__deck-damage">
+                    <%= current_player["empty_deck_draw_attempts"].to_i + 1 %>
+                  </span>
+                <% end %>
+              </span>
             </strong>
           </p>
 
@@ -833,7 +841,15 @@
                 draggable: false
               ) %>
 
-              <span><%= opponent_player["deck_count"] %></span>
+              <span class="game-board__deck-count">
+                <span><%= opponent_player["deck_count"] %></span>
+
+                <% if opponent_player["deck_count"].zero? %>
+                  <span class="game-board__deck-damage">
+                    <%= opponent_player["empty_deck_draw_attempts"].to_i + 1 %>
+                  </span>
+                <% end %>
+              </span>
             </strong>
           </p>
 

@@ -1269,16 +1269,45 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 		first_player = create_player
 		second_player = create_player(email: "second@example.com")
 
+    load Rails.root.join("db/seeds/nations.rb")
+    load Rails.root.join("db/seeds/abilities.rb")
+    load Rails.root.join("db/seeds/cards.rb")
+    load Rails.root.join("db/seeds/card_abilities.rb")
+
     first_deck = create_complete_deck(
       player: first_player,
       nation_code: "usa",
-      headquarters_code: "usa_headquarters_second_front"
+      headquarters_code: "usa_headquarters_second_front",
+      card_codes: %w[
+        usa_m3_stuart
+        usa_m8_greyhound
+        usa_m3_lee_grant
+        usa_m4_sherman
+        usa_m4a3e8
+        usa_m4a3e2
+        usa_m10_wolverine
+        usa_m26_pershing
+        usa_m8_hmc_scott
+        usa_lend_liz
+      ]
     )
 
     second_deck = create_complete_deck(
       player: second_player,
       nation_code: "germany",
-      headquarters_code: "germany_headquarters_operation_weiß"
+      headquarters_code: "germany_headquarters_operation_weiß",
+      card_codes: %w[
+        germany_pz_ii
+        germany_sd_222
+        germany_pz_iii_ausf
+        germany_pz_iv_ausf
+        germany_hetzer
+        germany_jagdpanther_iv
+        germany_jagdpanther
+        germany_tiger_i
+        germany_sturmpanzer_iv
+        germany_postril
+      ]
     )
 
 		# Player 1 входит в игру через /play.
