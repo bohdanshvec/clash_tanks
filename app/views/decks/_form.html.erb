@@ -154,7 +154,7 @@
             <% quantity = selected_quantities[card.id] || 0 %>
 
             <div
-              class="deck-editor__card"
+              class="deck-editor__card<%= ' deck-editor__card--absent' if quantity.zero? %>"
               data-card-weight="<%= card.weight %>"
             >
 
@@ -185,8 +185,10 @@
 
                 <button
                   type="button"
+                  data-deck-editor-target="increaseButton"
                   data-action="click->deck-editor#increase"
                   data-card-id="<%= card.id %>"
+                  <%= "hidden" if quantity >= 3 %>
                 >
                   +
                 </button>

@@ -7,7 +7,8 @@ export default class extends Controller {
     "nationSection",
     "quantity",
     "count",
-    "weight"
+    "weight",
+    "increaseButton"
   ]
 
   connect() {
@@ -16,6 +17,7 @@ export default class extends Controller {
 
   update() {
     this.updateNation()
+    this.updateCardStates()
     this.updateSummary()
   }
 
@@ -46,6 +48,33 @@ export default class extends Controller {
     this.nationTarget.textContent =
       section?.querySelector("h2")?.textContent.trim() ||
       "не выбрана"
+  }
+
+  updateCardStates() {
+    this.quantityTargets.forEach((input) => {
+      const card = input.closest(".deck-editor__card")
+
+      const quantity =
+        Number.parseInt(input.value, 10) || 0
+
+      this.updateCardState(card, quantity)
+    })
+  }
+
+  updateCardState(card, quantity) {
+    card.classList.toggle(
+      "deck-editor__card--absent",
+      quantity === 0
+    )
+
+    const increaseButton =
+      card.querySelector(
+        "[data-deck-editor-target='increaseButton']"
+      )
+
+    if (increaseButton) {
+      increaseButton.hidden = quantity >= 3
+    }
   }
 
   increase(event) {
@@ -83,6 +112,8 @@ export default class extends Controller {
       card.querySelector(".deck-editor__quantity-value")
 
     counter.textContent = quantity
+
+    this.updateCardState(card, quantity)
 
     this.updateSummary()
   }

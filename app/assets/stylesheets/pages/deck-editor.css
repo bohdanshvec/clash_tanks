@@ -179,10 +179,18 @@
   box-sizing: border-box;
 }
 
-/* Наведение */
+/* В редакторе колоды увеличение карточек отключено */
 
 .deck-editor__card .catalog-card:hover {
-  transform: translateY(-15px) scale(1.4);
+  transform: none;
+  filter: none;
+  z-index: 1;
+}
+
+/* Карточки, отсутствующие в колоде */
+
+.deck-editor__card--absent .catalog-card {
+  opacity: 0.65;
 }
 
 /* ---------------------------------------------------------
@@ -231,6 +239,14 @@
 
 .deck-editor__quantity input {
   display: none;
+}
+
+/* Карты, присутствующие в колоде */
+
+.deck-editor__card:not(.deck-editor__card--absent) button {
+  background-color: #38b000;
+  border-color: #38b000;
+  color: #ffffff;
 }
 
 /* ---------------------------------------------------------
@@ -372,10 +388,6 @@
   .deck-editor__card .catalog-card {
     flex-basis: 100%;
     width: 100%;
-  }
-
-  .deck-editor__card .catalog-card:hover {
-    transform: translateY(-8px) scale(1.2);
   }
 
   .deck-editor__field {
