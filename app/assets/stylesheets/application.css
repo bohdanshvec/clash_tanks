@@ -12,6 +12,7 @@
 @import "components/platoon-field.css";
 @import "components/game-effects.css";
 @import "pages/game-ui.css";
+@import "components/navigation.css";
 @import "pages/rules.css";
 @import "pages/home.css";
 @import "components/text-theme.css";

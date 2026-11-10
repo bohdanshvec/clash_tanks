@@ -1,3 +1,4 @@
+
 /* ---------------------------------------------------------
    Stage 17.2 — редактор колоды
    --------------------------------------------------------- */
@@ -7,11 +8,13 @@
   box-sizing: border-box;
 }
 
+/* Название колоды и выбор штаба */
+
 .deck-editor__general {
   display: flex;
   align-items: flex-end;
   flex-wrap: wrap;
-  gap: 30px;
+  gap: 24px;
 
   margin-bottom: 20px;
 }
@@ -19,33 +22,109 @@
 .deck-editor__field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 9px;
+}
+
+.deck-editor__field label {
+  color: #e0c68d;
+
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .deck-editor__field input,
 .deck-editor__field select {
-  min-width: 280px;
-  padding: 7px 9px;
-
   box-sizing: border-box;
+
+  min-width: 280px;
+  min-height: 46px;
+  padding: 10px 13px;
+
+  color: #e6e9e3;
+  background: #202824;
+
+  border: 1px solid #65704d;
+  border-radius: 6px;
+
+  font-family: inherit;
+  font-size: 15px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
+
+.deck-editor__field input:focus,
+.deck-editor__field select:focus {
+  color: #ffffff;
+  background: #202824;
+
+  border-color: #d1bd83;
+
+  box-shadow: 0 0 0 3px rgba(224, 198, 141, 0.18);
+
+  outline: none;
+}
+
+/* Выбранный штаб при редактировании */
+
+.deck-editor__selected-headquarters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: 10px 14px;
+
+  color: #e6e9e3;
+  background: #303a31;
+
+  border: 1px solid #65704d;
+  border-radius: 7px;
+}
+
+.deck-editor__selected-headquarters small {
+  color: #c9d0c2;
+}
+
+/* Сводка по колоде */
 
 .deck-editor__summary {
   display: flex;
-  gap: 30px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 30px;
 
   margin-bottom: 25px;
-  padding: 12px 15px;
+  padding: 16px 20px;
 
-  border: 1px solid #aaa;
-  border-radius: 6px;
+  color: #e6e9e3;
+  background: linear-gradient(
+    135deg,
+    rgba(35, 44, 34, 0.96),
+    rgba(24, 31, 24, 0.96)
+  );
 
-  background: #f5f5f5;
+  border: 1px solid #65704d;
+  border-radius: 8px;
+
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.18);
+}
+
+.deck-editor__summary strong {
+  font-size: 15px;
+}
+
+.deck-editor__summary span {
+  color: #e0c68d;
 }
 
 .deck-editor__summary--over-limit {
   color: #b00000;
 }
+
+/* ---------------------------------------------------------
+   Нации
+   --------------------------------------------------------- */
 
 .deck-editor__nation {
   margin-bottom: 25px;
@@ -58,7 +137,6 @@
 .deck-editor__nation h2 {
   margin: 0 0 12px;
 }
-
 
 /* ---------------------------------------------------------
    Карточки редактора
@@ -102,37 +180,6 @@
 .deck-editor__card .catalog-card:hover {
   transform: translateY(-15px) scale(1.4);
 }
-
-/* Адаптивность */
-
-@media (max-width: 600px) {
-  .deck-editor__card-list {
-    gap: 12px;
-  }
-
-  .deck-editor__card {
-    flex-basis: min(255px, calc(50vw - 24px));
-    width: min(255px, calc(50vw - 24px));
-  }
-
-  .deck-editor__card .catalog-card {
-    flex-basis: 100%;
-    width: 100%;
-  }
-
-  .deck-editor__card .catalog-card:hover {
-    transform: translateY(-8px) scale(1.2);
-  }
-}
-
-@media (max-width: 380px) {
-  .deck-editor__card {
-    flex-basis: 100%;
-    width: 100%;
-    max-width: 255px;
-  }
-}
-
 
 /* ---------------------------------------------------------
    Количество карт
@@ -183,64 +230,7 @@
 }
 
 /* ---------------------------------------------------------
-   Выбранный штаб при редактировании
-   --------------------------------------------------------- */
-
-.deck-editor__selected-headquarters {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  padding: 10px 14px;
-
-  border: 1px solid #aaa;
-  border-radius: 5px;
-
-  background: #f5f5f5;
-}
-
-.deck-editor__selected-headquarters small {
-  color: #666;
-}
-
-/* ---------------------------------------------------------
-   Действия редактора
-   --------------------------------------------------------- */
-
-.deck-editor__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  margin-top: 0;
-  padding-bottom: 1px;
-}
-
-.deck-editor__actions input,
-.deck-editor__actions a {
-  box-sizing: border-box;
-
-  padding: 7px 12px;
-
-  border: 1px solid #767676;
-  border-radius: 3px;
-
-  background: #efefef;
-
-  font-size: 14px;
-  line-height: normal;
-  text-decoration: none;
-
-  cursor: pointer;
-}
-
-.deck-editor__actions input:hover,
-.deck-editor__actions a:hover {
-  background: #e5e5e5;
-}
-
-/* ---------------------------------------------------------
-   Stage 24 — ошибки редактора колоды
+   Ошибки редактора колоды
    --------------------------------------------------------- */
 
 .deck-editor__errors {
@@ -270,103 +260,9 @@
   color: #e6e9e3;
 }
 
-/* =========================================================
-   Stage 24 — оформление формы редактора колоды
-   ========================================================= */
-
-/* Название колоды и выбор штаба */
-
-.deck-editor__general {
-  gap: 24px;
-  align-items: flex-end;
-}
-
-.deck-editor__field {
-  gap: 9px;
-}
-
-.deck-editor__field label {
-  color: #e0c68d;
-
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.deck-editor__field input,
-.deck-editor__field select {
-  min-height: 46px;
-  padding: 10px 13px;
-
-  color: #e6e9e3;
-  background: #202824;
-
-  border: 1px solid #65704d;
-  border-radius: 6px;
-
-  font-family: inherit;
-  font-size: 15px;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.deck-editor__field input:focus,
-.deck-editor__field select:focus {
-  color: #ffffff;
-  background: #202824;
-
-  border-color: #d1bd83;
-
-  box-shadow: 0 0 0 3px rgba(224, 198, 141, 0.18);
-
-  outline: none;
-}
-
-/* Информация о штабе при редактировании */
-
-.deck-editor__selected-headquarters {
-  color: #e6e9e3;
-  background: #303a31;
-  border-color: #65704d;
-  border-radius: 7px;
-}
-
-.deck-editor__selected-headquarters small {
-  color: #c9d0c2;
-}
-
-/* Сводка по колоде */
-
-.deck-editor__summary {
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 18px 30px;
-
-  padding: 16px 20px;
-
-  color: #e6e9e3;
-  background: linear-gradient(
-    135deg,
-    rgba(35, 44, 34, 0.96),
-    rgba(24, 31, 24, 0.96)
-  );
-
-  border: 1px solid #65704d;
-  border-radius: 8px;
-
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.18);
-}
-
-.deck-editor__summary strong {
-  font-size: 15px;
-}
-
-.deck-editor__summary span {
-  color: #e0c68d;
-}
-
-/* Кнопки сохранения и отмены */
+/* ---------------------------------------------------------
+   Действия редактора
+   --------------------------------------------------------- */
 
 .deck-editor__actions {
   display: flex;
@@ -375,7 +271,9 @@
   flex-wrap: wrap;
   gap: 30px;
 
+  margin-top: 0;
   margin-left: auto;
+  padding-bottom: 1px;
 }
 
 .deck-editor__actions input,
@@ -383,6 +281,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   box-sizing: border-box;
 
   min-height: 46px;
@@ -452,27 +351,29 @@
   outline-offset: 3px;
 }
 
-/* Учитываем предпочтение уменьшенной анимации */
-
-@media (prefers-reduced-motion: reduce) {
-  .decks-page__create-button,
-  .deck-editor__field input,
-  .deck-editor__field select,
-  .deck-editor__actions input,
-  .deck-editor__actions a {
-    transition: none;
-  }
-
-  .decks-page__create-button:hover,
-  .deck-editor__actions input:hover,
-  .deck-editor__actions a:hover {
-    transform: none;
-  }
-}
-
-/* Мобильные устройства */
+/* =========================================================
+   Адаптивность
+   ========================================================= */
 
 @media (max-width: 600px) {
+  .deck-editor__card-list {
+    gap: 12px;
+  }
+
+  .deck-editor__card {
+    flex-basis: min(255px, calc(50vw - 24px));
+    width: min(255px, calc(50vw - 24px));
+  }
+
+  .deck-editor__card .catalog-card {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .deck-editor__card .catalog-card:hover {
+    transform: translateY(-8px) scale(1.2);
+  }
+
   .deck-editor__field {
     width: 100%;
   }
@@ -492,5 +393,31 @@
   .deck-editor__actions a {
     min-height: 48px;
     padding: 12px 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .deck-editor__card {
+    flex-basis: 100%;
+    width: 100%;
+    max-width: 255px;
+  }
+}
+
+/* Учитываем предпочтение уменьшенной анимации */
+
+@media (prefers-reduced-motion: reduce) {
+  .decks-page__create-button,
+  .deck-editor__field input,
+  .deck-editor__field select,
+  .deck-editor__actions input,
+  .deck-editor__actions a {
+    transition: none;
+  }
+
+  .decks-page__create-button:hover,
+  .deck-editor__actions input:hover,
+  .deck-editor__actions a:hover {
+    transform: none;
   }
 }

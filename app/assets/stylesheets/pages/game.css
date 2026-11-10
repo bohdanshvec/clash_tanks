@@ -1,3 +1,4 @@
+
 /* =========================================================
    Stage 15.11 — игровая геометрия
    ========================================================= */
@@ -29,48 +30,6 @@
 }
 
 /* ---------------------------------------------------------
-   Заголовок
-   --------------------------------------------------------- */
-
-.game-header {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 20px;
-  white-space: nowrap;
-  color: #e9d4a0;
-}
-
-.game-header > .app-header__fullscreen {
-  margin-left: auto;
-  margin-right: 28px;
-}
-
-.game-header h3,
-.game-header p {
-  color: #e9d4a0;
-}
-
-.game-header h1,
-.game-header p {
-  margin: 0;
-}
-
-.app-header__home {
-  display: inline-block;
-  margin-left: 16px;
-  padding: 6px 12px;
-  border: 1px solid #222;
-  border-radius: 6px;
-  text-decoration: none;
-  background: #eee;
-}
-
-.app-header__home:hover {
-  background: #ddd;
-}
-
-/* ---------------------------------------------------------
    Верхняя часть
    --------------------------------------------------------- */
 
@@ -82,21 +41,6 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-}
-
-.game-top__hand,
-.game-top__info {
-  width: 100%;
-  min-width: 0;
-}
-
-.game-top__hand {
-  width: min(1120px, 100%);
-  margin-left: auto;
-  margin-right: auto;
-
-  display: flex;
-  justify-content: center;
 }
 
 /* ---------------------------------------------------------
@@ -113,54 +57,8 @@
   gap: 10px;
 }
 
-.game-bottom__info,
-.game-bottom__hand {
-  width: 100%;
-  min-width: 0;
-}
-
-.game-bottom__hand {
-  width: min(1120px, 100%);
-  margin-left: auto;
-  margin-right: auto;
-
-  display: flex;
-  justify-content: center;
-}
-
 /* ---------------------------------------------------------
-   Информационные окна
-   --------------------------------------------------------- */
-
-.info-window {
-  width: 100%;
-  box-sizing: border-box;
-  color: #e9d4a0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  overflow-x: auto;
-}
-
-.info-window h2 {
-  margin-top: 0;
-}
-
-.info-window p {
-  margin: 0;
-}
-
-.info-window form {
-  margin: 0;
-}
-
-/* ---------------------------------------------------------
-   Рука
+   Рука игрока
    --------------------------------------------------------- */
 
 .game-top__hand,

@@ -1,3 +1,4 @@
+
 /* ---------------------------------------------------------
    Заголовки
    --------------------------------------------------------- */
@@ -195,37 +196,6 @@
   }
 }
 
-/* ---------------------------------------------------------
-   Stage 16.7 — основной header
-   --------------------------------------------------------- */
-
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 12px 20px;
-  margin-bottom: 20px;
-
-  border-bottom: 1px solid #ccc;
-}
-
-.app-header__title {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.app-header__title a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.app-header__player {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
 /* =========================================================
    Stage 24 — основное оформление Header
    ========================================================= */
@@ -237,15 +207,18 @@
   --ct-header-text: #e6e9e3;
 }
 
-/* Header не использует фоновую иллюстрацию сайта */
-
 .app-header {
   position: relative;
   z-index: 20;
 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
   min-height: var(--ct-header-height);
   box-sizing: border-box;
 
+  padding: 12px 20px;
   margin-bottom: 0;
 
   background-color: var(--ct-header-bg);
@@ -256,25 +229,13 @@
   color: var(--ct-header-text);
 }
 
-/* Название проекта */
-
-.app-header__title {
-  color: var(--ct-header-text);
-}
-
-/* Ссылки Header */
-
-.app-header__title a {
-  color: var(--ct-header-text);
-}
-
-.app-header__title a:hover {
-  color: #bfd18e;
-}
-
 /* Информация об игроке */
 
 .app-header__player {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
   color: var(--ct-header-text);
 }
 
@@ -353,7 +314,7 @@ body.game-page .game {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: clamp(2px, 0.5vw, 7px);
 
   margin: 0;
   text-align: center;
@@ -361,7 +322,7 @@ body.game-page .game {
 
 .game-board__info-label {
   color: #d6c69f;
-  font-size: 16px;
+  font-size: clamp(9px, 1.1vw, 16px);
   font-weight: 700;
   line-height: 1.3;
 }
@@ -370,7 +331,7 @@ body.game-page .game {
   color: #f5e9ca;
 
   font-family: Arial, sans-serif;
-  font-size: 24px;
+  font-size: clamp(12px, 1.7vw, 24px);
   font-weight: 800;
   line-height: 1.2;
 
@@ -379,8 +340,9 @@ body.game-page .game {
 }
 
 .game-board__info-item:not(:last-child) {
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(233, 212, 160, 0.3);
+  padding-bottom: clamp(2px, 0.8vw, 12px);
+
+  border-bottom: 1px solid rgba(233, 212, 160, 0.25);
 }
 
 /* Прогноз ресурсов от объектов на поле */
@@ -407,14 +369,6 @@ body.game-page .game {
   font-size: 16px;
   font-weight: 700;
   line-height: 1.2;
-}
-
-/* Разделение информации */
-
-.game-board__info-item:not(:last-child) {
-  padding-bottom: 12px;
-
-  border-bottom: 1px solid rgba(233, 212, 160, 0.25);
 }
 
 /* =========================================================
@@ -493,7 +447,7 @@ body.game-page .game {
   min-width: 0;
 
   box-sizing: border-box;
-  padding: 10px 8px;
+  padding: clamp(4px, 0.7vw, 10px) 4px;
 
   border: 1px solid #a18e60;
   border-radius: 6px;
@@ -507,7 +461,7 @@ body.game-page .game {
   color: #e9d4a0;
 
   font-family: inherit;
-  font-size: 14px;
+  font-size: clamp(9px, 1vw, 14px);
   font-weight: 700;
   line-height: 1.3;
   text-align: center;
@@ -544,7 +498,6 @@ body.game-page .game {
 
 .game-board__action--surrender button[type="submit"] {
   max-width: 112px;
-  padding: 9px 8px;
 
   border-color: #8e5c4c;
 
@@ -579,14 +532,12 @@ body.game-page .game {
   flex-shrink: 0;
 
   margin-top: auto;
-  padding-top: 16px;
+  padding-top: clamp(2px, 1vw, 16px);
 }
 
 .game-board__action--end-turn button[type="submit"] {
   max-width: 136px;
-  min-height: 64px;
-
-  padding: 12px 8px;
+  min-height: clamp(30px, 4.5vw, 64px);
 
   border: 2px solid #c2a45d;
 
@@ -598,7 +549,7 @@ body.game-page .game {
 
   color: #fff0bd;
 
-  font-size: 17px;
+  font-size: clamp(10px, 1.2vw, 17px);
   font-weight: 800;
   line-height: 1.25;
 
@@ -622,42 +573,6 @@ body.game-page .game {
   box-shadow:
     0 4px 9px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-/* =========================================================
-   Stage 24 — адаптация боковых информационных колонок
-   ========================================================= */
-
-.game-board__info-item {
-  gap: clamp(2px, 0.5vw, 7px);
-}
-
-.game-board__info-label {
-  font-size: clamp(9px, 1.1vw, 16px);
-}
-
-.game-board__info-item strong {
-  font-size: clamp(12px, 1.7vw, 24px);
-}
-
-.game-board__info-item:not(:last-child) {
-  padding-bottom: clamp(2px, 0.8vw, 12px);
-}
-
-/* Кнопки также уменьшаются при сужении поля */
-
-.game-board__action button[type="submit"] {
-  font-size: clamp(9px, 1vw, 14px);
-  padding: clamp(4px, 0.7vw, 10px) 4px;
-}
-
-.game-board__action--end-turn {
-  padding-top: clamp(2px, 1vw, 16px);
-}
-
-.game-board__action--end-turn button[type="submit"] {
-  min-height: clamp(30px, 4.5vw, 64px);
-  font-size: clamp(10px, 1.2vw, 17px);
 }
 
 /* =========================================================

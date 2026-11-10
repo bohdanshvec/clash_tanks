@@ -1,5 +1,7 @@
+
 /* ---------------------------------------------------------
-   Карты
+   Резервная игровая карточка
+   Используется при отсутствии записи карты в базе данных
    --------------------------------------------------------- */
 
 .game-card {
@@ -41,86 +43,4 @@
     transform 0.15s ease,
     box-shadow 0.15s ease,
     z-index 0s;
-}
-
-.game-card__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.game-card__header strong {
-  line-height: 1.1;
-}
-
-.game-card__stats {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2px;
-  margin-top: 6px;
-}
-
-.game-card__stats p {
-  margin: 0;
-  line-height: 1.15;
-}
-
-/* ---------------------------------------------------------
-   Abilities на карте
-   --------------------------------------------------------- */
-
-.game-card__stats ul {
-  margin: 2px 0 0;
-  padding: 0;
-
-  list-style: none;
-
-  width: 100%;
-  min-width: 0;
-
-  box-sizing: border-box;
-
-  overflow: hidden;
-}
-
-.game-card__stats li {
-  margin: 0;
-  padding: 0;
-
-  width: 100%;
-  min-width: 0;
-
-  line-height: 1.15;
-
-  overflow: hidden;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-/* ---------------------------------------------------------
-   Карточка штаба
-   --------------------------------------------------------- */
-
-.headquarters-card {
-  width: 220px;
-  min-height: 220px;
-
-  margin-bottom: 20px;
-  padding: 12px;
-
-  box-sizing: border-box;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-
-  color: #202820;
-}
-
-.headquarters-card .game-card__stats {
-  overflow: hidden;
 }

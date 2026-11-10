@@ -1,8 +1,11 @@
+
 /* =========================================================
    Stage 24 — модальное окно просмотра колоды
    ========================================================= */
 
-/* Кнопка открытия окна */
+/* =========================================================
+   Кнопка открытия окна
+   ========================================================= */
 
 .deck-card__preview-button {
   display: inline-block;
@@ -27,7 +30,30 @@
   background: #e5e5e5;
 }
 
-/* Окно */
+.deck-card__actions .deck-card__preview-button {
+  background: #b4a16a;
+  color: #192119;
+
+  border: 1px solid #d1bd83;
+  border-radius: 6px;
+
+  font-weight: 700;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.deck-card__actions .deck-card__preview-button:hover {
+  background: #d1bd83;
+  color: #111811;
+
+  border-color: #e0c68d;
+}
+
+/* =========================================================
+   Основное модальное окно
+   ========================================================= */
 
 .deck-card__preview-dialog {
   position: fixed;
@@ -43,67 +69,78 @@
   margin: auto;
   padding: 22px;
 
-  border: 2px solid #65704d;
+  background: #303a31;
+  color: #e6e9e3;
+
+  border: 1px solid #65704d;
   border-radius: 12px;
 
-  background: #e8e4d7;
-  color: #202820;
-
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 18px 55px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(224, 198, 141, 0.12);
 }
 
-/* Затемнение поверх сайта — изображение фона остаётся позади */
+/* Затемнение страницы */
 
 .deck-card__preview-dialog::backdrop {
-  background: rgba(8, 12, 8, 0.72);
-  backdrop-filter: blur(2px);
+  background: rgba(8, 12, 8, 0.76);
+  backdrop-filter: blur(3px);
 }
 
-/* Заголовок и кнопка закрытия */
+/* =========================================================
+   Заголовок и кнопка закрытия
+   ========================================================= */
 
 .deck-card__preview-dialog-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-
   gap: 16px;
 
   margin-bottom: 16px;
   padding-bottom: 12px;
 
-  border-bottom: 1px solid #a4a18f;
+  border-bottom: 1px solid #65704d;
 }
 
 .deck-card__preview-dialog-header h2 {
   margin: 0;
 
-  color: #202820;
+  color: #e0c68d;
 
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 700;
   line-height: 1.3;
+  letter-spacing: 0.4px;
 }
 
-.deck-card__preview-close {
+.deck-card__preview-dialog .deck-card__preview-close {
   flex: 0 0 auto;
 
   padding: 7px 12px;
 
-  border: 1px solid #65704d;
-  border-radius: 5px;
+  background: #202824;
+  color: #e0c68d;
 
-  background: #303a31;
-  color: #e9d4a0;
+  border: 1px solid #65704d;
+  border-radius: 6px;
 
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
 
   cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
-.deck-card__preview-close:hover {
+.deck-card__preview-dialog .deck-card__preview-close:hover {
   background: #465343;
-  color: #fff;
+  color: #ffffff;
+  border-color: #d1bd83;
 }
 
 .deck-card__preview-close:focus-visible,
@@ -112,53 +149,65 @@
   outline-offset: 3px;
 }
 
-/* Список карт */
+/* =========================================================
+   Список карт
+   ========================================================= */
 
-.deck-card__preview-list {
+.deck-card__preview-dialog .deck-card__preview-list {
   position: relative;
 
   width: 100%;
-
-  margin: 0;
-  padding: 8px;
-
   box-sizing: border-box;
 
-  border: 1px solid #c3bead;
-  border-radius: 6px;
+  margin: 0;
+  padding: 12px;
 
-  background: #f7f5ed;
+  background: #202824;
+
+  border: 1px solid #465449;
+  border-radius: 8px;
 
   list-style: none;
 }
 
-/* Строка отдельной карты */
+/* Строки списка */
 
-.deck-card__preview-item {
+.deck-card__preview-dialog .deck-card__preview-item {
   position: relative;
 
   width: 240px;
-
   box-sizing: border-box;
 
-  padding: 6px 8px;
+  padding: 9px 12px;
 
+  color: #e6e9e3;
+
+  border-bottom: 1px solid rgba(101, 112, 77, 0.35);
   border-radius: 4px;
 
-  color: #202820;
-
   cursor: default;
+
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.deck-card__preview-item:hover {
-  background: #e8e5d9;
+.deck-card__preview-dialog .deck-card__preview-item:last-child {
+  border-bottom: none;
+}
+
+.deck-card__preview-dialog .deck-card__preview-item:hover {
+  background: #465343;
+  color: #f1dba9;
 }
 
 .deck-card__preview-item > span {
   display: block;
 }
 
-/* Всплывающая карточка с характеристиками */
+/* =========================================================
+   Всплывающая карточка с характеристиками
+   ========================================================= */
 
 .deck-card__preview-dialog .deck-card__card-preview {
   position: absolute;
@@ -195,7 +244,34 @@
     visibility 0s;
 }
 
-/* Компактные характеристики карточки */
+/* Полноразмерные карточки из каталога */
+
+.deck-card__card-preview .catalog-card {
+  width: 255px;
+  flex: 0 0 255px;
+
+  margin: 0;
+}
+
+.deck-card__card-preview .catalog-card:hover {
+  transform: none;
+  filter: none;
+}
+
+/* Светлая карточка на тёмном фоне */
+
+.deck-card__preview-dialog .deck-card__card-preview .game-card {
+  background: #f1eee3;
+  color: #202820;
+
+  border: 2px solid #a18e60;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* =========================================================
+   Компактные характеристики карточки
+   ========================================================= */
 
 .deck-card__card-preview .game-card__stats {
   gap: 1px;
@@ -224,7 +300,9 @@
   line-height: 1.05;
 }
 
-/* Адаптация для узких экранов */
+/* =========================================================
+   Адаптация для узких экранов
+   ========================================================= */
 
 @media (max-width: 520px) {
   .deck-card__preview-dialog {
@@ -236,7 +314,12 @@
   }
 
   .deck-card__preview-dialog-header h2 {
-    font-size: 17px;
+    font-size: 18px;
+  }
+
+  .deck-card__preview-dialog .deck-card__preview-close {
+    padding: 7px 10px;
+    font-size: 12px;
   }
 
   .deck-card__preview-item {
@@ -254,195 +337,4 @@
 
     transform-origin: right top;
   }
-}
-
-/* =========================================================
-   Stage 24 — оформление просмотра колоды в стиле Clash Tanks
-   ========================================================= */
-
-/* Основная панель */
-
-.deck-card__preview-dialog {
-  background: #303a31;
-  color: #e6e9e3;
-
-  border: 1px solid #65704d;
-  border-radius: 12px;
-
-  box-shadow:
-    0 18px 55px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(224, 198, 141, 0.12);
-}
-
-/* Затемнение страницы */
-
-.deck-card__preview-dialog::backdrop {
-  background: rgba(8, 12, 8, 0.76);
-  backdrop-filter: blur(3px);
-}
-
-/* Заголовок окна */
-
-.deck-card__preview-dialog-header {
-  border-bottom: 1px solid #65704d;
-}
-
-.deck-card__preview-dialog-header h2 {
-  color: #e0c68d;
-
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-}
-
-/* Кнопка закрытия */
-
-.deck-card__actions .deck-card__preview-close {
-  padding: 9px 16px;
-
-  background: #202824;
-  color: #e0c68d;
-
-  border: 1px solid #65704d;
-  border-radius: 6px;
-
-  font-weight: 700;
-
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.deck-card__actions .deck-card__preview-close:hover {
-  background: #465343;
-  color: #ffffff;
-
-  border-color: #d1bd83;
-}
-
-/* Список карт */
-
-.deck-card__preview-dialog .deck-card__preview-list {
-  background: #202824;
-
-  border: 1px solid #465449;
-  border-radius: 8px;
-
-  padding: 12px;
-}
-
-/* Строки списка */
-
-.deck-card__preview-dialog .deck-card__preview-item {
-  color: #e6e9e3;
-
-  border-bottom: 1px solid rgba(101, 112, 77, 0.35);
-  border-radius: 4px;
-
-  padding: 9px 12px;
-
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.deck-card__preview-dialog .deck-card__preview-item:last-child {
-  border-bottom: none;
-}
-
-/* Подсветка при наведении */
-
-.deck-card__preview-dialog .deck-card__preview-item:hover {
-  background: #465343;
-  color: #f1dba9;
-}
-
-/* Кнопка открытия просмотра */
-
-.deck-card__actions .deck-card__preview-button {
-  background: #b4a16a;
-  color: #192119;
-
-  border: 1px solid #d1bd83;
-  border-radius: 6px;
-
-  font-weight: 700;
-
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.deck-card__actions .deck-card__preview-button:hover {
-  background: #d1bd83;
-  color: #111811;
-
-  border-color: #e0c68d;
-}
-
-/* Характеристики карт оставляем светлыми
-   для контраста с тёмным списком */
-
-.deck-card__preview-dialog .deck-card__card-preview .game-card {
-  background: #f1eee3;
-  color: #202820;
-
-  border: 2px solid #a18e60;
-
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-}
-
-/* Адаптация заголовка */
-
-@media (max-width: 520px) {
-  .deck-card__preview-dialog-header h2 {
-    font-size: 18px;
-  }
-
-  .deck-card__actions .deck-card__preview-close {
-    padding: 7px 10px;
-    font-size: 12px;
-  }
-}
-
-/* =========================================================
-   Полноразмерные карточки из каталога в окне просмотра
-   ========================================================= */
-
-.deck-card__card-preview .catalog-card {
-  width: 255px;
-  flex: 0 0 255px;
-
-  margin: 0;
-}
-
-/* Не увеличиваем карточку повторно внутри предварительного просмотра */
-
-.deck-card__card-preview .catalog-card:hover {
-  transform: none;
-  filter: none;
-}
-
-/* Кнопка закрытия модального окна */
-
-.deck-card__preview-dialog .deck-card__preview-close {
-  background: #202824;
-  color: #e0c68d;
-
-  border: 1px solid #65704d;
-  border-radius: 6px;
-
-  font-weight: 700;
-
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.deck-card__preview-dialog .deck-card__preview-close:hover {
-  background: #465343;
-  color: #ffffff;
-  border-color: #d1bd83;
 }
