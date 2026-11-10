@@ -57,7 +57,7 @@
     end
 %>
 
-<main class="game <%= "game--finished" if game_finished %>"
+<div class="game <%= "game--finished" if game_finished %>"
       data-controller="game-events game-timer"
       data-game-events-events-value="<%= events.to_json %>"
       data-game-events-available-actions-value="<%= visible_state["available_actions"].to_json %>"
@@ -980,4 +980,4 @@
 
   </div>
 
-</main>
+</div>

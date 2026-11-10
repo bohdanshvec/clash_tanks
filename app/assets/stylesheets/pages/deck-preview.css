@@ -4,54 +4,6 @@
    ========================================================= */
 
 /* =========================================================
-   Кнопка открытия окна
-   ========================================================= */
-
-.deck-card__preview-button {
-  display: inline-block;
-  box-sizing: border-box;
-
-  padding: 7px 12px;
-
-  border: 1px solid #767676;
-  border-radius: 3px;
-
-  background: #efefef;
-  color: #222;
-
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 1.2;
-
-  cursor: pointer;
-}
-
-.deck-card__preview-button:hover {
-  background: #e5e5e5;
-}
-
-.deck-card__actions .deck-card__preview-button {
-  background: #b4a16a;
-  color: #192119;
-
-  border: 1px solid #d1bd83;
-  border-radius: 6px;
-
-  font-weight: 700;
-
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.deck-card__actions .deck-card__preview-button:hover {
-  background: #d1bd83;
-  color: #111811;
-
-  border-color: #e0c68d;
-}
-
-/* =========================================================
    Основное модальное окно
    ========================================================= */
 
@@ -322,7 +274,7 @@
     font-size: 12px;
   }
 
-  .deck-card__preview-item {
+  .deck-card__preview-dialog .deck-card__preview-item {
     width: 100%;
   }
 

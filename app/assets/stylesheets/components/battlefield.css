@@ -137,13 +137,6 @@
 
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: repeat(3, minmax(0, 1fr));
-
-  border-collapse: collapse;
-}
-
-.battlefield tbody,
-.battlefield tr {
-  display: contents;
 }
 
 .battlefield__cell {
@@ -244,74 +237,4 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-/* ---------------------------------------------------------
-   Формы внутри клетки
-   --------------------------------------------------------- */
-
-.cell-object form {
-  display: grid;
-
-  grid-template-columns: 1fr 1fr;
-
-  gap: 2px;
-
-  margin-top: 2px;
-}
-
-.cell-object label {
-  display: flex;
-  align-items: center;
-
-  gap: 2px;
-
-  min-width: 0;
-
-  font-size: 8px;
-  line-height: 1;
-}
-
-.cell-object select {
-  min-width: 0;
-  width: 100%;
-
-  padding: 0;
-
-  font-size: 8px;
-  line-height: 1;
-}
-
-.cell-object input[type="submit"] {
-  grid-column: 1 / -1;
-
-  width: 100%;
-
-  padding: 1px 3px;
-
-  font-size: 8px;
-  line-height: 1;
-}
-
-.cell-object form input[type="hidden"] {
-  display: none;
-}
-
-/* ---------------------------------------------------------
-   Небольшая защита от переполнения
-   --------------------------------------------------------- */
-
-.cell-object ul {
-  margin: 1px 0;
-  padding-left: 11px;
-
-  font-size: 8px;
-  line-height: 1;
-}
-
-.cell-object li {
-  margin: 0;
-  padding: 0;
-
-  line-height: 1;
 }

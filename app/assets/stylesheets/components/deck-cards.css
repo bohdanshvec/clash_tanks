@@ -71,16 +71,23 @@
   grid-column: 1 / -1;
   min-height: 42px;
 
-  background: linear-gradient(135deg, #e0ca93, #b4a16a);
+  background: #b4a16a;
   color: #192119;
 
-  border-color: #d1bd83;
+  border: 1px solid #d1bd83;
+  border-radius: 6px;
+
+  font-weight: 700;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .deck-card__actions .deck-card__preview-button:hover {
-  background: #e9d4a0;
+  background: #d1bd83;
   color: #111811;
-  border-color: #f1dba9;
+  border-color: #e0c68d;
 }
 
 .deck-card__actions .deck-card__delete-form {

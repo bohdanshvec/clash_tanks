@@ -28,19 +28,6 @@
   gap: 30px 24px;
 }
 
-/* Кнопки запуска боя */
-
-.play-decks .deck-card__actions {
-  margin-top: 0;
-}
-
-.play-decks .deck-card__actions form {
-  display: block;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
 /* Адаптивность */
 
 @media (max-width: 600px) {

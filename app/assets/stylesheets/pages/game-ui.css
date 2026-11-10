@@ -1,18 +1,3 @@
-
-/* ---------------------------------------------------------
-   Заголовки
-   --------------------------------------------------------- */
-
-.game-top h2,
-.game-bottom h2 {
-  margin-top: 0;
-}
-
-.game-top__hand > h2,
-.game-bottom__hand > h2 {
-  margin-bottom: 8px;
-}
-
 /* ---------------------------------------------------------
    Рука соперника
    --------------------------------------------------------- */
@@ -194,49 +179,6 @@
 
     font-size: 16px;
   }
-}
-
-/* =========================================================
-   Stage 24 — основное оформление Header
-   ========================================================= */
-
-:root {
-  --ct-header-height: 76px;
-  --ct-header-bg: #202720;
-  --ct-header-border: #65704d;
-  --ct-header-text: #e6e9e3;
-}
-
-.app-header {
-  position: relative;
-  z-index: 20;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  min-height: var(--ct-header-height);
-  box-sizing: border-box;
-
-  padding: 12px 20px;
-  margin-bottom: 0;
-
-  background-color: var(--ct-header-bg);
-  background-image: none;
-
-  border-bottom: 2px solid var(--ct-header-border);
-
-  color: var(--ct-header-text);
-}
-
-/* Информация об игроке */
-
-.app-header__player {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-
-  color: var(--ct-header-text);
 }
 
 /* =========================================================
