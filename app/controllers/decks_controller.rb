@@ -134,7 +134,9 @@ class DecksController < ApplicationController
 	end
 
   def prepare_form_after_error(error)
-    @selected_quantities = card_quantities.to_h.transform_keys(&:to_i)
+    @selected_quantities = card_quantities.to_h
+      .transform_keys(&:to_i)
+      .transform_values { |quantity| Integer(quantity, exception: false) || 0 }
 
     unless error.record == @deck
       @deck.errors.add(
