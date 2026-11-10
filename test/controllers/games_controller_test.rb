@@ -2148,8 +2148,8 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "li", minimum: 2
-    assert_select "li", text: "Вес: #{opponent_deck.weight}"
-    assert_select "li", text: "Вес: #{another_deck.weight}"
+    assert_select "li", text: "Вага: #{opponent_deck.weight}"
+    assert_select "li", text: "Вага: #{another_deck.weight}"
   end
 
   test "creating a waiting game refreshes other waiting rooms" do
