@@ -866,7 +866,7 @@ export default class extends Controller {
                 }
               ],
           {
-            duration: 700,
+            duration: 1200,
             easing: "ease-in-out"
           }
         )
@@ -937,7 +937,7 @@ export default class extends Controller {
               }
             ],
         {
-          duration: 300,
+          duration: 700,
           easing: "ease-out"
         }
       )
