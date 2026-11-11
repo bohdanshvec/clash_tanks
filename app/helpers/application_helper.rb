@@ -29,7 +29,7 @@ module ApplicationHelper
       raise ArgumentError, "Card image code cannot be empty"
     end
 
-    filename = "#{nation}_#{display}_#{type}_#{code}.png"
+    filename = "#{nation}_#{display}_#{type}_#{code}.webp"
 
     "cards/#{nation}/#{type}/#{filename}"
   end
@@ -54,9 +54,9 @@ module ApplicationHelper
     filename =
       case display
       when "deck", "hand"
-        "#{nation}_card_#{type}#{suffix}_border_#{display}.png"
+        "#{nation}_card_#{type}#{suffix}_border_#{display}.webp"
       else
-        "#{nation}_#{display}_#{type}#{suffix}_border.png"
+        "#{nation}_#{display}_#{type}#{suffix}_border.webp"
       end
 
     "cards/#{nation}/#{type}/#{filename}"
