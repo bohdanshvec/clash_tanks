@@ -89,15 +89,10 @@ module Games
 
     private
 
-    # Собственный движок используется только при стандартном выборе
-    # провайдера. Внедрённый decision_source сохраняет прежнее поведение.
-    def native_opponent_engine?
-      @decision_source.nil? &&
-        ENV.fetch("AI_PROVIDER", "groq").downcase == "opponent_engine"
-    end
-
     def select_ai_action(context:, current_player_id:)
-      unless native_opponent_engine?
+      # Внедрённый источник решений используется для изолированных тестов.
+      # В обычной игре всегда используется собственный Opponent Engine.
+      if @decision_source
         return DecisionProviders::AI.new(
           context: context,
           decision_source: @decision_source

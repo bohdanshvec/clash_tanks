@@ -1,3 +1,4 @@
+
 module DecisionProviders
   class AI < Base
     MAX_ATTEMPTS = 3
@@ -13,19 +14,37 @@ module DecisionProviders
     )
 
     RETRYABLE_DECISION_ERRORS = [
-      InvalidDecision,
-      GroqAdapter::InvalidActionIndex,
-      GroqAdapter::InvalidJsonGeneration
+      InvalidDecision
     ].freeze
 
     def initialize(context:, decision_source: nil)
       super(context: context)
 
-      @uses_default_adapter = decision_source.nil?
-      @decision_source = decision_source || method(:call_default_adapter)
+      # decision_source сохраняется исключительно как механизм
+      # внедрения тестовых решений.
+      @decision_source = decision_source
     end
 
     def call
+      call_with_plan.action
+    end
+
+    def call_with_plan
+      if @decision_source
+        return PlanDecision.new(
+          action: call_injected_decision_source,
+          plan: nil,
+          expected_visible_state: nil,
+          next_step_index: nil
+        )
+      end
+
+      call_opponent_engine_with_plan
+    end
+
+    private
+
+    def call_injected_decision_source
       attempts = 0
 
       loop do
@@ -33,6 +52,7 @@ module DecisionProviders
 
         begin
           decision = @decision_source.call(context.visible_state)
+
           return build_action(decision)
         rescue *RETRYABLE_DECISION_ERRORS => error
           raise_attempts_exhausted(error) if attempts >= MAX_ATTEMPTS
@@ -40,58 +60,6 @@ module DecisionProviders
           log_invalid_decision(error, attempts)
         end
       end
-    end
-
-    # Возвращает действие и информацию о плане для собственного движка.
-    # Для остальных провайдеров сохраняет прежнее поведение.
-    def call_with_plan
-      unless opponent_engine_provider?
-        return PlanDecision.new(
-          action: call,
-          plan: nil,
-          expected_visible_state: nil,
-          next_step_index: nil
-        )
-      end
-
-      attempts = 0
-
-      loop do
-        attempts += 1
-
-        begin
-          return call_opponent_engine_with_plan
-        rescue *RETRYABLE_DECISION_ERRORS => error
-          raise_attempts_exhausted(error) if attempts >= MAX_ATTEMPTS
-
-          log_invalid_decision(error, attempts)
-        end
-      end
-    end
-
-    private
-
-    def call_default_adapter(visible_state)
-      case ENV.fetch("AI_PROVIDER", "groq").downcase
-      when "groq"
-        GroqAdapter.new.call(visible_state)
-      when "openai"
-        OpenAiAdapter.new.call(visible_state)
-      when "opponent_engine"
-        call_opponent_engine(visible_state)
-      else
-        raise ArgumentError,
-              "Unsupported AI_PROVIDER: #{ENV.fetch('AI_PROVIDER')}"
-      end
-    end
-
-    def opponent_engine_provider?
-      @uses_default_adapter &&
-        ENV.fetch("AI_PROVIDER", "groq").downcase == "opponent_engine"
-    end
-
-    def call_opponent_engine(visible_state)
-      call_opponent_engine_with_plan.action
     end
 
     def call_opponent_engine_with_plan
@@ -110,6 +78,10 @@ module DecisionProviders
         context: context
       )
 
+      Rails.logger.info(
+        "[DecisionProviders::AI] Native opponent engine selected"
+      )
+
       PlanDecision.new(
         action: execution.action,
         plan: plan,
@@ -126,7 +98,7 @@ module DecisionProviders
 
     def log_invalid_decision(error, attempts)
       Rails.logger.warn(
-        "[DecisionProviders::AI] Invalid decision: " \
+        "[DecisionProviders::AI] Invalid injected decision: " \
         "error_class=#{error.class}, " \
         "retry=#{attempts}/#{MAX_ATTEMPTS}"
       )

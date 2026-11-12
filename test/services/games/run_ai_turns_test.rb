@@ -1,4 +1,3 @@
-# test/services/games/run_ai_turns_test.rb
 
 require "test_helper"
 require "timeout"
@@ -21,13 +20,13 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
   end
 
   test "does not run AI actions concurrently for the same game" do
-    provider_started = Queue.new
-    release_provider = Queue.new
+    decision_started = Queue.new
+    release_decision = Queue.new
     first_result = Queue.new
 
     decision_source = lambda do |_visible_state|
-      provider_started << true
-      release_provider.pop
+      decision_started << true
+      release_decision.pop
 
       {
         "type" => "end_turn",
@@ -43,20 +42,16 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     end
 
     begin
-      # Ждём, пока первый запуск получит блокировку
-      # и начнёт принимать решение ИИ.
       Timeout.timeout(10) do
-        provider_started.pop
+        decision_started.pop
       end
 
-      # Второй запуск для той же игры не должен
-      # запускать провайдера параллельно.
-      second_provider_called = false
+      second_decision_called = false
 
       second_result = Games::RunAiTurns.call(
         game: @game,
         decision_source: lambda do |_visible_state|
-          second_provider_called = true
+          second_decision_called = true
 
           {
             "type" => "end_turn",
@@ -67,10 +62,9 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
 
       assert second_result.success?, second_result.error
       assert_equal 0, second_result.actions_count
-      assert_not second_provider_called
+      assert_not second_decision_called
     ensure
-      # Не оставляем поток заблокированным даже при ошибке теста.
-      release_provider << true
+      release_decision << true
       worker.join(10)
 
       if worker.alive?
@@ -89,13 +83,13 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
   test "allows AI turns for different games to run independently" do
     another_game, = create_ai_game
 
-    provider_started = Queue.new
-    release_provider = Queue.new
+    decision_started = Queue.new
+    release_decision = Queue.new
     first_result = Queue.new
 
     decision_source = lambda do |_visible_state|
-      provider_started << true
-      release_provider.pop
+      decision_started << true
+      release_decision.pop
 
       {
         "type" => "end_turn",
@@ -112,11 +106,9 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
 
     begin
       Timeout.timeout(10) do
-        provider_started.pop
+        decision_started.pop
       end
 
-      # Первая игра всё ещё заблокирована внутри провайдера.
-      # Вторая игра должна обработаться независимо.
       second_result = Games::RunAiTurns.call(
         game: another_game,
         decision_source: lambda do |_visible_state|
@@ -130,7 +122,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
       assert second_result.success?, second_result.error
       assert_equal 1, second_result.actions_count
     ensure
-      release_provider << true
+      release_decision << true
       worker.join(10)
 
       if worker.alive?
@@ -146,19 +138,17 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal 1, result.actions_count
   end
 
-  test "releases the advisory lock after the AI provider raises an error" do
+  test "releases the advisory lock after a decision error" do
     failed_result = Games::RunAiTurns.call(
       game: @game,
       decision_source: lambda do |_visible_state|
-        raise "Simulated AI provider failure"
+        raise "Simulated decision failure"
       end
     )
 
     assert_not failed_result.success?
     assert_equal 0, failed_result.actions_count
 
-    # После ошибки первый запуск обязан освободить блокировку.
-    # Повторный вызов должен иметь возможность выполнить ход.
     retry_result = Games::RunAiTurns.call(
       game: @game,
       decision_source: lambda do |_visible_state|
@@ -187,7 +177,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert first_result.success?, first_result.error
     assert_equal 1, first_result.actions_count
 
-    # Возвращаем ход ИИ, чтобы повторный запуск мог выполнить действие.
     state = @game.reload.state.deep_dup
     state["current_player_id"] = @ai_player.id.to_s
     @game.update!(state: state)
@@ -206,7 +195,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal 1, second_result.actions_count
   end
 
-  test "preserves successful AI action events when next decision fails" do
+  test "preserves successful AI action events when the next decision fails" do
     calls = 0
     callback_events = []
     callback_states = []
@@ -223,7 +212,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
           }
         }
       else
-        raise "Simulated AI failure after successful action"
+        raise "Simulated decision failure after successful action"
       end
     end
 
@@ -241,13 +230,10 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
       end
     )
 
-    # Второе решение завершилось ошибкой, но первое действие
-    # должно остаться успешно применённым.
     assert_not result.success?
     assert_equal 1, result.actions_count
     assert_equal 2, calls
 
-    # Проверяем накопленные события результата сервиса.
     assert_equal(
       [
         "headquarters_attacked",
@@ -262,12 +248,9 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal [2, 0], attack_event.dig(:attacker, :position)
     assert_equal [0, 4], attack_event.dig(:target, :position)
 
-    # Callback должен сработать ровно один раз — после первого,
-    # успешно применённого действия.
     assert_equal 1, callback_events.size
     assert_equal result.events, callback_events.first
 
-    # В момент вызова callback новое состояние уже должно быть сохранено.
     assert_equal 1, callback_states.size
 
     callback_hq = callback_states.first.dig(
@@ -276,7 +259,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
 
     assert_operator callback_hq["hp"], :<, human_hq_initial_hp
 
-    # Проверяем состояние игры после завершения цикла.
     @game.reload
 
     assert @game.started?
@@ -292,13 +274,13 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
   end
 
   test "does not execute actions when the action limit is zero" do
-    provider_called = false
+    decision_called = false
 
     result = Games::RunAiTurns.call(
       game: @game,
       max_actions: 0,
       decision_source: lambda do |_visible_state|
-        provider_called = true
+        decision_called = true
 
         {
           "type" => "end_turn",
@@ -309,7 +291,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
 
     assert_not result.success?
     assert_equal 0, result.actions_count
-    assert_not provider_called
+    assert_not decision_called
 
     @game.reload
 
@@ -321,7 +303,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     )
   end
 
-  test "releases the advisory lock after an invalid AI action" do
+  test "releases the advisory lock after an invalid action" do
     failed_result = Games::RunAiTurns.call(
       game: @game,
       decision_source: lambda do |_visible_state|
@@ -335,8 +317,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_not failed_result.success?
     assert_equal 0, failed_result.actions_count
 
-    # После недопустимого действия блокировка должна освободиться.
-    # Повторный запуск должен успешно выполнить ход.
     retry_result = Games::RunAiTurns.call(
       game: @game,
       decision_source: lambda do |_visible_state|
@@ -351,7 +331,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal 1, retry_result.actions_count
   end
 
-  test "retries an AI decision when the game state becomes stale" do
+  test "retries a decision when the game state becomes stale" do
     calls = 0
 
     result = Games::RunAiTurns.call(
@@ -360,8 +340,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
         calls += 1
 
         if calls == 1
-          # Имитируем изменение состояния другим запросом
-          # после формирования контекста ИИ.
           state = @game.reload.state.deep_dup
           state["turn_number"] += 1
           @game.update!(state: state)
@@ -394,7 +372,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
       decision_source: lambda do |_visible_state|
         calls += 1
 
-        # Каждое решение устаревает до применения действия.
         state = @game.reload.state.deep_dup
         state["turn_number"] += 1
         @game.update!(state: state)
@@ -421,7 +398,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     )
   end
 
-  test "stops when the game finishes during an AI decision" do
+  test "stops when the game finishes during a decision" do
     calls = 0
 
     result = Games::RunAiTurns.call(
@@ -429,8 +406,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
       decision_source: lambda do |_visible_state|
         calls += 1
 
-        # Имитируем завершение игры другим запросом,
-        # пока провайдер формирует решение.
         state = @game.reload.state.deep_dup
         state["turn_number"] += 1
 
@@ -455,7 +430,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert @game.finished?
   end
 
-  test "stops when the turn passes to a human during an AI decision" do
+  test "stops when the turn passes to a human during a decision" do
     calls = 0
 
     result = Games::RunAiTurns.call(
@@ -463,7 +438,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
       decision_source: lambda do |_visible_state|
         calls += 1
 
-        # Имитируем передачу хода человеку другим запросом.
         state = @game.reload.state.deep_dup
         state["current_player_id"] = @human_player.id.to_s
         @game.update!(state: state)
@@ -524,7 +498,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal 2, result.actions_count
     assert_equal 2, broadcasts.size
 
-    # Пауза только между действиями, а не после последнего.
     assert_equal [2.5], delays
   end
 
@@ -598,9 +571,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
   test "native opponent engine reuses a plan to play two platoons" do
     prepare_native_engine_ai_hand
 
-    previous_provider = ENV["AI_PROVIDER"]
-    ENV["AI_PROVIDER"] = "opponent_engine"
-
     planner = DecisionProviders::OpponentEngine::Planning::TacticalPlanner
     original_call = planner.method(:call)
     planner_calls = 0
@@ -617,12 +587,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
       )
     ensure
       planner.singleton_class.define_method(:call, original_call)
-
-      if previous_provider
-        ENV["AI_PROVIDER"] = previous_provider
-      else
-        ENV.delete("AI_PROVIDER")
-      end
     end
 
     assert result.success?, result.error.inspect
@@ -641,8 +605,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal 2, platoon_events
     assert_equal 4, result.actions_count
 
-    # Первый план содержит два розыгрыша взводов.
-    # Второй план формируется для завершения хода.
     assert_equal 1, planner_calls
   end
 
@@ -682,24 +644,6 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
         "fuel" => 2
       }
     }
-  end
-
-  def build_plan_decision(context, actions:)
-    plan = Struct.new(:actions).new(actions)
-
-    action = GameEngine::Action.new(
-      player_id: context.player_id,
-      type: "end_turn",
-      payload: {},
-      expected_state_digest: context.state_digest
-    )
-
-    DecisionProviders::AI::PlanDecision.new(
-      action: action,
-      plan: plan,
-      expected_visible_state: context.visible_state,
-      next_step_index: 0
-    )
   end
 
   def prepare_opponent_plan(context:, action:)
