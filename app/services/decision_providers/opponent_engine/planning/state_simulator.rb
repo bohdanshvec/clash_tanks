@@ -1,4 +1,3 @@
-
 module DecisionProviders
   module OpponentEngine
     module Planning

@@ -269,15 +269,141 @@ class DecisionProvidersAITest < ActiveSupport::TestCase
 		)
 	end
 
+  test "uses the native opponent engine when configured" do
+    context = build_context
+    previous_provider = ENV["AI_PROVIDER"]
+    ENV["AI_PROVIDER"] = "opponent_engine"
+
+    begin
+      action = DecisionProviders::AI.new(
+        context: context
+      ).call
+
+      assert_instance_of GameEngine::Action, action
+      assert_equal "1", action.player_id
+      assert_equal context.state_digest, action.expected_state_digest
+      assert_includes %w[move attack play_card end_turn], action.type
+    ensure
+      if previous_provider.nil?
+        ENV.delete("AI_PROVIDER")
+      else
+        ENV["AI_PROVIDER"] = previous_provider
+      end
+    end
+  end
+
+  test "does not allow a prebuilt action to use another player" do
+    context = build_context
+
+    decision_source = lambda do |_visible_state|
+      GameEngine::Action.new(
+        player_id: "2",
+        type: "end_turn",
+        payload: {},
+        expected_state_digest: context.state_digest
+      )
+    end
+
+    assert_raises(ArgumentError) do
+      DecisionProviders::AI.new(
+        context: context,
+        decision_source: decision_source
+      ).call
+    end
+  end
+
+  test "returns the native opponent engine plan with its expected state" do
+    context = build_context
+    previous_provider = ENV["AI_PROVIDER"]
+    ENV["AI_PROVIDER"] = "opponent_engine"
+
+    begin
+      decision = DecisionProviders::AI.new(
+        context: context
+      ).call_with_plan
+
+      assert_instance_of GameEngine::Action, decision.action
+      assert_instance_of(
+        DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Result,
+        decision.plan
+      )
+
+      assert_equal context.state_digest, decision.action.expected_state_digest
+      assert_equal decision.plan.steps.first.expected_visible_state,
+                   decision.expected_visible_state
+
+      assert_equal 1, decision.next_step_index
+      assert_equal decision.plan.actions.first["type"], decision.action.type
+    ensure
+      if previous_provider.nil?
+        ENV.delete("AI_PROVIDER")
+      else
+        ENV["AI_PROVIDER"] = previous_provider
+      end
+    end
+  end
+
+  test "wraps external decision source without creating a plan" do
+    decision_source = lambda do |_visible_state|
+      {
+        "type" => "end_turn",
+        "payload" => {}
+      }
+    end
+
+    decision = DecisionProviders::AI.new(
+      context: build_context,
+      decision_source: decision_source
+    ).call_with_plan
+
+    assert_instance_of GameEngine::Action, decision.action
+    assert_nil decision.plan
+    assert_nil decision.expected_visible_state
+    assert_nil decision.next_step_index
+    assert_equal "end_turn", decision.action.type
+  end
+
   private
 
   def build_context
+
+    field = Array.new(3) { Array.new(5) }
+
+    field[2][0] = {
+      "type" => "headquarters",
+      "card_id" => "1",
+      "player_id" => "1",
+      "nation_id" => 1,
+      "name" => "Test HQ",
+      "hp" => 20,
+      "firepower" => 3,
+      "fuel" => 5,
+      "has_attacked" => false,
+      "has_counterattacked" => false,
+      "abilities" => []
+    }
+
+    field[0][4] = {
+      "type" => "headquarters",
+      "card_id" => "2",
+      "player_id" => "2",
+      "nation_id" => 2,
+      "name" => "Test HQ",
+      "hp" => 20,
+      "firepower" => 3,
+      "fuel" => 5,
+      "has_attacked" => false,
+      "has_counterattacked" => false,
+      "abilities" => []
+    }
+
     DecisionProviders::Context.new(
       state: {
         "status" => "started",
         "turn_number" => 1,
         "current_player_id" => "1",
-        "field" => Array.new(3) { Array.new(5) },
+        "turn_started_at" => Time.current.iso8601,
+        "field" => field,
         "result" => nil,
         "players" => {
           "1" => build_player(
@@ -315,5 +441,28 @@ class DecisionProvidersAITest < ActiveSupport::TestCase
       "empty_deck_draw_attempts" => 0,
       "graveyard" => []
     }
+  end
+
+  def context_digest_for_test
+    DecisionProviders::Context.new(
+      state: {
+        "status" => "started",
+        "turn_number" => 1,
+        "current_player_id" => "1",
+        "field" => field,
+        "result" => nil,
+        "players" => {
+          "1" => build_player(hand: [
+            {
+              "card_id" => "own-card",
+              "card_type" => "technique",
+              "price" => 1
+            }
+          ]),
+          "2" => build_player(hand: [])
+        }
+      },
+      player_id: "1"
+    ).state_digest
   end
 end

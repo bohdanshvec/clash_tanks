@@ -528,7 +528,209 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal [2.5], delays
   end
 
+  test "reuses the opponent plan when the state matches and the next action is legal" do
+    context = DecisionProviders::Context.new(
+      state: @game.reload.state,
+      player_id: @ai_player.id.to_s
+    )
+
+    legal_action = DecisionProviders::ActionOptions.call(
+      context.visible_state
+    ).first
+
+    assert legal_action, "Expected at least one legal AI action"
+
+    prepare_opponent_plan(
+      context: context,
+      action: legal_action
+    )
+
+    assert service_reuses_opponent_plan?(context)
+  end
+
+  test "does not reuse the opponent plan when the visible state changes" do
+    context = DecisionProviders::Context.new(
+      state: @game.reload.state,
+      player_id: @ai_player.id.to_s
+    )
+
+    legal_action = DecisionProviders::ActionOptions.call(
+      context.visible_state
+    ).first
+
+    assert legal_action, "Expected at least one legal AI action"
+
+    prepare_opponent_plan(
+      context: context,
+      action: legal_action
+    )
+
+    changed_state = @game.reload.state.deep_dup
+    changed_state["turn_number"] += 1
+
+    changed_context = DecisionProviders::Context.new(
+      state: changed_state,
+      player_id: @ai_player.id.to_s
+    )
+
+    assert_not service_reuses_opponent_plan?(changed_context)
+  end
+
+  test "does not reuse the opponent plan when its next action is no longer legal" do
+    context = DecisionProviders::Context.new(
+      state: @game.reload.state,
+      player_id: @ai_player.id.to_s
+    )
+
+    illegal_action = {
+      "type" => "__invalid_opponent_plan_action__",
+      "payload" => {}
+    }
+
+    prepare_opponent_plan(
+      context: context,
+      action: illegal_action
+    )
+
+    assert_not service_reuses_opponent_plan?(context)
+  end
+
+  test "native opponent engine reuses a plan to play two platoons" do
+    prepare_native_engine_ai_hand
+
+    previous_provider = ENV["AI_PROVIDER"]
+    ENV["AI_PROVIDER"] = "opponent_engine"
+
+    planner = DecisionProviders::OpponentEngine::Planning::TacticalPlanner
+    original_call = planner.method(:call)
+    planner_calls = 0
+
+    planner.singleton_class.define_method(:call) do |**kwargs|
+      planner_calls += 1
+      original_call.call(**kwargs)
+    end
+
+    begin
+      result = Games::RunAiTurns.call(
+        game: @game,
+        sleeper: ->(_seconds) {}
+      )
+    ensure
+      planner.singleton_class.define_method(:call, original_call)
+
+      if previous_provider
+        ENV["AI_PROVIDER"] = previous_provider
+      else
+        ENV.delete("AI_PROVIDER")
+      end
+    end
+
+    assert result.success?, result.error.inspect
+
+    final_state = @game.reload.state
+    ai_state = final_state.fetch("players").fetch(@ai_player.id.to_s)
+
+    assert_equal 2, ai_state.fetch("platoons").compact.length
+    assert_empty ai_state.fetch("hand")
+    assert_equal 0, ai_state.fetch("resources")
+
+    platoon_events = result.events.count do |event|
+      (event[:type] || event["type"]).to_s == "platoon_played"
+    end
+
+    assert_equal 2, platoon_events
+    assert_equal 4, result.actions_count
+
+    # Первый план содержит два розыгрыша взводов.
+    # Второй план формируется для завершения хода.
+    assert_equal 1, planner_calls
+  end
+
   private
+
+  def prepare_native_engine_ai_hand
+    state = @game.state.deep_dup
+    ai_state = state.fetch("players").fetch(@ai_player.id.to_s)
+
+    ai_state["resources"] = 4
+    ai_state["hand"] = [
+      native_engine_platoon_card(
+        card_id: 40,
+        nation_id: ai_state.fetch("nation_id")
+      ),
+      native_engine_platoon_card(
+        card_id: 41,
+        nation_id: ai_state.fetch("nation_id")
+      )
+    ]
+
+    @game.update!(state: state)
+  end
+
+  def native_engine_platoon_card(card_id:, nation_id:)
+    {
+      "card_id" => card_id,
+      "name" => "Пехотный взвод #{card_id}",
+      "card_type" => "platoon",
+      "nation_id" => nation_id,
+      "weight" => 1,
+      "price" => 2,
+      "platoon" => {
+        "firepower" => 5,
+        "hp" => 10,
+        "armor" => 3,
+        "fuel" => 2
+      }
+    }
+  end
+
+  def build_plan_decision(context, actions:)
+    plan = Struct.new(:actions).new(actions)
+
+    action = GameEngine::Action.new(
+      player_id: context.player_id,
+      type: "end_turn",
+      payload: {},
+      expected_state_digest: context.state_digest
+    )
+
+    DecisionProviders::AI::PlanDecision.new(
+      action: action,
+      plan: plan,
+      expected_visible_state: context.visible_state,
+      next_step_index: 0
+    )
+  end
+
+  def prepare_opponent_plan(context:, action:)
+    service = Games::RunAiTurns.new(
+      game: @game,
+      max_actions: 20
+    )
+
+    plan = Struct.new(:actions).new([action])
+
+    service.instance_variable_set(:@opponent_plan, plan)
+    service.instance_variable_set(
+      :@opponent_plan_expected_visible_state,
+      context.visible_state
+    )
+    service.instance_variable_set(:@opponent_plan_step_index, 0)
+    service.instance_variable_set(
+      :@opponent_plan_player_id,
+      @ai_player.id.to_s
+    )
+
+    @plan_test_service = service
+  end
+
+  def service_reuses_opponent_plan?(context)
+    @plan_test_service.send(
+      :reusable_opponent_plan_step?,
+      context: context,
+      current_player_id: @ai_player.id.to_s
+    )
+  end
 
   def create_ai_game
     ai_player = @ai_player
