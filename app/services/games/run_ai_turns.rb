@@ -5,6 +5,7 @@ module Games
     Result = Data.define(:success?, :error, :events, :actions_count)
 
     MAX_ACTIONS_PER_RUN = 20
+    ACTION_DELAY_SECONDS = 2.5
     
     # Максимальное количество повторных решений,
 		# если состояние игры изменилось во время работы ИИ.
@@ -14,31 +15,35 @@ module Games
     # Используется двухцелочисленный вариант блокировки.
     AI_TURN_LOCK_NAMESPACE = 1_129_603_401
 
-		def self.call(
-			game:,
-			max_actions: MAX_ACTIONS_PER_RUN,
-			decision_source: nil,
-			on_action: nil
-		)
-			new(
-				game:,
-				max_actions:,
-				decision_source:,
-				on_action:
-			).call
-		end
+    def self.call(
+      game:,
+      max_actions: MAX_ACTIONS_PER_RUN,
+      decision_source: nil,
+      on_action: nil,
+      sleeper: nil
+    )
+      new(
+        game:,
+        max_actions:,
+        decision_source:,
+        on_action:,
+        sleeper:
+      ).call
+    end
 
-		def initialize(
-			game:,
-			max_actions:,
-			decision_source: nil,
-			on_action: nil
-		)
-			@game = game
-			@max_actions = max_actions
-			@decision_source = decision_source
-			@on_action = on_action
-		end
+    def initialize(
+      game:,
+      max_actions:,
+      decision_source: nil,
+      on_action: nil,
+      sleeper: nil
+    )
+      @game = game
+      @max_actions = max_actions
+      @decision_source = decision_source
+      @on_action = on_action
+      @sleeper = sleeper || ->(seconds) { sleep(seconds) }
+    end
 
     def call
       Game.connection_pool.with_connection do |connection|
@@ -247,6 +252,22 @@ module Games
 						)
 					end
 				end
+
+        # Даём браузеру время воспроизвести визуальные эффекты
+        # перед следующим действием ИИ.
+        #
+        # Не задерживаем выполнение, если:
+        # - партия завершена;
+        # - ход уже перешёл другому игроку;
+        # - достигнут лимит действий.
+        next_action_belongs_to_ai =
+          result.state &&
+          result.state["status"] == "started" &&
+          result.state["current_player_id"].to_s == current_player_id
+
+        if next_action_belongs_to_ai && actions_count < @max_actions
+          @sleeper.call(ACTION_DELAY_SECONDS)
+        end
 
 				# Успешное действие означает, что цикл продолжился нормально.
 				stale_state_retries = 0

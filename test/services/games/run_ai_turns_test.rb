@@ -487,6 +487,47 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     )
   end
 
+  test "waits between successful AI actions while the AI turn continues" do
+    calls = 0
+    delays = []
+    broadcasts = []
+
+    result = Games::RunAiTurns.call(
+      game: @game,
+      decision_source: lambda do |_visible_state|
+        calls += 1
+
+        if calls == 1
+          {
+            "type" => "attack",
+            "payload" => {
+              "attacker" => [2, 0],
+              "target" => [0, 4]
+            }
+          }
+        else
+          {
+            "type" => "end_turn",
+            "payload" => {}
+          }
+        end
+      end,
+      on_action: lambda do |events|
+        broadcasts << events
+      end,
+      sleeper: lambda do |seconds|
+        delays << seconds
+      end
+    )
+
+    assert result.success?, result.error
+    assert_equal 2, result.actions_count
+    assert_equal 2, broadcasts.size
+
+    # Пауза только между действиями, а не после последнего.
+    assert_equal [2.5], delays
+  end
+
   private
 
   def create_ai_game
