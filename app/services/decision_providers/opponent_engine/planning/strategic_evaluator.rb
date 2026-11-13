@@ -254,19 +254,16 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def attack_force_score
-          own_headquarters = headquarters_for(@player_id)
-          enemy_headquarters = headquarters_for(@opponent_id)
-
-          return 0 unless own_headquarters && enemy_headquarters
+          return 0 unless headquarters_for(@player_id)
+          return 0 unless headquarters_for(@opponent_id)
 
           field_objects.sum do |target, target_position|
             next 0 unless target["type"] == "technique"
             next 0 unless owner_sign(target["player_id"]) == -1
 
-            attackers = available_attackers(
+            attackers = potential_attackers(
               target,
-              target_position,
-              own_headquarters
+              target_position
             )
 
             attacker_count = attackers.length
@@ -445,45 +442,74 @@ module DecisionProviders
           [score_after - score_before, 0].max
         end
 
-        def available_attackers(target, target_position, own_headquarters)
-          attackers = own_techniques.filter_map do |technique, position|
+        def potential_attackers(target, target_position)
+          own_techniques.filter_map do |technique, position|
             next if technique["has_attacked"]
 
-            next unless GameEngine::Rules::AttackTarget.valid?(
-              state: @visible_state,
-              attacker: technique,
-              target: target,
-              attacker_position: position,
-              target_position: target_position
-            )
+            possible_positions = [
+              position,
+              *available_move_positions(position)
+            ]
+
+            can_attack = possible_positions.any? do |attack_position|
+              state, attacker = potential_movement_state(
+                position,
+                attack_position
+              )
+
+              simulated_target =
+                state["field"][target_position[0]][target_position[1]]
+
+              next false unless simulated_target
+
+              GameEngine::Rules::AttackTarget.valid?(
+                state: state,
+                attacker: attacker,
+                target: simulated_target,
+                attacker_position: attack_position,
+                target_position: target_position
+              )
+            end
+
+            next unless can_attack
 
             {
               firepower: numeric(technique, "firepower")
             }
           end
+        end
 
-          headquarters_position = headquarters_position(@player_id)
+        def available_move_positions(position)
+          field_actions =
+            @visible_state.dig("available_actions", "field") || {}
 
-          if headquarters_position && !own_headquarters["has_attacked"]
-            valid_attack = GameEngine::Rules::AttackTarget.valid?(
-              state: @visible_state,
-              attacker: own_headquarters,
-              target: target,
-              attacker_position: headquarters_position,
-              target_position: target_position
-            )
+          actions = field_actions[position.join(",")] || {}
 
-            if valid_attack
-              platoons = Array(@player["platoons"]).compact
+          Array(actions["moves"])
+        end
 
-              attackers << {
-                firepower: numeric(own_headquarters, "firepower") +
-                  platoons.sum { |platoon| numeric(platoon, "firepower") }
-              }
-            end
-          end
+        def potential_movement_state(from, to)
+          return [
+            @visible_state,
+            @visible_state["field"][from[0]][from[1]]
+          ] if from == to
 
-          attackers
+          state = @visible_state.deep_dup
+
+          technique = state["field"][from[0]][from[1]]
+
+          technique["movement_count"] = [
+            numeric(technique, "movement_count").to_i - 1,
+            0
+          ].max
+
+          state["field"][from[0]][from[1]] = nil
+          state["field"][to[0]][to[1]] = technique
+
+          [
+            state,
+            technique
+          ]
         end
 
         # --------------------------------------------------------------

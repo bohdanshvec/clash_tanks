@@ -267,6 +267,32 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values two techniques that can move into positions to attack the same target" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][2][2] = test_technique(42)
+    state["field"][2][4] = test_technique(42)
+
+    assert_operator(
+      attack_force_score(state: state),
+      :>,
+      0
+    )
+  end
+
+  test "does not count headquarters as a second tank in attack force" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][1][2] = test_technique(42)
+
+    assert_equal(
+      0,
+      attack_force_score(state: state)
+    )
+  end
+
   test "values moving a technique to enable a headquarters attack" do
     state = @state.deep_dup
 
@@ -422,6 +448,21 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
   end
 
   private
+
+  def attack_force_score(state:)
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: @ai_player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    evaluator.send(:attack_force_score)
+  end
 
   def headquarters_attack_opportunity_score(state:)
     visible_state = GameEngine::VisibleState.call(
