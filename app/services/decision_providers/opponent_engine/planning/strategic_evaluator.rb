@@ -33,6 +33,7 @@ module DecisionProviders
         HAND_CARD_WEIGHT = 1.0
 
         ENEMY_THREAT_WEIGHT = 0.5
+        HEADQUARTERS_ATTACK_OPPORTUNITY_WEIGHT = 0.5
 
         def self.call(visible_state:, player_id:)
           new(
@@ -65,6 +66,7 @@ module DecisionProviders
             positional_score +
             deployment_capacity_score +
             attack_force_score +
+            headquarters_attack_opportunity_score +
             resources_score -
             enemy_threat_score
           )
@@ -295,6 +297,152 @@ module DecisionProviders
 
             base_bonus * attack_readiness
           end
+        end
+
+        # --------------------------------------------------------------
+        # Возможность штабной атаки после перемещения разведчика
+        # --------------------------------------------------------------
+
+        def headquarters_attack_opportunity_score
+          headquarters = headquarters_for(@player_id)
+
+          return 0 unless headquarters
+          return 0 if headquarters["has_attacked"]
+
+          headquarters_position = headquarters_position(@player_id)
+          return 0 unless headquarters_position
+
+          best_attack_gain = enemy_techniques.flat_map do |target, target_position|
+            own_techniques.flat_map do |technique, technique_position|
+              potential_spotting_states(
+                technique,
+                technique_position
+              ).filter_map do |state, _spotter_position|
+                simulated_headquarters =
+                  state["field"][headquarters_position[0]][headquarters_position[1]]
+
+                simulated_target =
+                  state["field"][target_position[0]][target_position[1]]
+
+                next unless simulated_headquarters && simulated_target
+
+                next unless GameEngine::Rules::AttackTarget.valid?(
+                  state: state,
+                  attacker: simulated_headquarters,
+                  target: simulated_target,
+                  attacker_position: headquarters_position,
+                  target_position: target_position
+                )
+
+                headquarters_attack_material_gain(
+                  state: state,
+                  attacker_position: headquarters_position,
+                  target_position: target_position
+                )
+              end
+            end
+          end.max || 0
+
+          best_attack_gain * HEADQUARTERS_ATTACK_OPPORTUNITY_WEIGHT
+        end
+
+        def potential_spotting_states(technique, position)
+          candidates = [
+            [@visible_state, position]
+          ]
+
+          movement_count = numeric(technique, "movement_count").to_i
+          return candidates unless movement_count.positive?
+
+          reachable_positions = {
+            position => 0
+          }
+
+          queue = [position]
+
+          until queue.empty?
+            current_position = queue.shift
+            moves_used = reachable_positions.fetch(current_position)
+
+            next if moves_used >= movement_count
+
+            GameEngine::Rules::Position.neighbors(current_position).each do |next_position|
+              next if reachable_positions.key?(next_position)
+              next unless object_at(next_position).nil?
+
+              next unless GameEngine::Rules::TechniqueMovement.valid?(
+                technique,
+                current_position,
+                next_position
+              )
+
+              reachable_positions[next_position] = moves_used + 1
+              queue << next_position
+            end
+          end
+
+          reachable_positions.each do |destination, moves_used|
+            next if destination == position
+
+            state = @visible_state.deep_dup
+
+            moved_technique =
+              state["field"][position[0]][position[1]]
+
+            moved_technique["movement_count"] -= moves_used
+
+            state["field"][position[0]][position[1]] = nil
+            state["field"][destination[0]][destination[1]] = moved_technique
+
+            candidates << [
+              state,
+              destination
+            ]
+          end
+
+          candidates
+        end
+
+        def headquarters_attack_material_gain(
+          state:,
+          attacker_position:,
+          target_position:
+        )
+          simulated_state = state.deep_dup
+
+          simulated_state["players"].each_value do |player|
+            player["graveyard"] ||= []
+          end
+
+          attacker =
+            simulated_state["field"][attacker_position[0]][attacker_position[1]]
+
+          target =
+            simulated_state["field"][target_position[0]][target_position[1]]
+
+          return 0 unless attacker && target
+
+          scenario = GameEngine::Rules::CombatType.call(
+            attacker: attacker,
+            target: target,
+            attacker_position: attacker_position,
+            target_position: target_position
+          )
+
+          score_before = combat_material_score(simulated_state)
+
+          attacker["has_attacked"] = true
+
+          GameEngine::Attacks::CombatExecutor.call(
+            state: simulated_state,
+            attacker_position: attacker_position,
+            target_position: target_position,
+            scenario: scenario
+          )
+
+          score_after = combat_material_score(simulated_state)
+
+          [score_after - score_before, 0].max
         end
 
         def available_attackers(target, target_position, own_headquarters)

@@ -267,6 +267,35 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values moving a technique to enable a headquarters attack" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][1][1] = test_technique(42)
+
+    assert_operator(
+      headquarters_attack_opportunity_score(state: state),
+      :>,
+      0
+    )
+  end
+
+  test "does not value a headquarters attack when no spotting move is available" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+
+    technique = test_technique(42)
+    technique["movement_count"] = 0
+
+    state["field"][1][1] = technique
+
+    assert_equal(
+      0,
+      headquarters_attack_opportunity_score(state: state)
+    )
+  end
+
   test "detects an enemy technique threatening an own technique" do
     state = @state.deep_dup
 
@@ -393,6 +422,21 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
   end
 
   private
+
+  def headquarters_attack_opportunity_score(state:)
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: @ai_player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    evaluator.send(:headquarters_attack_opportunity_score)
+  end
 
   def visible_state_for_ai
     GameEngine::VisibleState.call(
