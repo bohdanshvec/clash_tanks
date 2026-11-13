@@ -20,12 +20,8 @@ module DecisionProviders
         PLATOON_FUEL_WEIGHT = 0.25
 
         POSITION_WEIGHT = 1.5
-        ISOLATED_POSITION_WEIGHT = 0.5
-        SUPPORT_RADIUS = 2
 
         DEPLOYMENT_SLOT_WEIGHT = 5.0
-        STAGING_DEPLOYMENT_WEIGHT = 1.5
-        STAGING_RESERVE_WEIGHT = 4.0
 
         ATTACK_FORCE_MIN_TECHNIQUES = 2
         ATTACK_FORCE_MIN_FIREPOWER = 6.0
@@ -65,7 +61,6 @@ module DecisionProviders
             techniques_score +
             platoons_score +
             positional_score +
-            staging_score +
             deployment_capacity_score +
             attack_force_score +
             resources_score
@@ -182,20 +177,11 @@ module DecisionProviders
 
           return 0 unless own_headquarters && enemy_headquarters
 
-          techniques = own_techniques
-
-          own_score = techniques.sum do |_technique, position|
-            supported = techniques.any? do |_ally, ally_position|
-              ally_position != position &&
-                manhattan_distance(position, ally_position) <= SUPPORT_RADIUS
-            end
-
-            weight = supported ? POSITION_WEIGHT : ISOLATED_POSITION_WEIGHT
-
+          own_score = own_techniques.sum do |_technique, position|
             progress_toward(
               position,
               enemy_headquarters,
-              weight
+              POSITION_WEIGHT
             )
           end
 
@@ -241,40 +227,11 @@ module DecisionProviders
         # Тыловое накопление техники
         # --------------------------------------------------------------
 
-        def staging_positions_for(player_id)
-          case headquarters_position(player_id)
-          when [2, 0]
-            [[0, 0], [1, 0]]
-          when [0, 4]
-            [[1, 4], [2, 4]]
-          else
-            []
-          end
-        end
-
         def deployment_positions_for(player_id)
           position = headquarters_position(player_id)
           return [] unless position
 
           GameEngine::Rules::Position.neighbors(position)
-        end
-
-        def staging_score
-          deployment_positions = deployment_positions_for(@player_id)
-
-          staging_positions_for(@player_id).sum do |position|
-            technique = object_at(position)
-
-            next 0 unless technique
-            next 0 unless technique["type"] == "technique"
-            next 0 unless own_object?(technique)
-
-            if deployment_positions.include?(position)
-              STAGING_DEPLOYMENT_WEIGHT
-            else
-              STAGING_RESERVE_WEIGHT
-            end
-          end
         end
 
         # --------------------------------------------------------------
@@ -297,26 +254,50 @@ module DecisionProviders
 
           return 0 unless own_headquarters && enemy_headquarters
 
-          forward_techniques = own_techniques.select do |_technique, position|
-            manhattan_distance(position, enemy_headquarters) <
-              manhattan_distance(position, own_headquarters)
+          field_objects.sum do |target, target_position|
+            next 0 unless target["type"] == "technique"
+            next 0 unless owner_sign(target["player_id"]) == -1
+
+            available_attackers = own_techniques.select do |technique, attacker_position|
+              next false if technique["has_attacked"]
+
+              GameEngine::Rules::AttackTarget.valid?(
+                state: @visible_state,
+                attacker: technique,
+                target: target,
+                attacker_position: attacker_position,
+                target_position: target_position
+              )
+            end
+
+            technique_count = available_attackers.length
+
+            next 0 if technique_count < ATTACK_FORCE_MIN_TECHNIQUES
+
+            total_firepower = available_attackers.sum do |technique, _position|
+              numeric(technique, "firepower")
+            end
+
+            next 0 if total_firepower < ATTACK_FORCE_MIN_FIREPOWER
+
+            target_hp = numeric(target, "hp")
+
+            next 0 unless target_hp.positive?
+
+            attack_readiness = [
+              total_firepower / target_hp,
+              1.0
+            ].min
+
+            base_bonus =
+              ATTACK_FORCE_BASE_BONUS +
+              (technique_count - ATTACK_FORCE_MIN_TECHNIQUES) *
+                ATTACK_FORCE_TECHNIQUE_WEIGHT +
+              (total_firepower - ATTACK_FORCE_MIN_FIREPOWER) *
+                ATTACK_FORCE_FIREPOWER_WEIGHT
+
+            base_bonus * attack_readiness
           end
-
-          technique_count = forward_techniques.length
-
-          return 0 if technique_count < ATTACK_FORCE_MIN_TECHNIQUES
-
-          total_firepower = forward_techniques.sum do |technique, _position|
-            numeric(technique, "firepower")
-          end
-
-          return 0 if total_firepower < ATTACK_FORCE_MIN_FIREPOWER
-
-          ATTACK_FORCE_BASE_BONUS +
-            (technique_count - ATTACK_FORCE_MIN_TECHNIQUES) *
-              ATTACK_FORCE_TECHNIQUE_WEIGHT +
-            (total_firepower - ATTACK_FORCE_MIN_FIREPOWER) *
-              ATTACK_FORCE_FIREPOWER_WEIGHT
         end
 
         # --------------------------------------------------------------

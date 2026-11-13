@@ -172,7 +172,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  test "values moving technique into reserve and opening a deployment position" do
+  test "values opening a deployment position through movement" do
     blocked_state = @state.deep_dup
 
     [
@@ -195,6 +195,26 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
       evaluate(state: reserve_state),
       :>,
       evaluate(state: blocked_state)
+    )
+  end
+
+  test "does not reward moving a technique into reserve without opening a deployment position" do
+    forward_state = @state.deep_dup
+
+    forward_state["field"][0][1] = test_technique(42)
+    forward_state["field"][1][1] = test_technique(42)
+
+    reserve_state = forward_state.deep_dup
+
+    reserve_state["field"][0][0] =
+      reserve_state["field"][0][1]
+
+    reserve_state["field"][0][1] = nil
+
+    assert_operator(
+      evaluate(state: forward_state),
+      :>,
+      evaluate(state: reserve_state)
     )
   end
 
@@ -229,21 +249,21 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  test "values a concentrated forward attack force" do
-    scattered_state = @state.deep_dup
+  test "values multiple techniques that can attack the same target" do
+    grouped_state = @state.deep_dup
 
-    scattered_state["field"][0][2] = test_technique(42)
-    scattered_state["field"][2][2] = test_technique(42)
+    grouped_state["field"][0][2] = test_technique(42)
+    grouped_state["field"][2][2] = test_technique(42)
+    grouped_state["field"][1][3] = test_technique(57)
 
-    grouped_state = scattered_state.deep_dup
+    unsupported_state = grouped_state.deep_dup
 
-    grouped_state["field"][2][2] = nil
-    grouped_state["field"][1][3] = test_technique(42)
+    unsupported_state["field"][2][2]["has_attacked"] = true
 
     assert_operator(
       evaluate(state: grouped_state),
       :>,
-      evaluate(state: scattered_state)
+      evaluate(state: unsupported_state)
     )
   end
 

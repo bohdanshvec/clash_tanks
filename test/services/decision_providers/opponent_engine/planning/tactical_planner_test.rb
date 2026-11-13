@@ -149,7 +149,7 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     end
   end
 
-  test "moves technique into reserve to free a deployment position before playing new technique" do
+  test "moves technique to free a deployment position before playing new technique" do
     @state["field"][2][0]["has_attacked"] = true
 
     @state["field"][1][0] = technique(
@@ -198,21 +198,35 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
 
     assert_operator result.actions.length, :>=, 2
 
-    assert_equal "move", result.actions.first["type"]
+    first_action = result.actions.first
+    second_action = result.actions.second
 
-    assert_equal(
+    assert_equal "move", first_action["type"]
+
+    from = first_action.dig("payload", "from")
+    to = first_action.dig("payload", "to")
+
+    deployment_positions = [
       [1, 0],
-      result.actions.first.dig("payload", "from")
-    )
+      [1, 1],
+      [2, 1]
+    ]
+
+    assert_includes deployment_positions, from
+    refute_equal from, to
+
+    simulated_state = result.steps.first.expected_visible_state
+
+    assert_nil simulated_state.dig("field", from[0], from[1])
+
+    assert_equal "play_card", second_action["type"]
 
     assert_equal(
-      [0, 0],
-      result.actions.first.dig("payload", "to")
-    )
-
-    assert_equal(
-      "play_card",
-      result.actions.second["type"]
+      from,
+      [
+        second_action.dig("payload", "row"),
+        second_action.dig("payload", "column")
+      ]
     )
   end
 
