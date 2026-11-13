@@ -1,3 +1,4 @@
+
 module DecisionProviders
   module OpponentEngine
     module Planning
@@ -68,6 +69,18 @@ module DecisionProviders
           return empty_result(initial_score) unless
             @visible_state["current_player_id"].to_s == @player_id
 
+          root_actions = available_actions(@visible_state)
+
+          Rails.logger.info(
+            "[OpponentEngine] Root actions: " \
+            "#{root_actions.group_by { |action| action["type"] }.transform_values(&:size)}"
+          )
+
+          Rails.logger.info(
+            "[OpponentEngine] Root moves: " \
+            "#{root_actions.select { |action| action["type"] == "move" }.inspect}"
+          )
+
           frontier = [
             Node.new(
               visible_state: @visible_state,
@@ -85,11 +98,29 @@ module DecisionProviders
             candidates = []
 
             frontier.each do |node|
-              available_actions(node.visible_state).each do |action|
+              node_actions = available_actions(node.visible_state)
+
+              node_actions.each do |action|
                 simulation = simulate(
                   node.visible_state,
                   action
                 )
+
+                if node.actions.empty? && action["type"] == "move"
+                  if simulation.success?
+                    Rails.logger.info(
+                      "[OpponentEngine] Move simulation SUCCESS: " \
+                      "#{action["payload"].inspect}, " \
+                      "score: #{evaluate(simulation.visible_state)}"
+                    )
+                  else
+                    Rails.logger.warn(
+                      "[OpponentEngine] Move simulation FAILED: " \
+                      "#{action["payload"].inspect}, " \
+                      "error: #{simulation.error}"
+                    )
+                  end
+                end
 
                 next unless simulation.success?
 
@@ -137,6 +168,10 @@ module DecisionProviders
                 -node.actions.length
               ]
             end
+
+          Rails.logger.info(
+            "[OpponentEngine] Selected plan: #{best_node&.actions.inspect}"
+          )
 
           Result.new(
             actions: best_node ? best_node.actions : [],

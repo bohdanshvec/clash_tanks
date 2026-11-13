@@ -15,7 +15,8 @@ module GameEngine
 
         return failure("Source cell does not contain a technique") unless technique
         return failure("Source cell does not contain a technique") unless technique["type"] == "technique"
-        return failure("Technique does not belong to player") unless technique["player_id"] == @action.player_id
+        return failure("Technique does not belong to player") unless
+          technique["player_id"].to_s == @action.player_id.to_s
 
         return failure("No movement remaining") unless technique["movement_count"].to_i > 0
         return failure("Destination cell is occupied") if object_at(to)

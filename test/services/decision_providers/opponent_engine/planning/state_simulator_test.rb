@@ -13,7 +13,7 @@ class DecisionProviders::OpponentEngine::Planning::StateSimulatorTest <
       current_player_id: 42,
       participants: [
         headquarters_participant(
-          player_id: 42,
+          player_id: @ai_player_id,
           nation_id: 10
         ),
         headquarters_participant(
@@ -28,7 +28,7 @@ class DecisionProviders::OpponentEngine::Planning::StateSimulatorTest <
     @state["field"][1][1] = {
       "type" => "technique",
       "card_id" => 15,
-      "player_id" => 42,
+      "player_id" => @ai_player_id,
       "technique_type" => "medium_tank",
       "hp" => 10,
       "firepower" => 4,
@@ -96,7 +96,6 @@ class DecisionProviders::OpponentEngine::Planning::StateSimulatorTest <
     # Полный simulation state не возвращается.
     refute result.respond_to?(:state)
   end
-
 
   test "simulates an attack and recalculates available actions" do
     @state["field"][1][2] = {

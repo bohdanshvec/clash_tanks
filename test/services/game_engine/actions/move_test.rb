@@ -47,6 +47,25 @@ class GameEngine::Actions::MoveTest < ActiveSupport::TestCase
     assert_equal 0, result.state["field"][0][2]["movement_count"]
   end
 
+  test "allows moving technique when player ids have different types" do
+    @state["field"][1][1]["player_id"] = PLAYER_ID.to_s
+
+    action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "move",
+      payload: {
+        from: [1, 1],
+        to: [0, 2]
+      }
+    )
+
+    result = GameEngine::Actions::Move.new(@state, action).call
+
+    assert result.success?, result.error
+    assert_nil result.state["field"][1][1]
+    assert_equal "technique", result.state["field"][0][2]["type"]
+  end
+
   test "does not modify original state" do
     action = GameEngine::Action.new(
       player_id: PLAYER_ID,

@@ -1,3 +1,4 @@
+
 module DecisionProviders
   module OpponentEngine
     module Planning
@@ -19,15 +20,21 @@ module DecisionProviders
         PLATOON_FUEL_WEIGHT = 0.25
 
         POSITION_WEIGHT = 1.5
+        ISOLATED_POSITION_WEIGHT = 0.5
+        SUPPORT_RADIUS = 2
 
-        ATTACK_OPTION_WEIGHT = 4.0
-        MOVE_OPTION_WEIGHT = 0.75
-        PLAYABLE_CARD_WEIGHT = 3.0
+        DEPLOYMENT_SLOT_WEIGHT = 5.0
+        STAGING_DEPLOYMENT_WEIGHT = 1.5
+        STAGING_RESERVE_WEIGHT = 4.0
+
+        ATTACK_FORCE_MIN_TECHNIQUES = 2
+        ATTACK_FORCE_MIN_FIREPOWER = 6.0
+        ATTACK_FORCE_BASE_BONUS = 6.0
+        ATTACK_FORCE_TECHNIQUE_WEIGHT = 2.0
+        ATTACK_FORCE_FIREPOWER_WEIGHT = 0.5
 
         RESOURCE_WEIGHT = 1.5
         HAND_CARD_WEIGHT = 1.0
-
-        MAX_OPTIONS_PER_OBJECT = 3
 
         def self.call(visible_state:, player_id:)
           new(
@@ -58,7 +65,9 @@ module DecisionProviders
             techniques_score +
             platoons_score +
             positional_score +
-            available_actions_score +
+            staging_score +
+            deployment_capacity_score +
+            attack_force_score +
             resources_score
           )
         end
@@ -134,6 +143,13 @@ module DecisionProviders
             numeric(technique, "fuel") * TECHNIQUE_FUEL_WEIGHT
         end
 
+        def own_techniques
+          field_objects.select do |object, _position|
+            object["type"] == "technique" &&
+              owner_sign(object["player_id"]) == 1
+          end
+        end
+
         # --------------------------------------------------------------
         # Взводы
         # --------------------------------------------------------------
@@ -166,28 +182,45 @@ module DecisionProviders
 
           return 0 unless own_headquarters && enemy_headquarters
 
-          field_objects.sum do |object, position|
-            next 0 unless object["type"] == "technique"
+          techniques = own_techniques
 
-            case owner_sign(object["player_id"])
-            when 1
-              progress_toward(position, enemy_headquarters)
-            when -1
-              -progress_toward(position, own_headquarters)
-            else
-              0
+          own_score = techniques.sum do |_technique, position|
+            supported = techniques.any? do |_ally, ally_position|
+              ally_position != position &&
+                manhattan_distance(position, ally_position) <= SUPPORT_RADIUS
             end
+
+            weight = supported ? POSITION_WEIGHT : ISOLATED_POSITION_WEIGHT
+
+            progress_toward(
+              position,
+              enemy_headquarters,
+              weight
+            )
           end
+
+          enemy_score = field_objects.sum do |object, position|
+            next 0 unless object["type"] == "technique"
+            next 0 unless owner_sign(object["player_id"]) == -1
+
+            progress_toward(
+              position,
+              own_headquarters,
+              POSITION_WEIGHT
+            )
+          end
+
+          own_score - enemy_score
         end
 
-        def progress_toward(position, target)
+        def progress_toward(position, target, weight)
           max_distance =
             (@field.length - 1) +
             (@field.first.length - 1)
 
           distance = manhattan_distance(position, target)
 
-          (max_distance - distance) * POSITION_WEIGHT
+          (max_distance - distance) * weight
         end
 
         def manhattan_distance(first, second)
@@ -205,50 +238,85 @@ module DecisionProviders
         end
 
         # --------------------------------------------------------------
-        # Доступные действия
+        # Тыловое накопление техники
         # --------------------------------------------------------------
 
-        def available_actions_score
-          field_score + hand_score
-        end
-
-        def field_score
-          field_actions = @visible_state
-            .dig("available_actions", "field") || {}
-
-          field_actions.values.sum do |actions|
-            attacks = Array(actions["attacks"]).length
-            moves = Array(actions["moves"]).length
-
-            [
-              attacks,
-              MAX_OPTIONS_PER_OBJECT
-            ].min * ATTACK_OPTION_WEIGHT +
-              [
-                moves,
-                MAX_OPTIONS_PER_OBJECT
-              ].min * MOVE_OPTION_WEIGHT
+        def staging_positions_for(player_id)
+          case headquarters_position(player_id)
+          when [2, 0]
+            [[0, 0], [1, 0]]
+          when [0, 4]
+            [[1, 4], [2, 4]]
+          else
+            []
           end
         end
 
-        def hand_score
-          hand_actions = @visible_state
-            .dig("available_actions", "hand") || {}
+        def deployment_positions_for(player_id)
+          position = headquarters_position(player_id)
+          return [] unless position
 
-          playable_cards = hand_actions.values.count do |action|
-            playable_card_action?(action)
-          end
-
-          playable_cards * PLAYABLE_CARD_WEIGHT
+          GameEngine::Rules::Position.neighbors(position)
         end
 
-        def playable_card_action?(action)
-          return false unless action["resources_sufficient"]
+        def staging_score
+          deployment_positions = deployment_positions_for(@player_id)
 
-          action.key?("drop_zone") ||
-            Array(action["positions"]).any? ||
-            Array(action["slots"]).any? ||
-            Array(action["targets"]).any?
+          staging_positions_for(@player_id).sum do |position|
+            technique = object_at(position)
+
+            next 0 unless technique
+            next 0 unless technique["type"] == "technique"
+            next 0 unless own_object?(technique)
+
+            if deployment_positions.include?(position)
+              STAGING_DEPLOYMENT_WEIGHT
+            else
+              STAGING_RESERVE_WEIGHT
+            end
+          end
+        end
+
+        # --------------------------------------------------------------
+        # Свободные клетки для размещения новой техники
+        # --------------------------------------------------------------
+
+        def deployment_capacity_score
+          deployment_positions_for(@player_id).count do |position|
+            object_at(position).nil?
+          end * DEPLOYMENT_SLOT_WEIGHT
+        end
+
+        # --------------------------------------------------------------
+        # Накопленная сила для наступления
+        # --------------------------------------------------------------
+
+        def attack_force_score
+          own_headquarters = headquarters_position(@player_id)
+          enemy_headquarters = headquarters_position(@opponent_id)
+
+          return 0 unless own_headquarters && enemy_headquarters
+
+          forward_techniques = own_techniques.select do |_technique, position|
+            manhattan_distance(position, enemy_headquarters) <
+              manhattan_distance(position, own_headquarters)
+          end
+
+          technique_count = forward_techniques.length
+
+          return 0 if technique_count < ATTACK_FORCE_MIN_TECHNIQUES
+
+          total_firepower = forward_techniques.sum do |technique, _position|
+            numeric(technique, "firepower")
+          end
+
+          return 0 if total_firepower < ATTACK_FORCE_MIN_FIREPOWER
+
+          ATTACK_FORCE_BASE_BONUS +
+            (technique_count - ATTACK_FORCE_MIN_TECHNIQUES) *
+              ATTACK_FORCE_TECHNIQUE_WEIGHT +
+            (total_firepower - ATTACK_FORCE_MIN_FIREPOWER) *
+              ATTACK_FORCE_FIREPOWER_WEIGHT
         end
 
         # --------------------------------------------------------------
@@ -281,6 +349,14 @@ module DecisionProviders
               ]
             end
           end
+        end
+
+        def object_at(position)
+          @field.dig(position[0], position[1])
+        end
+
+        def own_object?(object)
+          object["player_id"].to_s == @player_id
         end
 
         def owner_sign(player_id)

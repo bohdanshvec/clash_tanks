@@ -149,6 +149,73 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     end
   end
 
+  test "moves technique into reserve to free a deployment position before playing new technique" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    @state["field"][1][0] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    ).merge(
+      "movement_count" => 1
+    )
+
+    @state["field"][1][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    @state["field"][2][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    ai_player = @state["players"][AI_PLAYER_ID.to_s]
+    ai_player["resources"] = 10
+
+    ai_player["hand"] = [
+      {
+        "card_id" => 99,
+        "card_type" => "technique",
+        "name" => "Reserve Test Tank",
+        "nation_id" => 10,
+        "price" => 1,
+        "technique" => {
+          "technique_type" => "medium_tank",
+          "hp" => 10,
+          "firepower" => 4,
+          "fuel" => 2,
+          "attack_range" => 1,
+          "movement_count" => 1,
+          "movement_type" => "diagonal"
+        }
+      }
+    ]
+
+    result = plan
+
+    assert_operator result.actions.length, :>=, 2
+
+    assert_equal "move", result.actions.first["type"]
+
+    assert_equal(
+      [1, 0],
+      result.actions.first.dig("payload", "from")
+    )
+
+    assert_equal(
+      [0, 0],
+      result.actions.first.dig("payload", "to")
+    )
+
+    assert_equal(
+      "play_card",
+      result.actions.second["type"]
+    )
+  end
+
   private
 
   def plan(

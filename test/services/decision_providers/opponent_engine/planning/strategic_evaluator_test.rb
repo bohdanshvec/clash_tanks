@@ -122,20 +122,21 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  test "values available attacks" do
+  test "does not reward merely having unused actions" do
     @state["field"][1][1] = test_technique(42)
     @state["field"][1][2] = test_technique(57)
 
-    ready_state = visible_state_for_ai
+    with_actions = visible_state_for_ai
 
-    @state["field"][1][1]["has_attacked"] = true
+    without_actions = with_actions.deep_dup
+    without_actions["available_actions"] = {
+      "field" => {},
+      "hand" => {}
+    }
 
-    spent_state = visible_state_for_ai
-
-    assert_operator(
-      evaluate(ready_state),
-      :>,
-      evaluate(spent_state)
+    assert_equal(
+      evaluate(with_actions),
+      evaluate(without_actions)
     )
   end
 
@@ -171,6 +172,81 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values moving technique into reserve and opening a deployment position" do
+    blocked_state = @state.deep_dup
+
+    [
+      [1, 0],
+      [1, 1],
+      [2, 1]
+    ].each do |position|
+      blocked_state["field"][position[0]][position[1]] =
+        test_technique(42)
+    end
+
+    reserve_state = blocked_state.deep_dup
+
+    reserve_state["field"][0][0] =
+      reserve_state["field"][1][0]
+
+    reserve_state["field"][1][0] = nil
+
+    assert_operator(
+      evaluate(state: reserve_state),
+      :>,
+      evaluate(state: blocked_state)
+    )
+  end
+
+  test "values reserve movement for the second player" do
+    second_state = GameEngine::GameState.initial(
+      current_player_id: 57,
+      participants: [
+        headquarters_participant(
+          player_id: 42,
+          nation_id: 10
+        ),
+        headquarters_participant(
+          player_id: 57,
+          nation_id: 20
+        )
+      ]
+    )
+
+    second_state["field"][1][4] = test_technique(57)
+
+    reserve_state = second_state.deep_dup
+
+    reserve_state["field"][2][4] =
+      reserve_state["field"][1][4]
+
+    reserve_state["field"][1][4] = nil
+
+    assert_operator(
+      evaluate(state: reserve_state, player_id: "57"),
+      :>,
+      evaluate(state: second_state, player_id: "57")
+    )
+  end
+
+  test "values a concentrated forward attack force" do
+    scattered_state = @state.deep_dup
+
+    scattered_state["field"][0][2] = test_technique(42)
+    scattered_state["field"][2][2] = test_technique(42)
+
+    grouped_state = scattered_state.deep_dup
+
+    grouped_state["field"][2][2] = nil
+    grouped_state["field"][1][3] = test_technique(42)
+
+    assert_operator(
+      evaluate(state: grouped_state),
+      :>,
+      evaluate(state: scattered_state)
+    )
+  end
+
   private
 
   def visible_state_for_ai
@@ -180,15 +256,15 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  def evaluate(visible_state = nil, state: nil)
+  def evaluate(visible_state = nil, state: nil, player_id: @ai_player_id)
     visible_state ||= GameEngine::VisibleState.call(
       state: state || @state,
-      player_id: @ai_player_id
+      player_id: player_id
     )
 
     DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.call(
       visible_state: visible_state,
-      player_id: @ai_player_id
+      player_id: player_id
     )
   end
 
