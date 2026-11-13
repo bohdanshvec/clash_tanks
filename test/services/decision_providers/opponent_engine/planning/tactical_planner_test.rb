@@ -68,6 +68,68 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
+  test "chooses a profitable ranged attack by a single technique" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+    attacker["attack_range"] = 2
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 10,
+      firepower: 4
+    )
+    target["movement_count"] = 0
+    target["movement_limit"] = 0
+
+    @state["field"][1][1] = attacker
+    @state["field"][1][3] = target
+
+    result = plan
+
+    assert_not_empty result.actions
+    assert_equal "attack", result.actions.first["type"]
+
+    assert_equal(
+      [1, 1],
+      result.actions.first.dig("payload", "attacker")
+    )
+
+    assert_equal(
+      [1, 3],
+      result.actions.first.dig("payload", "target")
+    )
+  end
+
+  test "does not sacrifice a technique to a tank destroyer that shoots first" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 2,
+      firepower: 4
+    )
+
+    tank_destroyer = technique(
+      player_id: OPPONENT_ID,
+      hp: 10,
+      firepower: 6
+    )
+    tank_destroyer["technique_type"] = "tank_destroyer"
+
+    @state["field"][1][1] = attacker
+    @state["field"][1][2] = tank_destroyer
+
+    result = plan
+
+    assert_not_empty result.actions
+    assert_equal "end_turn", result.actions.first["type"]
+  end
+
   test "does not continue searching after end turn" do
     @state["field"][2][0]["has_attacked"] = true
 

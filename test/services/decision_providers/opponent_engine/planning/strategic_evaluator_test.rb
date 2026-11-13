@@ -202,7 +202,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     forward_state = @state.deep_dup
 
     forward_state["field"][0][1] = test_technique(42)
-    forward_state["field"][1][1] = test_technique(42)
+    forward_state["field"][1][3] = test_technique(42)
 
     reserve_state = forward_state.deep_dup
 
@@ -281,6 +281,81 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values a group of techniques accumulated near own headquarters" do
+    grouped_state = @state.deep_dup
+
+    grouped_state["field"][1][0] = test_technique(42)
+    grouped_state["field"][2][1] = test_technique(42)
+
+    assert_operator(
+      staging_force_score(state: grouped_state),
+      :>,
+      0
+    )
+  end
+
+  test "does not reward a single technique near own headquarters" do
+    state = @state.deep_dup
+
+    state["field"][1][0] = test_technique(42)
+
+    assert_equal(
+      0,
+      staging_force_score(state: state)
+    )
+  end
+
+  test "penalizes an enemy group accumulated near its headquarters" do
+    state = @state.deep_dup
+
+    state["field"][1][4] = test_technique(57)
+    state["field"][0][3] = test_technique(57)
+
+    assert_operator(
+      staging_force_score(state: state),
+      :<,
+      0
+    )
+  end
+
+  test "includes all rows in the two staging columns near own headquarters" do
+    state = @state.deep_dup
+
+    state["field"][0][0] = test_technique(42)
+    state["field"][2][1] = test_technique(42)
+
+    assert_operator(
+      staging_force_score(state: state),
+      :>,
+      0
+    )
+  end
+
+  test "does not accumulate techniques outside the two staging columns" do
+    state = @state.deep_dup
+
+    state["field"][1][1] = test_technique(42)
+    state["field"][2][2] = test_technique(42)
+
+    assert_equal(
+      0,
+      staging_force_score(state: state)
+    )
+  end
+
+  test "uses the two rightmost columns for the second player's staging zone" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][2][4] = test_technique(57)
+
+    assert_operator(
+      staging_force_score(state: state),
+      :<,
+      0
+    )
+  end
+
   test "does not count headquarters as a second tank in attack force" do
     state = @state.deep_dup
 
@@ -290,6 +365,57 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     assert_equal(
       0,
       attack_force_score(state: state)
+    )
+  end
+
+  test "values a coordinated attack by two techniques and headquarters" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][0][3]["hp"] = 20
+
+    state["field"][0][2] = test_technique(42)
+    state["field"][1][2] = test_technique(42)
+
+    state["field"][2][0]["firepower"] = 4
+    state["field"][2][0]["has_attacked"] = false
+
+    assert_operator(
+      combined_attack_opportunity_score(state: state),
+      :>,
+      0
+    )
+  end
+
+  test "does not value a coordinated attack when headquarters has already attacked" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][0][3]["hp"] = 20
+
+    state["field"][0][2] = test_technique(42)
+    state["field"][1][2] = test_technique(42)
+
+    state["field"][2][0]["firepower"] = 4
+    state["field"][2][0]["has_attacked"] = true
+
+    assert_equal(
+      0,
+      combined_attack_opportunity_score(state: state)
+    )
+  end
+
+  test "does not value a coordinated attack with only one available technique" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][0][2] = test_technique(42)
+
+    state["field"][2][0]["firepower"] = 4
+
+    assert_equal(
+      0,
+      combined_attack_opportunity_score(state: state)
     )
   end
 
@@ -449,6 +575,21 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
 
   private
 
+  def combined_attack_opportunity_score(state:)
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: @ai_player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    evaluator.send(:combined_attack_opportunity_score)
+  end
+
   def attack_force_score(state:)
     visible_state = GameEngine::VisibleState.call(
       state: state,
@@ -462,6 +603,21 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
       )
 
     evaluator.send(:attack_force_score)
+  end
+
+  def staging_force_score(state:)
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: @ai_player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    evaluator.send(:staging_force_score)
   end
 
   def headquarters_attack_opportunity_score(state:)
