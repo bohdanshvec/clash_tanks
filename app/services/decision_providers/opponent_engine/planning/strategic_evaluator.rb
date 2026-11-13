@@ -357,7 +357,11 @@ module DecisionProviders
                   target_position: target_position
                 )
 
-                potential_damage_value(attacker, target)
+                potential_attack_threat(
+                  state: state,
+                  attacker_position: attacker_position,
+                  target_position: target_position
+                )
               end.max || 0
             end.max || 0
           end
@@ -373,11 +377,19 @@ module DecisionProviders
         end
 
         def potential_enemy_positions(technique, position)
+          movement_limit = numeric(technique, "movement_limit").to_i
+
+          initial_state = @visible_state.deep_dup
+          initial_technique = initial_state["field"][position[0]][position[1]]
+
+          initial_technique["movement_count"] = movement_limit
+          initial_technique["has_attacked"] = false
+          initial_technique["has_counterattacked"] = false
+
           candidates = [
-            [@visible_state, technique, position]
+            [initial_state, initial_technique, position]
           ]
 
-          movement_limit = numeric(technique, "movement_limit").to_i
           return candidates if movement_limit <= 0
 
           reachable_positions = { position => 0 }
@@ -391,7 +403,7 @@ module DecisionProviders
 
             GameEngine::Rules::Position.neighbors(current_position).each do |next_position|
               next if reachable_positions.key?(next_position)
-              next unless next_position == position || object_at(next_position).nil?
+              next unless object_at(next_position).nil?
 
               next unless GameEngine::Rules::TechniqueMovement.valid?(
                 technique,
@@ -430,26 +442,71 @@ module DecisionProviders
           candidates
         end
 
-        def potential_damage_value(attacker, target)
-          target_hp = numeric(target, "hp")
-          return 0 unless target_hp.positive?
+        def potential_attack_threat(state:, attacker_position:, target_position:)
+          simulated_state = state.deep_dup
 
-          damage = [
-            numeric(attacker, "firepower"),
-            target_hp
-          ].min
+          # VisibleState не содержит настоящие кладбища игроков.
+          # CombatExecutor использует их при уничтожении объектов.
+          simulated_state["players"].each_value do |player|
+            player["graveyard"] ||= []
+          end
 
-          target_value =
-            case target["type"]
-            when "technique"
-              technique_value(target)
-            when "headquarters"
-              headquarters_value(target)
-            else
-              0
+          attacker = simulated_state["field"][attacker_position[0]][attacker_position[1]]
+          target = simulated_state["field"][target_position[0]][target_position[1]]
+
+          return 0 unless attacker && target
+
+          attacker["has_attacked"] = true
+
+          scenario = GameEngine::Rules::CombatType.call(
+            attacker: attacker,
+            target: target,
+            attacker_position: attacker_position,
+            target_position: target_position
+          )
+
+          score_before = combat_material_score(simulated_state)
+
+          GameEngine::Attacks::CombatExecutor.call(
+            state: simulated_state,
+            attacker_position: attacker_position,
+            target_position: target_position,
+            scenario: scenario
+          )
+
+          score_after = combat_material_score(simulated_state)
+
+          [score_before - score_after, 0].max
+        end
+
+        def combat_material_score(state)
+          field_score = state_field_objects(state).sum do |object, _position|
+            sign = owner_sign(object["player_id"])
+            next 0 if sign.zero?
+
+            value =
+              case object["type"]
+              when "technique"
+                technique_value(object)
+              when "headquarters"
+                headquarters_value(object)
+              else
+                0
+              end
+
+            sign * value
+          end
+
+          platoons_score = state["players"].sum do |player_id, player|
+            sign = owner_sign(player_id)
+            next 0 if sign.zero?
+
+            Array(player["platoons"]).compact.sum do |platoon|
+              sign * platoon_value(platoon)
             end
+          end
 
-          target_value * damage / target_hp
+          field_score + platoons_score
         end
 
         def state_field_objects(state)

@@ -270,8 +270,14 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
   test "detects an enemy technique threatening an own technique" do
     state = @state.deep_dup
 
-    state["field"][1][2] = test_technique(42)
-    state["field"][1][3] = test_technique(57)
+    own_technique = test_technique(42)
+    own_technique["firepower"] = 2
+
+    enemy_technique = test_technique(57)
+    enemy_technique["firepower"] = 6
+
+    state["field"][1][2] = own_technique
+    state["field"][1][3] = enemy_technique
 
     assert_operator(
       threat_score(state: state),
@@ -283,8 +289,14 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
   test "considers enemy attacks available on its next turn" do
     state = @state.deep_dup
 
-    state["field"][1][2] = test_technique(42)
-    state["field"][1][3] = test_technique(57)
+    own_technique = test_technique(42)
+    own_technique["firepower"] = 2
+
+    enemy_technique = test_technique(57)
+    enemy_technique["firepower"] = 6
+
+    state["field"][1][2] = own_technique
+    state["field"][1][3] = enemy_technique
     state["field"][1][3]["has_attacked"] = true
 
     assert_operator(
@@ -297,8 +309,14 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
   test "detects an enemy technique that can move before attacking" do
     state = @state.deep_dup
 
-    state["field"][2][2] = test_technique(42)
-    state["field"][0][2] = test_technique(57)
+    own_technique = test_technique(42)
+    own_technique["firepower"] = 2
+
+    enemy_technique = test_technique(57)
+    enemy_technique["firepower"] = 6
+
+    state["field"][2][2] = own_technique
+    state["field"][0][2] = enemy_technique
 
     assert_operator(
       threat_score(state: state),
@@ -317,6 +335,55 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
 
     state["field"][0][0] = artillery
     state["field"][2][1] = test_technique(57)
+
+    assert_operator(
+      threat_score(state: state),
+      :>,
+      0
+    )
+  end
+
+  test "accounts for an available counterattack when estimating enemy threat" do
+    available_state = @state.deep_dup
+
+    own_technique = test_technique(42)
+    own_technique["firepower"] = 2
+
+    enemy_technique = test_technique(57)
+    enemy_technique["firepower"] = 6
+
+    available_state["field"][1][2] = own_technique
+    available_state["field"][1][3] = enemy_technique
+
+    spent_state = available_state.deep_dup
+    spent_state["field"][1][2]["has_counterattacked"] = true
+
+    assert_operator(
+      threat_score(state: spent_state),
+      :>,
+      threat_score(state: available_state)
+    )
+  end
+
+  test "accounts for a tank destroyer shooting first" do
+    state = @state.deep_dup
+
+    tank_destroyer = test_technique(42)
+    tank_destroyer["technique_type"] = "tank_destroyer"
+    tank_destroyer["firepower"] = 10
+
+    enemy_technique = test_technique(57)
+    enemy_technique["firepower"] = 4
+
+    state["field"][1][2] = tank_destroyer
+    state["field"][1][3] = enemy_technique
+
+    assert_equal(
+      0,
+      threat_score(state: state)
+    )
+
+    state["field"][1][2]["has_counterattacked"] = true
 
     assert_operator(
       threat_score(state: state),
