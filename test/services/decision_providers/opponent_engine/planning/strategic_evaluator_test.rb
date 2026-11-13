@@ -267,6 +267,64 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "detects an enemy technique threatening an own technique" do
+    state = @state.deep_dup
+
+    state["field"][1][2] = test_technique(42)
+    state["field"][1][3] = test_technique(57)
+
+    assert_operator(
+      threat_score(state: state),
+      :>,
+      0
+    )
+  end
+
+  test "considers enemy attacks available on its next turn" do
+    state = @state.deep_dup
+
+    state["field"][1][2] = test_technique(42)
+    state["field"][1][3] = test_technique(57)
+    state["field"][1][3]["has_attacked"] = true
+
+    assert_operator(
+      threat_score(state: state),
+      :>,
+      0
+    )
+  end
+
+  test "detects an enemy technique that can move before attacking" do
+    state = @state.deep_dup
+
+    state["field"][2][2] = test_technique(42)
+    state["field"][0][2] = test_technique(57)
+
+    assert_operator(
+      threat_score(state: state),
+      :>,
+      0
+    )
+  end
+
+  test "detects artillery attacks using allied spotting" do
+    state = @state.deep_dup
+
+    artillery = test_technique(57)
+    artillery["technique_type"] = "artillery"
+    artillery["movement_limit"] = 0
+    artillery["movement_count"] = 0
+
+    state["field"][0][0] = artillery
+    state["field"][2][1] = test_technique(57)
+
+    assert_operator(
+      threat_score(state: state),
+      :>,
+      0
+    )
+  end
+
   private
 
   def visible_state_for_ai
@@ -286,6 +344,21 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
       visible_state: visible_state,
       player_id: player_id
     )
+  end
+
+  def threat_score(state:)
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: @ai_player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    evaluator.send(:enemy_threat_score)
   end
 
   def test_technique(player_id)

@@ -32,6 +32,8 @@ module DecisionProviders
         RESOURCE_WEIGHT = 1.5
         HAND_CARD_WEIGHT = 1.0
 
+        ENEMY_THREAT_WEIGHT = 0.5
+
         def self.call(visible_state:, player_id:)
           new(
             visible_state: visible_state,
@@ -63,7 +65,8 @@ module DecisionProviders
             positional_score +
             deployment_capacity_score +
             attack_force_score +
-            resources_score
+            resources_score -
+            enemy_threat_score
           )
         end
 
@@ -249,8 +252,8 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def attack_force_score
-          own_headquarters = headquarters_position(@player_id)
-          enemy_headquarters = headquarters_position(@opponent_id)
+          own_headquarters = headquarters_for(@player_id)
+          enemy_headquarters = headquarters_for(@opponent_id)
 
           return 0 unless own_headquarters && enemy_headquarters
 
@@ -258,24 +261,18 @@ module DecisionProviders
             next 0 unless target["type"] == "technique"
             next 0 unless owner_sign(target["player_id"]) == -1
 
-            available_attackers = own_techniques.select do |technique, attacker_position|
-              next false if technique["has_attacked"]
+            attackers = available_attackers(
+              target,
+              target_position,
+              own_headquarters
+            )
 
-              GameEngine::Rules::AttackTarget.valid?(
-                state: @visible_state,
-                attacker: technique,
-                target: target,
-                attacker_position: attacker_position,
-                target_position: target_position
-              )
-            end
+            attacker_count = attackers.length
 
-            technique_count = available_attackers.length
+            next 0 if attacker_count < ATTACK_FORCE_MIN_TECHNIQUES
 
-            next 0 if technique_count < ATTACK_FORCE_MIN_TECHNIQUES
-
-            total_firepower = available_attackers.sum do |technique, _position|
-              numeric(technique, "firepower")
+            total_firepower = attackers.sum do |attacker|
+              attacker[:firepower]
             end
 
             next 0 if total_firepower < ATTACK_FORCE_MIN_FIREPOWER
@@ -291,12 +288,180 @@ module DecisionProviders
 
             base_bonus =
               ATTACK_FORCE_BASE_BONUS +
-              (technique_count - ATTACK_FORCE_MIN_TECHNIQUES) *
+              (attacker_count - ATTACK_FORCE_MIN_TECHNIQUES) *
                 ATTACK_FORCE_TECHNIQUE_WEIGHT +
               (total_firepower - ATTACK_FORCE_MIN_FIREPOWER) *
                 ATTACK_FORCE_FIREPOWER_WEIGHT
 
             base_bonus * attack_readiness
+          end
+        end
+
+        def available_attackers(target, target_position, own_headquarters)
+          attackers = own_techniques.filter_map do |technique, position|
+            next if technique["has_attacked"]
+
+            next unless GameEngine::Rules::AttackTarget.valid?(
+              state: @visible_state,
+              attacker: technique,
+              target: target,
+              attacker_position: position,
+              target_position: target_position
+            )
+
+            {
+              firepower: numeric(technique, "firepower")
+            }
+          end
+
+          headquarters_position = headquarters_position(@player_id)
+
+          if headquarters_position && !own_headquarters["has_attacked"]
+            valid_attack = GameEngine::Rules::AttackTarget.valid?(
+              state: @visible_state,
+              attacker: own_headquarters,
+              target: target,
+              attacker_position: headquarters_position,
+              target_position: target_position
+            )
+
+            if valid_attack
+              platoons = Array(@player["platoons"]).compact
+
+              attackers << {
+                firepower: numeric(own_headquarters, "firepower") +
+                  platoons.sum { |platoon| numeric(platoon, "firepower") }
+              }
+            end
+          end
+
+          attackers
+        end
+
+        # --------------------------------------------------------------
+        # Угроза от вражеской техники
+        # --------------------------------------------------------------
+
+        def enemy_threat_score
+          total_threat = enemy_techniques.sum do |technique, position|
+            potential_enemy_positions(technique, position).map do |state, attacker, attacker_position|
+              state_field_objects(state).filter_map do |target, target_position|
+                next unless owner_sign(target["player_id"]) == 1
+                next unless %w[technique headquarters].include?(target["type"])
+
+                next unless GameEngine::Rules::AttackTarget.valid?(
+                  state: state,
+                  attacker: attacker,
+                  target: target,
+                  attacker_position: attacker_position,
+                  target_position: target_position
+                )
+
+                potential_damage_value(attacker, target)
+              end.max || 0
+            end.max || 0
+          end
+
+          total_threat * ENEMY_THREAT_WEIGHT
+        end
+
+        def enemy_techniques
+          field_objects.select do |object, _position|
+            object["type"] == "technique" &&
+              owner_sign(object["player_id"]) == -1
+          end
+        end
+
+        def potential_enemy_positions(technique, position)
+          candidates = [
+            [@visible_state, technique, position]
+          ]
+
+          movement_limit = numeric(technique, "movement_limit").to_i
+          return candidates if movement_limit <= 0
+
+          reachable_positions = { position => 0 }
+          queue = [position]
+
+          until queue.empty?
+            current_position = queue.shift
+            moves_used = reachable_positions.fetch(current_position)
+
+            next if moves_used >= movement_limit
+
+            GameEngine::Rules::Position.neighbors(current_position).each do |next_position|
+              next if reachable_positions.key?(next_position)
+              next unless next_position == position || object_at(next_position).nil?
+
+              next unless GameEngine::Rules::TechniqueMovement.valid?(
+                technique,
+                current_position,
+                next_position
+              )
+
+              reachable_positions[next_position] = moves_used + 1
+              queue << next_position
+            end
+          end
+
+          reachable_positions.each do |destination, moves_used|
+            next if destination == position
+
+            state = @visible_state.deep_dup
+
+            moved_technique = state["field"][position[0]][position[1]]
+
+            moved_technique["movement_count"] =
+              movement_limit - moves_used
+
+            moved_technique["has_attacked"] = false
+            moved_technique["has_counterattacked"] = false
+
+            state["field"][position[0]][position[1]] = nil
+            state["field"][destination[0]][destination[1]] = moved_technique
+
+            candidates << [
+              state,
+              moved_technique,
+              destination
+            ]
+          end
+
+          candidates
+        end
+
+        def potential_damage_value(attacker, target)
+          target_hp = numeric(target, "hp")
+          return 0 unless target_hp.positive?
+
+          damage = [
+            numeric(attacker, "firepower"),
+            target_hp
+          ].min
+
+          target_value =
+            case target["type"]
+            when "technique"
+              technique_value(target)
+            when "headquarters"
+              headquarters_value(target)
+            else
+              0
+            end
+
+          target_value * damage / target_hp
+        end
+
+        def state_field_objects(state)
+          state.fetch("field").each_with_index.flat_map do |row, row_index|
+            row.each_with_index.filter_map do |object, column_index|
+              next unless object
+
+              [
+                object,
+                [row_index, column_index]
+              ]
+            end
           end
         end
 
