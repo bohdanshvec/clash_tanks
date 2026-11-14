@@ -645,6 +645,50 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "reduces waiting value when enemy can threaten the attacking group" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][0][3]["hp"] = 8
+    state["field"][0][3]["movement_limit"] = 0
+    state["field"][0][3]["movement_count"] = 0
+
+    state["field"][2][2] = test_technique(42)
+    state["field"][2][4] = test_technique(42)
+
+    [
+      [2, 2],
+      [2, 4]
+    ].each do |position|
+      technique = state["field"][position[0]][position[1]]
+      technique["movement_count"] = 0
+      technique["has_attacked"] = true
+    end
+
+    safe_score = future_coordination_opportunity_score(
+      state: state,
+      current_player_id: 57
+    )
+
+    threatened_state = state.deep_dup
+
+    enemy = test_technique(57)
+    enemy["hp"] = 100
+    enemy["firepower"] = 8
+    enemy["movement_limit"] = 0
+    enemy["movement_count"] = 0
+
+    threatened_state["field"][1][3] = enemy
+
+    threatened_score = future_coordination_opportunity_score(
+      state: threatened_state,
+      current_player_id: 57
+    )
+
+    assert_operator safe_score, :>, 0
+    assert_operator threatened_score, :<, safe_score
+  end
+
   test "does not reward waiting when only one technique can attack" do
     state = @state.deep_dup
 
