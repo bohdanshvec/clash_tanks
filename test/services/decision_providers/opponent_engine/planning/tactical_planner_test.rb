@@ -292,6 +292,106 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
+  test "preserves deployment branches when move branches dominate the beam" do
+    @state["field"][1][0] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    ).merge(
+      "movement_count" => 1
+    )
+
+    @state["players"]["42"]["hand"] = [
+      {
+        "card_id" => 99,
+        "card_type" => "technique"
+      }
+    ]
+
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 10
+      )
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    move_nodes = 12.times.map do |index|
+      node_class.new(
+        visible_state: visible_state,
+        actions: [
+          {
+            "type" => "move",
+            "payload" => {
+              "from" => [0, index % 4],
+              "to" => [0, (index + 1) % 5]
+            }
+          }
+        ],
+        steps: [],
+        score: 100 - index,
+        terminal: false
+      )
+    end
+
+    card_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "play_card",
+          "payload" => {
+            "card_id" => 99
+          }
+        }
+      ],
+      steps: [],
+      score: 1,
+      terminal: false
+    )
+
+    deployment_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "move",
+          "payload" => {
+            "from" => [1, 0],
+            "to" => [0, 0]
+          }
+        }
+      ],
+      steps: [],
+      score: 0,
+      terminal: false
+    )
+
+    ranked = planner.send(
+      :rank,
+      move_nodes + [card_node, deployment_node]
+    )
+
+    first_actions = ranked.first(10).map do |node|
+      node.actions.first
+    end
+
+    assert first_actions.any? do |action|
+      action["type"] == "play_card" &&
+        action.dig("payload", "card_id") == 99
+    end
+
+    assert first_actions.any? do |action|
+      action["type"] == "move" &&
+        action.dig("payload", "from") == [1, 0] &&
+        action.dig("payload", "to") == [0, 0]
+    end
+  end
+
   private
 
   def plan(

@@ -76,7 +76,7 @@ module DecisionProviders
             .sort_by { |attacker| -attacker[:firepower] }
             .first(MAX_TECHNIQUES)
 
-          return Analysis.new(0, 0) if techniques.length < 2
+          return Analysis.new(0, 0) if techniques.empty?
 
           @candidates = techniques.map do |attacker|
             {
@@ -88,6 +88,8 @@ module DecisionProviders
           end
 
           add_headquarters_candidate
+
+          return Analysis.new(0, 0) if @candidates.length < 2
 
           initial_state = simulation_state(@visible_state)
           @initial_score = state_score(initial_state)
@@ -180,7 +182,10 @@ module DecisionProviders
                 ].max
               end
 
-              if next_technique_count >= 2
+              target_destroyed =
+                object_at(next_state, @target_position).nil?
+
+              if next_used_keys.length >= 2 && target_destroyed
                 @best_combined_gain = [
                   @best_combined_gain,
                   total_gain
@@ -189,7 +194,7 @@ module DecisionProviders
 
               # Если цель уничтожена, продолжать эту
               # последовательность атак невозможно.
-              next unless object_at(next_state, @target_position)
+              next if target_destroyed
 
               # После уничтожения любого штаба партия завершена.
               next if terminal_state?(next_state)

@@ -55,6 +55,13 @@ module DecisionProviders
 
           @depth = Integer(depth)
           @width = Integer(width)
+          @root_card_types = Array(
+            @visible_state.dig("players", @player_id, "hand")
+          ).each_with_object({}) do |card, result|
+            result[card["card_id"].to_s] = card["card_type"]
+          end
+
+@root_deployment_positions = root_deployment_positions
 
           raise ArgumentError, "Depth must be positive" unless @depth.positive?
           raise ArgumentError, "Width must be positive" unless @width.positive?
@@ -183,6 +190,48 @@ module DecisionProviders
 
         private
 
+        def first_action_category(node)
+          action = node.actions.first
+          return "empty" unless action
+
+          payload = action["payload"] || {}
+
+          case action["type"]
+          when "play_card"
+            card_id = payload["card_id"].to_s
+            card_type = @root_card_types[card_id] || "unknown"
+
+            "play_card:#{card_type}"
+
+          when "move"
+            if @root_deployment_positions.include?(payload["from"]) &&
+                !@root_deployment_positions.include?(payload["to"])
+              "move:free_deployment"
+            else
+              "move"
+            end
+
+          else
+            action["type"]
+          end
+        end
+
+        def root_deployment_positions
+          @visible_state.fetch("field").each_with_index do |row, row_index|
+            row.each_with_index do |object, column_index|
+              next unless object
+              next unless object["type"] == "headquarters"
+              next unless object["player_id"].to_s == @player_id
+
+              return GameEngine::Rules::Position.neighbors(
+                [row_index, column_index]
+              )
+            end
+          end
+
+          []
+        end
+
         # --------------------------------------------------------------
         # Генерация допустимых действий
         # --------------------------------------------------------------
@@ -230,12 +279,29 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def rank(nodes)
-          nodes.sort_by do |node|
+          ranked_nodes = nodes.sort_by do |node|
             [
               -node.score,
               node.actions.length
             ]
           end
+
+          category_representatives =
+            ranked_nodes
+              .group_by { |node| first_action_category(node) }
+              .values
+              .map(&:first)
+              .first(@width)
+
+          representative_ids =
+            category_representatives.each_with_object({}) do |node, result|
+              result[node.object_id] = true
+            end
+
+          category_representatives +
+            ranked_nodes.reject do |node|
+              representative_ids.key?(node.object_id)
+            end
         end
 
         def empty_result(score)

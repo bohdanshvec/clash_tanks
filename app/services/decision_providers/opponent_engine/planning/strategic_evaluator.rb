@@ -27,7 +27,7 @@ module DecisionProviders
         ATTACK_FORCE_BASE_BONUS = 6.0
         ATTACK_FORCE_TECHNIQUE_WEIGHT = 2.0
         ATTACK_FORCE_FIREPOWER_WEIGHT = 0.5
-        COMBINED_ATTACK_MIN_TECHNIQUES = 2
+        COMBINED_ATTACK_MIN_TECHNIQUES = 1
         COMBINED_ATTACK_OPPORTUNITY_WEIGHT = 0.75
 
         RESOURCE_WEIGHT = 1.5
@@ -648,6 +648,9 @@ module DecisionProviders
             target_position: target_position,
             scenario: scenario
           )
+
+          return 0 unless
+            simulated_state["field"][target_position[0]][target_position[1]].nil?
 
           score_after = combat_material_score(simulated_state)
 
