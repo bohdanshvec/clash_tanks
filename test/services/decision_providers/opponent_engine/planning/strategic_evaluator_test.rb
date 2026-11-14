@@ -377,7 +377,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     state = @state.deep_dup
 
     state["field"][0][3] = test_technique(57)
-    state["field"][0][3]["hp"] = 20
+    state["field"][0][3]["hp"] = 12
 
     state["field"][0][2] = test_technique(42)
     state["field"][1][2] = test_technique(42)
@@ -396,7 +396,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     state = @state.deep_dup
 
     state["field"][0][3] = test_technique(57)
-    state["field"][0][3]["hp"] = 20
+    state["field"][0][3]["hp"] = 8
 
     state["field"][0][2] = test_technique(42)
     state["field"][1][2] = test_technique(42)
@@ -411,17 +411,36 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  test "does not value a coordinated attack with only one available technique" do
+  test "does not reward a nonlethal attack by one technique and headquarters" do
     state = @state.deep_dup
 
     state["field"][0][3] = test_technique(57)
+    state["field"][0][3]["hp"] = 8
+
     state["field"][0][2] = test_technique(42)
 
-    state["field"][2][0]["firepower"] = 4
+    state["field"][2][0]["firepower"] = 3
 
     assert_equal(
       0,
       combined_attack_opportunity_score(state: state)
+    )
+  end
+
+  test "values a lethal coordinated attack by one technique and headquarters" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][0][3]["hp"] = 7
+
+    state["field"][0][2] = test_technique(42)
+
+    state["field"][2][0]["firepower"] = 3
+
+    assert_operator(
+      combined_attack_opportunity_score(state: state),
+      :>,
+      0
     )
   end
 
@@ -431,10 +450,26 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     state["field"][0][3] = test_technique(57)
     state["field"][1][1] = test_technique(42)
 
+    state["field"][0][3]["hp"] = 3
+
     assert_operator(
       headquarters_attack_opportunity_score(state: state),
       :>,
       0
+    )
+  end
+
+  test "does not value a nonlethal headquarters attack after spotting move" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][0][3]["hp"] = 4
+
+    state["field"][1][1] = test_technique(42)
+
+    assert_equal(
+      0,
+      headquarters_attack_opportunity_score(state: state)
     )
   end
 
@@ -583,7 +618,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     state = @state.deep_dup
 
     state["field"][0][3] = test_technique(57)
-    state["field"][0][3]["hp"] = 20
+    state["field"][0][3]["hp"] = 8
     state["field"][0][3]["movement_limit"] = 0
     state["field"][0][3]["movement_count"] = 0
 

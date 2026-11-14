@@ -105,6 +105,37 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
+  test "waits for headquarters support instead of making a nonlethal solo attack" do
+    headquarters = @state["field"][2][0]
+    headquarters["has_attacked"] = true
+
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    attacker["movement_count"] = 0
+
+    @state["field"][1][2] = attacker
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 8,
+      firepower: 4
+    )
+
+    target["has_attacked"] = true
+    target["has_counterattacked"] = true
+
+    @state["field"][0][3] = target
+
+    result = plan
+
+    assert_not_empty result.actions
+    assert_equal "end_turn", result.actions.first["type"]
+  end
+
   test "does not sacrifice a technique to a tank destroyer that shoots first" do
     @state["field"][2][0]["has_attacked"] = true
 
