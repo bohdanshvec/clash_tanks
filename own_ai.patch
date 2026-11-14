@@ -1,0 +1,1046 @@
+diff --git a/app/services/decision_providers/a_i.rb b/app/services/decision_providers/a_i.rb
+index 30d13b4..e8074cb 100644
+--- a/app/services/decision_providers/a_i.rb
++++ b/app/services/decision_providers/a_i.rb
+@@ -51,6 +51,8 @@ module DecisionProviders
+         GroqAdapter.new.call(visible_state)
+       when "openai"
+         OpenAiAdapter.new.call(visible_state)
++      when "heuristic"
++        HeuristicAdapter.new.call(visible_state)
+       else
+         raise ArgumentError,
+               "Unsupported AI_PROVIDER: #{ENV.fetch('AI_PROVIDER')}"
+diff --git a/app/services/decision_providers/heuristic/board.rb b/app/services/decision_providers/heuristic/board.rb
+new file mode 100644
+index 0000000..d1f814a
+--- /dev/null
++++ b/app/services/decision_providers/heuristic/board.rb
+@@ -0,0 +1,234 @@
++# app/services/decision_providers/heuristic/board.rb
++
++module DecisionProviders
++  module Heuristic
++    # Только чтение: разбор VisibleState для собственного алгоритма ИИ.
++    #
++    # Класс не изменяет состояние и не содержит игровых правил.
++    # Правила движения берутся из GameEngine::Rules.
++    class Board
++      # Домашняя зона — клетки не дальше двух клеток от своего штаба.
++      HOME_RADIUS = 2
++
++      Unit = Struct.new(:pos, :obj) do
++        def hp = obj["hp"].to_i
++        def firepower = obj["firepower"].to_i
++        def fuel = obj["fuel"].to_i
++        def type = obj["technique_type"]
++        def artillery? = type == "artillery"
++        def tank_destroyer? = type == "tank_destroyer"
++        def moves_left = obj["movement_count"].to_i
++        def move_limit = obj["movement_limit"].to_i
++        def attacked? = obj["has_attacked"] == true
++      end
++
++      attr_reader :me_id, :enemy_id, :me, :enemy,
++                  :own_hq, :own_hq_pos, :enemy_hq, :enemy_hq_pos,
++                  :own_units, :enemy_units
++
++      def initialize(visible_state)
++        @state = visible_state
++        @field = visible_state.fetch("field")
++        @me_id = visible_state.fetch("current_player_id").to_s
++
++        players = visible_state.fetch("players")
++        @me = players.fetch(@me_id)
++        @enemy_id = players.keys.map(&:to_s).find { |id| id != @me_id }
++        @enemy = players.fetch(@enemy_id)
++
++        @own_units = []
++        @enemy_units = []
++        @reach_cache = {}
++
++        scan_field
++      end
++
++      # ------------------------------------------------------------------
++      # Общая информация
++      # ------------------------------------------------------------------
++
++      # Номер хода именно этого игрока (1, 2, 3 ...).
++      def own_turn_index
++        (@state["turn_number"].to_i + 1) / 2
++      end
++
++      def deck_count
++        @me["deck_count"].to_i
++      end
++
++      def resources
++        @me["resources"].to_i
++      end
++
++      # Топливо, которое игрок получит в начале следующего хода.
++      def next_turn_resources
++        @me["fuel_on_field"].to_i
++      end
++
++      def hand
++        @me["hand"] || []
++      end
++
++      # Урон одного выстрела штаба: собственная мощь + мощь взводов.
++      def enemy_hq_fire
++        hq_fire(@enemy_hq, @enemy)
++      end
++
++      # ------------------------------------------------------------------
++      # Геометрия
++      # ------------------------------------------------------------------
++
++      def distance(first, second)
++        [(first[0] - second[0]).abs, (first[1] - second[1]).abs].max
++      end
++
++      def neighbors(pos)
++        GameEngine::Rules::Position.neighbors(pos)
++      end
++
++      def object_at(pos)
++        @field[pos[0]][pos[1]]
++      end
++
++      def empty?(pos)
++        object_at(pos).nil?
++      end
++
++      def unit_at(pos)
++        @own_units.find { |unit| unit.pos == pos }
++      end
++
++      def hq_distance(pos)
++        distance(pos, @own_hq_pos)
++      end
++
++      # Клетки рядом со штабом — единственные, куда можно выставить технику.
++      def ring1?(pos)
++        hq_distance(pos) == 1
++      end
++
++      def home?(pos)
++        hq_distance(pos).between?(1, HOME_RADIUS)
++      end
++
++      def enemy_object?(obj)
++        obj && obj["player_id"].to_s == @enemy_id
++      end
++
++      # Сколько союзников стоит рядом с клеткой (штаб тоже считается).
++      def allies_adjacent(pos, exclude: nil)
++        count = @own_units.count do |unit|
++          unit.pos != exclude && distance(unit.pos, pos) == 1
++        end
++
++        count += 1 if distance(@own_hq_pos, pos) == 1
++        count
++      end
++
++      def min_enemy_distance(pos)
++        distances = @enemy_units.map { |unit| distance(unit.pos, pos) }
++        distances << distance(@enemy_hq_pos, pos)
++        distances.min
++      end
++
++      # ------------------------------------------------------------------
++      # Угрозы
++      # ------------------------------------------------------------------
++
++      # Клетки, куда техника может дойти за указанное число шагов.
++      def reachable(unit, steps)
++        @reach_cache[[unit.pos, steps]] ||= begin
++          seen = { unit.pos => 0 }
++          queue = [unit.pos]
++
++          until queue.empty?
++            current = queue.shift
++            depth = seen[current]
++
++            next if depth >= steps
++
++            neighbors(current).each do |candidate|
++              next if seen.key?(candidate)
++              next unless empty?(candidate)
++              next unless GameEngine::Rules::TechniqueMovement.valid?(
++                unit.obj,
++                current,
++                candidate
++              )
++
++              seen[candidate] = depth + 1
++              queue << candidate
++            end
++          end
++
++          seen.keys - [unit.pos]
++        end
++      end
++
++      # Вражеская техника, способная атаковать клетку в свой следующий ход.
++      def attackers_of(pos)
++        @enemy_units.select do |enemy_unit|
++          cells = [enemy_unit.pos] + reachable(enemy_unit, enemy_unit.move_limit)
++          cells.any? { |cell| distance(cell, pos) == 1 }
++        end
++      end
++
++      # Ожидаемый урон по клетке в следующий ход противника.
++      # Штаб и САУ противника стреляют по разведанной цели с любого расстояния.
++      def exposure_damage(pos)
++        attackers = attackers_of(pos)
++        return 0 if attackers.empty?
++
++        support = (@enemy_units - attackers).select(&:artillery?)
++
++        attackers.sum(&:firepower) +
++          support.sum(&:firepower) +
++          enemy_hq_fire
++      end
++
++      # Может ли вражеская техника в свой ход встать рядом с нашим штабом.
++      def threatens_own_hq?(enemy_unit)
++        cells = [enemy_unit.pos] + reachable(enemy_unit, enemy_unit.move_limit)
++        cells.any? { |cell| distance(cell, @own_hq_pos) == 1 }
++      end
++
++      private
++
++      def scan_field
++        @field.each_with_index do |row, row_index|
++          row.each_with_index do |object, column_index|
++            next unless object
++
++            pos = [row_index, column_index]
++            mine = object["player_id"].to_s == @me_id
++
++            case object["type"]
++            when "headquarters"
++              if mine
++                @own_hq = object
++                @own_hq_pos = pos
++              else
++                @enemy_hq = object
++                @enemy_hq_pos = pos
++              end
++            when "technique"
++              (mine ? @own_units : @enemy_units) << Unit.new(pos, object)
++            end
++          end
++        end
++
++        unless @own_hq_pos && @enemy_hq_pos
++          raise ArgumentError, "Both headquarters must be on the field"
++        end
++      end
++
++      def hq_fire(headquarters, player)
++        platoon_fire = (player["platoons"] || []).compact.sum do |platoon|
++          platoon["firepower"].to_i
++        end
++
++        headquarters["firepower"].to_i + platoon_fire
++      end
++    end
++  end
++end
+diff --git a/app/services/decision_providers/heuristic/combat_simulator.rb b/app/services/decision_providers/heuristic/combat_simulator.rb
+new file mode 100644
+index 0000000..df6f4f6
+--- /dev/null
++++ b/app/services/decision_providers/heuristic/combat_simulator.rb
+@@ -0,0 +1,129 @@
++# app/services/decision_providers/heuristic/combat_simulator.rb
++
++module DecisionProviders
++  module Heuristic
++    # «Что будет, если атаковать?» — без изменения настоящей партии.
++    #
++    # Симулятор работает на глубокой копии видимых данных и вызывает
++    # те же классы GameEngine, что и настоящая атака. Поэтому правила боя
++    # (контратака, ПТ-САУ первой, броня взводов, дальний огонь) не
++    # дублируются в алгоритме ИИ и не расходятся с движком.
++    #
++    # Настоящий GameState и VisibleState не изменяются.
++    class CombatSimulator
++      Outcome = Struct.new(
++        :attacker_type, :target_type,
++        :attacker_before, :target_before, :target_pos,
++        :attacker_hp_lost, :target_hp_lost,
++        :attacker_destroyed, :target_destroyed,
++        :my_platoon_hp_lost, :enemy_platoon_hp_lost,
++        keyword_init: true
++      )
++
++      def initialize(visible_state, state: nil)
++        @me_id = visible_state.fetch("current_player_id").to_s
++        @state = state || build_sandbox(visible_state)
++      end
++
++      # Независимая копия: последовательность атак не портит исходную.
++      def fork
++        self.class.new(
++          { "current_player_id" => @me_id },
++          state: deep_copy(@state)
++        )
++      end
++
++      # Атака из `from` по `to`. Состояние копии изменяется.
++      def attack(from, to)
++        attacker = object_at(from)
++        target = object_at(to)
++
++        raise ArgumentError, "Attacker or target is missing" unless attacker && target
++
++        before = snapshot(attacker, target)
++        platoons_before = platoon_hp_by_player
++
++        attacker["has_attacked"] = true
++
++        scenario = GameEngine::Rules::CombatType.call(
++          attacker: attacker,
++          target: target,
++          attacker_position: from,
++          target_position: to
++        )
++
++        GameEngine::Attacks::CombatExecutor.call(
++          state: @state,
++          attacker_position: from,
++          target_position: to,
++          scenario: scenario
++        )
++
++        platoons_after = platoon_hp_by_player
++        enemy_id = (platoons_before.keys - [@me_id]).first
++
++        Outcome.new(
++          attacker_type: attacker["type"],
++          target_type: target["type"],
++          attacker_before: before[:attacker],
++          target_before: before[:target],
++          target_pos: to,
++          attacker_hp_lost: before[:attacker]["hp"].to_i - attacker["hp"].to_i,
++          target_hp_lost: before[:target]["hp"].to_i - target["hp"].to_i,
++          attacker_destroyed: attacker["hp"].to_i <= 0,
++          target_destroyed: target["hp"].to_i <= 0,
++          my_platoon_hp_lost:
++            platoons_before[@me_id] - platoons_after[@me_id],
++          enemy_platoon_hp_lost:
++            platoons_before[enemy_id] - platoons_after[enemy_id]
++        )
++      end
++
++      # Переставляет технику в копии (для оценки «что будет после хода»).
++      def relocate(from, to)
++        object = object_at(from)
++        return unless object && object_at(to).nil?
++
++        @state["field"][from[0]][from[1]] = nil
++        @state["field"][to[0]][to[1]] = object
++      end
++
++      private
++
++      def build_sandbox(visible_state)
++        players = visible_state.fetch("players").to_h do |id, player|
++          [
++            id.to_s,
++            {
++              "platoons" => deep_copy(player["platoons"] || []),
++              "graveyard" => []
++            }
++          ]
++        end
++
++        {
++          "field" => deep_copy(visible_state.fetch("field")),
++          "players" => players
++        }
++      end
++
++      def object_at(pos)
++        @state["field"][pos[0]][pos[1]]
++      end
++
++      def snapshot(attacker, target)
++        { attacker: attacker.dup, target: target.dup }
++      end
++
++      def platoon_hp_by_player
++        @state["players"].to_h do |id, player|
++          [id, player["platoons"].compact.sum { |platoon| platoon["hp"].to_i }]
++        end
++      end
++
++      def deep_copy(value)
++        Marshal.load(Marshal.dump(value))
++      end
++    end
++  end
++end
+diff --git a/app/services/decision_providers/heuristic/planner.rb b/app/services/decision_providers/heuristic/planner.rb
+new file mode 100644
+index 0000000..270fd5a
+--- /dev/null
++++ b/app/services/decision_providers/heuristic/planner.rb
+@@ -0,0 +1,580 @@
++# app/services/decision_providers/heuristic/planner.rb
++
++module DecisionProviders
++  module Heuristic
++    # Собственный алгоритм ИИ: «накопление у штаба → штурм с поддержкой».
++    #
++    # Планировщик выбирает ОДНО действие из серверного списка legal_actions.
++    # Он не применяет действие и не проверяет правила — это делает движок.
++    #
++    # Фазы:
++    #   :build_up — выставлять технику, держать её у штаба, бить только
++    #               выгодные цели рядом с домом и стрелять штабом;
++    #   :assault  — идти группой к вражескому штабу, бить цели
++    #               сфокусированным огнём (штаб + несколько машин).
++    class Planner
++      CONFIG = {
++        # --- Ценности (единая шкала «очков») ---
++        win_value: 10_000.0,
++        kill_bonus: 1.5,
++        hp_point: 1.0,
++        firepower_hp_factor: 0.3,
++        enemy_hq_hp_point: 2.0,
++        own_hq_hp_point: 1.8,
++        platoon_hp_point: 0.45,
++        hq_threat_bonus: 3.0,
++
++        # --- Переход в штурм ---
++        assault_min_units: 3,
++        assault_power_ratio: 0.8,
++        assault_by_own_turn: 5,
++        assault_deck_count: 1,
++        committed_min_units: 2,
++
++        # --- Атаки ---
++        build_up_min_net: 1.0,
++        assault_min_net: 0.4,
++        max_plan_attackers: 4,
++
++        # --- Карты ---
++        card_base: 5.0,
++        deploy_weight: 1.4,
++        min_order_gain: 5.0,
++
++        # --- Движение ---
++        move_min_gain: 0.25,
++        advance_weight: 1.1,
++        cohesion_weight: 0.5,
++        contact_weight: 0.6,
++        contact_cap: 40.0,
++        exposure_weight_build_up: 0.8,
++        exposure_weight_assault: 0.6,
++        outside_home_penalty: 2.5,
++        free_ring_pressure: 0.9,
++        blocked_ring_pressure: 6.0
++      }.freeze
++
++      TYPE_BONUS = {
++        "light_tank" => 0.0,
++        "medium_tank" => 0.4,
++        "heavy_tank" => 0.8,
++        "tank_destroyer" => 1.0,
++        "artillery" => 1.5
++      }.freeze
++
++      KIND_ORDER = { order: 0, technique: 1, platoon: 2, draw: 3 }.freeze
++
++      Candidate = Struct.new(:score, :action, :kind)
++      Decision = Struct.new(:action, :score, :kind, :phase)
++
++      Plan = Struct.new(
++        :score, :first_action, :own_losses, :own_damage, :target_pos,
++        keyword_init: true
++      )
++
++      Item = Struct.new(:card, :kind, :value, :price, :action, keyword_init: true)
++
++      attr_reader :phase
++
++      def initialize(visible_state:, legal_actions:, config: {})
++        @legal = legal_actions
++        @cfg = CONFIG.merge(config)
++        @board = Board.new(visible_state)
++        @base_sim = CombatSimulator.new(visible_state)
++        @phase = assault? ? :assault : :build_up
++      end
++
++      def call
++        candidates = attack_candidates + card_candidates + move_candidates
++
++        best = candidates.each_with_index.max_by do |candidate, index|
++          [candidate.score, -index]
++        end&.first
++
++        if best && best.score > 0
++          Decision.new(best.action, best.score, best.kind, @phase)
++        else
++          Decision.new(end_turn_action, 0.0, :end_turn, @phase)
++        end
++      end
++
++      private
++
++      attr_reader :cfg
++
++      # ==================================================================
++      # Фаза
++      # ==================================================================
++
++      def assault?
++        units = @board.own_units
++        return false if units.empty?
++
++        return true if @board.own_turn_index >= cfg[:assault_by_own_turn]
++        return true if @board.deck_count <= cfg[:assault_deck_count]
++
++        committed = units.any? do |unit|
++          @board.hq_distance(unit.pos) > Board::HOME_RADIUS
++        end
++
++        need = committed ? cfg[:committed_min_units] : cfg[:assault_min_units]
++        return false if units.size < need
++
++        own_power = units.sum { |unit| unit_value(unit.obj) }
++        enemy_power = @board.enemy_units.sum { |unit| unit_value(unit.obj) }
++
++        own_power >= enemy_power * cfg[:assault_power_ratio]
++      end
++
++      # ==================================================================
++      # Оценка
++      # ==================================================================
++
++      def unit_value(object)
++        object["hp"].to_f +
++          object["firepower"].to_f * 1.6 +
++          object["fuel"].to_f * 0.8 +
++          TYPE_BONUS.fetch(object["technique_type"], 0.0)
++      end
++
++      def hp_value(object)
++        cfg[:hp_point] + cfg[:firepower_hp_factor] * object["firepower"].to_f
++      end
++
++      # Ценность результата одного выстрела для нас (с учётом потерь).
++      def outcome_value(outcome)
++        if outcome.target_type == "headquarters" && outcome.target_destroyed
++          return cfg[:win_value]
++        end
++
++        if outcome.attacker_type == "headquarters" && outcome.attacker_destroyed
++          return -cfg[:win_value]
++        end
++
++        value = 0.0
++
++        if outcome.target_type == "headquarters"
++          value += outcome.target_hp_lost * cfg[:enemy_hq_hp_point]
++          value += outcome.enemy_platoon_hp_lost * cfg[:platoon_hp_point]
++        elsif outcome.target_destroyed
++          value += unit_value(outcome.target_before) +
++                   cfg[:kill_bonus] +
++                   threat_bonus(outcome.target_pos)
++        else
++          value += outcome.target_hp_lost * hp_value(outcome.target_before)
++        end
++
++        if outcome.attacker_type == "headquarters"
++          value -= outcome.attacker_hp_lost * cfg[:own_hq_hp_point]
++        elsif outcome.attacker_destroyed
++          value -= unit_value(outcome.attacker_before)
++        else
++          value -= outcome.attacker_hp_lost * hp_value(outcome.attacker_before)
++        end
++
++        value - outcome.my_platoon_hp_lost * cfg[:platoon_hp_point]
++      end
++
++      def threat_bonus(target_pos)
++        unit = @board.enemy_units.find { |enemy| enemy.pos == target_pos }
++        return 0.0 unless unit
++
++        @board.threatens_own_hq?(unit) ? cfg[:hq_threat_bonus] : 0.0
++      end
++
++      # ==================================================================
++      # Атаки: фокус-огонь по одной цели
++      # ==================================================================
++
++      def attack_candidates
++        attacks = @legal.select { |action| action["type"] == "attack" }
++
++        attacks.group_by { |action| action["payload"]["target"] }
++               .filter_map do |target_pos, actions|
++          plan = best_plan(target_pos, actions)
++
++          next unless plan
++          next unless plan_allowed?(plan)
++
++          Candidate.new(plan.score, plan.first_action, :attack)
++        end
++      end
++
++      # Перебирает порядок, в котором наши атакующие бьют одну цель.
++      # Выгоднее всего начинать с выстрелов без ответа (штаб/САУ с разведкой),
++      # а добивать машиной, которой уже не отвечают.
++      def best_plan(target_pos, actions)
++        by_attacker = actions.to_h do |action|
++          [action["payload"]["attacker"], action]
++        end
++
++        ranked = by_attacker.keys.sort_by do |pos|
++          outcome = @base_sim.fork.attack(pos, target_pos)
++          [outcome.attacker_hp_lost, -outcome.target_hp_lost]
++        end
++
++        ranked = ranked.first(cfg[:max_plan_attackers])
++
++        best = nil
++
++        ranked.permutation.each do |order|
++          plan = evaluate_order(order, target_pos, by_attacker)
++          best = plan if best.nil? || plan.score > best.score
++        end
++
++        best
++      end
++
++      def evaluate_order(order, target_pos, by_attacker)
++        sim = @base_sim.fork
++        total = 0.0
++        best_total = nil
++        losses = 0
++        damage = 0
++        best_losses = 0
++        best_damage = 0
++
++        order.each do |attacker_pos|
++          outcome = sim.attack(attacker_pos, target_pos)
++          total += outcome_value(outcome)
++          damage += outcome.attacker_hp_lost
++          losses += 1 if outcome.attacker_destroyed
++
++          # Лучший префикс: лишний выстрел с потерями не добавляем.
++          if best_total.nil? || total > best_total
++            best_total = total
++            best_losses = losses
++            best_damage = damage
++          end
++
++          break if outcome.target_destroyed
++        end
++
++        Plan.new(
++          score: best_total,
++          first_action: by_attacker.fetch(order.first),
++          own_losses: best_losses,
++          own_damage: best_damage,
++          target_pos: target_pos
++        )
++      end
++
++      def plan_allowed?(plan)
++        return false unless plan.score > 0
++
++        # Выстрел по вражескому штабу без потерь — почти бесплатный урон,
++        # поэтому порог выгоды для него не нужен в обеих фазах.
++        target_object = @board.object_at(plan.target_pos)
++        if target_object["type"] == "headquarters" && plan.own_losses.zero?
++          return true
++        end
++
++        if @phase == :assault
++          return plan.score >= cfg[:assault_min_net]
++        end
++
++        # Накопление: без потерь, выгодно, и либо рядом с домом,
++        # либо вообще без повреждений наших машин.
++        return false if plan.own_losses.positive?
++        return false if plan.score < cfg[:build_up_min_net]
++        return true if plan.own_damage.zero?
++
++        target = @board.object_at(plan.target_pos)
++        return true if target["type"] == "headquarters"
++
++        @board.hq_distance(plan.target_pos) <= Board::HOME_RADIUS
++      end
++
++      # ==================================================================
++      # Карты: лучший набор на всё топливо хода
++      # ==================================================================
++
++      def card_candidates
++        items = build_items
++        return [] if items.empty?
++
++        chosen = best_subset(items)
++        return [] if chosen.empty?
++
++        item = chosen.min_by { |candidate| [KIND_ORDER[candidate.kind], -candidate.value] }
++
++        [Candidate.new(cfg[:card_base] + item.value * 0.5, item.action, :card)]
++      end
++
++      def build_items
++        legal_by_card = @legal
++                        .select { |action| action["type"] == "play_card" }
++                        .group_by { |action| action["payload"]["card_id"] }
++
++        items = @board.hand.filter_map do |card|
++          actions = legal_by_card[card["card_id"]]
++          next unless actions
++
++          case card["card_type"]
++          when "technique" then technique_item(card, actions)
++          when "platoon" then platoon_item(card, actions)
++          when "order" then order_item(card, actions)
++          end
++        end
++
++        items.select { |item| item.value > 0 }
++             .sort_by { |item| -item.value }
++             .first(12)
++      end
++
++      def technique_item(card, actions)
++        technique = card["technique"]
++
++        cell_actions = actions.select { |action| action["payload"]["row"] }
++        return if cell_actions.empty?
++
++        best = cell_actions.max_by do |action|
++          deploy_cell_score(
++            technique,
++            [action["payload"]["row"], action["payload"]["column"]]
++          )
++        end
++
++        Item.new(
++          card: card,
++          kind: :technique,
++          value: unit_value(technique) * cfg[:deploy_weight],
++          price: card["price"].to_i,
++          action: best
++        )
++      end
++
++      def platoon_item(card, actions)
++        platoon = card["platoon"] || {}
++
++        value = platoon["armor"].to_f * 1.1 +
++                platoon["firepower"].to_f * 1.2 +
++                platoon["fuel"].to_f * 1.6 +
++                platoon["hp"].to_f * 0.3
++
++        Item.new(
++          card: card,
++          kind: :platoon,
++          value: value,
++          price: card["price"].to_i,
++          action: actions.first
++        )
++      end
++
++      def order_item(card, actions)
++        abilities = card["abilities"] || []
++
++        if abilities.any? { |ability| ability["code"] == "damage_technique" }
++          damage_order_item(card, actions, abilities)
++        elsif abilities.any? { |ability| ability["code"] == "draw_cards" }
++          draw_order_item(card, actions, abilities)
++        end
++      end
++
++      def damage_order_item(card, actions, abilities)
++        damage = abilities.find { |a| a["code"] == "damage_technique" }["damage"].to_i
++
++        scored = actions.filter_map do |action|
++          target_pos = action["payload"]["targets"]&.first
++          target = target_pos && @board.object_at(target_pos)
++          next unless target
++
++          gain = if damage >= target["hp"].to_i
++                   unit_value(target) + cfg[:kill_bonus] + threat_bonus(target_pos)
++                 else
++                   damage * hp_value(target) * 0.7
++                 end
++
++          [gain, action]
++        end
++
++        gain, action = scored.max_by(&:first)
++        return unless gain && gain >= cfg[:min_order_gain]
++
++        Item.new(
++          card: card,
++          kind: :order,
++          value: gain,
++          price: card["price"].to_i,
++          action: action
++        )
++      end
++
++      # Добор не нужен, пока есть что выставить; из пустой колоды брать
++      # карты нельзя — каждая неудачная попытка наносит урон штабу.
++      def draw_order_item(card, actions, abilities)
++        count = abilities.find { |a| a["code"] == "draw_cards" }["count"].to_i
++        return if @board.deck_count < count
++
++        playable = @legal.any? do |action|
++          action["type"] == "play_card" && action["payload"]["card_id"] != card["card_id"] &&
++            !action["payload"].key?("targets")
++        end
++
++        return if playable
++
++        Item.new(
++          card: card,
++          kind: :draw,
++          value: 0.3,
++          price: card["price"].to_i,
++          action: actions.first
++        )
++      end
++
++      def best_subset(items)
++        resources = @board.resources
++        free_slots = (@board.me["platoons"] || []).count(&:nil?)
++
++        cells = items.select { |i| i.kind == :technique }.flat_map do |item|
++          @legal.select do |action|
++            action["type"] == "play_card" &&
++              action["payload"]["card_id"] == item.card["card_id"] &&
++              action["payload"]["row"]
++          end.map { |action| [action["payload"]["row"], action["payload"]["column"]] }
++        end.uniq
++
++        best = nil
++
++        (1...(1 << items.size)).each do |mask|
++          selected = items.each_index.select { |i| mask[i] == 1 }.map { |i| items[i] }
++
++          price = selected.sum(&:price)
++          next if price > resources
++          next if selected.count { |i| i.kind == :technique } > cells.size
++          next if selected.count { |i| i.kind == :platoon } > free_slots
++          next if selected.count { |i| i.kind == :order } > 1
++
++          key = [selected.sum(&:value), price, -selected.size]
++          best = [key, selected] if best.nil? || (key <=> best[0]) > 0
++        end
++
++        best ? best[1] : []
++      end
++
++      # Куда поставить новую технику рядом со штабом.
++      def deploy_cell_score(technique, cell)
++        ally = @board.allies_adjacent(cell)
++        pseudo = Board::Unit.new(cell, technique.merge("movement_count" => 0))
++
++        score = -0.5 * @board.distance(cell, @board.enemy_hq_pos)
++        score += 0.2 * ally
++        score += 0.4 * @board.min_enemy_distance(cell) if technique["technique_type"] == "artillery"
++        score - cfg[:exposure_weight_build_up] * exposure_cost(pseudo, cell, ally)
++      end
++
++      # ==================================================================
++      # Движение
++      # ==================================================================
++
++      def move_candidates
++        blocked = blocked_deploys
++        pending = pending_deploys
++
++        @legal.filter_map do |action|
++          next unless action["type"] == "move"
++
++          from = action["payload"]["from"]
++          to = action["payload"]["to"]
++          unit = @board.unit_at(from)
++          next unless unit
++
++          gain = stance(unit, to, blocked, pending) -
++                 stance(unit, from, blocked, pending)
++
++          next if gain < cfg[:move_min_gain]
++
++          Candidate.new(gain, action, :move)
++        end
++      end
++
++      # Техника, которую можно купить, но выставить некуда:
++      # все клетки у штаба заняты своими машинами.
++      def blocked_deploys
++        playable_ids = @legal
++                       .select { |action| action["type"] == "play_card" }
++                       .map { |action| action["payload"]["card_id"] }
++
++        @board.hand.count do |card|
++          card["card_type"] == "technique" &&
++            card["price"].to_i <= @board.resources &&
++            !playable_ids.include?(card["card_id"])
++        end
++      end
++
++      def pending_deploys
++        @board.hand.count do |card|
++          card["card_type"] == "technique" &&
++            card["price"].to_i <= @board.next_turn_resources
++        end
++      end
++
++      # Статическая оценка клетки для машины (чем выше — тем лучше).
++      def stance(unit, cell, blocked, pending)
++        ally = @board.allies_adjacent(cell, exclude: unit.pos)
++        expo = exposure_cost(unit, cell, ally)
++
++        pressure =
++          if blocked.positive? then cfg[:blocked_ring_pressure]
++          elsif pending.positive? then cfg[:free_ring_pressure]
++          else 0.3
++          end
++
++        ring_penalty = @board.ring1?(cell) ? pressure : 0.0
++
++        if @phase == :assault && !unit.artillery?
++          score = -cfg[:advance_weight] * @board.distance(cell, @board.enemy_hq_pos)
++          score += cfg[:cohesion_weight] * ally
++          score += cfg[:contact_weight] * contact_value(unit, cell)
++          score -= cfg[:exposure_weight_assault] * expo
++        else
++          score = if unit.artillery?
++                    0.4 * @board.min_enemy_distance(cell)
++                  else
++                    -0.3 * @board.distance(cell, @board.enemy_hq_pos)
++                  end
++
++          score += 0.25 * ally
++          score -= cfg[:exposure_weight_build_up] * expo
++          score -= cfg[:outside_home_penalty] unless @board.home?(cell)
++        end
++
++        score - ring_penalty
++      end
++
++      # Возможная потеря техники в клетке в следующий ход противника.
++      def exposure_cost(unit, cell, ally)
++        damage = @board.exposure_damage(cell)
++        return 0.0 if damage.zero?
++
++        chance = [damage.to_f / [unit.hp, 1].max, 1.0].min
++        chance *= 1.0 - 0.15 * [ally, 3].min
++
++        chance * unit_value(unit.obj)
++      end
++
++      # Если машина встанет в клетку — какую атаку она сможет там провести.
++      def contact_value(unit, cell)
++        return 0.0 if unit.attacked?
++
++        best = 0.0
++
++        @board.neighbors(cell).each do |neighbor|
++          next unless @board.enemy_object?(@board.object_at(neighbor))
++
++          sim = @base_sim.fork
++          sim.relocate(unit.pos, cell)
++
++          best = [best, outcome_value(sim.attack(cell, neighbor))].max
++        end
++
++        [best, cfg[:contact_cap]].min
++      end
++
++      def end_turn_action
++        @legal.find { |action| action["type"] == "end_turn" } ||
++          { "type" => "end_turn", "payload" => {} }
++      end
++    end
++  end
++end
+diff --git a/app/services/decision_providers/heuristic_adapter.rb b/app/services/decision_providers/heuristic_adapter.rb
+new file mode 100644
+index 0000000..c6549df
+--- /dev/null
++++ b/app/services/decision_providers/heuristic_adapter.rb
+@@ -0,0 +1,53 @@
++# app/services/decision_providers/heuristic_adapter.rb
++
++module DecisionProviders
++  # Собственный алгоритм ИИ без внешнего API.
++  #
++  # Интерфейс совпадает с GroqAdapter и OpenAiAdapter:
++  #   call(visible_state) -> { "type" => ..., "payload" => ... }
++  #
++  # Возвращается только действие из серверного списка legal_actions
++  # (ActionOptions). Проверку и применение действия выполняет движок
++  # через GameActionRunner.
++  class HeuristicAdapter
++    def initialize(config: {})
++      @config = config
++    end
++
++    def call(visible_state)
++      legal_actions = ActionOptions.call(visible_state)
++
++      return end_turn_action if legal_actions.empty?
++      return legal_actions.first if legal_actions.one?
++
++      decision = Heuristic::Planner.new(
++        visible_state: visible_state,
++        legal_actions: legal_actions,
++        config: @config
++      ).call
++
++      Rails.logger.info(
++        "[HeuristicAdapter] phase=#{decision.phase}, " \
++        "kind=#{decision.kind}, " \
++        "score=#{decision.score.round(2)}, " \
++        "action=#{decision.action['type']}"
++      )
++
++      decision.action
++    rescue StandardError => error
++      # Ошибка алгоритма не должна останавливать партию.
++      # Завершение хода всегда допустимо для активного игрока.
++      Rails.logger.error(
++        "[HeuristicAdapter] #{error.class}: #{error.message}"
++      )
++
++      end_turn_action
++    end
++
++    private
++
++    def end_turn_action
++      { "type" => "end_turn", "payload" => {} }
++    end
++  end
++end
+diff --git a/app/services/games/run_ai_turns.rb b/app/services/games/run_ai_turns.rb
+index b8aa572..87e385a 100644
+--- a/app/services/games/run_ai_turns.rb
++++ b/app/services/games/run_ai_turns.rb
+@@ -4,7 +4,7 @@ module Games
+   class RunAiTurns
+     Result = Data.define(:success?, :error, :events, :actions_count)
+ 
+-    MAX_ACTIONS_PER_RUN = 20
++    MAX_ACTIONS_PER_RUN = 40
+     
+     # Максимальное количество повторных решений,
+ 		# если состояние игры изменилось во время работы ИИ.
