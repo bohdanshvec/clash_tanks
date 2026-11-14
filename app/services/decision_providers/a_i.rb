@@ -1,4 +1,3 @@
-# app/services/decision_providers/a_i.rb
 
 module DecisionProviders
   class AI < Base
@@ -7,18 +6,45 @@ module DecisionProviders
     class InvalidDecision < StandardError
     end
 
+    PlanDecision = Data.define(
+      :action,
+      :plan,
+      :expected_visible_state,
+      :next_step_index
+    )
+
     RETRYABLE_DECISION_ERRORS = [
-      InvalidDecision,
-      GroqAdapter::InvalidActionIndex,
-      GroqAdapter::InvalidJsonGeneration
+      InvalidDecision
     ].freeze
 
     def initialize(context:, decision_source: nil)
       super(context: context)
-      @decision_source = decision_source || method(:call_default_adapter)
+
+      # decision_source сохраняется исключительно как механизм
+      # внедрения тестовых решений.
+      @decision_source = decision_source
     end
 
     def call
+      call_with_plan.action
+    end
+
+    def call_with_plan
+      if @decision_source
+        return PlanDecision.new(
+          action: call_injected_decision_source,
+          plan: nil,
+          expected_visible_state: nil,
+          next_step_index: nil
+        )
+      end
+
+      call_opponent_engine_with_plan
+    end
+
+    private
+
+    def call_injected_decision_source
       attempts = 0
 
       loop do
@@ -26,38 +52,63 @@ module DecisionProviders
 
         begin
           decision = @decision_source.call(context.visible_state)
+
           return build_action(decision)
         rescue *RETRYABLE_DECISION_ERRORS => error
-          if attempts >= MAX_ATTEMPTS
-            raise ArgumentError,
-                  "AI failed to produce a valid decision after " \
-                  "#{MAX_ATTEMPTS} attempts (#{error.class})"
-          end
+          raise_attempts_exhausted(error) if attempts >= MAX_ATTEMPTS
 
-          Rails.logger.warn(
-            "[DecisionProviders::AI] Invalid decision: " \
-            "error_class=#{error.class}, " \
-            "retry=#{attempts}/#{MAX_ATTEMPTS}"
-          )
+          log_invalid_decision(error, attempts)
         end
       end
     end
 
-    private
+    def call_opponent_engine_with_plan
+      current_time = Time.iso8601(
+        context.visible_state.fetch("server_time")
+      )
 
-    def call_default_adapter(visible_state)
-      case ENV.fetch("AI_PROVIDER", "groq").downcase
-      when "groq"
-        GroqAdapter.new.call(visible_state)
-      when "openai"
-        OpenAiAdapter.new.call(visible_state)
-      else
-        raise ArgumentError,
-              "Unsupported AI_PROVIDER: #{ENV.fetch('AI_PROVIDER')}"
-      end
+      plan = OpponentEngine::Planning::TacticalPlanner.call(
+        visible_state: context.visible_state,
+        player_id: context.player_id,
+        current_time: current_time
+      )
+
+      execution = OpponentEngine::ActionExecutor.execute(
+        plan: plan,
+        context: context
+      )
+
+      Rails.logger.info(
+        "[DecisionProviders::AI] Native opponent engine selected"
+      )
+
+      PlanDecision.new(
+        action: execution.action,
+        plan: plan,
+        expected_visible_state: execution.expected_visible_state,
+        next_step_index: execution.next_step_index
+      )
+    end
+
+    def raise_attempts_exhausted(error)
+      raise ArgumentError,
+            "AI failed to produce a valid decision after " \
+            "#{MAX_ATTEMPTS} attempts (#{error.class})"
+    end
+
+    def log_invalid_decision(error, attempts)
+      Rails.logger.warn(
+        "[DecisionProviders::AI] Invalid injected decision: " \
+        "error_class=#{error.class}, " \
+        "retry=#{attempts}/#{MAX_ATTEMPTS}"
+      )
     end
 
     def build_action(decision)
+      if decision.is_a?(GameEngine::Action)
+        return validate_prebuilt_action(decision)
+      end
+
       unless decision.is_a?(Hash)
         raise InvalidDecision, "AI decision must be a Hash"
       end
@@ -80,6 +131,18 @@ module DecisionProviders
         payload: normalize_payload(payload),
         expected_state_digest: context.state_digest
       )
+    end
+
+    def validate_prebuilt_action(action)
+      unless action.player_id.to_s == context.player_id
+        raise InvalidDecision, "AI action has an invalid player_id"
+      end
+
+      unless action.expected_state_digest == context.state_digest
+        raise InvalidDecision, "AI action has an invalid state digest"
+      end
+
+      action
     end
 
     def normalize_payload(value)

@@ -5,6 +5,7 @@ module Games
     Result = Data.define(:success?, :error, :events, :actions_count)
 
     MAX_ACTIONS_PER_RUN = 20
+    ACTION_DELAY_SECONDS = 2.5
     
     # Максимальное количество повторных решений,
 		# если состояние игры изменилось во время работы ИИ.
@@ -14,31 +15,39 @@ module Games
     # Используется двухцелочисленный вариант блокировки.
     AI_TURN_LOCK_NAMESPACE = 1_129_603_401
 
-		def self.call(
-			game:,
-			max_actions: MAX_ACTIONS_PER_RUN,
-			decision_source: nil,
-			on_action: nil
-		)
-			new(
-				game:,
-				max_actions:,
-				decision_source:,
-				on_action:
-			).call
-		end
+    def self.call(
+      game:,
+      max_actions: MAX_ACTIONS_PER_RUN,
+      decision_source: nil,
+      on_action: nil,
+      sleeper: nil
+    )
+      new(
+        game:,
+        max_actions:,
+        decision_source:,
+        on_action:,
+        sleeper:
+      ).call
+    end
 
-		def initialize(
-			game:,
-			max_actions:,
-			decision_source: nil,
-			on_action: nil
-		)
-			@game = game
-			@max_actions = max_actions
-			@decision_source = decision_source
-			@on_action = on_action
-		end
+    def initialize(
+      game:,
+      max_actions:,
+      decision_source: nil,
+      on_action: nil,
+      sleeper: nil
+    )
+      @game = game
+      @max_actions = max_actions
+      @decision_source = decision_source
+      @on_action = on_action
+      @sleeper = sleeper || ->(seconds) { sleep(seconds) }
+      @opponent_plan = nil
+      @opponent_plan_expected_visible_state = nil
+      @opponent_plan_step_index = nil
+      @opponent_plan_player_id = nil
+    end
 
     def call
       Game.connection_pool.with_connection do |connection|
@@ -79,6 +88,137 @@ module Games
     end
 
     private
+
+    def select_ai_action(context:, current_player_id:)
+      # Внедрённый источник решений используется для изолированных тестов.
+      # В обычной игре всегда используется собственный Opponent Engine.
+      if @decision_source
+        return DecisionProviders::AI.new(
+          context: context,
+          decision_source: @decision_source
+        ).call
+      end
+
+      if reusable_opponent_plan_step?(
+        context: context,
+        current_player_id: current_player_id
+      )
+        execution = DecisionProviders::OpponentEngine::ActionExecutor.execute(
+          plan: @opponent_plan,
+          context: context,
+          step_index: @opponent_plan_step_index
+        )
+
+        store_plan_execution(execution)
+
+        return execution.action
+      end
+
+      clear_opponent_plan
+
+      decision = DecisionProviders::AI.new(
+        context: context
+      ).call_with_plan
+
+      store_plan_decision(
+        decision,
+        current_player_id: current_player_id
+      )
+
+      decision.action
+    end
+
+    def reusable_opponent_plan_step?(context:, current_player_id:)
+      return false unless @opponent_plan
+      return false unless @opponent_plan_player_id == current_player_id
+      return false unless @opponent_plan_expected_visible_state
+      return false unless @opponent_plan_step_index
+
+      return false unless @opponent_plan_step_index < @opponent_plan.actions.length
+
+      return false unless visible_states_match?(
+        @opponent_plan_expected_visible_state,
+        context.visible_state
+      )
+
+      planned_action = @opponent_plan.actions.fetch(
+        @opponent_plan_step_index
+      )
+
+      legal_actions = DecisionProviders::ActionOptions.call(
+        context.visible_state
+      )
+
+      legal_actions.any? do |legal_action|
+        normalize_action_for_comparison(legal_action) ==
+          normalize_action_for_comparison(planned_action)
+      end
+    end
+
+    def store_plan_decision(decision, current_player_id:)
+      return unless decision.plan
+
+      @opponent_plan = decision.plan
+      @opponent_plan_expected_visible_state =
+        decision.expected_visible_state
+      @opponent_plan_step_index = decision.next_step_index
+      @opponent_plan_player_id = current_player_id
+    end
+
+    def store_plan_execution(execution)
+      @opponent_plan_expected_visible_state =
+        execution.expected_visible_state
+      @opponent_plan_step_index = execution.next_step_index
+    end
+
+    def clear_opponent_plan
+      @opponent_plan = nil
+      @opponent_plan_expected_visible_state = nil
+      @opponent_plan_step_index = nil
+      @opponent_plan_player_id = nil
+    end
+
+    # Сравниваем игровое состояние, исключая только поля,
+    # которые закономерно меняются с течением реального времени.
+    def visible_states_match?(expected, actual)
+      normalize_visible_state(expected) ==
+        normalize_visible_state(actual)
+    end
+
+    def normalize_visible_state(visible_state)
+      normalized = visible_state.deep_dup
+
+      normalized.delete("server_time")
+      normalized.delete("turn_started_at")
+
+      normalized.fetch("players", {}).each_value do |player|
+        player.delete("remaining_time")
+      end
+
+      normalized
+    end
+
+    def normalize_action_for_comparison(action)
+      {
+        "type" => action["type"] || action[:type],
+        "payload" => normalize_hash_for_comparison(
+          action["payload"] || action[:payload] || {}
+        )
+      }
+    end
+
+    def normalize_hash_for_comparison(value)
+      case value
+      when Hash
+        value.each_with_object({}) do |(key, item), result|
+          result[key.to_s] = normalize_hash_for_comparison(item)
+        end
+      when Array
+        value.map { |item| normalize_hash_for_comparison(item) }
+      else
+        value
+      end
+    end
 
 		def run_ai_loop
 			events = []
@@ -168,13 +308,10 @@ module Games
 				)
 
         # ИИ выбирает действие, но не применяет его самостоятельно.
-        provider_options = { context: context }
-
-        if @decision_source
-          provider_options[:decision_source] = @decision_source
-        end
-
-				action = DecisionProviders::AI.new(**provider_options).call
+        action = select_ai_action(
+          context: context,
+          current_player_id: current_player_id
+        )
 
 				Rails.logger.info(
 					"[Games::RunAiTurns] Game ##{@game.id}: " \
@@ -207,6 +344,8 @@ module Games
 						end
 
 						stale_state_retries += 1
+
+            clear_opponent_plan
 
 						Rails.logger.info(
 							"[Games::RunAiTurns] Game ##{@game.id}: " \
@@ -247,6 +386,22 @@ module Games
 						)
 					end
 				end
+
+        # Даём браузеру время воспроизвести визуальные эффекты
+        # перед следующим действием ИИ.
+        #
+        # Не задерживаем выполнение, если:
+        # - партия завершена;
+        # - ход уже перешёл другому игроку;
+        # - достигнут лимит действий.
+        next_action_belongs_to_ai =
+          result.state &&
+          result.state["status"] == "started" &&
+          result.state["current_player_id"].to_s == current_player_id
+
+        if next_action_belongs_to_ai && actions_count < @max_actions
+          @sleeper.call(ACTION_DELAY_SECONDS)
+        end
 
 				# Успешное действие означает, что цикл продолжился нормально.
 				stale_state_retries = 0

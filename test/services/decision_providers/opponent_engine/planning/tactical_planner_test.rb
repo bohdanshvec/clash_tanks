@@ -1,0 +1,480 @@
+
+require "test_helper"
+
+class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
+  ActiveSupport::TestCase
+
+  AI_PLAYER_ID = 42
+  OPPONENT_ID = 57
+
+  def setup
+    @state = GameEngine::GameState.initial(
+      current_player_id: AI_PLAYER_ID,
+      participants: [
+        headquarters_participant(
+          player_id: AI_PLAYER_ID,
+          nation_id: 10
+        ),
+        headquarters_participant(
+          player_id: OPPONENT_ID,
+          nation_id: 20
+        )
+      ]
+    )
+
+    add_headquarters_stats
+
+    @current_time = Time.current + 1.second
+  end
+
+  test "returns a plan containing end turn when no other actions are available" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    result = plan
+
+    assert_equal 1, result.actions.length
+    assert_equal "end_turn", result.actions.first["type"]
+    assert_operator result.expanded_nodes, :>=, 1
+  end
+
+  test "chooses an attack that destroys an enemy technique" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    @state["field"][1][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    @state["field"][1][2] = technique(
+      player_id: OPPONENT_ID,
+      hp: 4,
+      firepower: 3
+    )
+
+    result = plan
+
+    assert_not_empty result.actions
+    assert_equal "attack", result.actions.first["type"]
+
+    assert_equal(
+      [1, 1],
+      result.actions.first.dig("payload", "attacker")
+    )
+
+    assert_equal(
+      [1, 2],
+      result.actions.first.dig("payload", "target")
+    )
+  end
+
+  test "chooses a profitable ranged attack by a single technique" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+    attacker["attack_range"] = 2
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 10,
+      firepower: 4
+    )
+    target["movement_count"] = 0
+    target["movement_limit"] = 0
+
+    @state["field"][1][1] = attacker
+    @state["field"][1][3] = target
+
+    result = plan
+
+    assert_not_empty result.actions
+    assert_equal "attack", result.actions.first["type"]
+
+    assert_equal(
+      [1, 1],
+      result.actions.first.dig("payload", "attacker")
+    )
+
+    assert_equal(
+      [1, 3],
+      result.actions.first.dig("payload", "target")
+    )
+  end
+
+  test "waits for headquarters support instead of making a nonlethal solo attack" do
+    headquarters = @state["field"][2][0]
+    headquarters["has_attacked"] = true
+
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    attacker["movement_count"] = 0
+
+    @state["field"][1][2] = attacker
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 8,
+      firepower: 4
+    )
+
+    target["has_attacked"] = true
+    target["has_counterattacked"] = true
+
+    @state["field"][0][3] = target
+
+    result = plan
+
+    assert_not_empty result.actions
+    assert_equal "end_turn", result.actions.first["type"]
+  end
+
+  test "does not sacrifice a technique to a tank destroyer that shoots first" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 2,
+      firepower: 4
+    )
+
+    tank_destroyer = technique(
+      player_id: OPPONENT_ID,
+      hp: 10,
+      firepower: 6
+    )
+    tank_destroyer["technique_type"] = "tank_destroyer"
+
+    @state["field"][1][1] = attacker
+    @state["field"][1][2] = tank_destroyer
+
+    result = plan
+
+    assert_not_empty result.actions
+    assert_equal "end_turn", result.actions.first["type"]
+  end
+
+  test "does not continue searching after end turn" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    result = plan
+
+    end_turn_index = result.actions.index do |action|
+      action["type"] == "end_turn"
+    end
+
+    assert_equal(
+      result.actions.length - 1,
+      end_turn_index
+    ) if end_turn_index
+  end
+
+  test "preserves expected visible state after every planned action" do
+    visible_state = visible_state_for_ai
+    result = plan(visible_state)
+
+    assert_equal result.actions.length, result.steps.length
+    refute_empty result.steps
+
+    current_state = visible_state
+
+    result.steps.each_with_index do |step, index|
+      assert_equal result.actions[index], step.action
+
+      simulation =
+        DecisionProviders::OpponentEngine::Planning::StateSimulator.call(
+          visible_state: current_state,
+          player_id: AI_PLAYER_ID,
+          action: step.action,
+          current_time: @current_time
+        )
+
+      assert simulation.success?
+      assert_equal simulation.visible_state, step.expected_visible_state
+
+      current_state = step.expected_visible_state
+    end
+  end
+
+  test "does not mutate the original visible state" do
+    visible_state = visible_state_for_ai
+    original_state = visible_state.deep_dup
+
+    plan(visible_state)
+
+    assert_equal original_state, visible_state
+  end
+
+  test "respects configured search depth" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    result = plan(
+      depth: 2,
+      width: 3
+    )
+
+    assert_operator result.actions.length, :<=, 2
+  end
+
+  test "returns an empty plan when it is not the AI player's turn" do
+    @state["current_player_id"] = OPPONENT_ID
+
+    result = plan
+
+    assert_empty result.actions
+    assert_equal 0, result.expanded_nodes
+  end
+
+  test "rejects invalid search parameters" do
+    assert_raises(ArgumentError) do
+      plan(depth: 0)
+    end
+
+    assert_raises(ArgumentError) do
+      plan(width: 0)
+    end
+  end
+
+  test "moves technique to free a deployment position before playing new technique" do
+    @state["field"][2][0]["has_attacked"] = true
+
+    @state["field"][1][0] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    ).merge(
+      "movement_count" => 1
+    )
+
+    @state["field"][1][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    @state["field"][2][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    ai_player = @state["players"][AI_PLAYER_ID.to_s]
+    ai_player["resources"] = 10
+
+    ai_player["hand"] = [
+      {
+        "card_id" => 99,
+        "card_type" => "technique",
+        "name" => "Reserve Test Tank",
+        "nation_id" => 10,
+        "price" => 1,
+        "technique" => {
+          "technique_type" => "medium_tank",
+          "hp" => 10,
+          "firepower" => 4,
+          "fuel" => 2,
+          "attack_range" => 1,
+          "movement_count" => 1,
+          "movement_type" => "diagonal"
+        }
+      }
+    ]
+
+    result = plan
+
+    assert_operator result.actions.length, :>=, 2
+
+    first_action = result.actions.first
+    second_action = result.actions.second
+
+    assert_equal "move", first_action["type"]
+
+    from = first_action.dig("payload", "from")
+    to = first_action.dig("payload", "to")
+
+    deployment_positions = [
+      [1, 0],
+      [1, 1],
+      [2, 1]
+    ]
+
+    assert_includes deployment_positions, from
+    refute_equal from, to
+
+    simulated_state = result.steps.first.expected_visible_state
+
+    assert_nil simulated_state.dig("field", from[0], from[1])
+
+    assert_equal "play_card", second_action["type"]
+
+    assert_equal(
+      from,
+      [
+        second_action.dig("payload", "row"),
+        second_action.dig("payload", "column")
+      ]
+    )
+  end
+
+  test "preserves deployment branches when move branches dominate the beam" do
+    @state["field"][1][0] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    ).merge(
+      "movement_count" => 1
+    )
+
+    @state["players"]["42"]["hand"] = [
+      {
+        "card_id" => 99,
+        "card_type" => "technique"
+      }
+    ]
+
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 10
+      )
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    move_nodes = 12.times.map do |index|
+      node_class.new(
+        visible_state: visible_state,
+        actions: [
+          {
+            "type" => "move",
+            "payload" => {
+              "from" => [0, index % 4],
+              "to" => [0, (index + 1) % 5]
+            }
+          }
+        ],
+        steps: [],
+        score: 100 - index,
+        terminal: false
+      )
+    end
+
+    card_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "play_card",
+          "payload" => {
+            "card_id" => 99
+          }
+        }
+      ],
+      steps: [],
+      score: 1,
+      terminal: false
+    )
+
+    deployment_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "move",
+          "payload" => {
+            "from" => [1, 0],
+            "to" => [0, 0]
+          }
+        }
+      ],
+      steps: [],
+      score: 0,
+      terminal: false
+    )
+
+    ranked = planner.send(
+      :rank,
+      move_nodes + [card_node, deployment_node]
+    )
+
+    first_actions = ranked.first(10).map do |node|
+      node.actions.first
+    end
+
+    assert first_actions.any? do |action|
+      action["type"] == "play_card" &&
+        action.dig("payload", "card_id") == 99
+    end
+
+    assert first_actions.any? do |action|
+      action["type"] == "move" &&
+        action.dig("payload", "from") == [1, 0] &&
+        action.dig("payload", "to") == [0, 0]
+    end
+  end
+
+  private
+
+  def plan(
+    visible_state = nil,
+    depth: DecisionProviders::OpponentEngine::Planning::TacticalPlanner::DEFAULT_DEPTH,
+    width: DecisionProviders::OpponentEngine::Planning::TacticalPlanner::DEFAULT_WIDTH
+  )
+    visible_state ||= visible_state_for_ai
+
+    DecisionProviders::OpponentEngine::Planning::TacticalPlanner.call(
+      visible_state: visible_state,
+      player_id: AI_PLAYER_ID,
+      current_time: @current_time,
+      depth: depth,
+      width: width
+    )
+  end
+
+  def visible_state_for_ai
+    GameEngine::VisibleState.call(
+      state: @state,
+      player_id: AI_PLAYER_ID
+    )
+  end
+
+  def add_headquarters_stats
+    [@state["field"][2][0], @state["field"][0][4]].each do |headquarters|
+      headquarters.merge!(
+        "hp" => 20,
+        "firepower" => 4,
+        "fuel" => 5,
+        "has_attacked" => false,
+        "has_counterattacked" => false
+      )
+    end
+  end
+
+  def technique(player_id:, hp:, firepower:)
+    {
+      "type" => "technique",
+      "card_id" => 15,
+      "player_id" => player_id,
+      "technique_type" => "medium_tank",
+      "hp" => hp,
+      "firepower" => firepower,
+      "fuel" => 2,
+      "attack_range" => 1,
+      "movement_count" => 0,
+      "movement_limit" => 1,
+      "movement_type" => "diagonal",
+      "has_attacked" => false,
+      "has_counterattacked" => false
+    }
+  end
+end
