@@ -1,4 +1,3 @@
-
 module DecisionProviders
   module OpponentEngine
     module Planning
@@ -37,16 +36,15 @@ module DecisionProviders
         ENEMY_THREAT_WEIGHT = 0.5
         HEADQUARTERS_ATTACK_OPPORTUNITY_WEIGHT = 0.5
 
-        # Накопление техники около собственного штаба
-        STAGING_COLUMNS = 2
-        STAGING_MIN_TECHNIQUES = 2
-        STAGING_BASE_BONUS = 8.0
-        STAGING_TECHNIQUE_WEIGHT = 3.0
-        STAGING_FIREPOWER_WEIGHT = 1.0
+        # Оценка ожидания следующего хода ради совместной атаки
+        WAITING_OPPORTUNITY_WEIGHT = 0.5
+        WAITING_OPPORTUNITY_MAX_SCORE = 18.0
+        WAITING_RISK_SCALE = 20.0
 
-        # Ограничение бонуса за чрезмерное накопление
-        STAGING_MAX_TECHNIQUES = 4
-        STAGING_MAX_FIREPOWER = 12.0
+        # Координация и продвижение наступательной группировки
+        GROUP_SUPPORT_RADIUS = 3
+        GROUP_SUPPORT_WEIGHT = 4.0
+        GROUP_MAX_SCORE = 24.0
 
         def self.call(visible_state:, player_id:)
           new(
@@ -79,9 +77,10 @@ module DecisionProviders
             positional_score +
             deployment_capacity_score +
             attack_force_score +
-            staging_force_score +
+            group_coordination_score +
             headquarters_attack_opportunity_score +
             combined_attack_opportunity_score +
+            future_coordination_opportunity_score +
             resources_score -
             enemy_threat_score
           )
@@ -244,7 +243,7 @@ module DecisionProviders
         end
 
         # --------------------------------------------------------------
-        # Тыловое накопление техники
+        # Свободные клетки для размещения новой техники
         # --------------------------------------------------------------
 
         def deployment_positions_for(player_id)
@@ -253,10 +252,6 @@ module DecisionProviders
 
           GameEngine::Rules::Position.neighbors(position)
         end
-
-        # --------------------------------------------------------------
-        # Свободные клетки для размещения новой техники
-        # --------------------------------------------------------------
 
         def deployment_capacity_score
           deployment_positions_for(@player_id).count do |position|
@@ -312,62 +307,74 @@ module DecisionProviders
         end
 
         # --------------------------------------------------------------
-        # Накопление техники около собственного штаба
+        # Координация наступательной группировки
         # --------------------------------------------------------------
 
-        def staging_force_score
-          own_staging_force = staging_force_for(@player_id)
-          enemy_staging_force = staging_force_for(@opponent_id)
+        def group_coordination_score
+          own_score = group_coordination_score_for(@player_id)
+          enemy_score = group_coordination_score_for(@opponent_id)
 
-          own_staging_force - enemy_staging_force
+          own_score - enemy_score
         end
 
-        def staging_force_for(player_id)
+        def group_coordination_score_for(player_id)
           return 0 unless player_id
 
-          own_headquarters_position = headquarters_position(player_id)
-          return 0 unless own_headquarters_position
+          opposing_player_id = @players.keys.find do |id|
+            id.to_s != player_id.to_s
+          end
 
-          field_width = @field.first.length
-          headquarters_column = own_headquarters_position[1]
+          return 0 unless opposing_player_id
 
-          staging_columns =
-            if headquarters_column < field_width / 2
-              0...STAGING_COLUMNS
-            else
-              (field_width - STAGING_COLUMNS)...field_width
-            end
+          enemy_headquarters = headquarters_position(opposing_player_id)
+          return 0 unless enemy_headquarters
 
-          staging_techniques = field_objects.filter_map do |object, position|
+          techniques = field_objects.filter_map do |object, position|
             next unless object["type"] == "technique"
             next unless object["player_id"].to_s == player_id.to_s
-            next unless staging_columns.cover?(position[1])
 
-            object
+            position
           end
 
-          technique_count = staging_techniques.length
+          return 0 if techniques.length < 2
 
-          return 0 if technique_count < STAGING_MIN_TECHNIQUES
+          max_distance =
+            (@field.length - 1) +
+            (@field.first.length - 1)
 
-          total_firepower = staging_techniques.sum do |technique|
-            numeric(technique, "firepower")
+          return 0 unless max_distance.positive?
+
+          coordination_score = techniques.each_with_index.sum do |position, index|
+            nearest_ally_distance = techniques.each_with_index.filter_map do |ally_position, ally_index|
+              next if index == ally_index
+
+              manhattan_distance(position, ally_position)
+            end.min
+
+            next 0 unless nearest_ally_distance
+            next 0 if nearest_ally_distance > GROUP_SUPPORT_RADIUS
+
+            support_strength =
+              (GROUP_SUPPORT_RADIUS + 1 - nearest_ally_distance).to_f /
+              GROUP_SUPPORT_RADIUS
+
+            progress_ratio =
+              1.0 -
+              manhattan_distance(position, enemy_headquarters).to_f /
+                max_distance
+
+            progress_ratio = progress_ratio.clamp(0.0, 1.0)
+
+            progress_multiplier =
+              0.5 + (0.5 * progress_ratio)
+
+            support_strength * progress_multiplier
           end
 
-          evaluated_technique_count = [
-            technique_count,
-            STAGING_MAX_TECHNIQUES
+          [
+            coordination_score * GROUP_SUPPORT_WEIGHT,
+            GROUP_MAX_SCORE
           ].min
-
-          evaluated_firepower = [
-            total_firepower,
-            STAGING_MAX_FIREPOWER
-          ].min
-
-          STAGING_BASE_BONUS +
-            (evaluated_technique_count - STAGING_MIN_TECHNIQUES) *
-              STAGING_TECHNIQUE_WEIGHT +
-            evaluated_firepower * STAGING_FIREPOWER_WEIGHT
         end
 
         # --------------------------------------------------------------
@@ -394,6 +401,111 @@ module DecisionProviders
 
             coordination_bonus * COMBINED_ATTACK_OPPORTUNITY_WEIGHT
           end
+        end
+
+        # --------------------------------------------------------------
+        # Выгода ожидания следующего хода для совместной атаки
+        # --------------------------------------------------------------
+
+        def future_coordination_opportunity_score
+          # Оценка применяется только после завершения нашего хода.
+          return 0 if @visible_state["current_player_id"].to_s == @player_id
+
+          current_gain = best_combined_attack_gain
+
+          projected_state = project_next_own_turn
+
+          projected_evaluator = self.class.new(
+            visible_state: projected_state,
+            player_id: @player_id
+          )
+
+          future_gain =
+            projected_evaluator.send(:best_combined_attack_gain)
+
+          additional_gain = [
+            future_gain - current_gain,
+            0
+          ].max
+
+          return 0 unless additional_gain.positive?
+
+          # Чем выше угроза противника, тем меньше ценность ожидания.
+          risk = enemy_threat_score
+
+          risk_multiplier =
+            1.0 / (1.0 + risk / WAITING_RISK_SCALE)
+
+          [
+            additional_gain *
+              WAITING_OPPORTUNITY_WEIGHT *
+              risk_multiplier,
+            WAITING_OPPORTUNITY_MAX_SCORE
+          ].min
+        end
+
+        # --------------------------------------------------------------
+        # Лучшая абсолютная выгода совместной атаки
+        # --------------------------------------------------------------
+
+        def best_combined_attack_gain
+          enemy_techniques.map do |target, target_position|
+            attackers = potential_attackers(
+              target,
+              target_position
+            )
+
+            next 0 if attackers.length < COMBINED_ATTACK_MIN_TECHNIQUES
+
+            analysis =
+              ForceCoordinationEvaluator.analyze(
+                visible_state: @visible_state,
+                player_id: @player_id,
+                target_position: target_position,
+                attackers: attackers,
+                material_scorer: method(:combat_material_score)
+              )
+
+            analysis.best_combined_gain
+          end.max || 0
+        end
+
+        # --------------------------------------------------------------
+        # Гипотетическое начало следующего собственного хода
+        # --------------------------------------------------------------
+
+        def project_next_own_turn
+          state = @visible_state.deep_dup
+
+          state["current_player_id"] = @player_id
+
+          # Доступные действия будут вычисляться по правилам движения,
+          # а не использовать устаревшие действия предыдущего хода.
+          state["available_actions"] = {
+            "field" => {},
+            "hand" => {}
+          }
+
+          state["field"].each do |row|
+            row.each do |object|
+              next unless object
+              next unless object["player_id"].to_s == @player_id
+
+              case object["type"]
+              when "technique"
+                object["movement_count"] =
+                  numeric(object, "movement_limit").to_i
+
+                object["has_attacked"] = false
+                object["has_counterattacked"] = false
+              when "headquarters"
+                object["has_attacked"] = false
+                object["has_counterattacked"] = false
+              end
+            end
+          end
+
+          state
         end
 
         # --------------------------------------------------------------
@@ -548,7 +660,10 @@ module DecisionProviders
 
             possible_positions = [
               position,
-              *available_move_positions(position)
+              *available_move_positions(
+                position,
+                technique: technique
+              )
             ].uniq
 
             attack_positions = possible_positions.filter_map do |attack_position|
@@ -611,13 +726,29 @@ module DecisionProviders
           end
         end
 
-        def available_move_positions(position)
+        def available_move_positions(position, technique:)
           field_actions =
             @visible_state.dig("available_actions", "field") || {}
 
-          actions = field_actions[position.join(",")] || {}
+          actions = field_actions[position.join(",")]
 
-          Array(actions["moves"])
+          # Если для техники есть рассчитанные сервером действия,
+          # используем именно их.
+          return Array(actions["moves"]) if actions
+
+          # После end_turn серверные available_actions пусты.
+          # Для гипотетического следующего хода рассчитываем
+          # доступные перемещения по существующим игровым правилам.
+          return [] unless numeric(technique, "movement_count").positive?
+
+          GameEngine::Rules::Position.neighbors(position).select do |next_position|
+            object_at(next_position).nil? &&
+              GameEngine::Rules::TechniqueMovement.valid?(
+                technique,
+                position,
+                next_position
+              )
+          end
         end
 
         def potential_movement_state(from, to)

@@ -2,6 +2,19 @@ module DecisionProviders
   module OpponentEngine
     module Planning
       class ForceCoordinationEvaluator
+
+        Analysis = Data.define(
+          :best_single_gain,
+          :best_combined_gain
+        ) do
+          def coordination_bonus
+            [
+              best_combined_gain - best_single_gain,
+              0
+            ].max
+          end
+        end
+
         MAX_TECHNIQUES = 3
         MAX_ATTACK_POSITIONS = 2
 
@@ -19,6 +32,22 @@ module DecisionProviders
             attackers:,
             material_scorer:
           ).call
+        end
+
+        def self.analyze(
+          visible_state:,
+          player_id:,
+          target_position:,
+          attackers:,
+          material_scorer:
+        )
+          new(
+            visible_state:,
+            player_id:,
+            target_position:,
+            attackers:,
+            material_scorer:
+          ).analyze
         end
 
         def initialize(
@@ -39,11 +68,15 @@ module DecisionProviders
         end
 
         def call
+          analyze.coordination_bonus
+        end
+
+        def analyze
           techniques = @attackers
             .sort_by { |attacker| -attacker[:firepower] }
             .first(MAX_TECHNIQUES)
 
-          return 0 if techniques.length < 2
+          return Analysis.new(0, 0) if techniques.length < 2
 
           @candidates = techniques.map do |attacker|
             {
@@ -68,10 +101,10 @@ module DecisionProviders
             technique_count: 0
           )
 
-          [
-            @best_combined_gain - @best_single_gain,
-            0
-          ].max
+          Analysis.new(
+            @best_single_gain,
+            @best_combined_gain
+          )
         end
 
         private
