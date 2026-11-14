@@ -387,7 +387,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  test "does not value a coordinated attack when headquarters has already attacked" do
+  test "values a coordinated attack by two techniques after headquarters has attacked" do
     state = @state.deep_dup
 
     state["field"][0][3] = test_technique(57)
@@ -399,9 +399,10 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     state["field"][2][0]["firepower"] = 4
     state["field"][2][0]["has_attacked"] = true
 
-    assert_equal(
-      0,
-      combined_attack_opportunity_score(state: state)
+    assert_operator(
+      combined_attack_opportunity_score(state: state),
+      :>,
+      0
     )
   end
 

@@ -29,7 +29,6 @@ module DecisionProviders
         ATTACK_FORCE_TECHNIQUE_WEIGHT = 2.0
         ATTACK_FORCE_FIREPOWER_WEIGHT = 0.5
         COMBINED_ATTACK_MIN_TECHNIQUES = 2
-        COMBINED_ATTACK_MAX_TECHNIQUES = 3
         COMBINED_ATTACK_OPPORTUNITY_WEIGHT = 0.75
 
         RESOURCE_WEIGHT = 1.5
@@ -372,15 +371,10 @@ module DecisionProviders
         end
 
         # --------------------------------------------------------------
-        # Совместная атака нескольких танков и штаба
+        # Совместная атака нескольких танков
         # --------------------------------------------------------------
 
         def combined_attack_opportunity_score
-          headquarters = headquarters_for(@player_id)
-
-          return 0 unless headquarters
-          return 0 if headquarters["has_attacked"]
-
           enemy_techniques.sum do |target, target_position|
             attackers = potential_attackers(
               target,
@@ -389,194 +383,17 @@ module DecisionProviders
 
             next 0 if attackers.length < COMBINED_ATTACK_MIN_TECHNIQUES
 
-            attackers = attackers
-              .sort_by { |attacker| -attacker[:firepower] }
-              .first(COMBINED_ATTACK_MAX_TECHNIQUES)
+            coordination_bonus =
+              ForceCoordinationEvaluator.call(
+                visible_state: @visible_state,
+                player_id: @player_id,
+                target_position: target_position,
+                attackers: attackers,
+                material_scorer: method(:combat_material_score)
+              )
 
-            combined_attack_bonus = combined_attack_material_gain(
-              target_position: target_position,
-              attackers: attackers
-            )
-
-            combined_attack_bonus *
-              COMBINED_ATTACK_OPPORTUNITY_WEIGHT
+            coordination_bonus * COMBINED_ATTACK_OPPORTUNITY_WEIGHT
           end
-        end
-
-        def combined_attack_material_gain(target_position:, attackers:)
-          state = @visible_state.deep_dup
-
-          state["players"].each_value do |player|
-            player["graveyard"] ||= []
-          end
-
-          initial_score = combat_material_score(state)
-
-          used_technique_indexes = []
-          headquarters_used = false
-
-          best_single_gain = 0
-          best_combined_gain = 0
-
-          max_actions = COMBINED_ATTACK_MAX_TECHNIQUES + 1
-
-          max_actions.times do
-            candidates = []
-
-            attackers.each_with_index do |attacker_data, index|
-              next if used_technique_indexes.include?(index)
-
-              origin = attacker_data[:position]
-
-              possible_positions = [
-                origin,
-                *available_move_positions(origin)
-              ].uniq
-
-              possible_positions.each do |destination|
-                candidate = simulate_combined_attack(
-                  state: state,
-                  attacker_position: origin,
-                  destination: destination,
-                  target_position: target_position
-                )
-
-                next unless candidate
-
-                candidates << candidate.merge(
-                  kind: :technique,
-                  index: index
-                )
-              end
-            end
-
-            unless headquarters_used
-              own_headquarters_position =
-                headquarters_position(@player_id)
-
-              if own_headquarters_position
-                candidate = simulate_combined_attack(
-                  state: state,
-                  attacker_position: own_headquarters_position,
-                  target_position: target_position
-                )
-
-                if candidate
-                  candidates << candidate.merge(
-                    kind: :headquarters
-                  )
-                end
-              end
-            end
-
-            break if candidates.empty?
-
-            if used_technique_indexes.empty? && !headquarters_used
-              best_single_gain = [
-                candidates.map { |candidate| candidate[:gain] }.max || 0,
-                0
-              ].max
-            end
-
-            selected = candidates.max_by do |candidate|
-              candidate[:gain]
-            end
-
-            state = selected[:state]
-
-            if selected[:kind] == :technique
-              used_technique_indexes << selected[:index]
-            else
-              headquarters_used = true
-            end
-
-            total_gain = combat_material_score(state) - initial_score
-
-            if used_technique_indexes.length >= COMBINED_ATTACK_MIN_TECHNIQUES &&
-                headquarters_used
-              best_combined_gain = [
-                best_combined_gain,
-                total_gain
-              ].max
-            end
-
-            # После уничтожения цели продолжать атаку невозможно.
-            break unless state["field"].dig(*target_position)
-          end
-
-          # Учитываем только дополнительную выгоду координации,
-          # не начисляя повторно ценность одиночной атаки.
-          [
-            best_combined_gain - best_single_gain,
-            0
-          ].max
-        end
-
-        def simulate_combined_attack(
-          state:,
-          attacker_position:,
-          target_position:,
-          destination: nil
-        )
-          simulated_state = state.deep_dup
-
-          destination ||= attacker_position
-
-          attacker = simulated_state["field"].dig(*attacker_position)
-
-          return nil unless attacker
-          return nil if attacker["has_attacked"]
-
-          if destination != attacker_position
-            return nil unless attacker["type"] == "technique"
-            return nil unless numeric(attacker, "movement_count").positive?
-            return nil if simulated_state["field"].dig(*destination)
-
-            attacker["movement_count"] =
-              [numeric(attacker, "movement_count").to_i - 1, 0].max
-
-            simulated_state["field"][attacker_position[0]][attacker_position[1]] = nil
-            simulated_state["field"][destination[0]][destination[1]] = attacker
-
-            attacker_position = destination
-          end
-
-          target = simulated_state["field"].dig(*target_position)
-
-          return nil unless target
-
-          return nil unless GameEngine::Rules::AttackTarget.valid?(
-            state: simulated_state,
-            attacker: attacker,
-            target: target,
-            attacker_position: attacker_position,
-            target_position: target_position
-          )
-
-          scenario = GameEngine::Rules::CombatType.call(
-            attacker: attacker,
-            target: target,
-            attacker_position: attacker_position,
-            target_position: target_position
-          )
-
-          score_before = combat_material_score(simulated_state)
-
-          attacker["has_attacked"] = true
-
-          GameEngine::Attacks::CombatExecutor.call(
-            state: simulated_state,
-            attacker_position: attacker_position,
-            target_position: target_position,
-            scenario: scenario
-          )
-
-          score_after = combat_material_score(simulated_state)
-
-          {
-            state: simulated_state,
-            gain: score_after - score_before
-          }
         end
 
         # --------------------------------------------------------------
@@ -732,9 +549,9 @@ module DecisionProviders
             possible_positions = [
               position,
               *available_move_positions(position)
-            ]
+            ].uniq
 
-            can_attack = possible_positions.any? do |attack_position|
+            attack_positions = possible_positions.filter_map do |attack_position|
               state, attacker = potential_movement_state(
                 position,
                 attack_position
@@ -743,22 +560,53 @@ module DecisionProviders
               simulated_target =
                 state["field"][target_position[0]][target_position[1]]
 
-              next false unless simulated_target
+              next unless simulated_target
 
-              GameEngine::Rules::AttackTarget.valid?(
+              next unless GameEngine::Rules::AttackTarget.valid?(
                 state: state,
                 attacker: attacker,
                 target: simulated_target,
                 attacker_position: attack_position,
                 target_position: target_position
               )
+
+              attack_position
             end
 
-            next unless can_attack
+            attack_positions.sort_by! do |attack_position|
+              state, attacker = potential_movement_state(
+                position,
+                attack_position
+              )
+
+              simulated_target =
+                state["field"][target_position[0]][target_position[1]]
+
+              scenario = GameEngine::Rules::CombatType.call(
+                attacker: attacker,
+                target: simulated_target,
+                attacker_position: attack_position,
+                target_position: target_position
+              )
+
+              scenario_priority = {
+                ranged: 0,
+                normal: 1,
+                ptsau_first: 2
+              }.fetch(scenario, 3)
+
+              [
+                scenario_priority,
+                attack_position == position ? 0 : 1
+              ]
+            end
+
+            next if attack_positions.empty?
 
             {
               position: position,
-              firepower: numeric(technique, "firepower")
+              firepower: numeric(technique, "firepower"),
+              attack_positions: attack_positions
             }
           end
         end
