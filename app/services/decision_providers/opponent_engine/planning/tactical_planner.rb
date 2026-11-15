@@ -216,15 +216,22 @@ module DecisionProviders
             card_id = payload["card_id"].to_s
             card_type = @root_card_types[card_id] || "unknown"
 
-            "play_card:#{card_type}"
+            "play_card:#{card_type}:#{card_id}"
 
           when "move"
+            from = Array(payload["from"]).join(",")
+
             if @root_deployment_positions.include?(payload["from"]) &&
                 !@root_deployment_positions.include?(payload["to"])
-              "move:free_deployment"
+              "move:free_deployment:#{from}"
             else
-              "move"
+              "move:#{from}"
             end
+
+          when "attack"
+            attacker = Array(payload["attacker"]).join(",")
+
+            "attack:#{attacker}"
 
           else
             action["type"]

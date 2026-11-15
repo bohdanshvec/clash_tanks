@@ -423,6 +423,130 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     end
   end
 
+  test "preserves movement branches from different techniques" do
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 2
+      )
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    first_tank_nodes = 5.times.map do |index|
+      node_class.new(
+        visible_state: visible_state,
+        actions: [
+          {
+            "type" => "move",
+            "payload" => {
+              "from" => [0, 1],
+              "to" => [index, 2]
+            }
+          }
+        ],
+        steps: [],
+        score: 100 - index,
+        terminal: false
+      )
+    end
+
+    second_tank_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "move",
+          "payload" => {
+            "from" => [0, 2],
+            "to" => [1, 2]
+          }
+        }
+      ],
+      steps: [],
+      score: 50,
+      terminal: false
+    )
+
+    ranked = planner.send(
+      :rank,
+      first_tank_nodes + [second_tank_node]
+    )
+
+    selected_origins = ranked.first(2).map do |node|
+      node.actions.first.dig("payload", "from")
+    end
+
+    assert_includes selected_origins, [0, 1]
+    assert_includes selected_origins, [0, 2]
+  end
+
+  test "preserves attack branches from different techniques" do
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 2
+      )
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    first_tank_nodes = 5.times.map do |index|
+      node_class.new(
+        visible_state: visible_state,
+        actions: [
+          {
+            "type" => "attack",
+            "payload" => {
+              "attacker" => [0, 1],
+              "target" => [index, 3]
+            }
+          }
+        ],
+        steps: [],
+        score: 100 - index,
+        terminal: false
+      )
+    end
+
+    second_tank_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "attack",
+          "payload" => {
+            "attacker" => [0, 2],
+            "target" => [1, 3]
+          }
+        }
+      ],
+      steps: [],
+      score: 50,
+      terminal: false
+    )
+
+    ranked = planner.send(
+      :rank,
+      first_tank_nodes + [second_tank_node]
+    )
+
+    selected_attackers = ranked.first(2).map do |node|
+      node.actions.first.dig("payload", "attacker")
+    end
+
+    assert_includes selected_attackers, [0, 1]
+    assert_includes selected_attackers, [0, 2]
+  end
+
   private
 
   def plan(
