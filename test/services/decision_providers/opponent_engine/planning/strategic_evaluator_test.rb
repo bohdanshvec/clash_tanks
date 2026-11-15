@@ -392,6 +392,25 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values nonlethal coordinated damage by two techniques and headquarters" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][0][3]["hp"] = 30
+
+    state["field"][0][2] = test_technique(42)
+    state["field"][1][2] = test_technique(42)
+
+    state["field"][2][0]["firepower"] = 4
+    state["field"][2][0]["has_attacked"] = false
+
+    assert_operator(
+      combined_attack_opportunity_score(state: state),
+      :>,
+      0
+    )
+  end
+
   test "values a coordinated attack by two techniques after headquarters has attacked" do
     state = @state.deep_dup
 

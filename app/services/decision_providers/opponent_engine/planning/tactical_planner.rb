@@ -3,8 +3,8 @@ module DecisionProviders
   module OpponentEngine
     module Planning
       class TacticalPlanner
-        DEFAULT_DEPTH = 5
-        DEFAULT_WIDTH = 10
+        DEFAULT_DEPTH = 7
+        DEFAULT_WIDTH = 20
 
         Node = Data.define(
           :visible_state,
@@ -68,6 +68,8 @@ module DecisionProviders
         end
 
         def call
+          started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
           initial_score = evaluate(@visible_state)
 
           return empty_result(initial_score) unless
@@ -178,6 +180,19 @@ module DecisionProviders
 
           Rails.logger.info(
             "[OpponentEngine] Selected plan: #{best_node&.actions.inspect}"
+          )
+
+          elapsed_ms = (
+            Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+          ) * 1000
+
+          Rails.logger.info(
+            "[OpponentEngine] Search completed: " \
+            "depth=#{@depth}, " \
+            "width=#{@width}, " \
+            "expanded_nodes=#{expanded_nodes}, " \
+            "elapsed_ms=#{elapsed_ms.round(1)}, " \
+            "selected_actions=#{best_node&.actions&.length || 0}"
           )
 
           Result.new(

@@ -185,7 +185,15 @@ module DecisionProviders
               target_destroyed =
                 object_at(next_state, @target_position).nil?
 
-              if next_used_keys.length >= 2 && target_destroyed
+              combined_attack =
+                next_technique_count >= 2 ||
+                (
+                  next_technique_count >= 1 &&
+                  next_used_keys.any? { |key| key.first == :headquarters } &&
+                  target_destroyed
+                )
+
+              if combined_attack
                 @best_combined_gain = [
                   @best_combined_gain,
                   total_gain
