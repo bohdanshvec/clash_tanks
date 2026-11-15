@@ -41,11 +41,6 @@ module DecisionProviders
         WAITING_OPPORTUNITY_MAX_SCORE = 18.0
         WAITING_RISK_SCALE = 20.0
 
-        # Координация и продвижение наступательной группировки
-        GROUP_SUPPORT_RADIUS = 3
-        GROUP_SUPPORT_WEIGHT = 4.0
-        GROUP_MAX_SCORE = 24.0
-
         def self.call(visible_state:, player_id:)
           new(
             visible_state: visible_state,
@@ -77,7 +72,6 @@ module DecisionProviders
             positional_score +
             deployment_capacity_score +
             attack_force_score +
-            group_coordination_score +
             headquarters_attack_opportunity_score +
             combined_attack_opportunity_score +
             future_coordination_opportunity_score +
@@ -304,77 +298,6 @@ module DecisionProviders
 
             base_bonus * attack_readiness
           end
-        end
-
-        # --------------------------------------------------------------
-        # Координация наступательной группировки
-        # --------------------------------------------------------------
-
-        def group_coordination_score
-          own_score = group_coordination_score_for(@player_id)
-          enemy_score = group_coordination_score_for(@opponent_id)
-
-          own_score - enemy_score
-        end
-
-        def group_coordination_score_for(player_id)
-          return 0 unless player_id
-
-          opposing_player_id = @players.keys.find do |id|
-            id.to_s != player_id.to_s
-          end
-
-          return 0 unless opposing_player_id
-
-          enemy_headquarters = headquarters_position(opposing_player_id)
-          return 0 unless enemy_headquarters
-
-          techniques = field_objects.filter_map do |object, position|
-            next unless object["type"] == "technique"
-            next unless object["player_id"].to_s == player_id.to_s
-
-            position
-          end
-
-          return 0 if techniques.length < 2
-
-          max_distance =
-            (@field.length - 1) +
-            (@field.first.length - 1)
-
-          return 0 unless max_distance.positive?
-
-          coordination_score = techniques.each_with_index.sum do |position, index|
-            nearest_ally_distance = techniques.each_with_index.filter_map do |ally_position, ally_index|
-              next if index == ally_index
-
-              manhattan_distance(position, ally_position)
-            end.min
-
-            next 0 unless nearest_ally_distance
-            next 0 if nearest_ally_distance > GROUP_SUPPORT_RADIUS
-
-            support_strength =
-              (GROUP_SUPPORT_RADIUS + 1 - nearest_ally_distance).to_f /
-              GROUP_SUPPORT_RADIUS
-
-            progress_ratio =
-              1.0 -
-              manhattan_distance(position, enemy_headquarters).to_f /
-                max_distance
-
-            progress_ratio = progress_ratio.clamp(0.0, 1.0)
-
-            progress_multiplier =
-              0.5 + (0.5 * progress_ratio)
-
-            support_strength * progress_multiplier
-          end
-
-          [
-            coordination_score * GROUP_SUPPORT_WEIGHT,
-            GROUP_MAX_SCORE
-          ].min
         end
 
         # --------------------------------------------------------------
