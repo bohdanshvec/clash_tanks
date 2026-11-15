@@ -18,15 +18,10 @@ module DecisionProviders
         PLATOON_ARMOR_WEIGHT = 1.5
         PLATOON_FUEL_WEIGHT = 0.25
 
-        POSITION_WEIGHT = 1.5
+        POSITION_WEIGHT = 1.0
 
         DEPLOYMENT_SLOT_WEIGHT = 5.0
 
-        ATTACK_FORCE_MIN_TECHNIQUES = 2
-        ATTACK_FORCE_MIN_FIREPOWER = 6.0
-        ATTACK_FORCE_BASE_BONUS = 6.0
-        ATTACK_FORCE_TECHNIQUE_WEIGHT = 2.0
-        ATTACK_FORCE_FIREPOWER_WEIGHT = 0.5
         COMBINED_ATTACK_MIN_TECHNIQUES = 1
         COMBINED_ATTACK_OPPORTUNITY_WEIGHT = 0.75
 
@@ -66,17 +61,16 @@ module DecisionProviders
 
         def call
           terminal_score || (
-            headquarters_score +
-            techniques_score +
-            platoons_score +
-            positional_score +
-            deployment_capacity_score +
-            attack_force_score +
-            headquarters_attack_opportunity_score +
-            combined_attack_opportunity_score +
-            future_coordination_opportunity_score +
-            resources_score -
-            enemy_threat_score
+          headquarters_score +
+          techniques_score +
+          platoons_score +
+          positional_score +
+          deployment_capacity_score +
+          headquarters_attack_opportunity_score +
+          combined_attack_opportunity_score +
+          future_coordination_opportunity_score +
+          resources_score -
+          enemy_threat_score
           )
         end
 
@@ -251,53 +245,6 @@ module DecisionProviders
           deployment_positions_for(@player_id).count do |position|
             object_at(position).nil?
           end * DEPLOYMENT_SLOT_WEIGHT
-        end
-
-        # --------------------------------------------------------------
-        # Накопленная сила для наступления
-        # --------------------------------------------------------------
-
-        def attack_force_score
-          return 0 unless headquarters_for(@player_id)
-          return 0 unless headquarters_for(@opponent_id)
-
-          field_objects.sum do |target, target_position|
-            next 0 unless target["type"] == "technique"
-            next 0 unless owner_sign(target["player_id"]) == -1
-
-            attackers = potential_attackers(
-              target,
-              target_position
-            )
-
-            attacker_count = attackers.length
-
-            next 0 if attacker_count < ATTACK_FORCE_MIN_TECHNIQUES
-
-            total_firepower = attackers.sum do |attacker|
-              attacker[:firepower]
-            end
-
-            next 0 if total_firepower < ATTACK_FORCE_MIN_FIREPOWER
-
-            target_hp = numeric(target, "hp")
-
-            next 0 unless target_hp.positive?
-
-            attack_readiness = [
-              total_firepower / target_hp,
-              1.0
-            ].min
-
-            base_bonus =
-              ATTACK_FORCE_BASE_BONUS +
-              (attacker_count - ATTACK_FORCE_MIN_TECHNIQUES) *
-                ATTACK_FORCE_TECHNIQUE_WEIGHT +
-              (total_firepower - ATTACK_FORCE_MIN_FIREPOWER) *
-                ATTACK_FORCE_FIREPOWER_WEIGHT
-
-            base_bonus * attack_readiness
-          end
         end
 
         # --------------------------------------------------------------

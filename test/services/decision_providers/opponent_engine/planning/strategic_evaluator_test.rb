@@ -116,7 +116,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     near_state["field"][1][2] = test_technique(42)
 
     assert_equal(
-      1.5,
+      1.0,
       positional_score(state: near_state) -
         positional_score(state: far_state)
     )
@@ -281,7 +281,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  test "values two techniques that can move into positions to attack the same target" do
+  test "values a coordinated attack by two techniques that can move into attack positions" do
     state = @state.deep_dup
 
     state["field"][0][3] = test_technique(57)
@@ -289,7 +289,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     state["field"][2][4] = test_technique(42)
 
     assert_operator(
-      attack_force_score(state: state),
+      combined_attack_opportunity_score(state: state),
       :>,
       0
     )
@@ -326,18 +326,6 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     assert_equal(
       positional_score(state: close_state),
       positional_score(state: scattered_state)
-    )
-  end
-
-  test "does not count headquarters as a second tank in attack force" do
-    state = @state.deep_dup
-
-    state["field"][0][3] = test_technique(57)
-    state["field"][1][2] = test_technique(42)
-
-    assert_equal(
-      0,
-      attack_force_score(state: state)
     )
   end
 
@@ -728,6 +716,23 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "does not reward a coordinated attack when counterattacks destroy the attacking tanks" do
+    state = @state.deep_dup
+
+    target = test_technique(57)
+    target["hp"] = 30
+    target["firepower"] = 100
+
+    state["field"][0][3] = target
+    state["field"][0][2] = test_technique(42)
+    state["field"][1][2] = test_technique(42)
+
+    assert_equal(
+      0,
+      combined_attack_opportunity_score(state: state)
+    )
+  end
+
   private
 
   def future_coordination_opportunity_score(
@@ -768,21 +773,6 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
       )
 
     evaluator.send(:combined_attack_opportunity_score)
-  end
-
-  def attack_force_score(state:)
-    visible_state = GameEngine::VisibleState.call(
-      state: state,
-      player_id: @ai_player_id
-    )
-
-    evaluator =
-      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
-        visible_state: visible_state,
-        player_id: @ai_player_id
-      )
-
-    evaluator.send(:attack_force_score)
   end
 
   def positional_score(state:)
