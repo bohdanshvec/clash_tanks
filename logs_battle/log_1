@@ -1,0 +1,893 @@
+[ef587ed7-ed3c-4250-95e5-ee9ab9aac4a3]   Rendered layout layouts/application.html.erb (Duration: 56.6ms | GC: 7.2ms)
+[ef587ed7-ed3c-4250-95e5-ee9ab9aac4a3] Completed 200 OK in 65ms (Views: 58.3ms | ActiveRecord: 1.2ms (2 queries, 1 cached) | GC: 9.4ms)
+[7eaca571-c3e4-4cb3-a48c-53629025cfb3] Started GET "/play" for 172.70.247.151 at 2026-11-14 13:59:25 +0000
+[7eaca571-c3e4-4cb3-a48c-53629025cfb3] Processing by PagesController#play as HTML
+[7eaca571-c3e4-4cb3-a48c-53629025cfb3]   Rendered layout layouts/application.html.erb (Duration: 410.1ms | GC: 0.0ms)
+[7eaca571-c3e4-4cb3-a48c-53629025cfb3] Completed 200 OK in 8442ms (Views: 317.0ms | ActiveRecord: 1581.3ms (547 queries, 28 cached) | GC: 26.5ms)
+[78757a76-25c2-4ef6-b243-c528459be501] Started POST "/games" for 172.70.247.34 at 2026-11-14 13:59:37 +0000
+[78757a76-25c2-4ef6-b243-c528459be501] Processing by GamesController#create as TURBO_STREAM
+[78757a76-25c2-4ef6-b243-c528459be501]   Parameters: {"authenticity_token" => "[FILTERED]", "deck_id" => "46", "mode" => "ai"}
+[78757a76-25c2-4ef6-b243-c528459be501] Redirected to https://clash-tanks.onrender.com/games/17
+[78757a76-25c2-4ef6-b243-c528459be501] Completed 302 Found in 1093ms (ActiveRecord: 709.1ms (54 queries, 16 cached) | GC: 0.0ms)
+[db736ca9-edd2-4b74-91d2-1da9fcedb00b] Started GET "/games/17" for 172.64.198.225 at 2026-11-14 13:59:38 +0000
+[db736ca9-edd2-4b74-91d2-1da9fcedb00b] Processing by GamesController#show as TURBO_STREAM
+[db736ca9-edd2-4b74-91d2-1da9fcedb00b]   Parameters: {"id" => "17"}
+[db736ca9-edd2-4b74-91d2-1da9fcedb00b]   Rendered layout layouts/application.html.erb (Duration: 406.8ms | GC: 0.0ms)
+[db736ca9-edd2-4b74-91d2-1da9fcedb00b] Completed 200 OK in 471ms (Views: 394.1ms | ActiveRecord: 62.9ms (16 queries, 0 cached) | GC: 0.0ms)
+[e9e3e0f6-ba46-4663-a212-c028af68eb05] Started GET "/cable" for 150.228.5.47 at 2026-11-14 13:59:39 +0000
+[e9e3e0f6-ba46-4663-a212-c028af68eb05] Started GET "/cable" [WebSocket] for 150.228.5.47 at 2026-11-14 13:59:39 +0000
+[e9e3e0f6-ba46-4663-a212-c028af68eb05] Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Turbo::StreamsChannel is streaming from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xNw:16
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] Started POST "/games/17/run_ai_turn" for 172.70.247.151 at 2026-11-14 13:59:39 +0000
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] Processing by GamesController#run_ai_turn as JSON
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2]   Parameters: {"id" => "17"}
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [AI Diagnostics] Game #17: turn=1, resources=4, hand_size=6, legal_actions_count=11, legal_action_types={"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [OpponentEngine] Root moves: []
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}]
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [DecisionProviders::AI] Native opponent engine selected
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [AI Diagnostics] Game #17: turn=1, resources=4, hand_size=6, legal_actions_count=10, legal_action_types={"play_card" => 9, "end_turn" => 1}
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [Games::RunAiTurns] Game #17: AI proposed action type="play_card"
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [AI Diagnostics] Game #17: turn=1, resources=1, hand_size=5, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [OpponentEngine] Root actions: {"end_turn" => 1}
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [OpponentEngine] Root moves: []
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [DecisionProviders::AI] Native opponent engine selected
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] [Games::RunAiTurns] Game #17: AI proposed action type="end_turn"
+[9cb8ed3c-91a2-4877-8b7a-b040d3ec24a2] Completed 204 No Content in 6965ms (ActiveRecord: 324.2ms (95 queries, 26 cached) | GC: 33.0ms)
+[f63fd9bf-cc80-492b-ab33-d2fde1cd3241] Started POST "/games/17/play_card" for 172.70.247.34 at 2026-11-14 13:59:51 +0000
+[f63fd9bf-cc80-492b-ab33-d2fde1cd3241] Processing by GamesController#play_card as TURBO_STREAM
+[f63fd9bf-cc80-492b-ab33-d2fde1cd3241]   Parameters: {"player_id" => "16", "card_id" => "9", "row" => "1", "column" => "1", "id" => "17"}
+[f63fd9bf-cc80-492b-ab33-d2fde1cd3241] Completed 204 No Content in 511ms (ActiveRecord: 31.9ms (32 queries, 9 cached) | GC: 0.6ms)
+[eab2b8d8-5f17-4e31-83d7-e6df8204d894] Started POST "/games/17/attack" for 172.70.247.151 at 2026-11-14 13:59:53 +0000
+[eab2b8d8-5f17-4e31-83d7-e6df8204d894] Processing by GamesController#attack as TURBO_STREAM
+[eab2b8d8-5f17-4e31-83d7-e6df8204d894]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "17"}
+[eab2b8d8-5f17-4e31-83d7-e6df8204d894] Completed 204 No Content in 163ms (ActiveRecord: 62.5ms (32 queries, 9 cached) | GC: 0.0ms)
+[1199178e-de49-4764-970c-de9dc7bd1d08] Started POST "/games/17/end_turn" for 172.70.247.79 at 2026-11-14 13:59:55 +0000
+[1199178e-de49-4764-970c-de9dc7bd1d08] Processing by GamesController#end_turn as TURBO_STREAM
+[1199178e-de49-4764-970c-de9dc7bd1d08]   Parameters: {"id" => "17"}
+[1199178e-de49-4764-970c-de9dc7bd1d08] [AI Diagnostics] Game #17: turn=3, resources=5, hand_size=6, legal_actions_count=15, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 9, "end_turn" => 1}
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 9, "end_turn" => 1}
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: 13.5
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 21.5
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: 13.5
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 21.5
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 31, "targets" => [[1, 1]]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}]
+[1199178e-de49-4764-970c-de9dc7bd1d08] [DecisionProviders::AI] Native opponent engine selected
+[1199178e-de49-4764-970c-de9dc7bd1d08] [Games::RunAiTurns] Game #17: AI proposed action type="play_card"
+[1199178e-de49-4764-970c-de9dc7bd1d08] [AI Diagnostics] Game #17: turn=3, resources=1, hand_size=5, legal_actions_count=6, legal_action_types={"attack" => 1, "move" => 4, "end_turn" => 1}
+[1199178e-de49-4764-970c-de9dc7bd1d08] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[1199178e-de49-4764-970c-de9dc7bd1d08] [AI Diagnostics] Game #17: turn=3, resources=1, hand_size=5, legal_actions_count=5, legal_action_types={"move" => 4, "end_turn" => 1}
+[1199178e-de49-4764-970c-de9dc7bd1d08] [Games::RunAiTurns] Game #17: AI proposed action type="move"
+[1199178e-de49-4764-970c-de9dc7bd1d08] [AI Diagnostics] Game #17: turn=3, resources=1, hand_size=5, legal_actions_count=2, legal_action_types={"attack" => 1, "end_turn" => 1}
+[1199178e-de49-4764-970c-de9dc7bd1d08] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[1199178e-de49-4764-970c-de9dc7bd1d08] [AI Diagnostics] Game #17: turn=3, resources=1, hand_size=5, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Root actions: {"end_turn" => 1}
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Root moves: []
+[1199178e-de49-4764-970c-de9dc7bd1d08] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[1199178e-de49-4764-970c-de9dc7bd1d08] [DecisionProviders::AI] Native opponent engine selected
+[1199178e-de49-4764-970c-de9dc7bd1d08] [Games::RunAiTurns] Game #17: AI proposed action type="end_turn"
+[1199178e-de49-4764-970c-de9dc7bd1d08] Completed 204 No Content in 15172ms (ActiveRecord: 652.5ms (182 queries, 60 cached) | GC: 91.7ms)
+[504bb06a-427c-406e-96bc-b994b95dddf9] Started POST "/games/17/play_card" for 172.70.247.151 at 2026-11-14 14:00:23 +0000
+[504bb06a-427c-406e-96bc-b994b95dddf9] Processing by GamesController#play_card as TURBO_STREAM
+[504bb06a-427c-406e-96bc-b994b95dddf9]   Parameters: {"player_id" => "16", "card_id" => "31", "target" => "1,2", "id" => "17"}
+[504bb06a-427c-406e-96bc-b994b95dddf9] Completed 204 No Content in 271ms (ActiveRecord: 38.1ms (33 queries, 10 cached) | GC: 7.4ms)
+[98146b73-208d-4913-862c-add03c6d3d11] Started POST "/games/17/attack" for 172.70.247.34 at 2026-11-14 14:00:27 +0000
+[98146b73-208d-4913-862c-add03c6d3d11] Processing by GamesController#attack as TURBO_STREAM
+[98146b73-208d-4913-862c-add03c6d3d11]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "17"}
+[98146b73-208d-4913-862c-add03c6d3d11] Completed 204 No Content in 192ms (ActiveRecord: 39.9ms (33 queries, 10 cached) | GC: 1.8ms)
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] Started POST "/games/17/end_turn" for 172.70.247.151 at 2026-11-14 14:00:29 +0000
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] Processing by GamesController#end_turn as TURBO_STREAM
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78]   Parameters: {"id" => "17"}
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [AI Diagnostics] Game #17: turn=5, resources=4, hand_size=6, legal_actions_count=11, legal_action_types={"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [OpponentEngine] Root moves: []
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}]
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [DecisionProviders::AI] Native opponent engine selected
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [AI Diagnostics] Game #17: turn=5, resources=4, hand_size=6, legal_actions_count=10, legal_action_types={"play_card" => 9, "end_turn" => 1}
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [Games::RunAiTurns] Game #17: AI proposed action type="play_card"
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [AI Diagnostics] Game #17: turn=5, resources=1, hand_size=5, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [OpponentEngine] Root actions: {"end_turn" => 1}
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [OpponentEngine] Root moves: []
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [DecisionProviders::AI] Native opponent engine selected
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] [Games::RunAiTurns] Game #17: AI proposed action type="end_turn"
+[b36aa3b3-28bb-4bf5-a478-45f4600cfc78] Completed 204 No Content in 5732ms (ActiveRecord: 388.3ms (127 queries, 45 cached) | GC: 11.5ms)
+[d65a5510-a3d1-470a-b4ce-b4c9ecc063dc] Started POST "/games/17/play_card" for 172.64.198.224 at 2026-11-14 14:00:40 +0000
+[d65a5510-a3d1-470a-b4ce-b4c9ecc063dc] Processing by GamesController#play_card as TURBO_STREAM
+[d65a5510-a3d1-470a-b4ce-b4c9ecc063dc]   Parameters: {"player_id" => "16", "card_id" => "7", "row" => "1", "column" => "0", "id" => "17"}
+[d65a5510-a3d1-470a-b4ce-b4c9ecc063dc] Completed 204 No Content in 78ms (ActiveRecord: 58.6ms (33 queries, 11 cached) | GC: 0.7ms)
+[682a2c72-d2bf-45fb-98e7-5b1d4080e5ea] Started POST "/games/17/attack" for 172.70.247.151 at 2026-11-14 14:00:42 +0000
+[682a2c72-d2bf-45fb-98e7-5b1d4080e5ea] Processing by GamesController#attack as TURBO_STREAM
+[682a2c72-d2bf-45fb-98e7-5b1d4080e5ea]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "17"}
+[682a2c72-d2bf-45fb-98e7-5b1d4080e5ea] Completed 204 No Content in 150ms (ActiveRecord: 111.3ms (33 queries, 11 cached) | GC: 0.9ms)
+[f5f09600-df71-4eb6-92d3-25b76940267b] Started POST "/games/17/end_turn" for 172.70.247.151 at 2026-11-14 14:00:44 +0000
+[f5f09600-df71-4eb6-92d3-25b76940267b] Processing by GamesController#end_turn as TURBO_STREAM
+[f5f09600-df71-4eb6-92d3-25b76940267b]   Parameters: {"id" => "17"}
+[f5f09600-df71-4eb6-92d3-25b76940267b] [AI Diagnostics] Game #17: turn=7, resources=5, hand_size=6, legal_actions_count=14, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 8, "end_turn" => 1}
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 8, "end_turn" => 1}
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: 20.5
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 28.5
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: 20.5
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 28.5
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 10, "row" => 1, "column" => 3}}]
+[f5f09600-df71-4eb6-92d3-25b76940267b] [DecisionProviders::AI] Native opponent engine selected
+[f5f09600-df71-4eb6-92d3-25b76940267b] [Games::RunAiTurns] Game #17: AI proposed action type="move"
+[f5f09600-df71-4eb6-92d3-25b76940267b] [AI Diagnostics] Game #17: turn=7, resources=5, hand_size=6, legal_actions_count=14, legal_action_types={"attack" => 1, "play_card" => 12, "end_turn" => 1}
+[f5f09600-df71-4eb6-92d3-25b76940267b] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[f5f09600-df71-4eb6-92d3-25b76940267b] [AI Diagnostics] Game #17: turn=7, resources=5, hand_size=6, legal_actions_count=13, legal_action_types={"play_card" => 12, "end_turn" => 1}
+[f5f09600-df71-4eb6-92d3-25b76940267b] [Games::RunAiTurns] Game #17: AI proposed action type="play_card"
+[f5f09600-df71-4eb6-92d3-25b76940267b] [AI Diagnostics] Game #17: turn=7, resources=0, hand_size=5, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Root actions: {"end_turn" => 1}
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Root moves: []
+[f5f09600-df71-4eb6-92d3-25b76940267b] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[f5f09600-df71-4eb6-92d3-25b76940267b] [DecisionProviders::AI] Native opponent engine selected
+[f5f09600-df71-4eb6-92d3-25b76940267b] [Games::RunAiTurns] Game #17: AI proposed action type="end_turn"
+[f5f09600-df71-4eb6-92d3-25b76940267b] Completed 204 No Content in 9662ms (ActiveRecord: 233.7ms (157 queries, 53 cached) | GC: 43.6ms)
+[cf1c1a64-b151-40ec-a2ae-ca57bd06c984] Started POST "/games/17/move" for 172.70.247.151 at 2026-11-14 14:01:05 +0000
+[cf1c1a64-b151-40ec-a2ae-ca57bd06c984] Processing by GamesController#move as TURBO_STREAM
+[cf1c1a64-b151-40ec-a2ae-ca57bd06c984]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "0", "to_row" => "0", "to_column" => "0", "id" => "17"}
+[cf1c1a64-b151-40ec-a2ae-ca57bd06c984] Completed 204 No Content in 83ms (ActiveRecord: 27.0ms (34 queries, 10 cached) | GC: 0.8ms)
+[95a49f59-ba49-46fe-a0d4-fbebde631fcf] Started POST "/games/17/play_card" for 172.70.247.151 at 2026-11-14 14:01:06 +0000
+[95a49f59-ba49-46fe-a0d4-fbebde631fcf] Processing by GamesController#play_card as TURBO_STREAM
+[95a49f59-ba49-46fe-a0d4-fbebde631fcf]   Parameters: {"player_id" => "16", "card_id" => "10", "row" => "1", "column" => "1", "id" => "17"}
+[95a49f59-ba49-46fe-a0d4-fbebde631fcf] Completed 204 No Content in 125ms (ActiveRecord: 67.8ms (33 queries, 10 cached) | GC: 0.0ms)
+[9edb7282-3e6a-4ed7-b0f5-67224417c679] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:01:11 +0000
+[9edb7282-3e6a-4ed7-b0f5-67224417c679] Processing by GamesController#attack as TURBO_STREAM
+[9edb7282-3e6a-4ed7-b0f5-67224417c679]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "1", "target_column" => "2", "id" => "17"}
+[9edb7282-3e6a-4ed7-b0f5-67224417c679] Completed 204 No Content in 163ms (ActiveRecord: 101.9ms (33 queries, 10 cached) | GC: 4.6ms)
+[81f6472d-ed1c-47df-9d18-df03a7bb8478] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:01:13 +0000
+[81f6472d-ed1c-47df-9d18-df03a7bb8478] Processing by GamesController#attack as TURBO_STREAM
+[81f6472d-ed1c-47df-9d18-df03a7bb8478]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "17"}
+[81f6472d-ed1c-47df-9d18-df03a7bb8478] Completed 204 No Content in 145ms (ActiveRecord: 107.7ms (33 queries, 10 cached) | GC: 3.2ms)
+[826c9834-00d5-4144-80c8-a52361be1fd0] Started POST "/games/17/end_turn" for 162.158.103.209 at 2026-11-14 14:01:15 +0000
+[826c9834-00d5-4144-80c8-a52361be1fd0] Processing by GamesController#end_turn as TURBO_STREAM
+[826c9834-00d5-4144-80c8-a52361be1fd0]   Parameters: {"id" => "17"}
+[826c9834-00d5-4144-80c8-a52361be1fd0] [AI Diagnostics] Game #17: turn=9, resources=6, hand_size=6, legal_actions_count=18, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 12, "end_turn" => 1}
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 12, "end_turn" => 1}
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: 20.694444444444443
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 28.694444444444443
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: 20.694444444444443
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 28.694444444444443
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[826c9834-00d5-4144-80c8-a52361be1fd0] [DecisionProviders::AI] Native opponent engine selected
+[826c9834-00d5-4144-80c8-a52361be1fd0] [Games::RunAiTurns] Game #17: AI proposed action type="move"
+[826c9834-00d5-4144-80c8-a52361be1fd0] [AI Diagnostics] Game #17: turn=9, resources=6, hand_size=6, legal_actions_count=22, legal_action_types={"attack" => 3, "play_card" => 18, "end_turn" => 1}
+[826c9834-00d5-4144-80c8-a52361be1fd0] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[826c9834-00d5-4144-80c8-a52361be1fd0] [AI Diagnostics] Game #17: turn=9, resources=6, hand_size=6, legal_actions_count=20, legal_action_types={"attack" => 1, "play_card" => 18, "end_turn" => 1}
+[826c9834-00d5-4144-80c8-a52361be1fd0] [Games::RunAiTurns] Game #17: AI proposed action type="play_card"
+[826c9834-00d5-4144-80c8-a52361be1fd0] [AI Diagnostics] Game #17: turn=9, resources=0, hand_size=5, legal_actions_count=2, legal_action_types={"attack" => 1, "end_turn" => 1}
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Root moves: []
+[826c9834-00d5-4144-80c8-a52361be1fd0] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[826c9834-00d5-4144-80c8-a52361be1fd0] [DecisionProviders::AI] Native opponent engine selected
+[826c9834-00d5-4144-80c8-a52361be1fd0] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[826c9834-00d5-4144-80c8-a52361be1fd0] [AI Diagnostics] Game #17: turn=9, resources=0, hand_size=5, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[826c9834-00d5-4144-80c8-a52361be1fd0] [Games::RunAiTurns] Game #17: AI proposed action type="end_turn"
+[826c9834-00d5-4144-80c8-a52361be1fd0] Completed 204 No Content in 14263ms (ActiveRecord: 400.8ms (185 queries, 63 cached) | GC: 167.0ms)
+[1bf01fb6-d361-42e9-9f0b-a46072b1b8b1] Started POST "/games/17/play_card" for 162.158.103.209 at 2026-11-14 14:01:39 +0000
+[1bf01fb6-d361-42e9-9f0b-a46072b1b8b1] Processing by GamesController#play_card as TURBO_STREAM
+[1bf01fb6-d361-42e9-9f0b-a46072b1b8b1]   Parameters: {"player_id" => "16", "card_id" => "11", "row" => "2", "column" => "1", "id" => "17"}
+[1bf01fb6-d361-42e9-9f0b-a46072b1b8b1] Completed 204 No Content in 239ms (ActiveRecord: 116.6ms (32 queries, 9 cached) | GC: 6.7ms)
+[ef6824a0-870d-41dd-ac2f-b8888be2a1b2] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:01:40 +0000
+[ef6824a0-870d-41dd-ac2f-b8888be2a1b2] Processing by GamesController#attack as TURBO_STREAM
+[ef6824a0-870d-41dd-ac2f-b8888be2a1b2]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "17"}
+[ef6824a0-870d-41dd-ac2f-b8888be2a1b2] Completed 204 No Content in 149ms (ActiveRecord: 27.2ms (32 queries, 9 cached) | GC: 2.1ms)
+[6b133aad-bf2a-4cfa-9675-86afdcc67a1b] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:01:43 +0000
+[6b133aad-bf2a-4cfa-9675-86afdcc67a1b] Processing by GamesController#attack as TURBO_STREAM
+[6b133aad-bf2a-4cfa-9675-86afdcc67a1b]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "17"}
+[6b133aad-bf2a-4cfa-9675-86afdcc67a1b] Completed 204 No Content in 84ms (ActiveRecord: 29.3ms (32 queries, 9 cached) | GC: 0.6ms)
+[89c8eb6c-0048-489d-837b-d991dc8d6e19] Started POST "/games/17/move" for 162.158.103.209 at 2026-11-14 14:01:46 +0000
+[89c8eb6c-0048-489d-837b-d991dc8d6e19] Processing by GamesController#move as TURBO_STREAM
+[89c8eb6c-0048-489d-837b-d991dc8d6e19]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "1", "to_row" => "1", "to_column" => "0", "id" => "17"}
+[89c8eb6c-0048-489d-837b-d991dc8d6e19] Completed 204 No Content in 166ms (ActiveRecord: 29.8ms (32 queries, 9 cached) | GC: 0.9ms)
+[abb09334-01e7-4bd6-80ee-d1fcb2696d78] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:01:49 +0000
+[abb09334-01e7-4bd6-80ee-d1fcb2696d78] Processing by GamesController#attack as TURBO_STREAM
+[abb09334-01e7-4bd6-80ee-d1fcb2696d78]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "17"}
+[abb09334-01e7-4bd6-80ee-d1fcb2696d78] Completed 204 No Content in 108ms (ActiveRecord: 92.5ms (32 queries, 9 cached) | GC: 0.0ms)
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] Started POST "/games/17/end_turn" for 162.158.103.209 at 2026-11-14 14:01:51 +0000
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] Processing by GamesController#end_turn as TURBO_STREAM
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f]   Parameters: {"id" => "17"}
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [AI Diagnostics] Game #17: turn=11, resources=5, hand_size=5, legal_actions_count=14, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 8, "end_turn" => 1}
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 8, "end_turn" => 1}
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: 2.1944444444444446
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 10.194444444444445
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: 2.1944444444444446
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 10.194444444444445
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 9, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [DecisionProviders::AI] Native opponent engine selected
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [Games::RunAiTurns] Game #17: AI proposed action type="move"
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [AI Diagnostics] Game #17: turn=11, resources=5, hand_size=5, legal_actions_count=16, legal_action_types={"attack" => 3, "play_card" => 12, "end_turn" => 1}
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [AI Diagnostics] Game #17: turn=11, resources=5, hand_size=5, legal_actions_count=14, legal_action_types={"attack" => 1, "play_card" => 12, "end_turn" => 1}
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [Games::RunAiTurns] Game #17: AI proposed action type="play_card"
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [AI Diagnostics] Game #17: turn=11, resources=1, hand_size=4, legal_actions_count=2, legal_action_types={"attack" => 1, "end_turn" => 1}
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Root moves: []
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [DecisionProviders::AI] Native opponent engine selected
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [AI Diagnostics] Game #17: turn=11, resources=1, hand_size=4, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] [Games::RunAiTurns] Game #17: AI proposed action type="end_turn"
+[28e5b992-7e8e-4595-a5e4-75bffb82e60f] Completed 204 No Content in 13526ms (ActiveRecord: 308.3ms (173 queries, 54 cached) | GC: 83.5ms)
+[c075c520-e737-4782-9337-70dea36384ff] Started POST "/games/17/play_card" for 162.158.103.209 at 2026-11-14 14:02:12 +0000
+[c075c520-e737-4782-9337-70dea36384ff] Processing by GamesController#play_card as TURBO_STREAM
+[c075c520-e737-4782-9337-70dea36384ff]   Parameters: {"player_id" => "16", "card_id" => "37", "id" => "17"}
+[c075c520-e737-4782-9337-70dea36384ff] Completed 204 No Content in 215ms (ActiveRecord: 27.6ms (31 queries, 9 cached) | GC: 2.6ms)
+[781760a3-8e71-4b1a-9c0b-7162b71c53be] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:02:14 +0000
+[781760a3-8e71-4b1a-9c0b-7162b71c53be] Processing by GamesController#attack as TURBO_STREAM
+[781760a3-8e71-4b1a-9c0b-7162b71c53be]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "17"}
+[781760a3-8e71-4b1a-9c0b-7162b71c53be] Completed 204 No Content in 198ms (ActiveRecord: 176.6ms (31 queries, 9 cached) | GC: 0.5ms)
+[28ab96ca-aeaa-4019-9b34-4d23ddb6b7d3] Started POST "/games/17/move" for 162.158.103.209 at 2026-11-14 14:02:22 +0000
+[28ab96ca-aeaa-4019-9b34-4d23ddb6b7d3] Processing by GamesController#move as TURBO_STREAM
+[28ab96ca-aeaa-4019-9b34-4d23ddb6b7d3]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "0", "to_row" => "1", "to_column" => "1", "id" => "17"}
+[28ab96ca-aeaa-4019-9b34-4d23ddb6b7d3] Completed 204 No Content in 51ms (ActiveRecord: 25.4ms (31 queries, 9 cached) | GC: 0.5ms)
+[0e9114db-893e-4aea-9f29-1f81081b2acb] Started POST "/games/17/move" for 162.158.103.209 at 2026-11-14 14:02:23 +0000
+[0e9114db-893e-4aea-9f29-1f81081b2acb] Processing by GamesController#move as TURBO_STREAM
+[0e9114db-893e-4aea-9f29-1f81081b2acb]   Parameters: {"player_id" => "16", "from_row" => "0", "from_column" => "0", "to_row" => "0", "to_column" => "1", "id" => "17"}
+[0e9114db-893e-4aea-9f29-1f81081b2acb] Completed 204 No Content in 77ms (ActiveRecord: 25.1ms (31 queries, 9 cached) | GC: 0.0ms)
+[4a182422-ab0c-436d-9c3d-cb9faee0f403] Started POST "/games/17/move" for 162.158.103.209 at 2026-11-14 14:02:27 +0000
+[4a182422-ab0c-436d-9c3d-cb9faee0f403] Processing by GamesController#move as TURBO_STREAM
+[4a182422-ab0c-436d-9c3d-cb9faee0f403]   Parameters: {"player_id" => "16", "from_row" => "2", "from_column" => "1", "to_row" => "2", "to_column" => "2", "id" => "17"}
+[4a182422-ab0c-436d-9c3d-cb9faee0f403] Completed 204 No Content in 206ms (ActiveRecord: 108.3ms (31 queries, 9 cached) | GC: 6.8ms)
+==> Detected service running on port 10000
+==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+[58368276-617c-4d41-b68b-8011e784b86b] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:02:33 +0000
+[58368276-617c-4d41-b68b-8011e784b86b] Processing by GamesController#attack as TURBO_STREAM
+[58368276-617c-4d41-b68b-8011e784b86b]   Parameters: {"player_id" => "16", "attacker_row" => "0", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "17"}
+[58368276-617c-4d41-b68b-8011e784b86b] Completed 204 No Content in 212ms (ActiveRecord: 36.7ms (31 queries, 9 cached) | GC: 1.7ms)
+[455ebea9-5800-4e5f-998d-e7ea8924ccdc] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:02:36 +0000
+[455ebea9-5800-4e5f-998d-e7ea8924ccdc] Processing by GamesController#attack as TURBO_STREAM
+[455ebea9-5800-4e5f-998d-e7ea8924ccdc]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "17"}
+[455ebea9-5800-4e5f-998d-e7ea8924ccdc] Completed 204 No Content in 137ms (ActiveRecord: 112.6ms (31 queries, 9 cached) | GC: 0.7ms)
+[e5f1c99f-999b-416e-bd1a-f50e93067d77] Started POST "/games/17/attack" for 162.158.103.209 at 2026-11-14 14:02:38 +0000
+[e5f1c99f-999b-416e-bd1a-f50e93067d77] Processing by GamesController#attack as TURBO_STREAM
+[e5f1c99f-999b-416e-bd1a-f50e93067d77]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "2", "target_row" => "1", "target_column" => "2", "id" => "17"}
+[e5f1c99f-999b-416e-bd1a-f50e93067d77] Completed 204 No Content in 58ms (ActiveRecord: 35.8ms (31 queries, 9 cached) | GC: 0.8ms)
+[91ac2a7d-1edf-4198-b72f-2c91d0299ca9] Started POST "/games/17/play_card" for 162.158.103.209 at 2026-11-14 14:02:42 +0000
+[91ac2a7d-1edf-4198-b72f-2c91d0299ca9] Processing by GamesController#play_card as TURBO_STREAM
+[91ac2a7d-1edf-4198-b72f-2c91d0299ca9]   Parameters: {"player_id" => "16", "card_id" => "8", "row" => "2", "column" => "1", "id" => "17"}
+[91ac2a7d-1edf-4198-b72f-2c91d0299ca9] Completed 204 No Content in 63ms (ActiveRecord: 25.1ms (30 queries, 9 cached) | GC: 0.0ms)
+[dd719a35-2bc5-4462-b92c-a1af65336391] Started POST "/games/17/end_turn" for 162.158.103.209 at 2026-11-14 14:02:44 +0000
+[dd719a35-2bc5-4462-b92c-a1af65336391] Processing by GamesController#end_turn as TURBO_STREAM
+[dd719a35-2bc5-4462-b92c-a1af65336391]   Parameters: {"id" => "17"}
+[dd719a35-2bc5-4462-b92c-a1af65336391] [AI Diagnostics] Game #17: turn=13, resources=5, hand_size=4, legal_actions_count=14, legal_action_types={"attack" => 3, "move" => 4, "play_card" => 6, "end_turn" => 1}
+[dd719a35-2bc5-4462-b92c-a1af65336391] [OpponentEngine] Root actions: {"attack" => 3, "move" => 4, "play_card" => 6, "end_turn" => 1}
+[dd719a35-2bc5-4462-b92c-a1af65336391] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[dd719a35-2bc5-4462-b92c-a1af65336391] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: -57.16666666666667
+[dd719a35-2bc5-4462-b92c-a1af65336391] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -18.66666666666667
+[dd719a35-2bc5-4462-b92c-a1af65336391] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -57.16666666666667
+[dd719a35-2bc5-4462-b92c-a1af65336391] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -41.85416666666667
+[dd719a35-2bc5-4462-b92c-a1af65336391] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}]
+[dd719a35-2bc5-4462-b92c-a1af65336391] [DecisionProviders::AI] Native opponent engine selected
+[dd719a35-2bc5-4462-b92c-a1af65336391] [Games::RunAiTurns] Game #17: AI proposed action type="attack"
+[dd719a35-2bc5-4462-b92c-a1af65336391] Completed 204 No Content in 5780ms (ActiveRecord: 269.1ms (59 queries, 18 cached) | GC: 218.3ms)
+[abf534ea-20ab-46ce-a5a1-c5f2f7391e50] Started GET "/" for 162.158.103.209 at 2026-11-14 14:02:53 +0000
+[abf534ea-20ab-46ce-a5a1-c5f2f7391e50] Processing by PagesController#home as HTML
+[abf534ea-20ab-46ce-a5a1-c5f2f7391e50]   Rendered layout layouts/application.html.erb (Duration: 4.2ms | GC: 0.0ms)
+[abf534ea-20ab-46ce-a5a1-c5f2f7391e50] Completed 200 OK in 93ms (Views: 86.0ms | ActiveRecord: 3.1ms (2 queries, 0 cached) | GC: 0.0ms)
+Unsubscribing from channel: {"channel":"Turbo::StreamsChannel","signed_stream_name":"IloybGtPaTh2WTJ4aGMyZ3RkR0Z1YTNNdlIyRnRaUzh4Tnc6MTYi--6245bf1ce15309bd1eca34138a51dcb8d474eb79758041a6215137dd66c36d2e"}
+Turbo::StreamsChannel stopped streaming from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xNw:16
+[5a433824-a11d-40bc-ae8f-2deb73bd2638] Started GET "/play" for 162.158.103.209 at 2026-11-14 14:02:54 +0000
+[5a433824-a11d-40bc-ae8f-2deb73bd2638] Processing by PagesController#play as HTML
+[5a433824-a11d-40bc-ae8f-2deb73bd2638]   Rendered layout layouts/application.html.erb (Duration: 198.3ms | GC: 0.2ms)
+[5a433824-a11d-40bc-ae8f-2deb73bd2638] Completed 200 OK in 454ms (Views: 106.7ms | ActiveRecord: 120.5ms (64 queries, 27 cached) | GC: 2.0ms)
+[6ec4c953-2eea-44b9-bd4e-170516a70939] Started POST "/games" for 162.158.103.209 at 2026-11-14 14:02:59 +0000
+[6ec4c953-2eea-44b9-bd4e-170516a70939] Processing by GamesController#create as TURBO_STREAM
+[6ec4c953-2eea-44b9-bd4e-170516a70939]   Parameters: {"authenticity_token" => "[FILTERED]", "deck_id" => "48", "mode" => "ai"}
+[6ec4c953-2eea-44b9-bd4e-170516a70939] Redirected to https://clash-tanks.onrender.com/games/18
+[6ec4c953-2eea-44b9-bd4e-170516a70939] Completed 302 Found in 257ms (ActiveRecord: 116.8ms (54 queries, 16 cached) | GC: 0.3ms)
+[abb454fa-0a4d-47ef-8b6f-be5892d35f60] Started GET "/games/18" for 162.158.103.209 at 2026-11-14 14:02:59 +0000
+[abb454fa-0a4d-47ef-8b6f-be5892d35f60] Processing by GamesController#show as TURBO_STREAM
+[abb454fa-0a4d-47ef-8b6f-be5892d35f60]   Parameters: {"id" => "18"}
+[abb454fa-0a4d-47ef-8b6f-be5892d35f60]   Rendered layout layouts/application.html.erb (Duration: 102.5ms | GC: 0.2ms)
+[abb454fa-0a4d-47ef-8b6f-be5892d35f60] Completed 200 OK in 114ms (Views: 93.7ms | ActiveRecord: 16.8ms (16 queries, 0 cached) | GC: 0.2ms)
+Turbo::StreamsChannel is streaming from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xOA:16
+[53299204-9c18-4c53-a650-b65cebe110a2] Started POST "/games/18/run_ai_turn" for 162.158.103.209 at 2026-11-14 14:03:00 +0000
+[53299204-9c18-4c53-a650-b65cebe110a2] Processing by GamesController#run_ai_turn as JSON
+[53299204-9c18-4c53-a650-b65cebe110a2]   Parameters: {"id" => "18"}
+[53299204-9c18-4c53-a650-b65cebe110a2] Completed 204 No Content in 68ms (ActiveRecord: 65.5ms (5 queries, 0 cached) | GC: 0.1ms)
+[43529332-e8dc-42ca-b18c-e49481f70f9d] Started POST "/games/18/play_card" for 162.158.103.209 at 2026-11-14 14:03:02 +0000
+[43529332-e8dc-42ca-b18c-e49481f70f9d] Processing by GamesController#play_card as TURBO_STREAM
+[43529332-e8dc-42ca-b18c-e49481f70f9d]   Parameters: {"player_id" => "16", "card_id" => "28", "row" => "1", "column" => "1", "id" => "18"}
+[43529332-e8dc-42ca-b18c-e49481f70f9d] Completed 204 No Content in 183ms (ActiveRecord: 112.5ms (33 queries, 9 cached) | GC: 0.6ms)
+[cc21d74a-18d5-4596-9b1b-fd6a4db1f05e] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:03:04 +0000
+[cc21d74a-18d5-4596-9b1b-fd6a4db1f05e] Processing by GamesController#attack as TURBO_STREAM
+[cc21d74a-18d5-4596-9b1b-fd6a4db1f05e]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "18"}
+[cc21d74a-18d5-4596-9b1b-fd6a4db1f05e] Completed 204 No Content in 119ms (ActiveRecord: 100.0ms (33 queries, 9 cached) | GC: 0.0ms)
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] Started POST "/games/18/end_turn" for 162.158.103.209 at 2026-11-14 14:03:06 +0000
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] Processing by GamesController#end_turn as TURBO_STREAM
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0]   Parameters: {"id" => "18"}
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [AI Diagnostics] Game #18: turn=2, resources=4, hand_size=7, legal_actions_count=12, legal_action_types={"attack" => 1, "play_card" => 10, "end_turn" => 1}
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 10, "end_turn" => 1}
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [OpponentEngine] Root moves: []
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}]
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [DecisionProviders::AI] Native opponent engine selected
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [AI Diagnostics] Game #18: turn=2, resources=4, hand_size=7, legal_actions_count=11, legal_action_types={"play_card" => 10, "end_turn" => 1}
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [Games::RunAiTurns] Game #18: AI proposed action type="play_card"
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [AI Diagnostics] Game #18: turn=2, resources=1, hand_size=6, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [OpponentEngine] Root actions: {"end_turn" => 1}
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [OpponentEngine] Root moves: []
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [DecisionProviders::AI] Native opponent engine selected
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] [Games::RunAiTurns] Game #18: AI proposed action type="end_turn"
+[879c5b4e-75e4-4891-a8e4-a2cd9cb771b0] Completed 204 No Content in 6147ms (ActiveRecord: 151.8ms (122 queries, 34 cached) | GC: 20.3ms)
+[08530b7a-298b-4c33-9468-d3abf6f5b124] Started POST "/games/18/play_card" for 162.158.103.209 at 2026-11-14 14:03:24 +0000
+[08530b7a-298b-4c33-9468-d3abf6f5b124] Processing by GamesController#play_card as TURBO_STREAM
+[08530b7a-298b-4c33-9468-d3abf6f5b124]   Parameters: {"player_id" => "16", "card_id" => "35", "target" => "1,3", "id" => "18"}
+[08530b7a-298b-4c33-9468-d3abf6f5b124] Completed 204 No Content in 214ms (ActiveRecord: 179.0ms (32 queries, 8 cached) | GC: 2.2ms)
+[ce1062e0-f77c-4eec-bd06-035adbec9d25] Started POST "/games/18/move" for 162.158.103.209 at 2026-11-14 14:03:28 +0000
+[ce1062e0-f77c-4eec-bd06-035adbec9d25] Processing by GamesController#move as TURBO_STREAM
+[ce1062e0-f77c-4eec-bd06-035adbec9d25]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "1", "to_row" => "1", "to_column" => "2", "id" => "18"}
+[ce1062e0-f77c-4eec-bd06-035adbec9d25] Completed 204 No Content in 182ms (ActiveRecord: 82.4ms (32 queries, 8 cached) | GC: 0.7ms)
+[5b21fa37-0286-474a-8058-b586be8a2495] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:03:29 +0000
+[5b21fa37-0286-474a-8058-b586be8a2495] Processing by GamesController#attack as TURBO_STREAM
+[5b21fa37-0286-474a-8058-b586be8a2495]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "2", "target_row" => "1", "target_column" => "3", "id" => "18"}
+[5b21fa37-0286-474a-8058-b586be8a2495] Completed 204 No Content in 119ms (ActiveRecord: 42.4ms (32 queries, 8 cached) | GC: 0.9ms)
+[6cd8994b-6581-4321-874e-b1207560aa25] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:03:33 +0000
+[6cd8994b-6581-4321-874e-b1207560aa25] Processing by GamesController#attack as TURBO_STREAM
+[6cd8994b-6581-4321-874e-b1207560aa25]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "18"}
+[6cd8994b-6581-4321-874e-b1207560aa25] Completed 204 No Content in 91ms (ActiveRecord: 29.4ms (32 queries, 8 cached) | GC: 0.0ms)
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] Started POST "/games/18/end_turn" for 162.158.103.209 at 2026-11-14 14:03:35 +0000
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] Processing by GamesController#end_turn as TURBO_STREAM
+[1f14fbbd-7f50-4467-8655-f747e0195ed3]   Parameters: {"id" => "18"}
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [AI Diagnostics] Game #18: turn=4, resources=4, hand_size=7, legal_actions_count=12, legal_action_types={"attack" => 1, "play_card" => 10, "end_turn" => 1}
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 10, "end_turn" => 1}
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Root moves: []
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [1, 2]}}]
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [DecisionProviders::AI] Native opponent engine selected
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [Games::RunAiTurns] Game #18: AI proposed action type="play_card"
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [AI Diagnostics] Game #18: turn=4, resources=1, hand_size=6, legal_actions_count=4, legal_action_types={"attack" => 3, "end_turn" => 1}
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Root actions: {"attack" => 3, "end_turn" => 1}
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Root moves: []
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [1, 2]}}]
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [DecisionProviders::AI] Native opponent engine selected
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [AI Diagnostics] Game #18: turn=4, resources=1, hand_size=6, legal_actions_count=2, legal_action_types={"attack" => 1, "end_turn" => 1}
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [AI Diagnostics] Game #18: turn=4, resources=1, hand_size=6, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Root actions: {"end_turn" => 1}
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Root moves: []
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [DecisionProviders::AI] Native opponent engine selected
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] [Games::RunAiTurns] Game #18: AI proposed action type="end_turn"
+[1f14fbbd-7f50-4467-8655-f747e0195ed3] Completed 204 No Content in 9018ms (ActiveRecord: 389.3ms (150 queries, 45 cached) | GC: 38.7ms)
+[f940e50e-b13f-4bcf-b7e5-406e70ee80fe] Started POST "/games/18/play_card" for 162.158.103.209 at 2026-11-14 14:04:01 +0000
+[f940e50e-b13f-4bcf-b7e5-406e70ee80fe] Processing by GamesController#play_card as TURBO_STREAM
+[f940e50e-b13f-4bcf-b7e5-406e70ee80fe]   Parameters: {"player_id" => "16", "card_id" => "27", "row" => "2", "column" => "1", "id" => "18"}
+[f940e50e-b13f-4bcf-b7e5-406e70ee80fe] Completed 204 No Content in 86ms (ActiveRecord: 26.8ms (32 queries, 9 cached) | GC: 0.5ms)
+[f110c523-6e9a-46c9-80cc-877cb64aa59e] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:04:07 +0000
+[f110c523-6e9a-46c9-80cc-877cb64aa59e] Processing by GamesController#attack as TURBO_STREAM
+[f110c523-6e9a-46c9-80cc-877cb64aa59e]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "1", "target_column" => "3", "id" => "18"}
+[f110c523-6e9a-46c9-80cc-877cb64aa59e] Completed 204 No Content in 54ms (ActiveRecord: 34.3ms (32 queries, 9 cached) | GC: 0.6ms)
+[b3e82a76-bbd0-41dd-b066-f6a9c44c0e72] Started POST "/games/18/move" for 162.158.103.209 at 2026-11-14 14:04:09 +0000
+[b3e82a76-bbd0-41dd-b066-f6a9c44c0e72] Processing by GamesController#move as TURBO_STREAM
+[b3e82a76-bbd0-41dd-b066-f6a9c44c0e72]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "2", "to_row" => "1", "to_column" => "1", "id" => "18"}
+[b3e82a76-bbd0-41dd-b066-f6a9c44c0e72] Completed 204 No Content in 143ms (ActiveRecord: 120.2ms (32 queries, 9 cached) | GC: 0.7ms)
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] Started POST "/games/18/end_turn" for 162.158.103.209 at 2026-11-14 14:04:12 +0000
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] Processing by GamesController#end_turn as TURBO_STREAM
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995]   Parameters: {"id" => "18"}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [AI Diagnostics] Game #18: turn=6, resources=5, hand_size=7, legal_actions_count=16, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 10, "end_turn" => 1}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 10, "end_turn" => 1}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: -15.75
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -9.25
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -15.75
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -13.875
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 10, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}]
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [DecisionProviders::AI] Native opponent engine selected
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [Games::RunAiTurns] Game #18: AI proposed action type="move"
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [AI Diagnostics] Game #18: turn=6, resources=5, hand_size=7, legal_actions_count=20, legal_action_types={"attack" => 5, "play_card" => 14, "end_turn" => 1}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [AI Diagnostics] Game #18: turn=6, resources=5, hand_size=7, legal_actions_count=17, legal_action_types={"attack" => 2, "play_card" => 14, "end_turn" => 1}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [Games::RunAiTurns] Game #18: AI proposed action type="play_card"
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [AI Diagnostics] Game #18: turn=6, resources=0, hand_size=6, legal_actions_count=3, legal_action_types={"attack" => 2, "end_turn" => 1}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Root actions: {"attack" => 2, "end_turn" => 1}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Root moves: []
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}]
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [DecisionProviders::AI] Native opponent engine selected
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [AI Diagnostics] Game #18: turn=6, resources=0, hand_size=6, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Root actions: {"end_turn" => 1}
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Root moves: []
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [DecisionProviders::AI] Native opponent engine selected
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] [Games::RunAiTurns] Game #18: AI proposed action type="end_turn"
+[b0fd0bdf-aaf5-4a34-961c-4cd6a7e79995] Completed 204 No Content in 15270ms (ActiveRecord: 363.6ms (180 queries, 54 cached) | GC: 217.1ms)
+[c0074b06-cce3-41ae-be01-9a2dd75f8c76] Started POST "/games/18/play_card" for 162.158.103.209 at 2026-11-14 14:04:33 +0000
+[c0074b06-cce3-41ae-be01-9a2dd75f8c76] Processing by GamesController#play_card as TURBO_STREAM
+[c0074b06-cce3-41ae-be01-9a2dd75f8c76]   Parameters: {"player_id" => "16", "card_id" => "29", "row" => "1", "column" => "1", "id" => "18"}
+[c0074b06-cce3-41ae-be01-9a2dd75f8c76] Completed 204 No Content in 99ms (ActiveRecord: 76.9ms (32 queries, 9 cached) | GC: 0.6ms)
+[91d9ac73-9f5c-4d94-87ae-1b36872a1000] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:04:35 +0000
+[91d9ac73-9f5c-4d94-87ae-1b36872a1000] Processing by GamesController#attack as TURBO_STREAM
+[91d9ac73-9f5c-4d94-87ae-1b36872a1000]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "18"}
+[91d9ac73-9f5c-4d94-87ae-1b36872a1000] Completed 204 No Content in 138ms (ActiveRecord: 38.4ms (32 queries, 9 cached) | GC: 0.5ms)
+[3b4263e9-c770-46fc-81ad-5ca594b2a558] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:04:38 +0000
+[3b4263e9-c770-46fc-81ad-5ca594b2a558] Processing by GamesController#attack as TURBO_STREAM
+[3b4263e9-c770-46fc-81ad-5ca594b2a558]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "18"}
+[3b4263e9-c770-46fc-81ad-5ca594b2a558] Completed 204 No Content in 153ms (ActiveRecord: 118.1ms (32 queries, 9 cached) | GC: 0.0ms)
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] Started POST "/games/18/end_turn" for 162.158.103.209 at 2026-11-14 14:04:40 +0000
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] Processing by GamesController#end_turn as TURBO_STREAM
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf]   Parameters: {"id" => "18"}
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [AI Diagnostics] Game #18: turn=8, resources=6, hand_size=7, legal_actions_count=20, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 14, "end_turn" => 1}
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 14, "end_turn" => 1}
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: -5.0
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 3.0
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -5.0
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 3.0
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 31, "targets" => [[1, 1]]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}]
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [DecisionProviders::AI] Native opponent engine selected
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [Games::RunAiTurns] Game #18: AI proposed action type="play_card"
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [AI Diagnostics] Game #18: turn=8, resources=2, hand_size=6, legal_actions_count=6, legal_action_types={"attack" => 1, "move" => 4, "end_turn" => 1}
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [AI Diagnostics] Game #18: turn=8, resources=2, hand_size=6, legal_actions_count=5, legal_action_types={"move" => 4, "end_turn" => 1}
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [Games::RunAiTurns] Game #18: AI proposed action type="move"
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [AI Diagnostics] Game #18: turn=8, resources=2, hand_size=6, legal_actions_count=3, legal_action_types={"attack" => 2, "end_turn" => 1}
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [AI Diagnostics] Game #18: turn=8, resources=2, hand_size=6, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Root actions: {"end_turn" => 1}
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Root moves: []
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [DecisionProviders::AI] Native opponent engine selected
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] [Games::RunAiTurns] Game #18: AI proposed action type="end_turn"
+[4574d2db-30e1-4d5f-ab3d-6a6c4862e0cf] Completed 204 No Content in 15473ms (ActiveRecord: 595.8ms (183 queries, 60 cached) | GC: 219.2ms)
+[bec07260-b9e1-482d-897a-3ef2a7e52a19] Started POST "/games/18/play_card" for 162.158.103.209 at 2026-11-14 14:05:00 +0000
+[bec07260-b9e1-482d-897a-3ef2a7e52a19] Processing by GamesController#play_card as TURBO_STREAM
+[bec07260-b9e1-482d-897a-3ef2a7e52a19]   Parameters: {"player_id" => "16", "card_id" => "26", "row" => "1", "column" => "1", "id" => "18"}
+[bec07260-b9e1-482d-897a-3ef2a7e52a19] Completed 204 No Content in 169ms (ActiveRecord: 143.9ms (33 queries, 10 cached) | GC: 3.0ms)
+[4483f985-dcf1-4159-a518-084bdad32f2b] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:05:04 +0000
+[4483f985-dcf1-4159-a518-084bdad32f2b] Processing by GamesController#attack as TURBO_STREAM
+[4483f985-dcf1-4159-a518-084bdad32f2b]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "18"}
+[4483f985-dcf1-4159-a518-084bdad32f2b] Completed 204 No Content in 118ms (ActiveRecord: 27.1ms (33 queries, 10 cached) | GC: 0.8ms)
+[783a5319-46c0-4623-9ed1-81ce8b8fbb72] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:05:07 +0000
+[783a5319-46c0-4623-9ed1-81ce8b8fbb72] Processing by GamesController#attack as TURBO_STREAM
+[783a5319-46c0-4623-9ed1-81ce8b8fbb72]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "18"}
+[783a5319-46c0-4623-9ed1-81ce8b8fbb72] Completed 204 No Content in 123ms (ActiveRecord: 27.8ms (33 queries, 10 cached) | GC: 1.3ms)
+[b54d784f-8c30-455c-9f78-e52dfbfaef4d] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:05:09 +0000
+[b54d784f-8c30-455c-9f78-e52dfbfaef4d] Processing by GamesController#attack as TURBO_STREAM
+[b54d784f-8c30-455c-9f78-e52dfbfaef4d]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "1", "target_column" => "2", "id" => "18"}
+[b54d784f-8c30-455c-9f78-e52dfbfaef4d] Completed 204 No Content in 187ms (ActiveRecord: 31.2ms (33 queries, 10 cached) | GC: 0.0ms)
+[659d2968-3215-43eb-85a8-40637b3bd2dc] Started POST "/games/18/end_turn" for 162.158.103.209 at 2026-11-14 14:05:15 +0000
+[659d2968-3215-43eb-85a8-40637b3bd2dc] Processing by GamesController#end_turn as TURBO_STREAM
+[659d2968-3215-43eb-85a8-40637b3bd2dc]   Parameters: {"id" => "18"}
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [AI Diagnostics] Game #18: turn=10, resources=4, hand_size=6, legal_actions_count=14, legal_action_types={"attack" => 1, "play_card" => 12, "end_turn" => 1}
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 12, "end_turn" => 1}
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [OpponentEngine] Root moves: []
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 9, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [DecisionProviders::AI] Native opponent engine selected
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [AI Diagnostics] Game #18: turn=10, resources=4, hand_size=6, legal_actions_count=13, legal_action_types={"play_card" => 12, "end_turn" => 1}
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [Games::RunAiTurns] Game #18: AI proposed action type="play_card"
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [AI Diagnostics] Game #18: turn=10, resources=0, hand_size=5, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [OpponentEngine] Root actions: {"end_turn" => 1}
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [OpponentEngine] Root moves: []
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [DecisionProviders::AI] Native opponent engine selected
+[659d2968-3215-43eb-85a8-40637b3bd2dc] [Games::RunAiTurns] Game #18: AI proposed action type="end_turn"
+[659d2968-3215-43eb-85a8-40637b3bd2dc] Completed 204 No Content in 6693ms (ActiveRecord: 851.4ms (122 queries, 40 cached) | GC: 29.3ms)
+[bc516244-156b-43b8-9a69-91b53bd083be] Started POST "/games/18/move" for 162.158.103.209 at 2026-11-14 14:05:24 +0000
+[bc516244-156b-43b8-9a69-91b53bd083be] Processing by GamesController#move as TURBO_STREAM
+[bc516244-156b-43b8-9a69-91b53bd083be]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "1", "to_row" => "1", "to_column" => "2", "id" => "18"}
+[bc516244-156b-43b8-9a69-91b53bd083be] Completed 204 No Content in 56ms (ActiveRecord: 25.6ms (32 queries, 10 cached) | GC: 1.5ms)
+[f11229f8-8db5-4819-9161-5a7fee542239] Started POST "/games/18/move" for 162.158.103.209 at 2026-11-14 14:05:25 +0000
+[f11229f8-8db5-4819-9161-5a7fee542239] Processing by GamesController#move as TURBO_STREAM
+[f11229f8-8db5-4819-9161-5a7fee542239]   Parameters: {"player_id" => "16", "from_row" => "2", "from_column" => "1", "to_row" => "2", "to_column" => "2", "id" => "18"}
+[f11229f8-8db5-4819-9161-5a7fee542239] Completed 204 No Content in 46ms (ActiveRecord: 27.2ms (32 queries, 10 cached) | GC: 0.6ms)
+[3dad913c-80db-4fa9-ae5d-78df77adcc65] Started POST "/games/18/play_card" for 162.158.103.209 at 2026-11-14 14:05:31 +0000
+[3dad913c-80db-4fa9-ae5d-78df77adcc65] Processing by GamesController#play_card as TURBO_STREAM
+[3dad913c-80db-4fa9-ae5d-78df77adcc65]   Parameters: {"player_id" => "16", "card_id" => "25", "row" => "1", "column" => "1", "id" => "18"}
+[3dad913c-80db-4fa9-ae5d-78df77adcc65] Completed 204 No Content in 56ms (ActiveRecord: 30.7ms (31 queries, 10 cached) | GC: 1.1ms)
+[b2074b49-38c8-4774-a231-caa0db4bdcbc] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:05:33 +0000
+[b2074b49-38c8-4774-a231-caa0db4bdcbc] Processing by GamesController#attack as TURBO_STREAM
+[b2074b49-38c8-4774-a231-caa0db4bdcbc]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "2", "target_row" => "1", "target_column" => "3", "id" => "18"}
+[b2074b49-38c8-4774-a231-caa0db4bdcbc] Completed 204 No Content in 64ms (ActiveRecord: 38.5ms (31 queries, 10 cached) | GC: 0.0ms)
+[7a6003be-7b29-4631-801d-c423b7345f64] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:05:35 +0000
+[7a6003be-7b29-4631-801d-c423b7345f64] Processing by GamesController#attack as TURBO_STREAM
+[7a6003be-7b29-4631-801d-c423b7345f64]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "2", "target_row" => "1", "target_column" => "3", "id" => "18"}
+[7a6003be-7b29-4631-801d-c423b7345f64] Completed 204 No Content in 102ms (ActiveRecord: 40.0ms (31 queries, 10 cached) | GC: 3.5ms)
+[a59c8624-d3e8-4dff-a8c8-053639535bc5] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:05:39 +0000
+[a59c8624-d3e8-4dff-a8c8-053639535bc5] Processing by GamesController#attack as TURBO_STREAM
+[a59c8624-d3e8-4dff-a8c8-053639535bc5]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "18"}
+[a59c8624-d3e8-4dff-a8c8-053639535bc5] Completed 204 No Content in 158ms (ActiveRecord: 44.9ms (31 queries, 10 cached) | GC: 3.8ms)
+[684ffe76-4d36-49d3-8b7b-277b348139da] Started POST "/games/18/end_turn" for 162.158.103.209 at 2026-11-14 14:05:41 +0000
+[684ffe76-4d36-49d3-8b7b-277b348139da] Processing by GamesController#end_turn as TURBO_STREAM
+[684ffe76-4d36-49d3-8b7b-277b348139da]   Parameters: {"id" => "18"}
+[684ffe76-4d36-49d3-8b7b-277b348139da] [AI Diagnostics] Game #18: turn=12, resources=4, hand_size=5, legal_actions_count=11, legal_action_types={"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[684ffe76-4d36-49d3-8b7b-277b348139da] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[684ffe76-4d36-49d3-8b7b-277b348139da] [OpponentEngine] Root moves: []
+[684ffe76-4d36-49d3-8b7b-277b348139da] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 7, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[684ffe76-4d36-49d3-8b7b-277b348139da] [DecisionProviders::AI] Native opponent engine selected
+[684ffe76-4d36-49d3-8b7b-277b348139da] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[684ffe76-4d36-49d3-8b7b-277b348139da] [AI Diagnostics] Game #18: turn=12, resources=4, hand_size=5, legal_actions_count=10, legal_action_types={"play_card" => 9, "end_turn" => 1}
+[684ffe76-4d36-49d3-8b7b-277b348139da] [Games::RunAiTurns] Game #18: AI proposed action type="play_card"
+[684ffe76-4d36-49d3-8b7b-277b348139da] [AI Diagnostics] Game #18: turn=12, resources=0, hand_size=4, legal_actions_count=3, legal_action_types={"attack" => 2, "end_turn" => 1}
+[684ffe76-4d36-49d3-8b7b-277b348139da] [OpponentEngine] Root actions: {"attack" => 2, "end_turn" => 1}
+[684ffe76-4d36-49d3-8b7b-277b348139da] [OpponentEngine] Root moves: []
+[684ffe76-4d36-49d3-8b7b-277b348139da] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[684ffe76-4d36-49d3-8b7b-277b348139da] [DecisionProviders::AI] Native opponent engine selected
+[684ffe76-4d36-49d3-8b7b-277b348139da] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[684ffe76-4d36-49d3-8b7b-277b348139da] [AI Diagnostics] Game #18: turn=12, resources=0, hand_size=4, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[684ffe76-4d36-49d3-8b7b-277b348139da] [Games::RunAiTurns] Game #18: AI proposed action type="end_turn"
+[684ffe76-4d36-49d3-8b7b-277b348139da] Completed 204 No Content in 10277ms (ActiveRecord: 517.9ms (140 queries, 47 cached) | GC: 58.4ms)
+[412d00a1-7c94-4493-9cda-9a9b4477218e] Started POST "/games/18/move" for 162.158.103.209 at 2026-11-14 14:05:54 +0000
+[412d00a1-7c94-4493-9cda-9a9b4477218e] Processing by GamesController#move as TURBO_STREAM
+[412d00a1-7c94-4493-9cda-9a9b4477218e]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "1", "to_row" => "0", "to_column" => "2", "id" => "18"}
+[412d00a1-7c94-4493-9cda-9a9b4477218e] Completed 204 No Content in 74ms (ActiveRecord: 24.5ms (30 queries, 9 cached) | GC: 0.6ms)
+[05ec6ac7-e877-4603-b1a6-853f637f2eac] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:05:56 +0000
+[05ec6ac7-e877-4603-b1a6-853f637f2eac] Processing by GamesController#attack as TURBO_STREAM
+[05ec6ac7-e877-4603-b1a6-853f637f2eac]   Parameters: {"player_id" => "16", "attacker_row" => "0", "attacker_column" => "2", "target_row" => "1", "target_column" => "3", "id" => "18"}
+[05ec6ac7-e877-4603-b1a6-853f637f2eac] Completed 204 No Content in 89ms (ActiveRecord: 24.7ms (30 queries, 9 cached) | GC: 0.4ms)
+[dc13ecbe-b652-44f1-8451-53e6f6fde286] Started POST "/games/18/move" for 162.158.103.209 at 2026-11-14 14:05:58 +0000
+[dc13ecbe-b652-44f1-8451-53e6f6fde286] Processing by GamesController#move as TURBO_STREAM
+[dc13ecbe-b652-44f1-8451-53e6f6fde286]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "2", "to_row" => "1", "to_column" => "3", "id" => "18"}
+[dc13ecbe-b652-44f1-8451-53e6f6fde286] Completed 204 No Content in 106ms (ActiveRecord: 40.6ms (30 queries, 9 cached) | GC: 0.0ms)
+[fe522325-6a92-48cf-af85-19bb70c90c32] Started POST "/games/18/play_card" for 162.158.103.209 at 2026-11-14 14:06:10 +0000
+[fe522325-6a92-48cf-af85-19bb70c90c32] Processing by GamesController#play_card as TURBO_STREAM
+[fe522325-6a92-48cf-af85-19bb70c90c32]   Parameters: {"player_id" => "16", "card_id" => "41", "id" => "18"}
+[fe522325-6a92-48cf-af85-19bb70c90c32] Completed 204 No Content in 91ms (ActiveRecord: 68.4ms (30 queries, 9 cached) | GC: 4.5ms)
+[09e79826-36b6-42cd-a2e7-85d702c29975] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:06:12 +0000
+[09e79826-36b6-42cd-a2e7-85d702c29975] Processing by GamesController#attack as TURBO_STREAM
+[09e79826-36b6-42cd-a2e7-85d702c29975]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "18"}
+[09e79826-36b6-42cd-a2e7-85d702c29975] Completed 204 No Content in 116ms (ActiveRecord: 26.8ms (30 queries, 9 cached) | GC: 2.8ms)
+[fc17fe52-4a6f-412e-a9d0-4b575c1f602a] Started POST "/games/18/attack" for 162.158.103.209 at 2026-11-14 14:06:15 +0000
+[fc17fe52-4a6f-412e-a9d0-4b575c1f602a] Processing by GamesController#attack as TURBO_STREAM
+[fc17fe52-4a6f-412e-a9d0-4b575c1f602a]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "3", "target_row" => "0", "target_column" => "4", "id" => "18"}
+[fc17fe52-4a6f-412e-a9d0-4b575c1f602a] Completed 204 No Content in 144ms (ActiveRecord: 108.9ms (30 queries, 9 cached) | GC: 1.0ms)
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] Started POST "/games/18/end_turn" for 162.158.103.209 at 2026-11-14 14:06:18 +0000
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] Processing by GamesController#end_turn as TURBO_STREAM
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79]   Parameters: {"id" => "18"}
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] [AI Diagnostics] Game #18: turn=14, resources=4, hand_size=4, legal_actions_count=7, legal_action_types={"attack" => 2, "play_card" => 4, "end_turn" => 1}
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] [OpponentEngine] Root actions: {"attack" => 2, "play_card" => 4, "end_turn" => 1}
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] [OpponentEngine] Root moves: []
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] [DecisionProviders::AI] Native opponent engine selected
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] [Games::RunAiTurns] Game #18: AI proposed action type="attack"
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] [AI Diagnostics] Game #18: turn=14, resources=4, hand_size=4, legal_actions_count=5, legal_action_types={"play_card" => 4, "end_turn" => 1}
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] [Games::RunAiTurns] Game #18: AI proposed action type="end_turn"
+[f5d8bb3a-c5fe-42b0-ae40-8b4789cf4c79] Completed 204 No Content in 3646ms (ActiveRecord: 84.1ms (85 queries, 27 cached) | GC: 24.0ms)
+[6b58cc04-1f76-461c-a96d-98a45952fd3e] Started GET "/" for 162.158.103.209 at 2026-11-14 14:06:26 +0000
+[6b58cc04-1f76-461c-a96d-98a45952fd3e] Processing by PagesController#home as HTML
+[6b58cc04-1f76-461c-a96d-98a45952fd3e]   Rendered layout layouts/application.html.erb (Duration: 2.4ms | GC: 0.1ms)
+[6b58cc04-1f76-461c-a96d-98a45952fd3e] Completed 200 OK in 7ms (Views: 3.1ms | ActiveRecord: 2.8ms (2 queries, 0 cached) | GC: 0.1ms)
+Unsubscribing from channel: {"channel":"Turbo::StreamsChannel","signed_stream_name":"IloybGtPaTh2WTJ4aGMyZ3RkR0Z1YTNNdlIyRnRaUzh4T0E6MTYi--f016c9528a2f367cd2d393a1f3103684144b1d9486f1808ad083ff10c91d5ae9"}
+Turbo::StreamsChannel stopped streaming from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xOA:16
+[c4332df7-cf12-48c9-92f1-11ffb74d4e2f] Started GET "/play" for 162.158.103.209 at 2026-11-14 14:06:26 +0000
+[c4332df7-cf12-48c9-92f1-11ffb74d4e2f] Processing by PagesController#play as HTML
+[c4332df7-cf12-48c9-92f1-11ffb74d4e2f]   Rendered layout layouts/application.html.erb (Duration: 100.9ms | GC: 0.2ms)
+[c4332df7-cf12-48c9-92f1-11ffb74d4e2f] Completed 200 OK in 280ms (Views: 93.5ms | ActiveRecord: 62.9ms (64 queries, 27 cached) | GC: 0.6ms)
+[174e1882-3abc-458b-92be-a88155c643ff] Started GET "/play" for 162.158.103.209 at 2026-11-14 14:07:15 +0000
+[174e1882-3abc-458b-92be-a88155c643ff] Processing by PagesController#play as HTML
+[174e1882-3abc-458b-92be-a88155c643ff]   Rendered layout layouts/application.html.erb (Duration: 103.9ms | GC: 0.0ms)
+[174e1882-3abc-458b-92be-a88155c643ff] Completed 200 OK in 526ms (Views: 24.7ms | ActiveRecord: 460.8ms (64 queries, 27 cached) | GC: 0.4ms)
+[d792d7e3-5b86-4928-b7f6-e5ed68a2dfa3] Started GET "/cards" for 162.158.103.209 at 2026-11-14 14:07:18 +0000
+[d792d7e3-5b86-4928-b7f6-e5ed68a2dfa3] Processing by PagesController#cards as HTML
+[d792d7e3-5b86-4928-b7f6-e5ed68a2dfa3]   Rendered layout layouts/application.html.erb (Duration: 93.7ms | GC: 0.0ms)
+[d792d7e3-5b86-4928-b7f6-e5ed68a2dfa3] Completed 200 OK in 103ms (Views: 88.2ms | ActiveRecord: 10.8ms (9 queries, 0 cached) | GC: 0.0ms)
+[ee89c80b-5432-4826-b5ab-6e3958758c23] Started GET "/decks" for 162.158.103.209 at 2026-11-14 14:07:23 +0000
+[ee89c80b-5432-4826-b5ab-6e3958758c23] Processing by PagesController#decks as HTML
+[ee89c80b-5432-4826-b5ab-6e3958758c23]   Rendered layout layouts/application.html.erb (Duration: 95.9ms | GC: 1.3ms)
+[ee89c80b-5432-4826-b5ab-6e3958758c23] Completed 200 OK in 301ms (Views: 98.7ms | ActiveRecord: 170.8ms (35 queries, 5 cached) | GC: 7.7ms)
+[da1c07ef-8734-4d99-9ba0-eb89d68cf851] Started GET "/cards" for 162.158.103.209 at 2026-11-14 14:07:32 +0000
+[da1c07ef-8734-4d99-9ba0-eb89d68cf851] Processing by PagesController#cards as HTML
+[da1c07ef-8734-4d99-9ba0-eb89d68cf851]   Rendered layout layouts/application.html.erb (Duration: 167.2ms | GC: 0.9ms)
+[da1c07ef-8734-4d99-9ba0-eb89d68cf851] Completed 200 OK in 172ms (Views: 160.9ms | ActiveRecord: 10.0ms (9 queries, 0 cached) | GC: 0.9ms)
+[751957ee-cca6-4157-a827-10aaa9b91b5a] Started GET "/play" for 162.158.103.209 at 2026-11-14 14:07:33 +0000
+[751957ee-cca6-4157-a827-10aaa9b91b5a] Processing by PagesController#play as HTML
+[751957ee-cca6-4157-a827-10aaa9b91b5a]   Rendered layout layouts/application.html.erb (Duration: 99.9ms | GC: 0.3ms)
+[751957ee-cca6-4157-a827-10aaa9b91b5a] Completed 200 OK in 192ms (Views: 14.3ms | ActiveRecord: 114.9ms (64 queries, 27 cached) | GC: 0.8ms)
+[bd523bc7-f5e4-4483-b794-80ac8b9dce1e] Started POST "/games" for 162.158.103.209 at 2026-11-14 14:07:35 +0000
+[bd523bc7-f5e4-4483-b794-80ac8b9dce1e] Processing by GamesController#create as TURBO_STREAM
+[bd523bc7-f5e4-4483-b794-80ac8b9dce1e]   Parameters: {"authenticity_token" => "[FILTERED]", "deck_id" => "46", "mode" => "ai"}
+[bd523bc7-f5e4-4483-b794-80ac8b9dce1e] Redirected to https://clash-tanks.onrender.com/games/19
+[bd523bc7-f5e4-4483-b794-80ac8b9dce1e] Completed 302 Found in 357ms (ActiveRecord: 125.3ms (54 queries, 16 cached) | GC: 1.3ms)
+[8a297ac6-c90f-4b1a-bbfd-13bed825305b] Started GET "/games/19" for 162.158.103.209 at 2026-11-14 14:07:36 +0000
+[8a297ac6-c90f-4b1a-bbfd-13bed825305b] Processing by GamesController#show as TURBO_STREAM
+[8a297ac6-c90f-4b1a-bbfd-13bed825305b]   Parameters: {"id" => "19"}
+[8a297ac6-c90f-4b1a-bbfd-13bed825305b]   Rendered layout layouts/application.html.erb (Duration: 93.1ms | GC: 0.0ms)
+[8a297ac6-c90f-4b1a-bbfd-13bed825305b] Completed 200 OK in 104ms (Views: 79.3ms | ActiveRecord: 22.0ms (16 queries, 0 cached) | GC: 0.0ms)
+Turbo::StreamsChannel is streaming from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xOQ:16
+[52f033e9-19b4-4136-acfd-5b5261b708a6] Started POST "/games/19/run_ai_turn" for 162.158.103.209 at 2026-11-14 14:07:36 +0000
+[52f033e9-19b4-4136-acfd-5b5261b708a6] Processing by GamesController#run_ai_turn as JSON
+[52f033e9-19b4-4136-acfd-5b5261b708a6]   Parameters: {"id" => "19"}
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [AI Diagnostics] Game #19: turn=1, resources=4, hand_size=6, legal_actions_count=14, legal_action_types={"attack" => 1, "play_card" => 12, "end_turn" => 1}
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 12, "end_turn" => 1}
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [OpponentEngine] Root moves: []
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 9, "row" => 1, "column" => 3}}]
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [DecisionProviders::AI] Native opponent engine selected
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [Games::RunAiTurns] Game #19: AI proposed action type="attack"
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [AI Diagnostics] Game #19: turn=1, resources=4, hand_size=6, legal_actions_count=13, legal_action_types={"play_card" => 12, "end_turn" => 1}
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [Games::RunAiTurns] Game #19: AI proposed action type="play_card"
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [AI Diagnostics] Game #19: turn=1, resources=0, hand_size=5, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [OpponentEngine] Root actions: {"end_turn" => 1}
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [OpponentEngine] Root moves: []
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [DecisionProviders::AI] Native opponent engine selected
+[52f033e9-19b4-4136-acfd-5b5261b708a6] [Games::RunAiTurns] Game #19: AI proposed action type="end_turn"
+[52f033e9-19b4-4136-acfd-5b5261b708a6] Completed 204 No Content in 5621ms (ActiveRecord: 162.6ms (98 queries, 33 cached) | GC: 15.1ms)
+[c09510d7-9db9-4dff-a245-6ff2ba247e15] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:07:49 +0000
+[c09510d7-9db9-4dff-a245-6ff2ba247e15] Processing by GamesController#play_card as TURBO_STREAM
+[c09510d7-9db9-4dff-a245-6ff2ba247e15]   Parameters: {"player_id" => "16", "card_id" => "9", "row" => "1", "column" => "0", "id" => "19"}
+[c09510d7-9db9-4dff-a245-6ff2ba247e15] Completed 204 No Content in 50ms (ActiveRecord: 25.0ms (33 queries, 11 cached) | GC: 0.5ms)
+[7e2bbe28-a5a5-4678-bbdb-2c1f1c112541] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:07:50 +0000
+[7e2bbe28-a5a5-4678-bbdb-2c1f1c112541] Processing by GamesController#attack as TURBO_STREAM
+[7e2bbe28-a5a5-4678-bbdb-2c1f1c112541]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "19"}
+[7e2bbe28-a5a5-4678-bbdb-2c1f1c112541] Completed 204 No Content in 102ms (ActiveRecord: 27.3ms (33 queries, 11 cached) | GC: 0.8ms)
+[6f5c05aa-7002-4e6d-b583-dbad10180942] Started POST "/games/19/end_turn" for 162.158.103.209 at 2026-11-14 14:07:52 +0000
+[6f5c05aa-7002-4e6d-b583-dbad10180942] Processing by GamesController#end_turn as TURBO_STREAM
+[6f5c05aa-7002-4e6d-b583-dbad10180942]   Parameters: {"id" => "19"}
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [AI Diagnostics] Game #19: turn=3, resources=5, hand_size=6, legal_actions_count=16, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 10, "end_turn" => 1}
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 10, "end_turn" => 1}
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: 17.5
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 25.5
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: 17.5
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 25.5
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 10, "row" => 1, "column" => 3}}]
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [DecisionProviders::AI] Native opponent engine selected
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [Games::RunAiTurns] Game #19: AI proposed action type="move"
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [AI Diagnostics] Game #19: turn=3, resources=5, hand_size=6, legal_actions_count=17, legal_action_types={"attack" => 1, "play_card" => 15, "end_turn" => 1}
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [Games::RunAiTurns] Game #19: AI proposed action type="attack"
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [AI Diagnostics] Game #19: turn=3, resources=5, hand_size=6, legal_actions_count=16, legal_action_types={"play_card" => 15, "end_turn" => 1}
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [Games::RunAiTurns] Game #19: AI proposed action type="play_card"
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [AI Diagnostics] Game #19: turn=3, resources=0, hand_size=5, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Root actions: {"end_turn" => 1}
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Root moves: []
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [DecisionProviders::AI] Native opponent engine selected
+[6f5c05aa-7002-4e6d-b583-dbad10180942] [Games::RunAiTurns] Game #19: AI proposed action type="end_turn"
+[6f5c05aa-7002-4e6d-b583-dbad10180942] Completed 204 No Content in 10317ms (ActiveRecord: 338.2ms (157 queries, 59 cached) | GC: 162.3ms)
+[e952eef8-d96e-4845-8abc-e3f64369f93d] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:08:08 +0000
+[e952eef8-d96e-4845-8abc-e3f64369f93d] Processing by GamesController#play_card as TURBO_STREAM
+[e952eef8-d96e-4845-8abc-e3f64369f93d]   Parameters: {"player_id" => "16", "card_id" => "37", "id" => "19"}
+[e952eef8-d96e-4845-8abc-e3f64369f93d] Completed 204 No Content in 159ms (ActiveRecord: 25.6ms (34 queries, 12 cached) | GC: 6.1ms)
+[9bf2762c-3216-4eef-8cf0-d3310e7db7fc] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:08:10 +0000
+[9bf2762c-3216-4eef-8cf0-d3310e7db7fc] Processing by GamesController#move as TURBO_STREAM
+[9bf2762c-3216-4eef-8cf0-d3310e7db7fc]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "0", "to_row" => "1", "to_column" => "1", "id" => "19"}
+[9bf2762c-3216-4eef-8cf0-d3310e7db7fc] Completed 204 No Content in 117ms (ActiveRecord: 37.7ms (34 queries, 12 cached) | GC: 2.7ms)
+[fce8f86e-63e6-4cfd-b445-17369676adc2] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:08:13 +0000
+[fce8f86e-63e6-4cfd-b445-17369676adc2] Processing by GamesController#attack as TURBO_STREAM
+[fce8f86e-63e6-4cfd-b445-17369676adc2]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "1", "target_column" => "2", "id" => "19"}
+[fce8f86e-63e6-4cfd-b445-17369676adc2] Completed 204 No Content in 125ms (ActiveRecord: 106.5ms (34 queries, 12 cached) | GC: 0.9ms)
+[b23c1b88-62f4-4b4e-af3d-2f69471dfe12] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:08:15 +0000
+[b23c1b88-62f4-4b4e-af3d-2f69471dfe12] Processing by GamesController#attack as TURBO_STREAM
+[b23c1b88-62f4-4b4e-af3d-2f69471dfe12]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "19"}
+[b23c1b88-62f4-4b4e-af3d-2f69471dfe12] Completed 204 No Content in 55ms (ActiveRecord: 29.6ms (34 queries, 12 cached) | GC: 1.0ms)
+[0f9d2f52-16d0-479b-bb96-29750809b072] Started POST "/games/19/end_turn" for 162.158.103.209 at 2026-11-14 14:08:17 +0000
+[0f9d2f52-16d0-479b-bb96-29750809b072] Processing by GamesController#end_turn as TURBO_STREAM
+[0f9d2f52-16d0-479b-bb96-29750809b072]   Parameters: {"id" => "19"}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [AI Diagnostics] Game #19: turn=5, resources=6, hand_size=6, legal_actions_count=18, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 12, "end_turn" => 1}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 12, "end_turn" => 1}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: 28.75
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 36.75
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: 28.75
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 36.75
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 0, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[0f9d2f52-16d0-479b-bb96-29750809b072] [DecisionProviders::AI] Native opponent engine selected
+[0f9d2f52-16d0-479b-bb96-29750809b072] [Games::RunAiTurns] Game #19: AI proposed action type="move"
+[0f9d2f52-16d0-479b-bb96-29750809b072] [AI Diagnostics] Game #19: turn=5, resources=6, hand_size=6, legal_actions_count=22, legal_action_types={"attack" => 3, "play_card" => 18, "end_turn" => 1}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [Games::RunAiTurns] Game #19: AI proposed action type="attack"
+[0f9d2f52-16d0-479b-bb96-29750809b072] [AI Diagnostics] Game #19: turn=5, resources=6, hand_size=6, legal_actions_count=20, legal_action_types={"attack" => 1, "play_card" => 18, "end_turn" => 1}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [Games::RunAiTurns] Game #19: AI proposed action type="play_card"
+[0f9d2f52-16d0-479b-bb96-29750809b072] [AI Diagnostics] Game #19: turn=5, resources=3, hand_size=5, legal_actions_count=4, legal_action_types={"attack" => 1, "play_card" => 2, "end_turn" => 1}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 2, "end_turn" => 1}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Root moves: []
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 8, "row" => 0, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[0f9d2f52-16d0-479b-bb96-29750809b072] [DecisionProviders::AI] Native opponent engine selected
+[0f9d2f52-16d0-479b-bb96-29750809b072] [Games::RunAiTurns] Game #19: AI proposed action type="play_card"
+[0f9d2f52-16d0-479b-bb96-29750809b072] [AI Diagnostics] Game #19: turn=5, resources=0, hand_size=4, legal_actions_count=2, legal_action_types={"attack" => 1, "end_turn" => 1}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Root moves: []
+[0f9d2f52-16d0-479b-bb96-29750809b072] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[0f9d2f52-16d0-479b-bb96-29750809b072] [DecisionProviders::AI] Native opponent engine selected
+[0f9d2f52-16d0-479b-bb96-29750809b072] [Games::RunAiTurns] Game #19: AI proposed action type="end_turn"
+[0f9d2f52-16d0-479b-bb96-29750809b072] Completed 204 No Content in 14187ms (ActiveRecord: 374.7ms (189 queries, 73 cached) | GC: 106.6ms)
+[3edd0899-592a-43e8-965b-946e0ca1cafb] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:08:43 +0000
+[3edd0899-592a-43e8-965b-946e0ca1cafb] Processing by GamesController#play_card as TURBO_STREAM
+[3edd0899-592a-43e8-965b-946e0ca1cafb]   Parameters: {"player_id" => "16", "card_id" => "10", "row" => "2", "column" => "1", "id" => "19"}
+[3edd0899-592a-43e8-965b-946e0ca1cafb] Completed 204 No Content in 84ms (ActiveRecord: 62.8ms (32 queries, 11 cached) | GC: 0.8ms)
+[8e34ba82-7839-4680-9b29-42fcfaa58cc7] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:08:46 +0000
+[8e34ba82-7839-4680-9b29-42fcfaa58cc7] Processing by GamesController#attack as TURBO_STREAM
+[8e34ba82-7839-4680-9b29-42fcfaa58cc7]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "1", "target_column" => "2", "id" => "19"}
+[8e34ba82-7839-4680-9b29-42fcfaa58cc7] Completed 204 No Content in 187ms (ActiveRecord: 26.9ms (32 queries, 11 cached) | GC: 0.8ms)
+[8ab8666c-f937-4060-bfc8-e2bb2888bfb3] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:08:48 +0000
+[8ab8666c-f937-4060-bfc8-e2bb2888bfb3] Processing by GamesController#attack as TURBO_STREAM
+[8ab8666c-f937-4060-bfc8-e2bb2888bfb3]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "1", "target_row" => "1", "target_column" => "2", "id" => "19"}
+[8ab8666c-f937-4060-bfc8-e2bb2888bfb3] Completed 204 No Content in 41ms (ActiveRecord: 24.1ms (32 queries, 11 cached) | GC: 0.0ms)
+[8fe5e189-8ada-45d1-8ab0-e17dfb68bde7] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:08:52 +0000
+[8fe5e189-8ada-45d1-8ab0-e17dfb68bde7] Processing by GamesController#move as TURBO_STREAM
+[8fe5e189-8ada-45d1-8ab0-e17dfb68bde7]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "1", "to_row" => "1", "to_column" => "0", "id" => "19"}
+[8fe5e189-8ada-45d1-8ab0-e17dfb68bde7] Completed 204 No Content in 171ms (ActiveRecord: 108.1ms (32 queries, 11 cached) | GC: 5.7ms)
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] Started POST "/games/19/end_turn" for 162.158.103.209 at 2026-11-14 14:08:53 +0000
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] Processing by GamesController#end_turn as TURBO_STREAM
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7]   Parameters: {"id" => "19"}
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [AI Diagnostics] Game #19: turn=7, resources=6, hand_size=5, legal_actions_count=11, legal_action_types={"move" => 4, "attack" => 1, "play_card" => 5, "end_turn" => 1}
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 5, "end_turn" => 1}
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 51.69444444444444
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 51.69444444444444
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: 43.25
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 51.69444444444444
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 0, "column" => 3}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [DecisionProviders::AI] Native opponent engine selected
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [Games::RunAiTurns] Game #19: AI proposed action type="move"
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [AI Diagnostics] Game #19: turn=7, resources=6, hand_size=5, legal_actions_count=16, legal_action_types={"attack" => 1, "move" => 4, "play_card" => 10, "end_turn" => 1}
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [Games::RunAiTurns] Game #19: AI proposed action type="attack"
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [AI Diagnostics] Game #19: turn=7, resources=6, hand_size=5, legal_actions_count=15, legal_action_types={"move" => 4, "play_card" => 10, "end_turn" => 1}
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [Games::RunAiTurns] Game #19: AI proposed action type="play_card"
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [AI Diagnostics] Game #19: turn=7, resources=0, hand_size=4, legal_actions_count=4, legal_action_types={"move" => 3, "end_turn" => 1}
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Root actions: {"move" => 3, "end_turn" => 1}
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 97.88888888888889
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: 88.44444444444444
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 96.88888888888889
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}, {"type" => "end_turn", "payload" => {}}]
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [DecisionProviders::AI] Native opponent engine selected
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [Games::RunAiTurns] Game #19: AI proposed action type="move"
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [AI Diagnostics] Game #19: turn=7, resources=0, hand_size=4, legal_actions_count=1, legal_action_types={"end_turn" => 1}
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] [Games::RunAiTurns] Game #19: AI proposed action type="end_turn"
+[62fea521-7e6d-4512-b06e-b8c2f82bf0f7] Completed 204 No Content in 16632ms (ActiveRecord: 277.7ms (180 queries, 69 cached) | GC: 239.8ms)
+[38054e80-73e0-4dda-84ee-2328ae053b8b] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:09:34 +0000
+[38054e80-73e0-4dda-84ee-2328ae053b8b] Processing by GamesController#move as TURBO_STREAM
+[38054e80-73e0-4dda-84ee-2328ae053b8b]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "0", "to_row" => "0", "to_column" => "0", "id" => "19"}
+[38054e80-73e0-4dda-84ee-2328ae053b8b] Completed 204 No Content in 166ms (ActiveRecord: 27.4ms (33 queries, 11 cached) | GC: 5.0ms)
+[0be55aae-a6d6-4dab-988e-037ed6540bae] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:09:37 +0000
+[0be55aae-a6d6-4dab-988e-037ed6540bae] Processing by GamesController#play_card as TURBO_STREAM
+[0be55aae-a6d6-4dab-988e-037ed6540bae]   Parameters: {"player_id" => "16", "card_id" => "12", "row" => "1", "column" => "0", "id" => "19"}
+[0be55aae-a6d6-4dab-988e-037ed6540bae] Completed 204 No Content in 166ms (ActiveRecord: 107.6ms (32 queries, 11 cached) | GC: 0.9ms)
+[4c9da00e-7895-45d6-92d7-3f3779fff5f3] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:09:40 +0000
+[4c9da00e-7895-45d6-92d7-3f3779fff5f3] Processing by GamesController#play_card as TURBO_STREAM
+[4c9da00e-7895-45d6-92d7-3f3779fff5f3]   Parameters: {"player_id" => "16", "card_id" => "6", "row" => "1", "column" => "1", "id" => "19"}
+[4c9da00e-7895-45d6-92d7-3f3779fff5f3] Completed 204 No Content in 216ms (ActiveRecord: 192.5ms (31 queries, 11 cached) | GC: 0.8ms)
+[c5cd87c7-0931-4b7a-8a13-e1836c79d557] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:09:45 +0000
+[c5cd87c7-0931-4b7a-8a13-e1836c79d557] Processing by GamesController#move as TURBO_STREAM
+[c5cd87c7-0931-4b7a-8a13-e1836c79d557]   Parameters: {"player_id" => "16", "from_row" => "2", "from_column" => "1", "to_row" => "2", "to_column" => "2", "id" => "19"}
+[c5cd87c7-0931-4b7a-8a13-e1836c79d557] Completed 204 No Content in 95ms (ActiveRecord: 70.8ms (31 queries, 11 cached) | GC: 0.6ms)
+[7258525c-3c13-4492-b323-556ed61a4928] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:09:50 +0000
+[7258525c-3c13-4492-b323-556ed61a4928] Processing by GamesController#attack as TURBO_STREAM
+[7258525c-3c13-4492-b323-556ed61a4928]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "2", "id" => "19"}
+[7258525c-3c13-4492-b323-556ed61a4928] Completed 204 No Content in 178ms (ActiveRecord: 66.6ms (31 queries, 11 cached) | GC: 3.7ms)
+[2029b195-31dd-4e22-a937-0d730706a269] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:09:54 +0000
+[2029b195-31dd-4e22-a937-0d730706a269] Processing by GamesController#attack as TURBO_STREAM
+[2029b195-31dd-4e22-a937-0d730706a269]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "0", "target_row" => "2", "target_column" => "3", "id" => "19"}
+[2029b195-31dd-4e22-a937-0d730706a269] Completed 204 No Content in 202ms (ActiveRecord: 53.6ms (31 queries, 11 cached) | GC: 4.9ms)
+[4657e390-7b52-4bec-ae30-48f2474258ce] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:09:56 +0000
+[4657e390-7b52-4bec-ae30-48f2474258ce] Processing by GamesController#attack as TURBO_STREAM
+[4657e390-7b52-4bec-ae30-48f2474258ce]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "2", "target_row" => "2", "target_column" => "3", "id" => "19"}
+[4657e390-7b52-4bec-ae30-48f2474258ce] Completed 204 No Content in 161ms (ActiveRecord: 29.7ms (31 queries, 11 cached) | GC: 0.6ms)
+[006ffd23-0d69-4602-93a4-7b5ee452b914] Started POST "/games/19/end_turn" for 162.158.103.209 at 2026-11-14 14:09:59 +0000
+[006ffd23-0d69-4602-93a4-7b5ee452b914] Processing by GamesController#end_turn as TURBO_STREAM
+[006ffd23-0d69-4602-93a4-7b5ee452b914]   Parameters: {"id" => "19"}
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [AI Diagnostics] Game #19: turn=9, resources=5, hand_size=5, legal_actions_count=14, legal_action_types={"move" => 2, "attack" => 1, "play_card" => 10, "end_turn" => 1}
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [OpponentEngine] Root actions: {"move" => 2, "attack" => 1, "play_card" => 10, "end_turn" => 1}
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [0, 3], "to" => [1, 3]}}]
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 32.93055555555556
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [1, 3]}, score: 20.805555555555557
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 31, "targets" => [[1, 0]]}}, {"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [DecisionProviders::AI] Native opponent engine selected
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [Games::RunAiTurns] Game #19: AI proposed action type="attack"
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [AI Diagnostics] Game #19: turn=9, resources=5, hand_size=5, legal_actions_count=13, legal_action_types={"move" => 2, "play_card" => 10, "end_turn" => 1}
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [Games::RunAiTurns] Game #19: AI proposed action type="play_card"
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [AI Diagnostics] Game #19: turn=9, resources=1, hand_size=4, legal_actions_count=3, legal_action_types={"move" => 2, "end_turn" => 1}
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [Games::RunAiTurns] Game #19: AI proposed action type="move"
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [AI Diagnostics] Game #19: turn=9, resources=1, hand_size=4, legal_actions_count=2, legal_action_types={"attack" => 1, "end_turn" => 1}
+[006ffd23-0d69-4602-93a4-7b5ee452b914] [Games::RunAiTurns] Game #19: AI proposed action type="end_turn"
+[006ffd23-0d69-4602-93a4-7b5ee452b914] Completed 204 No Content in 13214ms (ActiveRecord: 345.8ms (143 queries, 55 cached) | GC: 129.7ms)
+[9278690f-835d-4249-ad67-11ceb9c86cad] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:10:18 +0000
+[9278690f-835d-4249-ad67-11ceb9c86cad] Processing by GamesController#move as TURBO_STREAM
+[9278690f-835d-4249-ad67-11ceb9c86cad]   Parameters: {"player_id" => "16", "from_row" => "2", "from_column" => "2", "to_row" => "2", "to_column" => "3", "id" => "19"}
+[9278690f-835d-4249-ad67-11ceb9c86cad] Completed 204 No Content in 156ms (ActiveRecord: 56.9ms (31 queries, 11 cached) | GC: 7.0ms)
+[d18fc942-c3cd-4eb5-beca-16c46920318e] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:10:20 +0000
+[d18fc942-c3cd-4eb5-beca-16c46920318e] Processing by GamesController#move as TURBO_STREAM
+[d18fc942-c3cd-4eb5-beca-16c46920318e]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "1", "to_row" => "1", "to_column" => "2", "id" => "19"}
+[d18fc942-c3cd-4eb5-beca-16c46920318e] Completed 204 No Content in 114ms (ActiveRecord: 26.0ms (31 queries, 11 cached) | GC: 1.0ms)
+[1c95db27-6cdd-4285-94b6-0ceddf1f33d2] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:10:22 +0000
+[1c95db27-6cdd-4285-94b6-0ceddf1f33d2] Processing by GamesController#move as TURBO_STREAM
+[1c95db27-6cdd-4285-94b6-0ceddf1f33d2]   Parameters: {"player_id" => "16", "from_row" => "0", "from_column" => "0", "to_row" => "0", "to_column" => "1", "id" => "19"}
+[1c95db27-6cdd-4285-94b6-0ceddf1f33d2] Completed 204 No Content in 125ms (ActiveRecord: 100.3ms (31 queries, 11 cached) | GC: 0.9ms)
+[6e818d94-4210-4d07-9496-490b7862f96e] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:10:28 +0000
+[6e818d94-4210-4d07-9496-490b7862f96e] Processing by GamesController#play_card as TURBO_STREAM
+[6e818d94-4210-4d07-9496-490b7862f96e]   Parameters: {"player_id" => "16", "card_id" => "31", "target" => "0,2", "id" => "19"}
+[6e818d94-4210-4d07-9496-490b7862f96e] Completed 204 No Content in 127ms (ActiveRecord: 26.4ms (31 queries, 11 cached) | GC: 0.2ms)
+[80331811-1757-49b7-8d71-855e3a53ff56] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:10:38 +0000
+[80331811-1757-49b7-8d71-855e3a53ff56] Processing by GamesController#play_card as TURBO_STREAM
+[80331811-1757-49b7-8d71-855e3a53ff56]   Parameters: {"player_id" => "16", "card_id" => "8", "row" => "1", "column" => "1", "id" => "19"}
+[80331811-1757-49b7-8d71-855e3a53ff56] Completed 204 No Content in 196ms (ActiveRecord: 73.6ms (30 queries, 11 cached) | GC: 4.0ms)
+[9958d166-5f33-41c3-ace0-fe4720efa1c1] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:10:42 +0000
+[9958d166-5f33-41c3-ace0-fe4720efa1c1] Processing by GamesController#attack as TURBO_STREAM
+[9958d166-5f33-41c3-ace0-fe4720efa1c1]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "1", "target_row" => "0", "target_column" => "2", "id" => "19"}
+[9958d166-5f33-41c3-ace0-fe4720efa1c1] Completed 204 No Content in 179ms (ActiveRecord: 24.3ms (30 queries, 11 cached) | GC: 2.8ms)
+[1ce06c8f-3538-4be1-aa4a-2317977c6671] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:10:44 +0000
+[1ce06c8f-3538-4be1-aa4a-2317977c6671] Processing by GamesController#attack as TURBO_STREAM
+[1ce06c8f-3538-4be1-aa4a-2317977c6671]   Parameters: {"player_id" => "16", "attacker_row" => "0", "attacker_column" => "1", "target_row" => "0", "target_column" => "2", "id" => "19"}
+[1ce06c8f-3538-4be1-aa4a-2317977c6671] Completed 204 No Content in 313ms (ActiveRecord: 103.9ms (30 queries, 11 cached) | GC: 1.0ms)
+[07054866-8747-43d3-a085-56576e36a714] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:10:48 +0000
+[07054866-8747-43d3-a085-56576e36a714] Processing by GamesController#attack as TURBO_STREAM
+[07054866-8747-43d3-a085-56576e36a714]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "19"}
+[07054866-8747-43d3-a085-56576e36a714] Completed 204 No Content in 109ms (ActiveRecord: 28.2ms (30 queries, 11 cached) | GC: 0.7ms)
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] Started POST "/games/19/end_turn" for 162.158.103.209 at 2026-11-14 14:10:50 +0000
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] Processing by GamesController#end_turn as TURBO_STREAM
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b]   Parameters: {"id" => "19"}
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [AI Diagnostics] Game #19: turn=11, resources=4, hand_size=4, legal_actions_count=11, legal_action_types={"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [OpponentEngine] Root actions: {"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [OpponentEngine] Root moves: []
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 7, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [DecisionProviders::AI] Native opponent engine selected
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [Games::RunAiTurns] Game #19: AI proposed action type="attack"
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [AI Diagnostics] Game #19: turn=11, resources=4, hand_size=4, legal_actions_count=10, legal_action_types={"play_card" => 9, "end_turn" => 1}
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [Games::RunAiTurns] Game #19: AI proposed action type="play_card"
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [AI Diagnostics] Game #19: turn=11, resources=0, hand_size=3, legal_actions_count=3, legal_action_types={"attack" => 2, "end_turn" => 1}
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [OpponentEngine] Root actions: {"attack" => 2, "end_turn" => 1}
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [OpponentEngine] Root moves: []
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [DecisionProviders::AI] Native opponent engine selected
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] [Games::RunAiTurns] Game #19: AI proposed action type="end_turn"
+[a32a8fc3-deca-4327-a560-c3ca9bf2e65b] Completed 204 No Content in 9754ms (ActiveRecord: 172.7ms (110 queries, 42 cached) | GC: 194.4ms)
+[f62a2022-883d-431a-9727-3fa0da306368] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:11:04 +0000
+[f62a2022-883d-431a-9727-3fa0da306368] Processing by GamesController#move as TURBO_STREAM
+[f62a2022-883d-431a-9727-3fa0da306368]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "2", "to_row" => "0", "to_column" => "3", "id" => "19"}
+[f62a2022-883d-431a-9727-3fa0da306368] Completed 204 No Content in 112ms (ActiveRecord: 28.3ms (29 queries, 10 cached) | GC: 0.0ms)
+[c3e6818b-6afc-4349-ad2c-5dedf4a65354] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:11:06 +0000
+[c3e6818b-6afc-4349-ad2c-5dedf4a65354] Processing by GamesController#move as TURBO_STREAM
+[c3e6818b-6afc-4349-ad2c-5dedf4a65354]   Parameters: {"player_id" => "16", "from_row" => "1", "from_column" => "1", "to_row" => "1", "to_column" => "2", "id" => "19"}
+[c3e6818b-6afc-4349-ad2c-5dedf4a65354] Completed 204 No Content in 172ms (ActiveRecord: 127.9ms (29 queries, 10 cached) | GC: 7.2ms)
+[6361adcd-ea7b-4b9e-b436-ad18c0cabb9a] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:11:07 +0000
+[6361adcd-ea7b-4b9e-b436-ad18c0cabb9a] Processing by GamesController#move as TURBO_STREAM
+[6361adcd-ea7b-4b9e-b436-ad18c0cabb9a]   Parameters: {"player_id" => "16", "from_row" => "0", "from_column" => "1", "to_row" => "0", "to_column" => "2", "id" => "19"}
+[6361adcd-ea7b-4b9e-b436-ad18c0cabb9a] Completed 204 No Content in 61ms (ActiveRecord: 28.5ms (29 queries, 10 cached) | GC: 2.8ms)
+[e6a77457-ee66-4fb1-a740-993795d625f7] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:11:09 +0000
+[e6a77457-ee66-4fb1-a740-993795d625f7] Processing by GamesController#attack as TURBO_STREAM
+[e6a77457-ee66-4fb1-a740-993795d625f7]   Parameters: {"player_id" => "16", "attacker_row" => "0", "attacker_column" => "2", "target_row" => "1", "target_column" => "3", "id" => "19"}
+[e6a77457-ee66-4fb1-a740-993795d625f7] Completed 204 No Content in 115ms (ActiveRecord: 23.5ms (29 queries, 10 cached) | GC: 0.7ms)
+[b70d7484-812f-4c36-847b-776cae3ea321] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:11:11 +0000
+[b70d7484-812f-4c36-847b-776cae3ea321] Processing by GamesController#attack as TURBO_STREAM
+[b70d7484-812f-4c36-847b-776cae3ea321]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "2", "target_row" => "1", "target_column" => "3", "id" => "19"}
+[b70d7484-812f-4c36-847b-776cae3ea321] Completed 204 No Content in 111ms (ActiveRecord: 22.5ms (29 queries, 10 cached) | GC: 1.1ms)
+[15892e09-68d8-4fd7-9630-72a4b6398c0c] Started POST "/games/19/move" for 162.158.103.209 at 2026-11-14 14:11:14 +0000
+[15892e09-68d8-4fd7-9630-72a4b6398c0c] Processing by GamesController#move as TURBO_STREAM
+[15892e09-68d8-4fd7-9630-72a4b6398c0c]   Parameters: {"player_id" => "16", "from_row" => "2", "from_column" => "3", "to_row" => "1", "to_column" => "3", "id" => "19"}
+[15892e09-68d8-4fd7-9630-72a4b6398c0c] Completed 204 No Content in 83ms (ActiveRecord: 22.3ms (29 queries, 10 cached) | GC: 0.0ms)
+[7be8123e-254f-4078-8a96-a260c70b5748] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:11:16 +0000
+[7be8123e-254f-4078-8a96-a260c70b5748] Processing by GamesController#attack as TURBO_STREAM
+[7be8123e-254f-4078-8a96-a260c70b5748]   Parameters: {"player_id" => "16", "attacker_row" => "1", "attacker_column" => "3", "target_row" => "0", "target_column" => "4", "id" => "19"}
+[7be8123e-254f-4078-8a96-a260c70b5748] Completed 204 No Content in 318ms (ActiveRecord: 292.9ms (29 queries, 10 cached) | GC: 0.0ms)
+[f96cf7fe-4264-4b89-8596-64fa2561c6b6] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:11:19 +0000
+[f96cf7fe-4264-4b89-8596-64fa2561c6b6] Processing by GamesController#attack as TURBO_STREAM
+[f96cf7fe-4264-4b89-8596-64fa2561c6b6]   Parameters: {"player_id" => "16", "attacker_row" => "0", "attacker_column" => "3", "target_row" => "0", "target_column" => "4", "id" => "19"}
+[f96cf7fe-4264-4b89-8596-64fa2561c6b6] Completed 204 No Content in 112ms (ActiveRecord: 27.5ms (29 queries, 10 cached) | GC: 6.8ms)
+[6c4ef956-e6ce-45f8-a15d-caa44738f39d] Started POST "/games/19/attack" for 162.158.103.209 at 2026-11-14 14:11:22 +0000
+[6c4ef956-e6ce-45f8-a15d-caa44738f39d] Processing by GamesController#attack as TURBO_STREAM
+[6c4ef956-e6ce-45f8-a15d-caa44738f39d]   Parameters: {"player_id" => "16", "attacker_row" => "2", "attacker_column" => "0", "target_row" => "0", "target_column" => "4", "id" => "19"}
+[6c4ef956-e6ce-45f8-a15d-caa44738f39d] Completed 204 No Content in 80ms (ActiveRecord: 22.9ms (29 queries, 10 cached) | GC: 1.4ms)
+[4c9b6e3f-4d9d-41d5-a74f-aaf426dd710e] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:11:28 +0000
+[4c9b6e3f-4d9d-41d5-a74f-aaf426dd710e] Processing by GamesController#play_card as TURBO_STREAM
+[4c9b6e3f-4d9d-41d5-a74f-aaf426dd710e]   Parameters: {"player_id" => "16", "card_id" => "11", "row" => "2", "column" => "1", "id" => "19"}
+[4c9b6e3f-4d9d-41d5-a74f-aaf426dd710e] Completed 204 No Content in 53ms (ActiveRecord: 23.3ms (28 queries, 9 cached) | GC: 0.4ms)
+[df86771a-e559-43c1-9cfd-3ce47d6f8c40] Started POST "/games/19/play_card" for 162.158.103.209 at 2026-11-14 14:11:29 +0000
+[df86771a-e559-43c1-9cfd-3ce47d6f8c40] Processing by GamesController#play_card as TURBO_STREAM
+[df86771a-e559-43c1-9cfd-3ce47d6f8c40]   Parameters: {"player_id" => "16", "card_id" => "5", "row" => "1", "column" => "1", "id" => "19"}
+[df86771a-e559-43c1-9cfd-3ce47d6f8c40] Completed 204 No Content in 104ms (ActiveRecord: 26.2ms (27 queries, 9 cached) | GC: 1.4ms)
+[597916c1-2c9f-4f11-aa0e-a0164029231e] Started POST "/games/19/end_turn" for 162.158.103.209 at 2026-11-14 14:11:31 +0000
+[597916c1-2c9f-4f11-aa0e-a0164029231e] Processing by GamesController#end_turn as TURBO_STREAM
+[597916c1-2c9f-4f11-aa0e-a0164029231e]   Parameters: {"id" => "19"}
+[597916c1-2c9f-4f11-aa0e-a0164029231e] [AI Diagnostics] Game #19: turn=13, resources=4, hand_size=3, legal_actions_count=6, legal_action_types={"attack" => 3, "play_card" => 2, "end_turn" => 1}
+[597916c1-2c9f-4f11-aa0e-a0164029231e] [OpponentEngine] Root actions: {"attack" => 3, "play_card" => 2, "end_turn" => 1}
+[597916c1-2c9f-4f11-aa0e-a0164029231e] [OpponentEngine] Root moves: []
+[597916c1-2c9f-4f11-aa0e-a0164029231e] [OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}]
+[597916c1-2c9f-4f11-aa0e-a0164029231e] [DecisionProviders::AI] Native opponent engine selected
+[597916c1-2c9f-4f11-aa0e-a0164029231e] [Games::RunAiTurns] Game #19: AI proposed action type="attack"
+[597916c1-2c9f-4f11-aa0e-a0164029231e] Completed 204 No Content in 1045ms (ActiveRecord: 115.5ms (53 queries, 18 cached) | GC: 22.1ms)
+[87ad1850-8703-49d7-aad9-cfa6bcce005f] Started GET "/" for 162.158.103.209 at 2026-11-14 14:11:35 +0000
+[87ad1850-8703-49d7-aad9-cfa6bcce005f] Processing by PagesController#home as HTML
+[87ad1850-8703-49d7-aad9-cfa6bcce005f]   Rendered layout layouts/application.html.erb (Duration: 4.6ms | GC: 0.0ms)
+[87ad1850-8703-49d7-aad9-cfa6bcce005f] Completed 200 OK in 46ms (Views: 19.4ms | ActiveRecord: 19.9ms (2 queries, 0 cached) | GC: 0.0ms)
+Unsubscribing from channel: {"channel":"Turbo::StreamsChannel","signed_stream_name":"IloybGtPaTh2WTJ4aGMyZ3RkR0Z1YTNNdlIyRnRaUzh4T1E6MTYi--f3fd48f6cc6a0352b14b466c92840cd6ace06291b741b2ce7679c78590a3543e"}
+Turbo::StreamsChannel stopped streaming from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xOQ:16 ты можешь по этому логу проанализировать, на сколько хорошо играл ИИ?
