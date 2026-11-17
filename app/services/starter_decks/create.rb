@@ -21,16 +21,16 @@ module StarterDecks
         name: "Second front",
         headquarters_code: "usa_headquarters_second_front",
         card_codes: %w[
-        	usa_m8_greyhound
-        	usa_m3_lee_grant
-        	usa_m4_sherman
-        	usa_m4a3e8
-        	usa_m4a3e2
-        	usa_m10_wolverine
-        	usa_m26_pershing
-        	usa_m8_hmc_scott
-        	usa_vognevij_nalit
-        	usa_inzheneri        
+          usa_m8_greyhound
+          usa_m4_sherman
+          usa_m4a3e8
+          usa_m4a3e2
+          usa_m4a3e2
+          usa_m10_wolverine
+          usa_m26_pershing
+          usa_m8_hmc_scott
+          usa_vognevij_nalit
+          usa_inzheneri
         ]
       },
       {
@@ -80,12 +80,12 @@ module StarterDecks
         headquarters_card: headquarters_card
       )
 
-      definition[:card_codes].each do |code|
+      definition[:card_codes].tally.each do |code, quantity|
         card = Card.find_by!(code: code)
 
         deck.deck_cards.create!(
           card: card,
-          quantity: 1
+          quantity: quantity
         )
       end
 
