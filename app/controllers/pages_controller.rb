@@ -121,10 +121,13 @@ class PagesController < ApplicationController
         .where(code: definition[:card_codes])
         .sort_by { |card| definition[:card_codes].index(card.code) }
 
+        card_quantities = definition[:card_codes].tally
+
       {
         name: definition[:name],
         headquarters_card: headquarters_card,
-        cards: cards
+        cards: cards,
+        card_quantities: card_quantities
       }
     end
   end

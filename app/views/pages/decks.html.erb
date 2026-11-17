@@ -141,7 +141,7 @@
       <% @starter_decks.each do |deck| %>
 
         <% headquarters_card = deck[:headquarters_card] %>
-        <% card_count = deck[:cards].size %>
+        <% card_count = deck[:card_quantities].values.sum %>
 
         <article class="deck-card">
 
@@ -175,7 +175,9 @@
                 <span>Вага</span>
 
                 <strong>
-                  <%= deck[:cards].sum(&:weight) %>
+                  <%= deck[:cards].sum { |card|
+                    card.weight * deck[:card_quantities].fetch(card.code)
+                  } %>
                 </strong>
 
               </p>
@@ -199,7 +201,9 @@
           <%= render "decks/preview_dialog",
                      dialog_id: "starter-#{headquarters_card.id}",
                      title: deck[:name],
-                     cards: deck[:cards].map { |card| [card, 1] } %>
+                     cards: deck[:cards].map { |card|
+                        [card, deck[:card_quantities].fetch(card.code)]
+                      }%>
 
         </article>
 
