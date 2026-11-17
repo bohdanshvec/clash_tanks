@@ -1,3 +1,4 @@
+
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
@@ -17,6 +18,10 @@ export default class extends Controller {
     document.removeEventListener("turbo:render", this.updateButton)
   }
 
+  buttonTargetConnected(button) {
+    this.updateButtonElement(button)
+  }
+
   async toggle() {
     try {
       if (document.fullscreenElement) {
@@ -30,18 +35,19 @@ export default class extends Controller {
   }
 
   updateButton() {
-    if (!this.hasButtonTarget) return
+    this.buttonTargets.forEach((button) => {
+      this.updateButtonElement(button)
+    })
+  }
 
+  updateButtonElement(button) {
     const active =
       document.fullscreenElement === document.documentElement
 
-    this.buttonTarget.textContent = active
+    button.textContent = active
       ? "Звичайний режим"
       : "На весь екран"
 
-    this.buttonTarget.setAttribute(
-      "aria-pressed",
-      String(active)
-    )
+    button.setAttribute("aria-pressed", String(active))
   }
 }

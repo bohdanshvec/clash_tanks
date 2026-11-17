@@ -579,3 +579,45 @@
     0 0 5px #ff2525,
     inset 0 0 5px rgba(255, 30, 30, 0.7);
 }
+
+
+/* ---------------------------------------------------------
+   Эффект получения новой карты
+   --------------------------------------------------------- */
+
+.card-draw-effect--active {
+  position: relative;
+  z-index: 200;
+
+  outline: 4px solid currentColor;
+  outline-offset: 2px;
+
+  animation:
+    card-draw-effect-flash 0.45s ease-in-out 2;
+}
+
+@keyframes card-draw-effect-flash {
+  0% {
+    outline-color: transparent;
+    filter: none;
+  }
+
+  50% {
+    outline-color: currentColor;
+    filter:
+      drop-shadow(0 0 5px currentColor)
+      drop-shadow(0 0 10px currentColor);
+  }
+
+  100% {
+    outline-color: transparent;
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-draw-effect--active {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
