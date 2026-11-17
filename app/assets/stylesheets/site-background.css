@@ -20,7 +20,7 @@ body {
   min-height: calc(100vh - var(--ct-header-height, 76px));
 
   background-color: #171a17;
-  background-image: url("backgrounds/site_background.png");
+  background-image: url("/backgrounds/site_background.webp");
 
   background-position: center center;
   background-repeat: no-repeat;

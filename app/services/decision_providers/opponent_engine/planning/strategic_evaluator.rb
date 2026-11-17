@@ -18,15 +18,10 @@ module DecisionProviders
         PLATOON_ARMOR_WEIGHT = 1.5
         PLATOON_FUEL_WEIGHT = 0.25
 
-        POSITION_WEIGHT = 1.5
+        POSITION_WEIGHT = 1.0
 
         DEPLOYMENT_SLOT_WEIGHT = 5.0
 
-        ATTACK_FORCE_MIN_TECHNIQUES = 2
-        ATTACK_FORCE_MIN_FIREPOWER = 6.0
-        ATTACK_FORCE_BASE_BONUS = 6.0
-        ATTACK_FORCE_TECHNIQUE_WEIGHT = 2.0
-        ATTACK_FORCE_FIREPOWER_WEIGHT = 0.5
         COMBINED_ATTACK_MIN_TECHNIQUES = 1
         COMBINED_ATTACK_OPPORTUNITY_WEIGHT = 0.75
 
@@ -40,11 +35,6 @@ module DecisionProviders
         WAITING_OPPORTUNITY_WEIGHT = 0.5
         WAITING_OPPORTUNITY_MAX_SCORE = 18.0
         WAITING_RISK_SCALE = 20.0
-
-        # Координация и продвижение наступательной группировки
-        GROUP_SUPPORT_RADIUS = 3
-        GROUP_SUPPORT_WEIGHT = 4.0
-        GROUP_MAX_SCORE = 24.0
 
         def self.call(visible_state:, player_id:)
           new(
@@ -71,18 +61,16 @@ module DecisionProviders
 
         def call
           terminal_score || (
-            headquarters_score +
-            techniques_score +
-            platoons_score +
-            positional_score +
-            deployment_capacity_score +
-            attack_force_score +
-            group_coordination_score +
-            headquarters_attack_opportunity_score +
-            combined_attack_opportunity_score +
-            future_coordination_opportunity_score +
-            resources_score -
-            enemy_threat_score
+          headquarters_score +
+          techniques_score +
+          platoons_score +
+          positional_score +
+          deployment_capacity_score +
+          headquarters_attack_opportunity_score +
+          combined_attack_opportunity_score +
+          future_coordination_opportunity_score +
+          resources_score -
+          enemy_threat_score
           )
         end
 
@@ -257,124 +245,6 @@ module DecisionProviders
           deployment_positions_for(@player_id).count do |position|
             object_at(position).nil?
           end * DEPLOYMENT_SLOT_WEIGHT
-        end
-
-        # --------------------------------------------------------------
-        # Накопленная сила для наступления
-        # --------------------------------------------------------------
-
-        def attack_force_score
-          return 0 unless headquarters_for(@player_id)
-          return 0 unless headquarters_for(@opponent_id)
-
-          field_objects.sum do |target, target_position|
-            next 0 unless target["type"] == "technique"
-            next 0 unless owner_sign(target["player_id"]) == -1
-
-            attackers = potential_attackers(
-              target,
-              target_position
-            )
-
-            attacker_count = attackers.length
-
-            next 0 if attacker_count < ATTACK_FORCE_MIN_TECHNIQUES
-
-            total_firepower = attackers.sum do |attacker|
-              attacker[:firepower]
-            end
-
-            next 0 if total_firepower < ATTACK_FORCE_MIN_FIREPOWER
-
-            target_hp = numeric(target, "hp")
-
-            next 0 unless target_hp.positive?
-
-            attack_readiness = [
-              total_firepower / target_hp,
-              1.0
-            ].min
-
-            base_bonus =
-              ATTACK_FORCE_BASE_BONUS +
-              (attacker_count - ATTACK_FORCE_MIN_TECHNIQUES) *
-                ATTACK_FORCE_TECHNIQUE_WEIGHT +
-              (total_firepower - ATTACK_FORCE_MIN_FIREPOWER) *
-                ATTACK_FORCE_FIREPOWER_WEIGHT
-
-            base_bonus * attack_readiness
-          end
-        end
-
-        # --------------------------------------------------------------
-        # Координация наступательной группировки
-        # --------------------------------------------------------------
-
-        def group_coordination_score
-          own_score = group_coordination_score_for(@player_id)
-          enemy_score = group_coordination_score_for(@opponent_id)
-
-          own_score - enemy_score
-        end
-
-        def group_coordination_score_for(player_id)
-          return 0 unless player_id
-
-          opposing_player_id = @players.keys.find do |id|
-            id.to_s != player_id.to_s
-          end
-
-          return 0 unless opposing_player_id
-
-          enemy_headquarters = headquarters_position(opposing_player_id)
-          return 0 unless enemy_headquarters
-
-          techniques = field_objects.filter_map do |object, position|
-            next unless object["type"] == "technique"
-            next unless object["player_id"].to_s == player_id.to_s
-
-            position
-          end
-
-          return 0 if techniques.length < 2
-
-          max_distance =
-            (@field.length - 1) +
-            (@field.first.length - 1)
-
-          return 0 unless max_distance.positive?
-
-          coordination_score = techniques.each_with_index.sum do |position, index|
-            nearest_ally_distance = techniques.each_with_index.filter_map do |ally_position, ally_index|
-              next if index == ally_index
-
-              manhattan_distance(position, ally_position)
-            end.min
-
-            next 0 unless nearest_ally_distance
-            next 0 if nearest_ally_distance > GROUP_SUPPORT_RADIUS
-
-            support_strength =
-              (GROUP_SUPPORT_RADIUS + 1 - nearest_ally_distance).to_f /
-              GROUP_SUPPORT_RADIUS
-
-            progress_ratio =
-              1.0 -
-              manhattan_distance(position, enemy_headquarters).to_f /
-                max_distance
-
-            progress_ratio = progress_ratio.clamp(0.0, 1.0)
-
-            progress_multiplier =
-              0.5 + (0.5 * progress_ratio)
-
-            support_strength * progress_multiplier
-          end
-
-          [
-            coordination_score * GROUP_SUPPORT_WEIGHT,
-            GROUP_MAX_SCORE
-          ].min
         end
 
         # --------------------------------------------------------------

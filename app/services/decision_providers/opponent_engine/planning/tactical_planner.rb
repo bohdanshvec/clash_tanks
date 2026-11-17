@@ -3,8 +3,8 @@ module DecisionProviders
   module OpponentEngine
     module Planning
       class TacticalPlanner
-        DEFAULT_DEPTH = 5
-        DEFAULT_WIDTH = 10
+        DEFAULT_DEPTH = 7
+        DEFAULT_WIDTH = 20
 
         Node = Data.define(
           :visible_state,
@@ -68,6 +68,8 @@ module DecisionProviders
         end
 
         def call
+          started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
           initial_score = evaluate(@visible_state)
 
           return empty_result(initial_score) unless
@@ -180,6 +182,19 @@ module DecisionProviders
             "[OpponentEngine] Selected plan: #{best_node&.actions.inspect}"
           )
 
+          elapsed_ms = (
+            Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+          ) * 1000
+
+          Rails.logger.info(
+            "[OpponentEngine] Search completed: " \
+            "depth=#{@depth}, " \
+            "width=#{@width}, " \
+            "expanded_nodes=#{expanded_nodes}, " \
+            "elapsed_ms=#{elapsed_ms.round(1)}, " \
+            "selected_actions=#{best_node&.actions&.length || 0}"
+          )
+
           Result.new(
             actions: best_node ? best_node.actions : [],
             steps: best_node ? best_node.steps : [],
@@ -201,15 +216,22 @@ module DecisionProviders
             card_id = payload["card_id"].to_s
             card_type = @root_card_types[card_id] || "unknown"
 
-            "play_card:#{card_type}"
+            "play_card:#{card_type}:#{card_id}"
 
           when "move"
+            from = Array(payload["from"]).join(",")
+
             if @root_deployment_positions.include?(payload["from"]) &&
                 !@root_deployment_positions.include?(payload["to"])
-              "move:free_deployment"
+              "move:free_deployment:#{from}"
             else
-              "move"
+              "move:#{from}"
             end
+
+          when "attack"
+            attacker = Array(payload["attacker"]).join(",")
+
+            "attack:#{attacker}"
 
           else
             action["type"]
