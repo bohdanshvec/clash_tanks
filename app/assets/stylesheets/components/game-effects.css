@@ -587,6 +587,7 @@
 
 .card-draw-effect--active {
   position: relative;
+  z-index: 200;
 
   outline: 4px solid currentColor;
   outline-offset: 2px;

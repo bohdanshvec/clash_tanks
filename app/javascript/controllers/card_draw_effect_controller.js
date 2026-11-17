@@ -53,55 +53,46 @@ export default class extends Controller {
     const incomingGame =
       template?.content.querySelector(".game")
 
-    const currentGame =
-      this.element.querySelector(".game")
-
-    if (!incomingGame || !currentGame) return
+    if (!incomingGame) return
 
     const events = this.parseGameEvents(incomingGame)
 
     if (!events) return
 
-    // Проверяем, действительно ли игрок получил карты.
-    const drawnPlayerIds = new Set(
-      events
-        .filter((item) => item.type === "card_drawn")
-        .map((item) => String(item.player_id))
+    const currentPlayerId = incomingGame.dataset.playerId
+
+    // Считаем фактически полученные карты.
+    // Каждое событие card_drawn соответствует одной карте.
+    const drawnCount = events.filter((item) => {
+      return (
+        item.type === "card_drawn" &&
+        String(item.player_id) === currentPlayerId
+      )
+    }).length
+
+    if (drawnCount === 0) return
+
+    // Получаем карты только руки текущего игрока.
+    const incomingCards = Array.from(
+      incomingGame.querySelectorAll(
+        ".hand--bottom [data-card-id]"
+      )
     )
 
-    const currentPlayerId =
-      incomingGame.dataset.playerId
+    // Подсвечиваем последние N карт, где N —
+    // количество событий card_drawn.
+    const newCards = incomingCards.slice(-drawnCount)
 
-    if (!drawnPlayerIds.has(currentPlayerId)) return
-
-    // Считаем экземпляры карт в прежней руке.
-    const previousCounts =
-      this.countCards(currentGame)
-
-    // Считаем карты в новой руке и отмечаем только
-    // те экземпляры, количество которых увеличилось.
-    const incomingCards = incomingGame.querySelectorAll(
-      ".hand [data-card-id]"
-    )
-
-    const incomingCounts = new Map()
-
-    incomingCards.forEach((card, index) => {
-      const key = this.cardKey(card)
-
-      const count = (incomingCounts.get(key) || 0) + 1
-
-      incomingCounts.set(key, count)
-
-      const previousCount =
-        previousCounts.get(key) || 0
-
-      if (count > previousCount) {
-        card.classList.add(
-          "card-draw-effect--active"
-        )
-      }
+    newCards.forEach((card) => {
+      card.classList.add("card-draw-effect--active")
     })
+
+    console.log(
+      "[Card Draw Effect] Drawn:",
+      drawnCount,
+      "Highlighted:",
+      newCards.length
+    )
   }
 
   // --------------------------------------------------
