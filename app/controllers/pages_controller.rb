@@ -8,22 +8,23 @@ class PagesController < ApplicationController
   def play
     ensure_guest_player!
 
-    @decks = current_player.decks
-      .includes(
-        :nation,
-        :headquarters_card,
-        deck_cards: {
-          card: [
-            :nation,
-            :technique,
-            :platoon,
-            :headquarters,
-            :abilities
-          ]
-        }
-      )
-      .order(:name)
-      .select(&:complete?)
+    @decks = sort_decks_by_nation_and_weight(
+      current_player.decks
+        .includes(
+          :nation,
+          :headquarters_card,
+          deck_cards: {
+            card: [
+              :nation,
+              :technique,
+              :platoon,
+              :headquarters,
+              :abilities
+            ]
+          }
+        )
+        .select(&:complete?)
+    )
       
     @ai_decks_by_deck_id = @decks.each_with_object({}) do |deck, result|
       result[deck.id] = Matchmaking::AiDeckSelector.call(
@@ -34,25 +35,26 @@ class PagesController < ApplicationController
 
 	def decks
 		if registered_player?
-      @decks = current_player.decks
-        .includes(
-          :nation,
-          headquarters_card: [
+      @decks = sort_decks_by_nation_and_weight(
+        current_player.decks
+          .includes(
             :nation,
-            :headquarters
-          ],
-          deck_cards: {
-            card: [
+            headquarters_card: [
               :nation,
-              :technique,
-              :platoon,
-              :headquarters,
-              :abilities,
-              { card_abilities: :ability }
-            ]
-          }
-        )
-        .order(:name)
+              :headquarters
+            ],
+            deck_cards: {
+              card: [
+                :nation,
+                :technique,
+                :platoon,
+                :headquarters,
+                :abilities,
+                { card_abilities: :ability }
+              ]
+            }
+          )
+      )
 		else
 		  @starter_decks = starter_decks
 		end
@@ -124,6 +126,19 @@ class PagesController < ApplicationController
         headquarters_card: headquarters_card,
         cards: cards
       }
+    end
+  end
+
+  def sort_decks_by_nation_and_weight(decks)
+    decks.sort_by do |deck|
+      weight = deck.deck_cards.sum do |deck_card|
+        deck_card.card.weight * deck_card.quantity
+      end
+
+      [
+        deck.nation.name,
+        -weight
+      ]
     end
   end
 end
