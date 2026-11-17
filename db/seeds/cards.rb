@@ -48,33 +48,33 @@ movement = {
 technique_rows = [
   ["germany_pz_ii", :germany, "Pz.II", "light_tank", 1, 1, 1, 1, 0],
   ["germany_sd_222", :germany, "Sd.222", "light_tank", 2, 2, 1, 2, 0],
-  ["germany_pz_iii_ausf", :germany, "Pz.III Ausf", "medium_tank", 3, 2, 3, 2, 0],
+  ["germany_pz_iii_ausf", :germany, "Pz.III Ausf", "medium_tank", 3, 3, 3, 2, 0],
   ["germany_pz_iv_ausf", :germany, "Pz.IV Ausf", "medium_tank", 4, 4, 4, 1, 1],
-  ["germany_hetzer", :germany, "Hetzer", "tank_destroyer", 4, 3, 4, 2, 1],
-  ["germany_jagdpanther_iv", :germany, "Jagdpanther IV", "tank_destroyer", 5, 4, 5, 2, 1],
-  ["germany_jagdpanther", :germany, "Jagdpanther", "tank_destroyer", 6, 5, 6, 2, 2],
+  ["germany_hetzer", :germany, "Hetzer", "tank_destroyer", 4, 4, 3, 2, 1],
+  ["germany_jagdpanther_iv", :germany, "Jagdpanther IV", "tank_destroyer", 5, 5, 4, 2, 1],
+  ["germany_jagdpanther", :germany, "Jagdpanther", "tank_destroyer", 7, 6, 6, 2, 2],
   ["germany_tiger_i", :germany, "Pz.VI Tiger I", "heavy_tank", 7, 6, 7, 2, 1],
-  ["germany_sturmpanzer_iv", :germany, "Sturmpanzer IV", "artillery", 8, 5, 4, 2, 1],
+  ["germany_sturmpanzer_iv", :germany, "Sturmpanzer IV", "artillery", 8, 6, 2, 2, 1],
 
-  ["usa_m3_stuart", :usa, "M3 Stuart", "light_tank", 1, 3, 1, 1, 0],
+  ["usa_m3_stuart", :usa, "M3 Stuart", "light_tank", 1, 2, 1, 1, 0],
   ["usa_m8_greyhound", :usa, "M8 Greyhound", "light_tank", 2, 4, 2, 1, 1],
   ["usa_m3_lee_grant", :usa, "M3 Lee/Grant", "medium_tank", 3, 4, 3, 1, 1],
-  ["usa_m4_sherman", :usa, "M4 Sherman", "medium_tank", 4, 5, 3, 2, 1],
-  ["usa_m4a3e8", :usa, "M4A3E8", "medium_tank", 4, 6, 4, 2, 0],
-  ["usa_m4a3e2", :usa, "M4A3E2", "medium_tank", 5, 6, 4, 2, 1],
+  ["usa_m4_sherman", :usa, "M4 Sherman", "medium_tank", 4, 4, 4, 2, 1],
+  ["usa_m4a3e8", :usa, "M4A3E8", "medium_tank", 4, 6, 5, 2, 0],
+  ["usa_m4a3e2", :usa, "M4A3E2", "medium_tank", 5, 6, 5, 2, 1],
   ["usa_m10_wolverine", :usa, "M10 Wolverine", "tank_destroyer", 6, 7, 5, 2, 1],
-  ["usa_m26_pershing", :usa, "M26 Pershing", "heavy_tank", 7, 7, 5, 2, 1],
-  ["usa_m8_hmc_scott", :usa, "M8 HMC Scott", "artillery", 8, 8, 3, 1, 1],
+  ["usa_m26_pershing", :usa, "M26 Pershing", "heavy_tank", 7, 7, 6, 2, 1],
+  ["usa_m8_hmc_scott", :usa, "M8 HMC Scott", "artillery", 8, 7, 3, 1, 1],
 
-  ["ussr_bt_7", :ussr, "БТ-7", "light_tank", 1, 2, 1, 1, 0],
+  ["ussr_bt_7", :ussr, "БТ-7", "light_tank", 1, 1, 1, 1, 0],
   ["ussr_t_60", :ussr, "Т-60", "light_tank", 2, 3, 2, 1, 1],
-  ["ussr_t_34", :ussr, "Т-34", "medium_tank", 3, 4, 3, 1, 1],
+  ["ussr_t_34", :ussr, "Т-34", "medium_tank", 3, 3, 3, 1, 1],
   ["ussr_t_34_76", :ussr, "Т-34-76", "medium_tank", 4, 5, 4, 2, 1],
-  ["ussr_su_85", :ussr, "СУ-85", "tank_destroyer", 4, 5, 5, 3, 0],
+  ["ussr_su_85", :ussr, "СУ-85", "tank_destroyer", 4, 5, 3, 3, 0],
   ["ussr_su_100", :ussr, "СУ-100", "tank_destroyer", 6, 6, 5, 2, 1],
   ["ussr_t_35", :ussr, "T-35", "heavy_tank", 5, 5, 6, 1, 1],
   ["ussr_kv_1", :ussr, "КВ-1", "heavy_tank", 7, 6, 6, 2, 1],
-  ["ussr_su_76m", :ussr, "СУ-76М", "artillery", 8, 6, 3, 1, 0]
+  ["ussr_su_76m", :ussr, "СУ-76М", "artillery", 8, 5, 3, 1, 0]
 ]
 
 techniques = technique_rows.map do |code, nation_code, name, technique_type, weight, price, hp, firepower, fuel|
@@ -95,20 +95,20 @@ end
 
 orders = [
   { code: "germany_postril", nation: nations[:germany], name: "Постріл", weight: 5, price: 4 },
-  { code: "germany_shifruvanny", nation: nations[:germany], name: "Шифрування", weight: 4, price: 2 },
+  { code: "germany_shifruvanny", nation: nations[:germany], name: "Шифрування", weight: 5, price: 5 },
   { code: "usa_lend_liz", nation: nations[:usa], name: "Ленд-ліз", weight: 3, price: 2 },
-  { code: "usa_vognevij_nalit", nation: nations[:usa], name: "Вогневий наліт", weight: 3, price: 3 },
-  { code: "ussr_zalp_katyushi", nation: nations[:ussr], name: "Залп „Катюші“", weight: 5, price: 4 },
+  { code: "usa_vognevij_nalit", nation: nations[:usa], name: "Вогневий наліт", weight: 3, price: 2 },
+  { code: "ussr_zalp_katyushi", nation: nations[:ussr], name: "Залп „Катюші“", weight: 5, price: 3 },
   { code: "ussr_popovnena", nation: nations[:ussr], name: "Поповнення", weight: 3, price: 2 }
 ]
 
 platoons = [
-  { code: "germany_grenaderi", nation: nations[:germany], name: "Гренадери", weight: 4, price: 4, hp: 6, firepower: 2, armor: 0, fuel: 0 },
-  { code: "germany_ukripleniy", nation: nations[:germany], name: "Укріплення", weight: 3, price: 3, hp: 5, firepower: 0, armor: 2, fuel: 0 },
+  { code: "germany_grenaderi", nation: nations[:germany], name: "Гренадери", weight: 4, price: 4, hp: 5, firepower: 1, armor: 0, fuel: 0 },
+  { code: "germany_ukripleniy", nation: nations[:germany], name: "Укріплення", weight: 3, price: 3, hp: 4, firepower: 0, armor: 2, fuel: 0 },
   { code: "usa_inzheneri", nation: nations[:usa], name: "Инженери", weight: 3, price: 4, hp: 5, firepower: 0, armor: 2, fuel: 0 },
   { code: "usa_bazukometniki", nation: nations[:usa], name: "Базукометники", weight: 5, price: 4, hp: 4, firepower: 1, armor: 0, fuel: 1 },
   { code: "ussr_strilci", nation: nations[:ussr], name: "Стрільці", weight: 4, price: 4, hp: 4, firepower: 1, armor: 0, fuel: 0 },
-  { code: "ussr_dot", nation: nations[:ussr], name: "ДОТ", weight: 4, price: 3, hp: 6, firepower: 0, armor: 2, fuel: 0 }
+  { code: "ussr_dot", nation: nations[:ussr], name: "ДОТ", weight: 4, price: 3, hp: 5, firepower: 0, armor: 2, fuel: 0 }
 ]
 
 headquarters.each do |attributes|
