@@ -1,4 +1,5 @@
 <div
+  class="game-screen"
   data-controller="ai-turn"
   data-ai-turn-url-value="<%= run_ai_turn_path(@game) %>"
   data-ai-turn-enabled-value="<%= @game.mode == "ai" %>"
@@ -7,6 +8,7 @@
 
   <div
     id="game-content"
+    class="game-screen__content"
     data-controller="game-combat-effects card-draw-effect"
   >
     <%= render "game",

@@ -1,38 +1,31 @@
-
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["button"]
 
   connect() {
-    this.updateButton = this.updateButton.bind(this)
+    this.scheduleLayout = this.scheduleLayout.bind(this)
     this.handleFullscreenChange = this.handleFullscreenChange.bind(this)
     this.handleTurboRender = this.handleTurboRender.bind(this)
-    this.resizeMobileLayout = this.resizeMobileLayout.bind(this)
 
     this.mobileModeActive =
       this.element.classList.contains("mobile-game-fullscreen")
 
     this.lastFullscreenState = Boolean(document.fullscreenElement)
 
+    this.layoutFrame = null
+    this.gameObserver = null
+    this.observedGameContent = null
+
     document.addEventListener("fullscreenchange", this.handleFullscreenChange)
     document.addEventListener("turbo:render", this.handleTurboRender)
     document.addEventListener("turbo:load", this.handleTurboRender)
 
-    window.addEventListener("resize", this.resizeMobileLayout)
-    window.addEventListener("orientationchange", this.resizeMobileLayout)
+    window.addEventListener("resize", this.scheduleLayout)
+    window.addEventListener("orientationchange", this.scheduleLayout)
+    window.visualViewport?.addEventListener("resize", this.scheduleLayout)
 
-    window.visualViewport?.addEventListener(
-      "resize",
-      this.resizeMobileLayout
-    )
-
-    window.visualViewport?.addEventListener(
-      "scroll",
-      this.resizeMobileLayout
-    )
-
-    this.refreshGameContent()
+    this.syncGameState()
     this.updateButton()
   }
 
@@ -41,18 +34,18 @@ export default class extends Controller {
     document.removeEventListener("turbo:render", this.handleTurboRender)
     document.removeEventListener("turbo:load", this.handleTurboRender)
 
-    window.removeEventListener("resize", this.resizeMobileLayout)
-    window.removeEventListener("orientationchange", this.resizeMobileLayout)
+    window.removeEventListener("resize", this.scheduleLayout)
+    window.removeEventListener("orientationchange", this.scheduleLayout)
+    window.visualViewport?.removeEventListener("resize", this.scheduleLayout)
 
-    window.visualViewport?.removeEventListener(
-      "resize",
-      this.resizeMobileLayout
-    )
+    if (this.layoutFrame) {
+      window.cancelAnimationFrame(this.layoutFrame)
+      this.layoutFrame = null
+    }
 
-    window.visualViewport?.removeEventListener(
-      "scroll",
-      this.resizeMobileLayout
-    )
+    this.gameObserver?.disconnect()
+    this.gameObserver = null
+    this.observedGameContent = null
 
     this.clearMobileLayout()
   }
@@ -60,6 +53,10 @@ export default class extends Controller {
   buttonTargetConnected(button) {
     this.updateButtonElement(button)
   }
+
+  // --------------------------------------------------
+  // Кнопка «На весь екран»
+  // --------------------------------------------------
 
   async toggle() {
     if (this.isMobileDevice()) {
@@ -96,24 +93,47 @@ export default class extends Controller {
       return
     }
 
+    // Сначала включаем CSS-режим (работает и там, где нет Fullscreen API,
+    // например на iPhone), затем пробуем настоящий полноэкранный режим.
     this.mobileModeActive = true
-    this.element.classList.add("mobile-game-fullscreen")
-
-    this.refreshGameContent()
-    this.resizeMobileLayout()
+    this.syncGameState()
     this.updateButton()
 
-    if (typeof document.documentElement.requestFullscreen === "function") {
-      try {
-        await document.documentElement.requestFullscreen()
-      } catch (error) {
-        console.info("Native fullscreen unavailable; using mobile layout.")
-      }
+    await this.enterNativeFullscreen()
+
+    this.relayoutSoon()
+    this.updateButton()
+  }
+
+  async enterNativeFullscreen() {
+    const root = document.documentElement
+
+    if (typeof root.requestFullscreen !== "function") return
+
+    try {
+      await root.requestFullscreen({ navigationUI: "hide" })
+    } catch (error) {
+      console.info("Native fullscreen unavailable; using mobile layout.")
+      return
     }
 
-    this.refreshGameContent()
-    this.resizeMobileLayout()
-    this.updateButton()
+    await this.lockLandscape()
+  }
+
+  async lockLandscape() {
+    try {
+      await screen.orientation?.lock?.("landscape")
+    } catch (error) {
+      // Блокировка ориентации поддерживается не везде — это нормально.
+    }
+  }
+
+  unlockOrientation() {
+    try {
+      screen.orientation?.unlock?.()
+    } catch (error) {
+      // Игнорируем.
+    }
   }
 
   isMobileDevice() {
@@ -123,19 +143,46 @@ export default class extends Controller {
     )
   }
 
-  refreshGameContent() {
-    this.game = this.element.querySelector(".game")
-    this.gameContent = this.element.querySelector(".game-content")
+  // --------------------------------------------------
+  // Состояние страницы с игрой
+  // --------------------------------------------------
 
-    if (!this.game || !this.gameContent) {
-      return
-    }
+  // Класс на <html> нужен только пока на странице есть игра.
+  // Так на других страницах сайта прокрутка не блокируется.
+  syncGameState() {
+    const game = this.element.querySelector(".game")
 
-    this.resizeMobileLayout()
+    this.element.classList.toggle(
+      "mobile-game-fullscreen",
+      this.mobileModeActive && Boolean(game)
+    )
+
+    this.observeGameContent()
+    this.scheduleLayout()
+  }
+
+  // Turbo Stream заменяет содержимое #game-content.
+  // После каждой замены пересчитываем масштаб.
+  observeGameContent() {
+    const content = document.getElementById("game-content")
+
+    if (content === this.observedGameContent) return
+
+    this.gameObserver?.disconnect()
+    this.gameObserver = null
+    this.observedGameContent = content
+
+    if (!content) return
+
+    this.gameObserver = new MutationObserver(() => {
+      this.scheduleLayout()
+    })
+
+    this.gameObserver.observe(content, { childList: true })
   }
 
   handleTurboRender() {
-    this.refreshGameContent()
+    this.syncGameState()
     this.updateButton()
   }
 
@@ -149,44 +196,53 @@ export default class extends Controller {
     this.lastFullscreenState = active
 
     this.updateButton()
-    this.resizeMobileLayout()
+    this.relayoutSoon()
+  }
+
+  // --------------------------------------------------
+  // Масштабирование игровой композиции
+  // --------------------------------------------------
+
+  scheduleLayout() {
+    if (this.layoutFrame) return
+
+    this.layoutFrame = window.requestAnimationFrame(() => {
+      this.layoutFrame = null
+      this.resizeMobileLayout()
+    })
+  }
+
+  // Размеры окна на Android меняются с задержкой (скрытие адресной строки,
+  // анимация входа в fullscreen), поэтому пересчитываем несколько раз.
+  relayoutSoon() {
+    this.scheduleLayout()
+
+    ;[150, 400, 800].forEach((delay) => {
+      window.setTimeout(this.scheduleLayout, delay)
+    })
   }
 
   resizeMobileLayout() {
-    if (
-      !this.mobileModeActive ||
-      !this.game ||
-      !this.gameContent ||
-      !this.game.isConnected ||
-      !this.gameContent.isConnected
-    ) {
-      return
-    }
+    if (!this.mobileModeActive) return
+
+    const game = this.element.querySelector(".game")
+    const gameContent = game?.querySelector(".game-content")
+
+    if (!game || !gameContent) return
 
     // offsetWidth/offsetHeight не зависят от CSS transform.
-    // scrollWidth/scrollHeight учитывают содержимое, выходящее за границы.
-    const contentWidth = Math.max(
-      this.gameContent.offsetWidth,
-      this.gameContent.scrollWidth
-    )
+    const contentWidth = gameContent.offsetWidth
+    const contentHeight = gameContent.offsetHeight
 
-    const contentHeight = Math.max(
-      this.gameContent.offsetHeight,
-      this.gameContent.scrollHeight
-    )
-
-    const gameStyles = window.getComputedStyle(this.game)
+    const gameStyles = window.getComputedStyle(game)
 
     const paddingLeft = parseFloat(gameStyles.paddingLeft) || 0
     const paddingRight = parseFloat(gameStyles.paddingRight) || 0
     const paddingTop = parseFloat(gameStyles.paddingTop) || 0
     const paddingBottom = parseFloat(gameStyles.paddingBottom) || 0
 
-    const availableWidth =
-      this.game.clientWidth - paddingLeft - paddingRight
-
-    const availableHeight =
-      this.game.clientHeight - paddingTop - paddingBottom
+    const availableWidth = game.clientWidth - paddingLeft - paddingRight
+    const availableHeight = game.clientHeight - paddingTop - paddingBottom
 
     if (
       contentWidth <= 0 ||
@@ -198,15 +254,18 @@ export default class extends Controller {
     }
 
     // Единый коэффициент для всей игровой композиции.
+    // Округляем вниз, чтобы не получить лишний пиксель за краем экрана.
     const scale = Math.min(
       availableWidth / contentWidth,
       availableHeight / contentHeight,
       1
     )
 
-    this.gameContent.style.setProperty(
+    // Переменная хранится на <html>, чтобы переживать замену .game
+    // при обновлениях через Turbo Stream.
+    this.element.style.setProperty(
       "--game-scale",
-      String(scale)
+      String(Math.floor(scale * 1000) / 1000)
     )
   }
 
@@ -214,12 +273,17 @@ export default class extends Controller {
     this.mobileModeActive = false
     this.element.classList.remove("mobile-game-fullscreen")
 
+    this.unlockOrientation()
     this.clearMobileLayout()
   }
 
   clearMobileLayout() {
-    this.gameContent?.style.removeProperty("--game-scale")
+    this.element.style.removeProperty("--game-scale")
   }
+
+  // --------------------------------------------------
+  // Кнопка
+  // --------------------------------------------------
 
   updateButton() {
     this.buttonTargets.forEach((button) => {
