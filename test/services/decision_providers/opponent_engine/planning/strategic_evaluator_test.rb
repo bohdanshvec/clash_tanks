@@ -122,6 +122,143 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values the same offensive support formation for both headquarters" do
+    first_player_state = @state.deep_dup
+
+    first_player_state["field"][0][3] = test_technique(57)
+    first_player_state["field"][1][2] = test_technique(42)
+    first_player_state["field"][2][1] = test_technique(42)
+
+    second_player_state = @state.deep_dup
+
+    second_player_state["field"][2][1] = test_technique(42)
+    second_player_state["field"][1][2] = test_technique(57)
+    second_player_state["field"][0][3] = test_technique(57)
+
+    first_score = offensive_group_score(
+      state: first_player_state,
+      player_id: "42"
+    )
+
+    second_score = offensive_group_score(
+      state: second_player_state,
+      player_id: "57"
+    )
+
+    assert_operator first_score, :>, 0
+    assert_equal first_score, second_score
+  end
+
+  test "rewards a rear tank that moves into support range of the vanguard" do
+    distant_state = @state.deep_dup
+
+    distant_state["field"][0][3] = test_technique(57)
+    distant_state["field"][0][2] = test_technique(42)
+    distant_state["field"][2][1] = test_technique(42)
+    distant_state["field"][2][1]["movement_count"] = 0
+
+    supporting_state = distant_state.deep_dup
+
+    supporting_state["field"][1][1] =
+      supporting_state["field"][2][1]
+    supporting_state["field"][2][1] = nil
+
+    assert_operator(
+      offensive_group_score(state: supporting_state),
+      :>,
+      offensive_group_score(state: distant_state)
+    )
+  end
+
+  test "prefers an advancing healthy supporter to a retreating one" do
+    advancing_state = @state.deep_dup
+
+    advancing_state["field"][0][3] = test_technique(57)
+    advancing_state["field"][0][2] = test_technique(42)
+    advancing_state["field"][1][1] = test_technique(42)
+    advancing_state["field"][1][1]["movement_count"] = 0
+
+    retreating_state = advancing_state.deep_dup
+
+    retreating_state["field"][2][1] =
+      retreating_state["field"][1][1]
+    retreating_state["field"][1][1] = nil
+
+    assert_operator(
+      offensive_group_score(state: advancing_state),
+      :>,
+      offensive_group_score(state: retreating_state)
+    )
+  end
+
+  test "does not bind a critically damaged tank to the offensive group" do
+    healthy_state = @state.deep_dup
+
+    healthy_state["field"][0][3] = test_technique(57)
+    healthy_state["field"][0][2] = test_technique(42)
+    healthy_state["field"][1][1] = test_technique(42)
+    healthy_state["field"][1][1]["movement_count"] = 0
+
+    critical_state = healthy_state.deep_dup
+    critical_state["field"][1][1]["hp"] = 3
+
+    assert_operator(
+      offensive_group_score(state: healthy_state),
+      :>,
+      offensive_group_score(state: critical_state)
+    )
+
+    assert_equal 0, offensive_group_score(state: critical_state)
+  end
+
+  test "does not reward a cluster without a reachable offensive objective" do
+    state = @state.deep_dup
+
+    state["field"][1][1] = test_technique(42)
+    state["field"][2][1] = test_technique(42)
+
+    assert_equal 0, offensive_group_score(state: state)
+  end
+
+  test "keeps a decisive solo attack more valuable than formation readiness" do
+    state = @state.deep_dup
+
+    target = test_technique(57)
+    target["hp"] = 10
+    target["firepower"] = 0
+
+    leader = test_technique(42)
+    leader["firepower"] = 20
+
+    state["field"][0][3] = target
+    state["field"][0][2] = leader
+    state["field"][1][1] = test_technique(42)
+    state["field"][1][1]["movement_count"] = 0
+
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: @ai_player_id
+    )
+
+    simulation =
+      DecisionProviders::OpponentEngine::Planning::StateSimulator.call(
+        visible_state: visible_state,
+        player_id: @ai_player_id,
+        action: {
+          "type" => "attack",
+          "payload" => {
+            "attacker" => [0, 2],
+            "target" => [0, 3]
+          }
+        },
+        current_time: Time.current
+      )
+
+    assert simulation.success?
+    assert_nil simulation.visible_state.dig("field", 0, 3)
+    assert_operator evaluate(simulation.visible_state), :>, evaluate(visible_state)
+  end
+
   test "penalizes enemy techniques positioned near own headquarters" do
     safe_state = @state.deep_dup
     threatened_state = @state.deep_dup
@@ -773,6 +910,21 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
       )
 
     evaluator.send(:combined_attack_opportunity_score)
+  end
+
+  def offensive_group_score(state:, player_id: @ai_player_id)
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: player_id
+      )
+
+    evaluator.send(:offensive_group_score)
   end
 
   def positional_score(state:)

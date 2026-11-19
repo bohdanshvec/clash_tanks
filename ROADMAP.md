@@ -193,8 +193,8 @@ None
 Начальные параметры Beam Search:
 
 ```text
-depth = 5
-width = 10
+depth = 7
+width = 20
 ```
 
 Для задержки между действиями:

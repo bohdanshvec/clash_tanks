@@ -20,6 +20,15 @@ module DecisionProviders
 
         POSITION_WEIGHT = 1.0
 
+        # Наступательная группа оценивается отдельно от непосредственной
+        # совместной атаки. Бонус намеренно невелик относительно ценности
+        # техники и результата боя: он помогает подготовить поддержку, но не
+        # должен заменять выгодную атаку.
+        OFFENSIVE_GROUP_CRITICAL_HP = 3
+        OFFENSIVE_GROUP_MAX_SUPPORT_DISTANCE = 2
+        OFFENSIVE_GROUP_FIREPOWER_WEIGHT = 0.35
+        OFFENSIVE_GROUP_PROGRESS_WEIGHT = 0.5
+
         DEPLOYMENT_SLOT_WEIGHT = 5.0
 
         COMBINED_ATTACK_MIN_TECHNIQUES = 1
@@ -65,6 +74,7 @@ module DecisionProviders
           techniques_score +
           platoons_score +
           positional_score +
+          offensive_group_score +
           deployment_capacity_score +
           headquarters_attack_opportunity_score +
           combined_attack_opportunity_score +
@@ -228,6 +238,178 @@ module DecisionProviders
             object["type"] == "headquarters" &&
               object["player_id"].to_s == player_id.to_s
           end&.last
+        end
+
+        # --------------------------------------------------------------
+        # Наступательная группировка
+        # --------------------------------------------------------------
+
+        # Поощряет здоровую технику, которая уже заняла позицию поддержки
+        # передовой машины у конкретной видимой цели. Это не оценка урона:
+        # непосредственная выгода совместной атаки остаётся ответственностью
+        # ForceCoordinationEvaluator.
+        #
+        # Поэтому в группу не включается техника, которая уже сама может
+        # атаковать ту же цель в этом ходу. Такая ситуация будет учтена
+        # combined_attack_opportunity_score и не должна считаться
+        # дважды.
+        def offensive_group_score
+          own_headquarters = headquarters_position(@player_id)
+          enemy_headquarters = headquarters_position(@opponent_id)
+
+          return 0 unless own_headquarters && enemy_headquarters
+
+          healthy_techniques = own_techniques.select do |technique, _position|
+            offensive_group_healthy?(technique)
+          end
+
+          return 0 if healthy_techniques.length < 2
+
+          offensive_targets.sum do |target, target_position|
+            offensive_group_score_for_target(
+              target: target,
+              target_position: target_position,
+              own_headquarters: own_headquarters,
+              techniques: healthy_techniques
+            )
+          end
+        end
+
+        def offensive_group_score_for_target(
+          target:,
+          target_position:,
+          own_headquarters:,
+          techniques:
+        )
+          leaders = techniques.select do |technique, position|
+            attack_positions_for(
+              technique,
+              position,
+              target,
+              target_position
+            ).any?
+          end
+
+          return 0 if leaders.empty?
+
+          # Один танк поддержки получает только один лучший бонус: иначе
+          # несколько передовых машин искусственно умножили бы его ценность.
+          techniques.sum do |supporter, supporter_position|
+            next 0 if leaders.any? { |_leader, position| position == supporter_position }
+
+            best_support_score_for(
+              supporter: supporter,
+              supporter_position: supporter_position,
+              leaders: leaders,
+              target: target,
+              target_position: target_position,
+              own_headquarters: own_headquarters
+            )
+          end
+        end
+
+        def best_support_score_for(
+          supporter:,
+          supporter_position:,
+          leaders:,
+          target:,
+          target_position:,
+          own_headquarters:
+        )
+          # Если машина уже может участвовать в атаке, её боевой вклад
+          # оценивает ForceCoordinationEvaluator.
+          return 0 if attack_positions_for(
+            supporter,
+            supporter_position,
+            target,
+            target_position
+          ).any?
+
+          return 0 unless offensive_group_mobile?(supporter)
+
+          supporter_progress = progress_from_headquarters(
+            supporter_position,
+            own_headquarters
+          )
+
+          return 0 unless supporter_progress.positive?
+
+          leaders.filter_map do |leader, leader_position|
+            leader_progress = progress_from_headquarters(
+              leader_position,
+              own_headquarters
+            )
+
+            next unless leader_progress > supporter_progress
+
+            distance = chebyshev_distance(
+              supporter_position,
+              leader_position
+            )
+
+            next if distance > OFFENSIVE_GROUP_MAX_SUPPORT_DISTANCE
+            next unless moves_toward?(
+              supporter_position,
+              target_position,
+              own_headquarters
+            )
+
+            support_readiness_score(
+              leader: leader,
+              supporter: supporter,
+              distance: distance,
+              supporter_progress: supporter_progress
+            )
+          end.max || 0
+        end
+
+        def offensive_targets
+          field_objects.select do |object, _position|
+            owner_sign(object["player_id"]) == -1 &&
+              %w[technique headquarters].include?(object["type"])
+          end
+        end
+
+        def offensive_group_healthy?(technique)
+          numeric(technique, "hp") > OFFENSIVE_GROUP_CRITICAL_HP
+        end
+
+        def offensive_group_mobile?(technique)
+          numeric(technique, "movement_count").positive? ||
+            numeric(technique, "movement_limit").positive?
+        end
+
+        def progress_from_headquarters(position, own_headquarters)
+          manhattan_distance(own_headquarters, position)
+        end
+
+        def chebyshev_distance(first, second)
+          [
+            (first[0] - second[0]).abs,
+            (first[1] - second[1]).abs
+          ].max
+        end
+
+        def moves_toward?(position, target_position, own_headquarters)
+          manhattan_distance(position, target_position) <
+            manhattan_distance(own_headquarters, target_position)
+        end
+
+        def support_readiness_score(
+          leader:,
+          supporter:,
+          distance:,
+          supporter_progress:
+        )
+          shared_firepower = [
+            numeric(leader, "firepower"),
+            numeric(supporter, "firepower")
+          ].min
+
+          proximity = OFFENSIVE_GROUP_MAX_SUPPORT_DISTANCE + 1 - distance
+
+          proximity * shared_firepower * OFFENSIVE_GROUP_FIREPOWER_WEIGHT +
+            supporter_progress * OFFENSIVE_GROUP_PROGRESS_WEIGHT
         end
 
         # --------------------------------------------------------------
@@ -531,35 +713,12 @@ module DecisionProviders
           own_techniques.filter_map do |technique, position|
             next if technique["has_attacked"]
 
-            possible_positions = [
+            attack_positions = attack_positions_for(
+              technique,
               position,
-              *available_move_positions(
-                position,
-                technique: technique
-              )
-            ].uniq
-
-            attack_positions = possible_positions.filter_map do |attack_position|
-              state, attacker = potential_movement_state(
-                position,
-                attack_position
-              )
-
-              simulated_target =
-                state["field"][target_position[0]][target_position[1]]
-
-              next unless simulated_target
-
-              next unless GameEngine::Rules::AttackTarget.valid?(
-                state: state,
-                attacker: attacker,
-                target: simulated_target,
-                attacker_position: attack_position,
-                target_position: target_position
-              )
-
-              attack_position
-            end
+              target,
+              target_position
+            )
 
             attack_positions.sort_by! do |attack_position|
               state, attacker = potential_movement_state(
@@ -596,6 +755,46 @@ module DecisionProviders
               firepower: numeric(technique, "firepower"),
               attack_positions: attack_positions
             }
+          end
+        end
+
+        def attack_positions_for(
+          technique,
+          position,
+          target,
+          target_position
+        )
+          return [] if technique["has_attacked"]
+
+          possible_positions = [
+            position,
+            *available_move_positions(
+              position,
+              technique: technique
+            )
+          ].uniq
+
+          possible_positions.filter_map do |attack_position|
+            state, attacker = potential_movement_state(
+              position,
+              attack_position
+            )
+
+            simulated_target =
+              state["field"][target_position[0]][target_position[1]]
+
+            next unless simulated_target
+            next unless simulated_target["player_id"].to_s == target["player_id"].to_s
+
+            next unless GameEngine::Rules::AttackTarget.valid?(
+              state: state,
+              attacker: attacker,
+              target: simulated_target,
+              attacker_position: attack_position,
+              target_position: target_position
+            )
+
+            attack_position
           end
         end
 
