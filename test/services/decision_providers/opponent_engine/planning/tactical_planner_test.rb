@@ -547,6 +547,83 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     assert_includes selected_attackers, [0, 2]
   end
 
+  test "preserves move and card branches when many attack targets dominate the beam" do
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 10
+      )
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    attack_nodes = 12.times.map do |index|
+      node_class.new(
+        visible_state: visible_state,
+        actions: [
+          {
+            "type" => "attack",
+            "payload" => {
+              "attacker" => [1, 1],
+              "target" => [index / 5, index % 5]
+            }
+          }
+        ],
+        steps: [],
+        score: 100 - index,
+        terminal: false
+      )
+    end
+
+    move_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "move",
+          "payload" => {
+            "from" => [1, 1],
+            "to" => [1, 2]
+          }
+        }
+      ],
+      steps: [],
+      score: 1,
+      terminal: false
+    )
+
+    card_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "play_card",
+          "payload" => {
+            "card_id" => 99
+          }
+        }
+      ],
+      steps: [],
+      score: 0,
+      terminal: false
+    )
+
+    ranked = planner.send(
+      :rank,
+      attack_nodes + [move_node, card_node]
+    )
+
+    first_actions = ranked.first(10).map do |node|
+      node.actions.first
+    end
+
+    assert first_actions.any? { |action| action["type"] == "move" }
+    assert first_actions.any? { |action| action["type"] == "play_card" }
+  end
+
   private
 
   def plan(

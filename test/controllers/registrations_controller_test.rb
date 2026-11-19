@@ -59,12 +59,17 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
       decks.map(&:name)
     )
 
+    expected_unique_cards = {
+      "Operation „Weiß“" => 10,
+      "Second front" => 9,
+      "Західний фронт" => 10
+    }
+
     decks.each do |deck|
       assert deck.complete?
       assert_equal 10, deck.card_count
-      assert_equal 10, deck.deck_cards.size
-      assert_equal 1, deck.deck_cards.map(&:quantity).uniq.size
-      assert_equal 1, deck.deck_cards.first.quantity
+      assert_equal expected_unique_cards.fetch(deck.name), deck.deck_cards.size
+      assert_equal 10, deck.deck_cards.sum(&:quantity)
       assert_equal "headquarters", deck.headquarters_card.card_type
       assert_equal deck.nation_id, deck.headquarters_card.nation_id
     end

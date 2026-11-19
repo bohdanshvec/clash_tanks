@@ -65,7 +65,7 @@ class SeedsTest < ActiveSupport::TestCase
 
     assert_equal AiPlayers::Setup::AI_EMAIL, ai_player.email
     assert_equal 3, ai_player.decks.count
-    assert_equal [40, 50, 58], ai_player.decks.map(&:weight).sort
+    assert_equal [40, 51, 58], ai_player.decks.map(&:weight).sort
 
     ai_player.decks.each do |deck|
       assert deck.complete?

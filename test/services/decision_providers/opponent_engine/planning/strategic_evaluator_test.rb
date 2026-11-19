@@ -528,6 +528,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
 
     state["field"][0][3] = test_technique(57)
     state["field"][0][3]["hp"] = 8
+    state["field"][0][3]["has_counterattacked"] = true
 
     state["field"][0][2] = test_technique(42)
 
@@ -809,6 +810,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     state["field"][2][2] = test_technique(42)
 
     state["field"][2][2]["movement_count"] = 0
+    state["field"][2][2]["movement_limit"] = 0
     state["field"][2][2]["has_attacked"] = true
 
     assert_equal(

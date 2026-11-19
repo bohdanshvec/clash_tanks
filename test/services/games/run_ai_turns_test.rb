@@ -605,7 +605,7 @@ class Games::RunAiTurnsTest < ActiveSupport::TestCase
     assert_equal 2, platoon_events
     assert_equal 4, result.actions_count
 
-    assert_equal 1, planner_calls
+    assert_equal 2, planner_calls
   end
 
   private

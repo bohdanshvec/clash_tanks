@@ -326,17 +326,61 @@ module DecisionProviders
               .group_by { |node| first_action_category(node) }
               .values
               .map(&:first)
-              .first(@width)
 
-          representative_ids =
-            category_representatives.each_with_object({}) do |node, result|
-              result[node.object_id] = true
+          action_type_representatives =
+            ranked_nodes
+              .group_by { |node| node.actions.first&.dig("type") }
+              .values
+              .map(&:first)
+
+          actor_representatives =
+            ranked_nodes
+              .group_by { |node| first_action_actor_category(node) }
+              .values
+              .map(&:first)
+
+          selected = []
+
+          [
+            action_type_representatives,
+            actor_representatives,
+            category_representatives,
+            ranked_nodes
+          ].each do |collection|
+            collection.each do |node|
+              selected << node unless selected.any? { |item| item.equal?(node) }
+
+              break if selected.length >= @width
             end
 
-          category_representatives +
-            ranked_nodes.reject do |node|
-              representative_ids.key?(node.object_id)
-            end
+            break if selected.length >= @width
+          end
+
+          selected
+        end
+
+        def first_action_actor_category(node)
+          action = node.actions.first
+          return "empty" unless action
+
+          payload = action["payload"] || {}
+
+          case action["type"]
+          when "attack"
+            "attack:#{Array(payload["attacker"]).join(",")}"
+
+          when "move"
+            "move:#{Array(payload["from"]).join(",")}"
+
+          when "play_card"
+            card_id = payload["card_id"].to_s
+            card_type = @root_card_types[card_id] || "unknown"
+
+            "play_card:#{card_type}:#{card_id}"
+
+          else
+            action["type"]
+          end
         end
 
         def plan_action_counts(node)

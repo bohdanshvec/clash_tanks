@@ -8,7 +8,7 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
     decks = AiPlayers::DecksSetup.call
 
     assert_equal 3, decks.size
-    assert_equal [40, 50, 58], decks.map(&:weight).sort
+    assert_equal [40, 51, 58], decks.map(&:weight).sort
 
     decks.each do |deck|
       assert deck.persisted?
