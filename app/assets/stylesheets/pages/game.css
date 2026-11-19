@@ -71,17 +71,16 @@
 
   overflow: visible;
 
-  gap: clamp(
-    -55px,
+  gap: min(
+    10px,
     calc(
       (
         100% -
         40px -
         (var(--hand-count) * 150px)
       ) /
-      (var(--hand-count) - 1)
-    ),
-    10px
+      max(1, calc(var(--hand-count) - 1))
+    )
   );
 }
 
@@ -123,4 +122,84 @@
 
 .hand .catalog-card:active {
   cursor: grabbing;
+}
+
+
+/* =========================================================
+   Mobile Fullscreen — масштабирование всей игровой композиции
+   ========================================================= */
+
+html.mobile-game-fullscreen,
+html.mobile-game-fullscreen body {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Основная область занимает экран без прокрутки. */
+
+html.mobile-game-fullscreen body.game-page > .site-main {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Игровая область. */
+
+html.mobile-game-fullscreen body.game-page .game {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+
+  margin: 0;
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+
+  box-sizing: border-box;
+  overflow: hidden;
+
+  background-attachment: scroll;
+}
+
+/*
+ * Исходная ширина композиции:
+ * 145 + 135 + 900 + 135 + 145 + 4 × 10 = 1500 px.
+ *
+ * JS уменьшает всю композицию единым коэффициентом.
+ */
+
+html.mobile-game-fullscreen body.game-page .game-content {
+  flex: 0 0 auto;
+
+  width: 1500px;
+  max-width: none;
+}
+
+/* Фиксируем геометрию поля. */
+
+html.mobile-game-fullscreen body.game-page .game-board {
+  --battlefield-width: 900px;
+  --battlefield-height: 540px;
+  --platoon-slot-size: 135px;
+  --player-info-width: 145px;
+
+  gap: 10px;
 }
