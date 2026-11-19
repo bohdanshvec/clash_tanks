@@ -10,11 +10,14 @@ export default class extends Controller {
     this.handleTurboRender = this.handleTurboRender.bind(this)
     this.resizeMobileLayout = this.resizeMobileLayout.bind(this)
 
-    this.mobileModeActive = false
+    this.mobileModeActive =
+      this.element.classList.contains("mobile-game-fullscreen")
+
     this.lastFullscreenState = Boolean(document.fullscreenElement)
 
     document.addEventListener("fullscreenchange", this.handleFullscreenChange)
     document.addEventListener("turbo:render", this.handleTurboRender)
+    document.addEventListener("turbo:load", this.handleTurboRender)
 
     window.addEventListener("resize", this.resizeMobileLayout)
     window.addEventListener("orientationchange", this.resizeMobileLayout)
@@ -36,6 +39,7 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("fullscreenchange", this.handleFullscreenChange)
     document.removeEventListener("turbo:render", this.handleTurboRender)
+    document.removeEventListener("turbo:load", this.handleTurboRender)
 
     window.removeEventListener("resize", this.resizeMobileLayout)
     window.removeEventListener("orientationchange", this.resizeMobileLayout)
@@ -50,7 +54,7 @@ export default class extends Controller {
       this.resizeMobileLayout
     )
 
-    this.deactivateMobileMode()
+    this.clearMobileLayout()
   }
 
   buttonTargetConnected(button) {
@@ -95,11 +99,12 @@ export default class extends Controller {
     this.mobileModeActive = true
     this.element.classList.add("mobile-game-fullscreen")
 
+    this.refreshGameContent()
     this.resizeMobileLayout()
     this.updateButton()
 
-    // CSS-адаптация продолжит работать, даже если браузер
-    // не поддерживает Fullscreen API.
+    // Нативный fullscreen используется дополнительно.
+    // CSS-масштабирование работает и без поддержки Fullscreen API.
     if (typeof document.documentElement.requestFullscreen === "function") {
       try {
         await document.documentElement.requestFullscreen()
@@ -108,8 +113,9 @@ export default class extends Controller {
       }
     }
 
-    this.updateButton()
+    this.refreshGameContent()
     this.resizeMobileLayout()
+    this.updateButton()
   }
 
   isMobileDevice() {
@@ -123,8 +129,10 @@ export default class extends Controller {
     this.game = this.element.querySelector(".game")
     this.gameContent = this.element.querySelector(".game-content")
 
-    if (!this.gameContent && this.mobileModeActive) {
-      this.deactivateMobileMode()
+    // Отсутствие игры на текущей странице не отключает режим.
+    // После следующего Turbo-перехода элементы будут найдены снова.
+    if (!this.game || !this.gameContent) {
+      return
     }
 
     this.resizeMobileLayout()
@@ -138,7 +146,7 @@ export default class extends Controller {
   handleFullscreenChange() {
     const active = Boolean(document.fullscreenElement)
 
-    // Выход через системную кнопку браузера или Escape.
+    // Выход из нативного fullscreen через браузер.
     if (this.lastFullscreenState && !active && this.mobileModeActive) {
       this.deactivateMobileMode()
     }
@@ -153,15 +161,28 @@ export default class extends Controller {
     if (
       !this.mobileModeActive ||
       !this.game ||
-      !this.gameContent
+      !this.gameContent ||
+      !this.game.isConnected ||
+      !this.gameContent.isConnected
     ) {
       return
     }
 
-    // Сначала возвращаем исходный размер для измерения.
-    this.gameContent.style.setProperty("--game-scale", "1")
+    // Измеряем исходную, немасштабированную композицию.
+    this.gameContent.style.zoom = "1"
 
     const contentRect = this.gameContent.getBoundingClientRect()
+
+    const contentWidth = Math.max(
+      contentRect.width,
+      this.gameContent.scrollWidth
+    )
+
+    const contentHeight = Math.max(
+      contentRect.height,
+      this.gameContent.scrollHeight
+    )
+
     const gameStyles = window.getComputedStyle(this.game)
 
     const paddingLeft = parseFloat(gameStyles.paddingLeft) || 0
@@ -169,46 +190,41 @@ export default class extends Controller {
     const paddingTop = parseFloat(gameStyles.paddingTop) || 0
     const paddingBottom = parseFloat(gameStyles.paddingBottom) || 0
 
-    const viewport = window.visualViewport
-
-    const viewportWidth =
-      viewport?.width || document.documentElement.clientWidth
-
-    const viewportHeight =
-      viewport?.height || window.innerHeight
-
     const availableWidth =
-      viewportWidth - paddingLeft - paddingRight
+      this.game.clientWidth - paddingLeft - paddingRight
 
     const availableHeight =
-      viewportHeight - paddingTop - paddingBottom
+      this.game.clientHeight - paddingTop - paddingBottom
 
     if (
-      contentRect.width <= 0 ||
-      contentRect.height <= 0 ||
+      contentWidth <= 0 ||
+      contentHeight <= 0 ||
       availableWidth <= 0 ||
       availableHeight <= 0
     ) {
       return
     }
 
+    // Один коэффициент для всей композиции:
+    // верхняя панель, поле, боковые панели и рука с картами.
     const scale = Math.min(
-      availableWidth / contentRect.width,
-      availableHeight / contentRect.height,
+      availableWidth / contentWidth,
+      availableHeight / contentHeight,
       1
     )
 
-    this.gameContent.style.setProperty(
-      "--game-scale",
-      String(scale)
-    )
+    this.gameContent.style.zoom = String(scale)
   }
 
   deactivateMobileMode() {
     this.mobileModeActive = false
     this.element.classList.remove("mobile-game-fullscreen")
 
-    this.gameContent?.style.removeProperty("--game-scale")
+    this.clearMobileLayout()
+  }
+
+  clearMobileLayout() {
+    this.gameContent?.style.removeProperty("zoom")
   }
 
   updateButton() {
