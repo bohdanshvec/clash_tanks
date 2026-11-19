@@ -523,7 +523,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  test "does not reward a nonlethal attack by one technique and headquarters" do
+  test "values nonlethal coordinated damage by one technique and headquarters" do
     state = @state.deep_dup
 
     state["field"][0][3] = test_technique(57)
@@ -533,9 +533,10 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
 
     state["field"][2][0]["firepower"] = 3
 
-    assert_equal(
-      0,
-      combined_attack_opportunity_score(state: state)
+    assert_operator(
+      combined_attack_opportunity_score(state: state),
+      :>,
+      0
     )
   end
 

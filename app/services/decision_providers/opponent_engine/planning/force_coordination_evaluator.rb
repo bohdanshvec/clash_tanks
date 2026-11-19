@@ -185,12 +185,16 @@ module DecisionProviders
               target_destroyed =
                 object_at(next_state, @target_position).nil?
 
+              # Штаб и техника образуют совместную атаку и в случае, когда
+              # цель ещё не уничтожена. Иначе последовательный огонь по
+              # опасной технике не получает стратегической ценности до
+              # последнего HP цели, хотя следующий участник атаки уже может
+              # завершить её уничтожение.
               combined_attack =
                 next_technique_count >= 2 ||
                 (
                   next_technique_count >= 1 &&
-                  next_used_keys.any? { |key| key.first == :headquarters } &&
-                  target_destroyed
+                  next_used_keys.any? { |key| key.first == :headquarters }
                 )
 
               if combined_attack

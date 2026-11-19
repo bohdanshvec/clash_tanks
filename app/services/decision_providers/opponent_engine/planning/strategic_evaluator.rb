@@ -4,7 +4,10 @@ module DecisionProviders
       class StrategicEvaluator
         WIN_SCORE = 1_000_000
 
-        HQ_HP_WEIGHT = 12.0
+        # Уничтожение штаба по-прежнему имеет терминальную оценку WIN_SCORE,
+        # поэтому обычное повреждение штаба не должно превосходить уничтожение
+        # или подавление боеспособной техники в несколько раз.
+        HQ_HP_WEIGHT = 5.0
         HQ_FIREPOWER_WEIGHT = 2.0
         HQ_FUEL_WEIGHT = 0.5
 

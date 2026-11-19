@@ -182,6 +182,14 @@ module DecisionProviders
             "[OpponentEngine] Selected plan: #{best_node&.actions.inspect}"
           )
 
+          Rails.logger.info(
+            "[OpponentEngine] Selected plan diagnostics: " \
+            "score=#{best_node&.score || initial_score}, " \
+            "score_delta=#{((best_node&.score || initial_score) - initial_score).round(2)}, " \
+            "actions=#{plan_action_counts(best_node)}, " \
+            "attackers=#{plan_attacker_types(best_node)}"
+          )
+
           elapsed_ms = (
             Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
           ) * 1000
@@ -230,8 +238,13 @@ module DecisionProviders
 
           when "attack"
             attacker = Array(payload["attacker"]).join(",")
+            target = Array(payload["target"]).join(",")
 
-            "attack:#{attacker}"
+            # Для одного атакующего цели могут иметь принципиально разные
+            # продолжения: например, штаб может давить вражеский штаб или
+            # начать последовательную атаку по технике вместе с танком.
+            # Нельзя оставлять в beam только одну из таких веток.
+            "attack:#{attacker}:#{target}"
 
           else
             action["type"]
@@ -324,6 +337,26 @@ module DecisionProviders
             ranked_nodes.reject do |node|
               representative_ids.key?(node.object_id)
             end
+        end
+
+        def plan_action_counts(node)
+          Array(node&.actions).map { |action| action["type"] }.tally
+        end
+
+        def plan_attacker_types(node)
+          Array(node&.steps).filter_map do |step|
+            action = step.action
+            next unless action["type"] == "attack"
+
+            position = action.dig("payload", "attacker")
+            attacker = step.expected_visible_state.dig(
+              "field",
+              position[0],
+              position[1]
+            )
+
+            attacker ? attacker["type"] : "destroyed"
+          end.tally
         end
 
         def empty_result(score)
