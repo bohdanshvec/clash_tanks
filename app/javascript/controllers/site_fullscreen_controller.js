@@ -103,8 +103,6 @@ export default class extends Controller {
     this.resizeMobileLayout()
     this.updateButton()
 
-    // Нативный fullscreen используется дополнительно.
-    // CSS-масштабирование работает и без поддержки Fullscreen API.
     if (typeof document.documentElement.requestFullscreen === "function") {
       try {
         await document.documentElement.requestFullscreen()
@@ -129,8 +127,6 @@ export default class extends Controller {
     this.game = this.element.querySelector(".game")
     this.gameContent = this.element.querySelector(".game-content")
 
-    // Отсутствие игры на текущей странице не отключает режим.
-    // После следующего Turbo-перехода элементы будут найдены снова.
     if (!this.game || !this.gameContent) {
       return
     }
@@ -146,7 +142,6 @@ export default class extends Controller {
   handleFullscreenChange() {
     const active = Boolean(document.fullscreenElement)
 
-    // Выход из нативного fullscreen через браузер.
     if (this.lastFullscreenState && !active && this.mobileModeActive) {
       this.deactivateMobileMode()
     }
@@ -168,18 +163,15 @@ export default class extends Controller {
       return
     }
 
-    // Измеряем исходную, немасштабированную композицию.
-    this.gameContent.style.zoom = "1"
-
-    const contentRect = this.gameContent.getBoundingClientRect()
-
+    // offsetWidth/offsetHeight не зависят от CSS transform.
+    // scrollWidth/scrollHeight учитывают содержимое, выходящее за границы.
     const contentWidth = Math.max(
-      contentRect.width,
+      this.gameContent.offsetWidth,
       this.gameContent.scrollWidth
     )
 
     const contentHeight = Math.max(
-      contentRect.height,
+      this.gameContent.offsetHeight,
       this.gameContent.scrollHeight
     )
 
@@ -205,15 +197,17 @@ export default class extends Controller {
       return
     }
 
-    // Один коэффициент для всей композиции:
-    // верхняя панель, поле, боковые панели и рука с картами.
+    // Единый коэффициент для всей игровой композиции.
     const scale = Math.min(
       availableWidth / contentWidth,
       availableHeight / contentHeight,
       1
     )
 
-    this.gameContent.style.zoom = String(scale)
+    this.gameContent.style.setProperty(
+      "--game-scale",
+      String(scale)
+    )
   }
 
   deactivateMobileMode() {
@@ -224,7 +218,7 @@ export default class extends Controller {
   }
 
   clearMobileLayout() {
-    this.gameContent?.style.removeProperty("zoom")
+    this.gameContent?.style.removeProperty("--game-scale")
   }
 
   updateButton() {

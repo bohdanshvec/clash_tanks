@@ -71,17 +71,7 @@
 
   overflow: visible;
 
-  gap: min(
-    10px,
-    calc(
-      (
-        100% -
-        40px -
-        (var(--hand-count) * 150px)
-      ) /
-      max(1, calc(var(--hand-count) - 1))
-    )
-  );
+  gap: 0;
 }
 
 .hand--top,
@@ -104,6 +94,23 @@
   cursor: grab;
 }
 
+/* Расстояние между карточками.
+   При нехватке места карточки перекрываются. */
+
+.hand .catalog-card + .catalog-card {
+  margin-left: min(
+    10px,
+    calc(
+      (
+        100% -
+        40px -
+        (var(--hand-count) * 150px)
+      ) /
+      (var(--hand-count) - 1)
+    )
+  );
+}
+
 /* Увеличение карточки при наведении */
 
 .hand .catalog-card:hover {
@@ -124,7 +131,6 @@
   cursor: grabbing;
 }
 
-
 /* =========================================================
    Mobile Fullscreen — масштабирование всей игровой композиции
    ========================================================= */
@@ -137,9 +143,12 @@ html.mobile-game-fullscreen body {
   overflow: hidden;
 }
 
-/* Основная область занимает экран без прокрутки. */
+/* Основная область занимает весь экран без прокрутки. */
 
 html.mobile-game-fullscreen body.game-page > .site-main {
+  position: fixed;
+  inset: 0;
+
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -158,6 +167,8 @@ html.mobile-game-fullscreen body.game-page > .site-main {
 /* Игровая область. */
 
 html.mobile-game-fullscreen body.game-page .game {
+  position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,7 +194,8 @@ html.mobile-game-fullscreen body.game-page .game {
  * Исходная ширина композиции:
  * 145 + 135 + 900 + 135 + 145 + 4 × 10 = 1500 px.
  *
- * JS уменьшает всю композицию единым коэффициентом.
+ * JS рассчитывает коэффициент --game-scale,
+ * которым масштабируется вся игровая композиция.
  */
 
 html.mobile-game-fullscreen body.game-page .game-content {
@@ -191,6 +203,9 @@ html.mobile-game-fullscreen body.game-page .game-content {
 
   width: 1500px;
   max-width: none;
+
+  transform: scale(var(--game-scale, 1));
+  transform-origin: center center;
 }
 
 /* Фиксируем геометрию поля. */
