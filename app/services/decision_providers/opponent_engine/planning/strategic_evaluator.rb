@@ -30,7 +30,7 @@ module DecisionProviders
         # совместной атаки. Бонус намеренно невелик относительно ценности
         # техники и результата боя: он помогает подготовить поддержку, но не
         # должен заменять выгодную атаку.
-        OFFENSIVE_GROUP_CRITICAL_HP = 3
+        OFFENSIVE_GROUP_FULL_STRENGTH_HP = 4
         OFFENSIVE_GROUP_MAX_SUPPORT_DISTANCE = 2
         OFFENSIVE_GROUP_FIREPOWER_WEIGHT = 0.35
         OFFENSIVE_GROUP_PROGRESS_WEIGHT = 0.5
@@ -283,18 +283,18 @@ module DecisionProviders
 
           return 0 unless own_headquarters && enemy_headquarters
 
-          healthy_techniques = own_techniques.select do |technique, _position|
-            offensive_group_healthy?(technique)
+          available_techniques = own_techniques.select do |technique, _position|
+            numeric(technique, "hp").positive?
           end
 
-          return 0 if healthy_techniques.length < 2
+          return 0 if available_techniques.length < 2
 
           offensive_targets.sum do |target, target_position|
             offensive_group_score_for_target(
               target: target,
               target_position: target_position,
               own_headquarters: own_headquarters,
-              techniques: healthy_techniques
+              techniques: available_techniques
             )
           end
         end
@@ -437,8 +437,12 @@ module DecisionProviders
           end
         end
 
-        def offensive_group_healthy?(technique)
-          numeric(technique, "hp") > OFFENSIVE_GROUP_CRITICAL_HP
+        def offensive_group_health_factor(technique)
+          [
+            numeric(technique, "hp").to_f /
+              OFFENSIVE_GROUP_FULL_STRENGTH_HP,
+            1.0
+          ].min
         end
 
         def offensive_group_mobile?(technique)
@@ -475,8 +479,14 @@ module DecisionProviders
 
           proximity = OFFENSIVE_GROUP_MAX_SUPPORT_DISTANCE + 1 - distance
 
-          proximity * shared_firepower * OFFENSIVE_GROUP_FIREPOWER_WEIGHT +
+          readiness_score =
+            proximity * shared_firepower * OFFENSIVE_GROUP_FIREPOWER_WEIGHT +
             supporter_progress * OFFENSIVE_GROUP_PROGRESS_WEIGHT
+
+          readiness_score * [
+            offensive_group_health_factor(leader),
+            offensive_group_health_factor(supporter)
+          ].min
         end
 
         # --------------------------------------------------------------

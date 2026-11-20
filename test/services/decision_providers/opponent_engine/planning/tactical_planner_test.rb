@@ -68,6 +68,38 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
+  test "attacks with headquarters first to protect a vulnerable technique" do
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 4,
+      firepower: 4
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 7,
+      firepower: 5
+    )
+
+    @state["field"][1][2] = attacker
+    @state["field"][1][1] = target
+
+    result = plan
+
+    assert_operator result.actions.length, :>=, 2
+
+    first_attack = result.actions[0]
+    second_attack = result.actions[1]
+
+    assert_equal "attack", first_attack["type"]
+    assert_equal [2, 0], first_attack.dig("payload", "attacker")
+    assert_equal [1, 1], first_attack.dig("payload", "target")
+
+    assert_equal "attack", second_attack["type"]
+    assert_equal [1, 2], second_attack.dig("payload", "attacker")
+    assert_equal [1, 1], second_attack.dig("payload", "target")
+  end
+
   test "chooses a profitable ranged attack by a single technique" do
     @state["field"][2][0]["has_attacked"] = true
 

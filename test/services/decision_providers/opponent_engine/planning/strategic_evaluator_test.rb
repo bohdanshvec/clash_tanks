@@ -231,7 +231,7 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
-  test "does not bind a critically damaged tank to the offensive group" do
+  test "preserves proportional offensive group value for damaged tanks" do
     healthy_state = @state.deep_dup
 
     healthy_state["field"][0][3] = test_technique(57)
@@ -239,16 +239,27 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     healthy_state["field"][1][1] = test_technique(42)
     healthy_state["field"][1][1]["movement_count"] = 0
 
-    critical_state = healthy_state.deep_dup
-    critical_state["field"][1][1]["hp"] = 3
+    full_score = offensive_group_score(state: healthy_state)
 
-    assert_operator(
-      offensive_group_score(state: healthy_state),
-      :>,
-      offensive_group_score(state: critical_state)
-    )
+    three_hp_state = healthy_state.deep_dup
+    three_hp_state["field"][1][1]["hp"] = 3
 
-    assert_equal 0, offensive_group_score(state: critical_state)
+    three_hp_score = offensive_group_score(state: three_hp_state)
+
+    one_hp_state = healthy_state.deep_dup
+    one_hp_state["field"][1][1]["hp"] = 1
+
+    one_hp_score = offensive_group_score(state: one_hp_state)
+
+    destroyed_state = healthy_state.deep_dup
+    destroyed_state["field"][1][1]["hp"] = 0
+
+    destroyed_score = offensive_group_score(state: destroyed_state)
+
+    assert_operator full_score, :>, three_hp_score
+    assert_operator three_hp_score, :>, one_hp_score
+    assert_operator one_hp_score, :>, 0
+    assert_equal 0, destroyed_score
   end
 
   test "does not reward a cluster without a reachable offensive objective" do
