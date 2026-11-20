@@ -1,0 +1,626 @@
+первый бой:
+
+dan@dan-Lenovo:~/paligon/my_project/clash_tanks$ mkdir -p log && touch log/opponent_engine_analysis.log && tail -n 0 -F log/development.log log/test.log 2>/dev/null | grep --line-buffered -E '\[OpponentEngine\]|Games::RunAiTurns|shot_fired|counterattack_fired|damage_applied|technique_destroyed|ERROR|FATAL|Exception' | tee -a log/opponent_engine_analysis.log
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 10, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 9, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=0.75, score_delta=41.25, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=63, elapsed_ms=264.0, selected_actions=3
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=0.75, score_delta=0.75, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=18.3, selected_actions=1
+[Games::RunAiTurns] Game #178: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 11, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [1, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=3.5, score_delta=44.5, actions={"play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=103, elapsed_ms=856.7, selected_actions=4
+[Games::RunAiTurns] Game #178: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [1, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=3.5, score_delta=12.13, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=15, elapsed_ms=150.8, selected_actions=3
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 10, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 7, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-3.5, score_delta=19.5, actions={"play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=81, elapsed_ms=474.6, selected_actions=4
+[Games::RunAiTurns] Game #178: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-3.5, score_delta=9.0, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=15, elapsed_ms=115.9, selected_actions=3
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 11, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=4.25, score_delta=34.75, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=67, elapsed_ms=393.9, selected_actions=3
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=4.25, score_delta=-3.25, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=27.1, selected_actions=1
+[Games::RunAiTurns] Game #178: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 7, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-9.720588235294118, score_delta=32.78, actions={"play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"technique" => 1, "headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=75, elapsed_ms=661.2, selected_actions=4
+[Games::RunAiTurns] Game #178: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-9.720588235294118, score_delta=22.03, actions={"attack" => 2, "end_turn" => 1}, attackers={"technique" => 1, "headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=11, elapsed_ms=133.4, selected_actions=3
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 7, "play_card" => 5, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 4]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 2]}, score: -59.25
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: -66.0
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -58.25
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -63.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 2]}, score: -64.25
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -62.75
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 4]}, score: -62.5
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 7, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-13.325000000000003, score_delta=37.8, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=308, elapsed_ms=2527.9, selected_actions=3
+[Games::RunAiTurns] Game #178: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 6, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 4]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 2]}, score: -47.35
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -46.35
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -56.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 2]}, score: -55.15
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -54.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 4]}, score: -55.5
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-13.325000000000003, score_delta=21.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=104, elapsed_ms=1952.0, selected_actions=2
+[Games::RunAiTurns] Game #178: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #178: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+
+
+
+второй бой: 
+
+dan@dan-Lenovo:~/paligon/my_project/clash_tanks$ mkdir -p log && touch log/opponent_engine_analysis.log && tail -n 0 -F log/development.log log/test.log 2>/dev/null | grep --line-buffered -E '\[OpponentEngine\]|Games::RunAiTurns|shot_fired|counterattack_fired|damage_applied|technique_destroyed|ERROR|FATAL|Exception' | tee -a log/opponent_engine_analysis.log
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 15, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 9, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-18.75, score_delta=25.25, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=83, elapsed_ms=397.0, selected_actions=3
+[Games::RunAiTurns] Game #179: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-18.75, score_delta=6.75, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=40.2, selected_actions=2
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 8, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: -38.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -26.375
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -38.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -36.5
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 8, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=9.524999999999999, score_delta=33.15, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=274, elapsed_ms=2761.7, selected_actions=3
+[Games::RunAiTurns] Game #179: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -8.525
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -23.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -21.5
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=9.524999999999999, score_delta=10.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=57, elapsed_ms=769.5, selected_actions=2
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 9, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: -10.625
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -12.95
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -22.75
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -20.75
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 10, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=20.65, score_delta=22.3, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=516, elapsed_ms=9195.0, selected_actions=4
+[Games::RunAiTurns] Game #179: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 1, "attack" => 5, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 15.225000000000001
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=20.65, score_delta=2.0, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=173, elapsed_ms=3174.5, selected_actions=2
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 11, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: -16.625
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -15.200000000000003
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -35.75
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -33.75
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 1, "column" => 3}}, {"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=5.875, score_delta=12.28, actions={"move" => 2, "play_card" => 1, "attack" => 3, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=743, elapsed_ms=17730.6, selected_actions=7
+[Games::RunAiTurns] Game #179: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 1, "attack" => 7, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 8.975000000000001
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=7.899999999999999, score_delta=-4.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=243, elapsed_ms=5339.0, selected_actions=2
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 3, "move" => 4, "play_card" => 14, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: -94.25
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -63.75
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -97.0
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -95.0
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 3], "target" => [0, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-24.675000000000004, score_delta=36.32, actions={"attack" => 2, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=608, elapsed_ms=10186.5, selected_actions=4
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 2, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -66.975
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -73.25
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -71.25
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 3], "target" => [0, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-24.675000000000004, score_delta=38.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"technique" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=55, elapsed_ms=1264.4, selected_actions=2
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 9, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: -44.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -46.825
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -57.25
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -55.25
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=15.0, score_delta=53.03, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=566, elapsed_ms=11765.3, selected_actions=4
+[Games::RunAiTurns] Game #179: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 5, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -22.75
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -36.75
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -35.65
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=15.0, score_delta=32.0, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=254, elapsed_ms=4532.2, selected_actions=2
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 5, "play_card" => 8, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 2], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 2], "to" => [1, 2]}, score: -9.175000000000004
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -15.25
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -14.924999999999997
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -14.725000000000001
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [0, 1]}}, {"type" => "play_card", "payload" => {"card_id" => 31, "targets" => [[1, 0]]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [0, 1]}}, {"type" => "move", "payload" => {"from" => [0, 2], "to" => [0, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=42.7, score_delta=52.2, actions={"attack" => 2, "play_card" => 1, "move" => 1, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=971, elapsed_ms=21037.8, selected_actions=5
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="play_card"
+[ActionCable] Broadcasting to Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xNzk:1: "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;...
+[ActionCable] Broadcasting to Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xNzk:3: "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;...
+Turbo::StreamsChannel transmitting "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;... (via streamed from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xNzk:3)
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #179: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+
+
+ третий бой:
+ 
+ dan@dan-Lenovo:~/paligon/my_project/clash_tanks$ mkdir -p log && touch log/opponent_engine_analysis.log && tail -n 0 -F log/development.log log/test.log 2>/dev/null | grep --line-buffered -E '\[OpponentEngine\]|Games::RunAiTurns|shot_fired|counterattack_fired|damage_applied|technique_destroyed|ERROR|FATAL|Exception' | tee -a log/opponent_engine_analysis.log
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 10, "end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 9, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-5.5, score_delta=31.5, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=63, elapsed_ms=306.8, selected_actions=3
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"end_turn" => 1}
+[OpponentEngine] Root moves: []
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-5.5, score_delta=-9.0, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=24.7, selected_actions=1
+[Games::RunAiTurns] Game #180: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 8, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [0, 3]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [0, 3]}, score: -20.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -18.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -20.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -18.5
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 8, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=14.399999999999999, score_delta=26.4, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=264, elapsed_ms=2889.6, selected_actions=3
+[Games::RunAiTurns] Game #180: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -0.6500000000000004
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -5.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -3.5
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=14.399999999999999, score_delta=3.75, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=57, elapsed_ms=892.3, selected_actions=2
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 9, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 5.625
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 5.625
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -6.0
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -4.0
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 10, "row" => 1, "column" => 4}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=33.075, score_delta=14.9, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=590, elapsed_ms=11832.3, selected_actions=3
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 27.65
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 26.950000000000003
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 19.5
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=33.075, score_delta=5.38, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=119, elapsed_ms=2695.7, selected_actions=1
+[Games::RunAiTurns] Game #180: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 4, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}, {"type" => "move", "payload" => {"from" => [1, 4], "to" => [2, 4]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 22.675
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 18.95
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 5.5
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 4], "to" => [2, 4]}, score: 33.85
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 31, "targets" => [[0, 0]]}}, {"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 4], "to" => [1, 3]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=73.55, score_delta=41.9, actions={"play_card" => 2, "move" => 3, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=846, elapsed_ms=22690.4, selected_actions=7
+[Games::RunAiTurns] Game #180: AI proposed action type="play_card"
+[ActionCable] Broadcasting to Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xODA:1: "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;...
+[ActionCable] Broadcasting to Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xODA:15: "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;...
+Turbo::StreamsChannel transmitting "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;... (via streamed from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xODA:15)
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 5, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}, {"type" => "move", "payload" => {"from" => [1, 4], "to" => [2, 4]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: 54.85
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: 31.75
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 4], "to" => [2, 4]}, score: 59.19999999999999
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "move", "payload" => {"from" => [1, 4], "to" => [1, 3]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=73.55, score_delta=16.55, actions={"move" => 2, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=408, elapsed_ms=8214.5, selected_actions=4
+[Games::RunAiTurns] Game #180: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+[ActionCable] Broadcasting to Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xODA:1: "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;...
+[ActionCable] Broadcasting to Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xODA:15: "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;...
+Turbo::StreamsChannel transmitting "<turbo-stream action=\"update\" target=\"game-content\"><template><!-- BEGIN app/views/games/_game.html.erb\n-->\n<div class=\"game \"\n      data-controller=\"game-events game-timer\"\n      data-game-events-events-value=\"[{&quot;type&quot;:&quot;damage_applied&quot;,&quot;source&quot;:{&quot;... (via streamed from Z2lkOi8vY2xhc2gtdGFua3MvR2FtZS8xODA:15)
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 5, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 1.875
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -0.4499999999999993
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -7.25
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -5.25
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=37.15, score_delta=26.3, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=459, elapsed_ms=9153.3, selected_actions=4
+[Games::RunAiTurns] Game #180: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 1, "attack" => 5, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: 23.725
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=37.15, score_delta=10.0, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=168, elapsed_ms=3526.6, selected_actions=2
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 4, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: -36.625
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -38.95
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -50.625
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -48.625
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-14.625, score_delta=16.78, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=606, elapsed_ms=12405.1, selected_actions=4
+[Games::RunAiTurns] Game #180: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"attack" => 5, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -14.875
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -28.875
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -27.775
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [0, 1]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [0, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-8.274999999999999, score_delta=0.85, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=249, elapsed_ms=4220.3, selected_actions=3
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:56:in 'block in Games::RunAiTurns#call'
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 3, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 4]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: -58.875
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 2]}, score: -60.724999999999994
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [1, 4]}, score: -60.875
+[OpponentEngine] Move simulation SUCCESS: {"from" => [1, 3], "to" => [2, 3]}, score: -58.875
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 7, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 1]}}, {"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [1, 1]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-29.375, score_delta=20.05, actions={"move" => 2, "play_card" => 1, "attack" => 3, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=536, elapsed_ms=10806.2, selected_actions=7
+[Games::RunAiTurns] Game #180: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="play_card"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[OpponentEngine] Root actions: {"move" => 1, "attack" => 7, "end_turn" => 1}
+[OpponentEngine] Root moves: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}]
+[OpponentEngine] Move simulation SUCCESS: {"from" => [0, 3], "to" => [0, 2]}, score: -46.575
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [1, 1]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-29.375, score_delta=15.35, actions={"move" => 1, "attack" => 3, "end_turn" => 1}, attackers={"technique" => 2, "headquarters" => 1}
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=248, elapsed_ms=4865.1, selected_actions=5
+[Games::RunAiTurns] Game #180: AI proposed action type="move"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="attack"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+[Games::RunAiTurns] Game #180: AI proposed action type="end_turn"
+  ↳ app/services/games/run_ai_turns.rb:229:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:248:in 'block in Games::RunAiTurns#run_ai_loop'
+  ↳ app/services/games/run_ai_turns.rb:71:in 'block in Games::RunAiTurns#call'
+
+

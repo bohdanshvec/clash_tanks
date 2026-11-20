@@ -56,6 +56,20 @@ module DecisionProviders
         WAITING_OPPORTUNITY_MAX_SCORE = 18.0
         WAITING_RISK_SCALE = 20.0
 
+        # Строй. Техника должна накапливаться на линии построения и выходить
+        # вперёд группой. Штраф действует только в конце собственного хода.
+        FORMATION_ADVANCE_DISTANCE = 2
+        FORMATION_MIN_GROUP = 3
+        LONE_ADVANCE_PENALTY = 14.0
+        LONE_ADVANCE_FIRED_FACTOR = 0.5
+        FORMATION_PATIENCE_DECK_CARDS = 4.0
+
+        # Гонка пустых колод. Взятие карты из пустой колоды наносит штабу
+        # урон 1, 2, 3, ... Проигрывает тот, чей штаб погибнет раньше.
+        DECK_RACE_WEIGHT = 6.0
+        DECK_RACE_HORIZON_DRAWS = 10
+        DECK_RACE_MAX_MARGIN = 4
+
         def self.call(visible_state:, player_id:)
           new(
             visible_state: visible_state,
@@ -91,8 +105,10 @@ module DecisionProviders
           headquarters_attack_opportunity_score +
           combined_attack_opportunity_score +
           future_coordination_opportunity_score +
-          resources_score -
-          enemy_threat_score
+          resources_score +
+          deck_race_score -
+          enemy_threat_score -
+          formation_penalty
           )
         end
 
@@ -509,10 +525,117 @@ module DecisionProviders
         end
 
         # --------------------------------------------------------------
+        # Состояние без «потраченных» атак
+        # --------------------------------------------------------------
+
+        def own_turn?
+          @visible_state["current_player_id"].to_s == @player_id
+        end
+
+        # После end_turn отметки has_attacked и has_counterattacked нашей
+        # техники и штаба остаются в состоянии, но в начале следующего
+        # собственного хода они сбрасываются. Поэтому «возможность атаки»
+        # в конце хода нужно оценивать так, будто выстрелы ещё не потрачены.
+        # Иначе выстрел штаба или танка выглядит потерей возможности, и ИИ
+        # предпочитает не стрелять.
+        #
+        # Перемещение здесь не сбрасывается: его отдельно учитывает
+        # future_coordination_opportunity_score.
+        def attack_flags_cleared_evaluator
+          @attack_flags_cleared_evaluator ||= self.class.new(
+            visible_state: state_with_attack_flags_cleared,
+            player_id: @player_id
+          )
+        end
+
+        def state_with_attack_flags_cleared
+          state = @visible_state.deep_dup
+
+          state["current_player_id"] = @player_id
+
+          state["available_actions"] = {
+            "field" => {},
+            "hand" => {}
+          }
+
+          state["field"].each do |row|
+            row.each do |object|
+              next unless object
+              next unless object["player_id"].to_s == @player_id
+              next unless %w[technique headquarters].include?(object["type"])
+
+              object["has_attacked"] = false
+              object["has_counterattacked"] = false
+            end
+          end
+
+          state
+        end
+
+        # --------------------------------------------------------------
+        # Строй: выдвижение вперёд только группой
+        # --------------------------------------------------------------
+
+        # Выдвинутой считается техника, ушедшая от собственного штаба
+        # минимум на FORMATION_ADVANCE_DISTANCE столбца. Если таких машин
+        # меньше требуемой группы, каждая получает штраф.
+        #
+        # Машина, которая в этом ходу уже стреляла, штрафуется слабее:
+        # её польза (урон, уничтожение цели) уже учтена в материальной
+        # оценке. Выход вперёд без выстрела штрафуется полностью.
+        #
+        # Внутри хода штраф не применяется, чтобы поиск мог построить
+        # групповое выдвижение из нескольких перемещений подряд.
+        def formation_penalty
+          return 0 if own_turn?
+
+          own_headquarters = headquarters_position(@player_id)
+          return 0 unless own_headquarters
+
+          healthy = own_techniques.select do |technique, _position|
+            numeric(technique, "hp").positive?
+          end
+
+          forward = healthy.select do |_technique, position|
+            (position[1] - own_headquarters[1]).abs >=
+              FORMATION_ADVANCE_DISTANCE
+          end
+
+          return 0 if forward.empty?
+
+          required_group = [
+            FORMATION_MIN_GROUP,
+            [healthy.length, 2].max
+          ].min
+
+          return 0 if forward.length >= required_group
+
+          forward.sum do |technique, _position|
+            factor =
+              technique["has_attacked"] ? LONE_ADVANCE_FIRED_FACTOR : 1.0
+
+            LONE_ADVANCE_PENALTY * factor
+          end * formation_patience
+        end
+
+        # Когда собственная колода почти пуста, ожидание становится
+        # дорогим: каждый ход приносит урон штабу. Штраф за одиночный
+        # выход плавно ослабевает до нуля.
+        def formation_patience
+          deck_count = numeric(@player, "deck_count")
+
+          [deck_count / FORMATION_PATIENCE_DECK_CARDS, 1.0].min
+        end
+
+        # --------------------------------------------------------------
         # Совместная атака нескольких танков
         # --------------------------------------------------------------
 
         def combined_attack_opportunity_score
+          return attack_flags_cleared_evaluator.send(
+            :combined_attack_opportunity_score
+          ) unless own_turn?
+
           enemy_techniques.sum do |target, target_position|
             attackers = potential_attackers(
               target,
@@ -542,7 +665,8 @@ module DecisionProviders
           # Оценка применяется только после завершения нашего хода.
           return 0 if @visible_state["current_player_id"].to_s == @player_id
 
-          current_gain = best_combined_attack_gain
+          current_gain =
+            attack_flags_cleared_evaluator.send(:best_combined_attack_gain)
 
           projected_state = project_next_own_turn
 
@@ -644,6 +768,10 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def headquarters_attack_opportunity_score
+          return attack_flags_cleared_evaluator.send(
+            :headquarters_attack_opportunity_score
+          ) unless own_turn?
+
           headquarters = headquarters_for(@player_id)
 
           return 0 unless headquarters
@@ -1108,6 +1236,97 @@ module DecisionProviders
               ]
             end
           end
+        end
+
+        # --------------------------------------------------------------
+        # Гонка пустых колод
+        # --------------------------------------------------------------
+
+        # Сравнивает, чей штаб раньше погибнет только от урона пустой
+        # колоды, если ни один игрок больше не будет атаковать. Пока обе
+        # колоды далеко от конца, оценка равна нулю.
+        def deck_race_score
+          own_step = deck_death_step(@player_id, own_draws: true)
+          enemy_step = deck_death_step(@opponent_id, own_draws: false)
+
+          return 0 if own_step.nil? && enemy_step.nil?
+
+          margin =
+            if own_step.nil?
+              DECK_RACE_MAX_MARGIN
+            elsif enemy_step.nil?
+              -DECK_RACE_MAX_MARGIN
+            else
+              (own_step - enemy_step).clamp(
+                -DECK_RACE_MAX_MARGIN,
+                DECK_RACE_MAX_MARGIN
+              )
+            end
+
+          margin * DECK_RACE_WEIGHT
+        end
+
+        # Номер шага (1, 2, 3...) глобальной очереди взятий карт, на
+        # котором штаб игрока погибнет. Взятия чередуются; первым берёт
+        # карту тот, чей ход начнётся следующим. Если игрок переживёт
+        # горизонт расчёта, возвращает nil.
+        def deck_death_step(player_id, own_draws:)
+          return nil unless player_id
+
+          player = @players[player_id.to_s]
+          headquarters = headquarters_for(player_id)
+
+          return nil unless player && headquarters
+
+          hp = numeric(headquarters, "hp")
+          deck = numeric(player, "deck_count").to_i
+          attempts = numeric(player, "empty_deck_draw_attempts").to_i
+
+          platoons = Array(player["platoons"]).compact.map do |platoon|
+            { armor: numeric(platoon, "armor"), hp: numeric(platoon, "hp") }
+          end
+
+          # В конце нашего хода противник уже взял карту, следующим берёт
+          # карту наш ИИ. Внутри нашего хода следующим берёт противник.
+          ai_draws_next = !own_turn?
+
+          DECK_RACE_HORIZON_DRAWS.times do |index|
+            if deck.positive?
+              deck -= 1
+              next
+            end
+
+            attempts += 1
+            damage = attempts.to_f
+
+            platoons.each do |platoon|
+              break if damage <= 0
+              next if platoon[:hp] <= 0
+
+              absorbed = [damage, platoon[:armor]].min
+              platoon[:hp] -= absorbed
+              damage -= absorbed
+            end
+
+            hp -= damage
+
+            next unless hp <= 0
+
+            draw_number = index + 1
+
+            drawer_is_ai = own_draws
+            first_is_ai = ai_draws_next
+
+            return(
+              if drawer_is_ai == first_is_ai
+                2 * draw_number - 1
+              else
+                2 * draw_number
+              end
+            )
+          end
+
+          nil
         end
 
         # --------------------------------------------------------------

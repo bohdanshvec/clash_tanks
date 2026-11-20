@@ -102,6 +102,7 @@ module DecisionProviders
 
           completed = []
           expanded_nodes = 0
+          frontier_expanded = false
 
           @depth.times do
             candidates = []
@@ -164,12 +165,41 @@ module DecisionProviders
               end
             end
 
-            break if candidates.empty?
+            if candidates.empty?
+              frontier_expanded = true
+              break
+            end
 
             frontier = rank(candidates).first(@width)
           end
 
-          best_node = (completed + frontier)
+          # Узел без end_turn оценён «посреди хода». Его нельзя сравнивать
+          # с завершённым ходом: у него нет пополнения топлива противника,
+          # штрафов и бонусов конца хода, поэтому он выглядит лучше.
+          # Достраиваем такие узлы до end_turn и выбираем только среди
+          # завершённых ходов.
+          unless frontier_expanded
+            frontier.each do |node|
+              next if node.actions.empty?
+
+              finished = finish_turn(node)
+              next unless finished
+
+              expanded_nodes += 1
+              completed << finished
+            end
+          end
+
+          best_node = completed
+            .reject { |node| node.actions.empty? }
+            .max_by do |node|
+              [
+                node.score,
+                -node.actions.length
+              ]
+            end
+
+          best_node ||= frontier
             .reject { |node| node.actions.empty? }
             .max_by do |node|
               [
@@ -212,6 +242,29 @@ module DecisionProviders
         end
 
         private
+
+        # Достраивает незавершённый узел действием end_turn.
+        def finish_turn(node)
+          action = { "type" => "end_turn", "payload" => {} }
+
+          simulation = simulate(node.visible_state, action)
+          return nil unless simulation.success?
+
+          expected_state = simulation.visible_state.deep_dup
+
+          step = Step.new(
+            action: action.deep_dup,
+            expected_visible_state: expected_state.deep_dup
+          )
+
+          Node.new(
+            visible_state: expected_state,
+            actions: node.actions + [action.deep_dup],
+            steps: node.steps + [step],
+            score: evaluate(expected_state),
+            terminal: true
+          )
+        end
 
         def first_action_category(node)
           action = node.actions.first
