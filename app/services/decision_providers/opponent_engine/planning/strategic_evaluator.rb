@@ -14,7 +14,10 @@ module DecisionProviders
         TECHNIQUE_HP_WEIGHT = 2.5
         TECHNIQUE_FIREPOWER_WEIGHT = 3.0
         TECHNIQUE_RANGE_WEIGHT = 1.0
-        TECHNIQUE_FUEL_WEIGHT = 0.25
+        TECHNIQUE_FUEL_WEIGHT = 1.5
+
+        TECHNIQUE_TANK_DESTROYER_ROLE_WEIGHT = 5.0
+        TECHNIQUE_ARTILLERY_ROLE_WEIGHT = 6.0
 
         PLATOON_HP_WEIGHT = 2.0
         PLATOON_FIREPOWER_WEIGHT = 3.0
@@ -161,7 +164,19 @@ module DecisionProviders
           numeric(technique, "hp") * TECHNIQUE_HP_WEIGHT +
             numeric(technique, "firepower") * TECHNIQUE_FIREPOWER_WEIGHT +
             numeric(technique, "attack_range") * TECHNIQUE_RANGE_WEIGHT +
-            numeric(technique, "fuel") * TECHNIQUE_FUEL_WEIGHT
+            numeric(technique, "fuel") * TECHNIQUE_FUEL_WEIGHT +
+            technique_role_value(technique)
+        end
+
+        def technique_role_value(technique)
+          case technique["technique_type"]
+          when "tank_destroyer"
+            TECHNIQUE_TANK_DESTROYER_ROLE_WEIGHT
+          when "artillery"
+            TECHNIQUE_ARTILLERY_ROLE_WEIGHT
+          else
+            0
+          end
         end
 
         def own_techniques

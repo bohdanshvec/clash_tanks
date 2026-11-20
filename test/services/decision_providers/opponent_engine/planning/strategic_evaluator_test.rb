@@ -23,6 +23,46 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values tank destroyers above equivalent medium tanks" do
+    medium_tank = test_technique(57)
+    tank_destroyer = test_technique(57)
+
+    tank_destroyer["technique_type"] = "tank_destroyer"
+
+    assert_operator(
+      technique_value(tank_destroyer),
+      :>,
+      technique_value(medium_tank)
+    )
+  end
+
+  test "values artillery above equivalent medium tanks" do
+    medium_tank = test_technique(57)
+    artillery = test_technique(57)
+
+    artillery["technique_type"] = "artillery"
+
+    assert_operator(
+      technique_value(artillery),
+      :>,
+      technique_value(medium_tank)
+    )
+  end
+
+  test "values techniques that contribute fuel to future turns" do
+    without_fuel = test_technique(57)
+    with_fuel = test_technique(57)
+
+    without_fuel["fuel"] = 0
+    with_fuel["fuel"] = 2
+
+    assert_operator(
+      technique_value(with_fuel),
+      :>,
+      technique_value(without_fuel)
+    )
+  end
+
   test "returns a numeric and repeatable score" do
     visible_state = visible_state_for_ai
     original_state = visible_state.deep_dup
@@ -962,6 +1002,18 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
   end
 
   private
+
+  def technique_value(technique)
+    visible_state = visible_state_for_ai
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    evaluator.send(:technique_value, technique)
+  end
 
   def offensive_lane_score(state:, player_id: @ai_player_id)
     visible_state = GameEngine::VisibleState.call(
