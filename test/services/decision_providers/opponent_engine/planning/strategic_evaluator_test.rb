@@ -873,7 +873,125 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values a vertical offensive line for the first player" do
+    formed_state = @state.deep_dup
+
+    formed_state["field"][0][1] = test_technique(42)
+    formed_state["field"][1][1] = test_technique(42)
+
+    scattered_state = @state.deep_dup
+
+    scattered_state["field"][0][1] = test_technique(42)
+    scattered_state["field"][1][2] = test_technique(42)
+
+    assert_operator(
+      offensive_lane_score(state: formed_state),
+      :>,
+      offensive_lane_score(state: scattered_state)
+    )
+  end
+
+  test "values a vertical offensive line for the second player" do
+    second_state = GameEngine::GameState.initial(
+      current_player_id: 57,
+      participants: [
+        headquarters_participant(
+          player_id: 42,
+          nation_id: 10
+        ),
+        headquarters_participant(
+          player_id: 57,
+          nation_id: 20
+        )
+      ]
+    )
+
+    formed_state = second_state.deep_dup
+
+    formed_state["field"][1][3] = test_technique(57)
+    formed_state["field"][2][3] = test_technique(57)
+
+    scattered_state = second_state.deep_dup
+
+    scattered_state["field"][1][3] = test_technique(57)
+    scattered_state["field"][2][2] = test_technique(57)
+
+    assert_operator(
+      offensive_lane_score(
+        state: formed_state,
+        player_id: "57"
+      ),
+      :>,
+      offensive_lane_score(
+        state: scattered_state,
+        player_id: "57"
+      )
+    )
+  end
+
+  test "does not value a single technique as an offensive line" do
+    state = @state.deep_dup
+
+    state["field"][1][1] = test_technique(42)
+
+    assert_equal(
+      0,
+      offensive_lane_score(state: state)
+    )
+  end
+
+  test "does not reward additional free deployment positions" do
+    one_free_position = @state.deep_dup
+    two_free_positions = @state.deep_dup
+
+    [
+      [1, 0],
+      [2, 1]
+    ].each do |position|
+      one_free_position["field"][position[0]][position[1]] =
+        test_technique(42)
+    end
+
+    two_free_positions["field"][1][0] =
+      test_technique(42)
+
+    assert_equal(
+      deployment_capacity_score(state: one_free_position),
+      deployment_capacity_score(state: two_free_positions)
+    )
+  end
+
   private
+
+  def offensive_lane_score(state:, player_id: @ai_player_id)
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: player_id
+      )
+
+    evaluator.send(:offensive_lane_score)
+  end
+
+  def deployment_capacity_score(state:)
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: @ai_player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    evaluator.send(:deployment_capacity_score)
+  end
 
   def future_coordination_opportunity_score(
     state:,

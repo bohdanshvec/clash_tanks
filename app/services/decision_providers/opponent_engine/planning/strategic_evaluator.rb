@@ -34,6 +34,11 @@ module DecisionProviders
 
         DEPLOYMENT_SLOT_WEIGHT = 5.0
 
+        # Построение ударной линии рядом со штабом.
+        OFFENSIVE_LANE_PAIR_WEIGHT = 4.0
+        OFFENSIVE_LANE_FIREPOWER_WEIGHT = 0.2
+        OFFENSIVE_LANE_MAX_SCORE = 8.0
+
         COMBINED_ATTACK_MIN_TECHNIQUES = 1
         COMBINED_ATTACK_OPPORTUNITY_WEIGHT = 0.75
 
@@ -78,6 +83,7 @@ module DecisionProviders
           platoons_score +
           positional_score +
           offensive_group_score +
+          offensive_lane_score +
           deployment_capacity_score +
           headquarters_attack_opportunity_score +
           combined_attack_opportunity_score +
@@ -278,6 +284,49 @@ module DecisionProviders
           end
         end
 
+        # --------------------------------------------------------------
+        # Построение ударной линии
+        # --------------------------------------------------------------
+
+        def offensive_lane_score
+          own_headquarters = headquarters_position(@player_id)
+          return 0 unless own_headquarters
+
+          lane_column =
+            case own_headquarters[1]
+            when 0 then 1
+            when 4 then 3
+            else return 0
+            end
+
+          lane_techniques = own_techniques.select do |technique, position|
+            position[1] == lane_column &&
+              numeric(technique, "hp").positive?
+          end
+
+          return 0 if lane_techniques.length < 2
+
+          rows = lane_techniques
+            .map { |_technique, position| position[0] }
+            .sort
+
+          longest_line = rows
+            .chunk_while { |previous, current| current == previous + 1 }
+            .max_by(&:length)
+
+          return 0 unless longest_line && longest_line.length >= 2
+
+          line_firepower = lane_techniques.sum do |technique, position|
+            numeric(technique, "firepower") if
+              longest_line.include?(position[0])
+          end
+
+          (
+            (longest_line.length - 1) * OFFENSIVE_LANE_PAIR_WEIGHT +
+            line_firepower * OFFENSIVE_LANE_FIREPOWER_WEIGHT
+          ).clamp(0, OFFENSIVE_LANE_MAX_SCORE)
+        end
+
         def offensive_group_score_for_target(
           target:,
           target_position:,
@@ -427,9 +476,11 @@ module DecisionProviders
         end
 
         def deployment_capacity_score
-          deployment_positions_for(@player_id).count do |position|
+          has_free_position = deployment_positions_for(@player_id).any? do |position|
             object_at(position).nil?
-          end * DEPLOYMENT_SLOT_WEIGHT
+          end
+
+          has_free_position ? DEPLOYMENT_SLOT_WEIGHT : 0
         end
 
         # --------------------------------------------------------------
