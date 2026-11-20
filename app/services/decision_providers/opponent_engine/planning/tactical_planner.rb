@@ -61,7 +61,7 @@ module DecisionProviders
             result[card["card_id"].to_s] = card["card_type"]
           end
 
-@root_deployment_positions = root_deployment_positions
+          @root_deployment_positions = root_deployment_positions
 
           raise ArgumentError, "Depth must be positive" unless @depth.positive?
           raise ArgumentError, "Width must be positive" unless @width.positive?
@@ -77,6 +77,8 @@ module DecisionProviders
               max_ms: 0.0
             }
           end
+
+          @strategic_component_timings = {}
 
           initial_score = evaluate(@visible_state)
 
@@ -251,6 +253,22 @@ module DecisionProviders
               "max=#{stats[:max_ms].round(1)}ms"
           end.join(" | ")
 
+          strategic_summary = @strategic_component_timings
+            .sort_by { |name, _stats| name.to_s }
+            .map do |name, stats|
+              average_ms = stats[:total_ms] / stats[:calls]
+
+              "#{name}=#{stats[:calls]} calls, " \
+                "total=#{stats[:total_ms].round(1)}ms, " \
+                "avg=#{average_ms.round(2)}ms, " \
+                "max=#{stats[:max_ms].round(1)}ms"
+            end
+            .join(" | ")
+
+          Rails.logger.info(
+            "[OpponentEngine] Strategic profile: #{strategic_summary}"
+          )
+
           Rails.logger.info(
             "[OpponentEngine] Search profile: #{phase_summary}"
           )
@@ -379,12 +397,12 @@ module DecisionProviders
         # --------------------------------------------------------------
         # Стратегическая оценка
         # --------------------------------------------------------------
-
         def evaluate(visible_state)
           measure_phase(:evaluate) do
             StrategicEvaluator.call(
               visible_state: visible_state,
-              player_id: @player_id
+              player_id: @player_id,
+              profile: @strategic_component_timings
             )
           end
         end
@@ -393,7 +411,9 @@ module DecisionProviders
           measure_phase(:evaluate_breakdown) do
             StrategicEvaluator.new(
               visible_state: visible_state,
-              player_id: @player_id
+              player_id: @player_id,
+              profile: @strategic_component_timings,
+              profile_scope: :breakdown
             ).score_breakdown
           end
         end

@@ -70,14 +70,21 @@ module DecisionProviders
         DECK_RACE_HORIZON_DRAWS = 10
         DECK_RACE_MAX_MARGIN = 4
 
-        def self.call(visible_state:, player_id:)
+        def self.call(visible_state:, player_id:, profile: nil)
           new(
             visible_state: visible_state,
-            player_id: player_id
+            player_id: player_id,
+            profile: profile,
+            profile_scope: :evaluate
           ).call
         end
 
-        def initialize(visible_state:, player_id:)
+        def initialize(
+          visible_state:,
+          player_id:,
+          profile: nil,
+          profile_scope: :evaluate
+        )
           @visible_state = visible_state
           @player_id = player_id.to_s
 
@@ -91,53 +98,100 @@ module DecisionProviders
           end
 
           @opponent = @opponent_id ? @players.fetch(@opponent_id) : {}
+
+          @profile = profile
+          @profile_scope = profile_scope
         end
 
         def call
-          terminal_score || (
-          headquarters_score +
-          techniques_score +
-          platoons_score +
-          positional_score +
-          offensive_group_score +
-          offensive_lane_score +
-          deployment_capacity_score +
-          headquarters_attack_opportunity_score +
-          combined_attack_opportunity_score +
-          future_coordination_opportunity_score +
-          resources_score +
-          deck_race_score -
-          enemy_threat_score -
-          formation_penalty
-          )
+          terminal = measure_component(:terminal) do
+            terminal_score
+          end
+
+          return terminal unless terminal.nil?
+
+          measure_component(:headquarters) { headquarters_score } +
+            measure_component(:techniques) { techniques_score } +
+            measure_component(:platoons) { platoons_score } +
+            measure_component(:positioning) { positional_score } +
+            measure_component(:offensive_group) { offensive_group_score } +
+            measure_component(:offensive_lane) { offensive_lane_score } +
+            measure_component(:deployment_capacity) { deployment_capacity_score } +
+            measure_component(:headquarters_attack_opportunity) do
+              headquarters_attack_opportunity_score
+            end +
+            measure_component(:combined_attack_opportunity) do
+              combined_attack_opportunity_score
+            end +
+            measure_component(:future_coordination_opportunity) do
+              future_coordination_opportunity_score
+            end +
+            measure_component(:resources) { resources_score } +
+            measure_component(:deck_race) { deck_race_score } -
+            measure_component(:enemy_threat) { enemy_threat_score } -
+            measure_component(:formation_penalty) { formation_penalty }
         end
 
         # Возвращает составляющие стратегической оценки для диагностики.
         # Не меняет правила оценки и не используется при выборе действий.
         def score_breakdown
-          terminal = terminal_score
+          terminal = measure_component(:terminal) do
+            terminal_score
+          end
 
           return { terminal: terminal } unless terminal.nil?
 
           {
-            headquarters: headquarters_score,
-            techniques: techniques_score,
-            platoons: platoons_score,
-            positioning: positional_score,
-            offensive_group: offensive_group_score,
-            offensive_lane: offensive_lane_score,
-            deployment_capacity: deployment_capacity_score,
-            headquarters_attack_opportunity: headquarters_attack_opportunity_score,
-            combined_attack_opportunity: combined_attack_opportunity_score,
-            future_coordination_opportunity: future_coordination_opportunity_score,
-            resources: resources_score,
-            deck_race: deck_race_score,
-            enemy_threat: -enemy_threat_score,
-            formation_penalty: -formation_penalty
+            headquarters: measure_component(:headquarters) { headquarters_score },
+            techniques: measure_component(:techniques) { techniques_score },
+            platoons: measure_component(:platoons) { platoons_score },
+            positioning: measure_component(:positioning) { positional_score },
+            offensive_group: measure_component(:offensive_group) { offensive_group_score },
+            offensive_lane: measure_component(:offensive_lane) { offensive_lane_score },
+            deployment_capacity: measure_component(:deployment_capacity) { deployment_capacity_score },
+            headquarters_attack_opportunity: measure_component(:headquarters_attack_opportunity) do
+              headquarters_attack_opportunity_score
+            end,
+            combined_attack_opportunity: measure_component(:combined_attack_opportunity) do
+              combined_attack_opportunity_score
+            end,
+            future_coordination_opportunity: measure_component(:future_coordination_opportunity) do
+              future_coordination_opportunity_score
+            end,
+            resources: measure_component(:resources) { resources_score },
+            deck_race: measure_component(:deck_race) { deck_race_score },
+            enemy_threat: -measure_component(:enemy_threat) { enemy_threat_score },
+            formation_penalty: -measure_component(:formation_penalty) { formation_penalty }
           }
         end
 
         private
+
+        def measure_component(name)
+          return yield unless @profile
+
+          started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+          yield
+        ensure
+          if @profile && started_at
+            elapsed_ms = (
+              Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+            ) * 1000
+
+            key = :"#{@profile_scope}.#{name}"
+
+            stats = (@profile[key] ||= {
+              calls: 0,
+              total_ms: 0.0,
+              max_ms: 0.0
+            })
+
+            stats[:calls] += 1
+            stats[:total_ms] += elapsed_ms
+            stats[:max_ms] = [stats[:max_ms], elapsed_ms].max
+          end
+        end
 
         # --------------------------------------------------------------
         # Завершение партии

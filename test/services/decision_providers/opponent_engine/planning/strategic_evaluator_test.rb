@@ -94,6 +94,52 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     assert_includes breakdown.keys, :formation_penalty
   end
 
+  test "profiles strategic evaluation components without changing scores" do
+    visible_state = visible_state_for_ai
+    profile = {}
+
+    score =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.call(
+        visible_state: visible_state,
+        player_id: @ai_player_id,
+        profile: profile
+      )
+
+    breakdown =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id,
+        profile: profile,
+        profile_scope: :breakdown
+      ).score_breakdown
+
+    assert_equal score, breakdown.values.sum
+
+    assert_operator(
+      profile.fetch(:"evaluate.headquarters")[:calls],
+      :>,
+      0
+    )
+
+    assert_operator(
+      profile.fetch(:"evaluate.enemy_threat")[:calls],
+      :>,
+      0
+    )
+
+    assert_operator(
+      profile.fetch(:"breakdown.combined_attack_opportunity")[:calls],
+      :>,
+      0
+    )
+
+    assert_operator(
+      profile.fetch(:"breakdown.enemy_threat")[:total_ms],
+      :>=,
+      0
+    )
+  end
+
   test "values own headquarters health" do
     visible_state = visible_state_for_ai
     damaged_state = visible_state.deep_dup
