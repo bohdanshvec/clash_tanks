@@ -38,9 +38,9 @@ module DecisionProviders
         DEPLOYMENT_SLOT_WEIGHT = 5.0
 
         # Построение ударной линии рядом со штабом.
-        OFFENSIVE_LANE_PAIR_WEIGHT = 4.0
-        OFFENSIVE_LANE_FIREPOWER_WEIGHT = 0.2
-        OFFENSIVE_LANE_MAX_SCORE = 8.0
+        OFFENSIVE_LANE_PAIR_WEIGHT = 5.0
+        OFFENSIVE_LANE_FIREPOWER_WEIGHT = 0.35
+        OFFENSIVE_LANE_MAX_SCORE = 16.0
 
         COMBINED_ATTACK_MIN_TECHNIQUES = 1
         COMBINED_ATTACK_OPPORTUNITY_WEIGHT = 0.75
@@ -335,26 +335,25 @@ module DecisionProviders
               numeric(technique, "hp").positive?
           end
 
+          # Одна машина ещё не образует ударную группу.
           return 0 if lane_techniques.length < 2
 
-          rows = lane_techniques
-            .map { |_technique, position| position[0] }
-            .sort
+          group_firepower = lane_techniques.sum do |technique, _position|
+            health_factor = [
+              numeric(technique, "hp").to_f /
+                OFFENSIVE_GROUP_FULL_STRENGTH_HP,
+              1.0
+            ].min
 
-          longest_line = rows
-            .chunk_while { |previous, current| current == previous + 1 }
-            .max_by(&:length)
-
-          return 0 unless longest_line && longest_line.length >= 2
-
-          line_firepower = lane_techniques.sum do |technique, position|
-            numeric(technique, "firepower") if
-              longest_line.include?(position[0])
+            numeric(technique, "firepower") * health_factor
           end
 
+          group_size_bonus =
+            (lane_techniques.length - 1) * OFFENSIVE_LANE_PAIR_WEIGHT
+
           (
-            (longest_line.length - 1) * OFFENSIVE_LANE_PAIR_WEIGHT +
-            line_firepower * OFFENSIVE_LANE_FIREPOWER_WEIGHT
+            group_size_bonus +
+            group_firepower * OFFENSIVE_LANE_FIREPOWER_WEIGHT
           ).clamp(0, OFFENSIVE_LANE_MAX_SCORE)
         end
 

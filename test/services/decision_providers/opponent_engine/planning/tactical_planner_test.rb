@@ -72,13 +72,13 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     attacker = technique(
       player_id: AI_PLAYER_ID,
       hp: 4,
-      firepower: 4
+      firepower: 8
     )
 
     target = technique(
       player_id: OPPONENT_ID,
-      hp: 7,
-      firepower: 5
+      hp: 12,
+      firepower: 4
     )
 
     @state["field"][1][2] = attacker
@@ -98,6 +98,32 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     assert_equal "attack", second_attack["type"]
     assert_equal [1, 2], second_attack.dig("payload", "attacker")
     assert_equal [1, 1], second_attack.dig("payload", "target")
+
+    # После атаки штабом противник использовал контратаку.
+    hq_step_state = result.steps[0].expected_visible_state
+
+    assert(
+      hq_step_state.dig("field", 1, 1, "has_counterattacked")
+    )
+
+    # Собственная техника не пострадала от первого выстрела.
+    assert_equal(
+      4,
+      hq_step_state.dig("field", 1, 2, "hp")
+    )
+
+    # Последующая атака техники уничтожила цель.
+    technique_step_state = result.steps[1].expected_visible_state
+
+    assert_nil(
+      technique_step_state.dig("field", 1, 1)
+    )
+
+    # Техника не получила ответного урона.
+    assert_equal(
+      4,
+      technique_step_state.dig("field", 1, 2, "hp")
+    )
   end
 
   test "chooses a profitable ranged attack by a single technique" do
@@ -137,7 +163,7 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
-  test "waits for headquarters support instead of making a nonlethal solo attack" do
+  test "makes a safe solo attack when headquarters support is unavailable" do
     headquarters = @state["field"][2][0]
     headquarters["has_attacked"] = true
 
@@ -165,7 +191,17 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     result = plan
 
     assert_not_empty result.actions
-    assert_equal "end_turn", result.actions.first["type"]
+    assert_equal "attack", result.actions.first["type"]
+
+    assert_equal(
+      [1, 2],
+      result.actions.first.dig("payload", "attacker")
+    )
+
+    assert_equal(
+      [0, 3],
+      result.actions.first.dig("payload", "target")
+    )
   end
 
   test "does not sacrifice a technique to a tank destroyer that shoots first" do

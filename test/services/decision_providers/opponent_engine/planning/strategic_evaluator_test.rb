@@ -942,6 +942,41 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "values a formation group on the same lane without adjacent rows" do
+    formed_state = @state.deep_dup
+
+    formed_state["field"][0][1] = test_technique(42)
+    formed_state["field"][2][1] = test_technique(42)
+
+    scattered_state = @state.deep_dup
+
+    scattered_state["field"][0][1] = test_technique(42)
+    scattered_state["field"][2][2] = test_technique(42)
+
+    assert_operator(
+      offensive_lane_score(state: formed_state),
+      :>,
+      offensive_lane_score(state: scattered_state)
+    )
+  end
+
+  test "values three techniques on the formation lane above two" do
+    two_tanks_state = @state.deep_dup
+
+    two_tanks_state["field"][0][1] = test_technique(42)
+    two_tanks_state["field"][1][1] = test_technique(42)
+
+    three_tanks_state = two_tanks_state.deep_dup
+
+    three_tanks_state["field"][2][1] = test_technique(42)
+
+    assert_operator(
+      offensive_lane_score(state: three_tanks_state),
+      :>,
+      offensive_lane_score(state: two_tanks_state)
+    )
+  end
+
   test "values a vertical offensive line for the second player" do
     second_state = GameEngine::GameState.initial(
       current_player_id: 57,
