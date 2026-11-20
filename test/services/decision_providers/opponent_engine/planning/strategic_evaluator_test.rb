@@ -75,6 +75,25 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     assert_equal original_state, visible_state
   end
 
+  test "score breakdown sums to the strategic evaluation" do
+    visible_state = visible_state_for_ai
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    breakdown = evaluator.score_breakdown
+
+    assert_kind_of Hash, breakdown
+    assert_equal evaluate(visible_state), breakdown.values.sum
+
+    assert_includes breakdown.keys, :enemy_threat
+    assert_includes breakdown.keys, :offensive_group
+    assert_includes breakdown.keys, :formation_penalty
+  end
+
   test "values own headquarters health" do
     visible_state = visible_state_for_ai
     damaged_state = visible_state.deep_dup

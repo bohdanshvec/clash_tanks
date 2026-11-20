@@ -116,23 +116,33 @@ module DecisionProviders
                   action
                 )
 
-                if node.actions.empty? && action["type"] == "move"
-                  if simulation.success?
-                    Rails.logger.info(
-                      "[OpponentEngine] Move simulation SUCCESS: " \
-                      "#{action["payload"].inspect}, " \
-                      "score: #{evaluate(simulation.visible_state)}"
-                    )
-                  else
+                unless simulation.success?
+                  if node.actions.empty? && action["type"] == "move"
                     Rails.logger.warn(
                       "[OpponentEngine] Move simulation FAILED: " \
                       "#{action["payload"].inspect}, " \
                       "error: #{simulation.error}"
                     )
                   end
+
+                  next
                 end
 
-                next unless simulation.success?
+                child_score = evaluate(simulation.visible_state)
+
+                if node.actions.empty?
+                  breakdown = evaluate_breakdown(
+                    simulation.visible_state
+                  )
+
+                  Rails.logger.info(
+                    "[OpponentEngine] Root candidate: " \
+                    "type=#{action["type"]}, " \
+                    "payload=#{action["payload"].inspect}, " \
+                    "score=#{child_score.round(2)}, " \
+                    "breakdown=#{breakdown.transform_values { |value| value.round(2) }.inspect}"
+                  )
+                end
 
                 expanded_nodes += 1
 
@@ -150,7 +160,7 @@ module DecisionProviders
                   visible_state: expected_state,
                   actions: actions,
                   steps: node.steps + [step],
-                  score: evaluate(expected_state),
+                  score: child_score,
                   terminal: terminal_action?(
                     action,
                     expected_state
@@ -350,6 +360,13 @@ module DecisionProviders
             visible_state: visible_state,
             player_id: @player_id
           )
+        end
+
+        def evaluate_breakdown(visible_state)
+          StrategicEvaluator.new(
+            visible_state: visible_state,
+            player_id: @player_id
+          ).score_breakdown
         end
 
         # --------------------------------------------------------------

@@ -112,6 +112,31 @@ module DecisionProviders
           )
         end
 
+        # Возвращает составляющие стратегической оценки для диагностики.
+        # Не меняет правила оценки и не используется при выборе действий.
+        def score_breakdown
+          terminal = terminal_score
+
+          return { terminal: terminal } unless terminal.nil?
+
+          {
+            headquarters: headquarters_score,
+            techniques: techniques_score,
+            platoons: platoons_score,
+            positioning: positional_score,
+            offensive_group: offensive_group_score,
+            offensive_lane: offensive_lane_score,
+            deployment_capacity: deployment_capacity_score,
+            headquarters_attack_opportunity: headquarters_attack_opportunity_score,
+            combined_attack_opportunity: combined_attack_opportunity_score,
+            future_coordination_opportunity: future_coordination_opportunity_score,
+            resources: resources_score,
+            deck_race: deck_race_score,
+            enemy_threat: -enemy_threat_score,
+            formation_penalty: -formation_penalty
+          }
+        end
+
         private
 
         # --------------------------------------------------------------
