@@ -70,6 +70,14 @@ module DecisionProviders
         def call
           started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
+          @phase_timings = Hash.new do |hash, key|
+            hash[key] = {
+              calls: 0,
+              total_ms: 0.0,
+              max_ms: 0.0
+            }
+          end
+
           initial_score = evaluate(@visible_state)
 
           return empty_result(initial_score) unless
@@ -234,6 +242,19 @@ module DecisionProviders
             Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
           ) * 1000
 
+          phase_summary = @phase_timings.map do |name, stats|
+            average_ms = stats[:total_ms] / stats[:calls]
+
+            "#{name}=#{stats[:calls]} calls, " \
+              "total=#{stats[:total_ms].round(1)}ms, " \
+              "avg=#{average_ms.round(2)}ms, " \
+              "max=#{stats[:max_ms].round(1)}ms"
+          end.join(" | ")
+
+          Rails.logger.info(
+            "[OpponentEngine] Search profile: #{phase_summary}"
+          )
+
           Rails.logger.info(
             "[OpponentEngine] Search completed: " \
             "depth=#{@depth}, " \
@@ -335,7 +356,9 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def available_actions(visible_state)
-          DecisionProviders::ActionOptions.call(visible_state)
+          measure_phase(:available_actions) do
+            DecisionProviders::ActionOptions.call(visible_state)
+          end
         end
 
         # --------------------------------------------------------------
@@ -343,12 +366,14 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def simulate(visible_state, action)
-          StateSimulator.call(
-            visible_state: visible_state,
-            player_id: @player_id,
-            action: action,
-            current_time: @current_time
-          )
+          measure_phase(:simulate) do
+            StateSimulator.call(
+              visible_state: visible_state,
+              player_id: @player_id,
+              action: action,
+              current_time: @current_time
+            )
+          end
         end
 
         # --------------------------------------------------------------
@@ -356,17 +381,41 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def evaluate(visible_state)
-          StrategicEvaluator.call(
-            visible_state: visible_state,
-            player_id: @player_id
-          )
+          measure_phase(:evaluate) do
+            StrategicEvaluator.call(
+              visible_state: visible_state,
+              player_id: @player_id
+            )
+          end
         end
 
         def evaluate_breakdown(visible_state)
-          StrategicEvaluator.new(
-            visible_state: visible_state,
-            player_id: @player_id
-          ).score_breakdown
+          measure_phase(:evaluate_breakdown) do
+            StrategicEvaluator.new(
+              visible_state: visible_state,
+              player_id: @player_id
+            ).score_breakdown
+          end
+        end
+
+        # --------------------------------------------------------------
+        # Профилирование
+        # --------------------------------------------------------------
+
+        def measure_phase(name)
+          started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+          yield
+        ensure
+          elapsed_ms = (
+            Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+          ) * 1000
+
+          stats = @phase_timings[name]
+
+          stats[:calls] += 1
+          stats[:total_ms] += elapsed_ms
+          stats[:max_ms] = [stats[:max_ms], elapsed_ms].max
         end
 
         # --------------------------------------------------------------

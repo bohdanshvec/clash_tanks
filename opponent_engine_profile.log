@@ -1,0 +1,168 @@
+[OpponentEngine] Selected plan diagnostics: score=-5.5, score_delta=31.5, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=64 calls, total=297.1ms, avg=4.64ms, max=25.3ms | available_actions=33 calls, total=1.8ms, avg=0.05ms, max=0.2ms | simulate=63 calls, total=62.8ms, avg=1.0ms, max=3.1ms | evaluate_breakdown=12 calls, total=26.8ms, avg=2.23ms, max=3.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=63, elapsed_ms=416.2, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=-5.5, score_delta=-9.0, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=2 calls, total=17.7ms, avg=8.85ms, max=12.2ms | available_actions=2 calls, total=0.1ms, avg=0.06ms, max=0.1ms | simulate=1 calls, total=2.1ms, avg=2.11ms, max=2.1ms | evaluate_breakdown=1 calls, total=13.6ms, avg=13.61ms, max=13.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=35.4, selected_actions=1
+[OpponentEngine] Selected plan diagnostics: score=-5.25, score_delta=34.25, actions={"play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=92 calls, total=665.8ms, avg=7.24ms, max=19.2ms | available_actions=45 calls, total=2.5ms, avg=0.06ms, max=0.2ms | simulate=91 calls, total=96.3ms, avg=1.06ms, max=5.4ms | evaluate_breakdown=10 calls, total=46.9ms, avg=4.69ms, max=7.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=91, elapsed_ms=844.4, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=-5.25, score_delta=10.0, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=16 calls, total=131.0ms, avg=8.19ms, max=13.4ms | available_actions=9 calls, total=0.5ms, avg=0.06ms, max=0.1ms | simulate=15 calls, total=22.9ms, avg=1.53ms, max=8.9ms | evaluate_breakdown=4 calls, total=41.4ms, avg=10.35ms, max=12.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=15, elapsed_ms=203.8, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=13.774999999999999, score_delta=23.4, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=244 calls, total=2081.1ms, avg=8.53ms, max=42.8ms | available_actions=72 calls, total=4.7ms, avg=0.07ms, max=0.5ms | simulate=243 calls, total=243.4ms, avg=1.0ms, max=4.8ms | evaluate_breakdown=12 calls, total=96.9ms, avg=8.07ms, max=17.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=243, elapsed_ms=2520.6, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=13.774999999999999, score_delta=-0.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=58 calls, total=774.1ms, avg=13.35ms, max=64.8ms | available_actions=30 calls, total=2.2ms, avg=0.07ms, max=0.4ms | simulate=57 calls, total=62.1ms, avg=1.09ms, max=3.8ms | evaluate_breakdown=5 calls, total=61.2ms, avg=12.24ms, max=32.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=57, elapsed_ms=927.5, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=30.575000000000003, score_delta=17.03, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=512 calls, total=8672.8ms, avg=16.94ms, max=62.5ms | available_actions=113 calls, total=9.9ms, avg=0.09ms, max=1.0ms | simulate=511 calls, total=576.0ms, avg=1.13ms, max=5.6ms | evaluate_breakdown=12 calls, total=249.2ms, avg=20.77ms, max=45.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=511, elapsed_ms=9735.0, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=32.025, score_delta=-1.55, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=185 calls, total=2900.0ms, avg=15.68ms, max=59.7ms | available_actions=63 calls, total=4.2ms, avg=0.07ms, max=0.3ms | simulate=184 calls, total=204.1ms, avg=1.11ms, max=4.7ms | evaluate_breakdown=9 calls, total=185.2ms, avg=20.58ms, max=51.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=184, elapsed_ms=3369.3, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=26.924999999999997, score_delta=33.03, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=273 calls, total=2836.8ms, avg=10.39ms, max=37.0ms | available_actions=77 calls, total=5.5ms, avg=0.07ms, max=0.3ms | simulate=272 calls, total=317.0ms, avg=1.17ms, max=5.3ms | evaluate_breakdown=11 calls, total=174.3ms, avg=15.85ms, max=29.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=272, elapsed_ms=3443.6, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=26.924999999999997, score_delta=13.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=10 calls, total=156.6ms, avg=15.66ms, max=27.9ms | available_actions=6 calls, total=0.4ms, avg=0.07ms, max=0.1ms | simulate=9 calls, total=13.6ms, avg=1.51ms, max=2.4ms | evaluate_breakdown=3 calls, total=38.4ms, avg=12.8ms, max=21.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=9, elapsed_ms=215.8, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=16.91470588235294, score_delta=54.71, actions={"move" => 2, "play_card" => 1, "attack" => 3, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search profile: evaluate=490 calls, total=8421.0ms, avg=17.19ms, max=112.9ms | available_actions=114 calls, total=7.9ms, avg=0.07ms, max=0.2ms | simulate=489 calls, total=556.2ms, avg=1.14ms, max=5.0ms | evaluate_breakdown=14 calls, total=319.6ms, avg=22.83ms, max=42.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=489, elapsed_ms=9499.0, selected_actions=7
+[OpponentEngine] Selected plan diagnostics: score=16.91470588235294, score_delta=23.66, actions={"attack" => 3, "move" => 1, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search profile: evaluate=150 calls, total=2901.8ms, avg=19.35ms, max=58.6ms | available_actions=65 calls, total=4.9ms, avg=0.08ms, max=1.0ms | simulate=149 calls, total=170.1ms, avg=1.14ms, max=7.0ms | evaluate_breakdown=6 calls, total=105.5ms, avg=17.59ms, max=34.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=149, elapsed_ms=3242.0, selected_actions=5
+[OpponentEngine] Selected plan diagnostics: score=-13.475, score_delta=26.7, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=589 calls, total=10794.0ms, avg=18.33ms, max=73.9ms | available_actions=117 calls, total=9.9ms, avg=0.08ms, max=0.9ms | simulate=588 calls, total=645.7ms, avg=1.1ms, max=5.0ms | evaluate_breakdown=16 calls, total=473.5ms, avg=29.59ms, max=45.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=588, elapsed_ms=12154.8, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=-5.75, score_delta=13.75, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=58 calls, total=298.5ms, avg=5.15ms, max=12.7ms | available_actions=30 calls, total=1.7ms, avg=0.06ms, max=0.2ms | simulate=57 calls, total=65.7ms, avg=1.15ms, max=4.4ms | evaluate_breakdown=11 calls, total=39.7ms, avg=3.61ms, max=5.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=57, elapsed_ms=431.2, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=-5.75, score_delta=1.75, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=39.0ms, avg=9.76ms, max=15.2ms | available_actions=3 calls, total=0.2ms, avg=0.06ms, max=0.1ms | simulate=3 calls, total=4.4ms, avg=1.46ms, max=1.7ms | evaluate_breakdown=2 calls, total=19.9ms, avg=9.97ms, max=15.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=66.2, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=9.962499999999999, score_delta=23.09, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=387 calls, total=4314.7ms, avg=11.15ms, max=63.9ms | available_actions=78 calls, total=5.5ms, avg=0.07ms, max=0.2ms | simulate=386 calls, total=438.5ms, avg=1.14ms, max=5.6ms | evaluate_breakdown=17 calls, total=265.7ms, avg=15.63ms, max=37.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=386, elapsed_ms=5186.5, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=9.962499999999999, score_delta=-1.25, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=105 calls, total=1497.7ms, avg=14.26ms, max=44.7ms | available_actions=49 calls, total=2.8ms, avg=0.06ms, max=0.1ms | simulate=104 calls, total=112.5ms, avg=1.08ms, max=2.1ms | evaluate_breakdown=8 calls, total=110.0ms, avg=13.75ms, max=50.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=104, elapsed_ms=1764.6, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=-17.0, score_delta=19.13, actions={"play_card" => 2, "move" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=449 calls, total=5530.9ms, avg=12.32ms, max=117.6ms | available_actions=98 calls, total=7.6ms, avg=0.08ms, max=1.0ms | simulate=448 calls, total=510.6ms, avg=1.14ms, max=5.5ms | evaluate_breakdown=17 calls, total=291.7ms, avg=17.16ms, max=35.1ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=448, elapsed_ms=6531.6, selected_actions=6
+[OpponentEngine] Selected plan diagnostics: score=-9.725000000000001, score_delta=10.14, actions={"move" => 1, "play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=190 calls, total=3928.8ms, avg=20.68ms, max=134.8ms | available_actions=70 calls, total=5.0ms, avg=0.07ms, max=0.7ms | simulate=189 calls, total=215.7ms, avg=1.14ms, max=4.0ms | evaluate_breakdown=9 calls, total=146.1ms, avg=16.23ms, max=53.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=189, elapsed_ms=4375.4, selected_actions=5
+[OpponentEngine] Selected plan diagnostics: score=-9.725000000000001, score_delta=1.97, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=16 calls, total=513.6ms, avg=32.1ms, max=66.1ms | available_actions=9 calls, total=0.5ms, avg=0.06ms, max=0.1ms | simulate=15 calls, total=18.0ms, avg=1.2ms, max=2.3ms | evaluate_breakdown=4 calls, total=92.4ms, avg=23.1ms, max=59.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=15, elapsed_ms=632.8, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=-18.61658415841584, score_delta=22.11, actions={"move" => 1, "play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=555 calls, total=12217.9ms, avg=22.01ms, max=144.2ms | available_actions=106 calls, total=8.6ms, avg=0.08ms, max=0.3ms | simulate=554 calls, total=659.6ms, avg=1.19ms, max=4.9ms | evaluate_breakdown=15 calls, total=523.4ms, avg=34.89ms, max=72.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=554, elapsed_ms=13650.5, selected_actions=5
+[OpponentEngine] Selected plan diagnostics: score=-18.61658415841584, score_delta=4.66, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=202 calls, total=4029.3ms, avg=19.95ms, max=163.4ms | available_actions=54 calls, total=3.5ms, avg=0.06ms, max=0.2ms | simulate=201 calls, total=221.4ms, avg=1.1ms, max=5.5ms | evaluate_breakdown=11 calls, total=268.8ms, avg=24.43ms, max=98.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=201, elapsed_ms=4612.3, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=-33.3, score_delta=58.7, actions={"move" => 1, "play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"technique" => 1, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=604 calls, total=7394.2ms, avg=12.24ms, max=93.2ms | available_actions=100 calls, total=7.6ms, avg=0.08ms, max=0.4ms | simulate=603 calls, total=647.5ms, avg=1.07ms, max=11.6ms | evaluate_breakdown=19 calls, total=400.3ms, avg=21.07ms, max=43.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=603, elapsed_ms=8697.2, selected_actions=5
+[OpponentEngine] Selected plan diagnostics: score=-33.3, score_delta=32.53, actions={"attack" => 2, "end_turn" => 1}, attackers={"technique" => 1, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=123 calls, total=1673.2ms, avg=13.6ms, max=44.3ms | available_actions=49 calls, total=2.9ms, avg=0.06ms, max=0.2ms | simulate=122 calls, total=131.1ms, avg=1.07ms, max=6.2ms | evaluate_breakdown=8 calls, total=97.5ms, avg=12.19ms, max=32.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=122, elapsed_ms=1952.1, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=-57.6625, score_delta=47.34, actions={"attack" => 2, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=465 calls, total=5883.6ms, avg=12.65ms, max=127.1ms | available_actions=95 calls, total=6.2ms, avg=0.07ms, max=0.3ms | simulate=464 calls, total=461.4ms, avg=0.99ms, max=5.7ms | evaluate_breakdown=18 calls, total=315.0ms, avg=17.5ms, max=32.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=464, elapsed_ms=6844.3, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=-57.6625, score_delta=17.55, actions={"attack" => 1, "end_turn" => 1}, attackers={"technique" => 1}
+[OpponentEngine] Search profile: evaluate=56 calls, total=762.6ms, avg=13.62ms, max=40.9ms | available_actions=29 calls, total=1.4ms, avg=0.05ms, max=0.1ms | simulate=55 calls, total=58.1ms, avg=1.06ms, max=3.4ms | evaluate_breakdown=7 calls, total=76.9ms, avg=10.98ms, max=36.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=55, elapsed_ms=920.9, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=-89.875, score_delta=45.88, actions={"play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=110 calls, total=1167.9ms, avg=10.62ms, max=27.5ms | available_actions=49 calls, total=2.4ms, avg=0.05ms, max=0.1ms | simulate=109 calls, total=115.6ms, avg=1.06ms, max=3.1ms | evaluate_breakdown=8 calls, total=50.4ms, avg=6.3ms, max=10.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=109, elapsed_ms=1371.7, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=-89.875, score_delta=11.63, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=36 calls, total=437.1ms, avg=12.14ms, max=32.2ms | available_actions=19 calls, total=1.0ms, avg=0.05ms, max=0.1ms | simulate=35 calls, total=35.4ms, avg=1.01ms, max=1.9ms | evaluate_breakdown=6 calls, total=48.6ms, avg=8.1ms, max=22.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=35, elapsed_ms=536.2, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=-106.125, score_delta=46.13, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=113 calls, total=1265.5ms, avg=11.2ms, max=58.3ms | available_actions=48 calls, total=2.4ms, avg=0.05ms, max=0.2ms | simulate=112 calls, total=108.3ms, avg=0.97ms, max=2.4ms | evaluate_breakdown=7 calls, total=58.9ms, avg=8.41ms, max=14.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=112, elapsed_ms=1473.8, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=-106.125, score_delta=22.0, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=36 calls, total=434.8ms, avg=12.08ms, max=28.5ms | available_actions=19 calls, total=0.9ms, avg=0.05ms, max=0.1ms | simulate=35 calls, total=30.5ms, avg=0.87ms, max=1.3ms | evaluate_breakdown=6 calls, total=55.1ms, avg=9.19ms, max=17.2ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=35, elapsed_ms=533.7, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=50.5, score_delta=33.5, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=58 calls, total=44.5ms, avg=0.77ms, max=1.8ms | available_actions=30 calls, total=2.0ms, avg=0.07ms, max=0.2ms | simulate=57 calls, total=69.9ms, avg=1.23ms, max=2.7ms | evaluate_breakdown=11 calls, total=8.0ms, avg=0.73ms, max=1.1ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=57, elapsed_ms=156.9, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=50.5, score_delta=-7.0, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=2 calls, total=2.1ms, avg=1.04ms, max=1.4ms | available_actions=2 calls, total=0.1ms, avg=0.06ms, max=0.1ms | simulate=1 calls, total=1.9ms, avg=1.88ms, max=1.9ms | evaluate_breakdown=1 calls, total=2.4ms, avg=2.41ms, max=2.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=8.6, selected_actions=1
+[OpponentEngine] Selected plan diagnostics: score=36.0, score_delta=19.0, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=40 calls, total=21.5ms, avg=0.54ms, max=1.7ms | available_actions=21 calls, total=1.1ms, avg=0.05ms, max=0.2ms | simulate=39 calls, total=33.3ms, avg=0.85ms, max=2.3ms | evaluate_breakdown=8 calls, total=2.4ms, avg=0.3ms, max=0.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=39, elapsed_ms=71.8, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=36.0, score_delta=3.0, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=3.2ms, avg=0.8ms, max=1.6ms | available_actions=3 calls, total=0.1ms, avg=0.05ms, max=0.1ms | simulate=3 calls, total=2.5ms, avg=0.83ms, max=0.9ms | evaluate_breakdown=2 calls, total=1.9ms, avg=0.96ms, max=1.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=9.5, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=55.875, score_delta=30.88, actions={"attack" => 1, "move" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=150 calls, total=354.9ms, avg=2.37ms, max=8.7ms | available_actions=50 calls, total=4.5ms, avg=0.09ms, max=0.6ms | simulate=149 calls, total=147.2ms, avg=0.99ms, max=6.1ms | evaluate_breakdown=9 calls, total=20.2ms, avg=2.24ms, max=3.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=149, elapsed_ms=578.4, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=55.875, score_delta=-8.5, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=2 calls, total=12.1ms, avg=6.06ms, max=9.2ms | available_actions=2 calls, total=0.2ms, avg=0.09ms, max=0.1ms | simulate=1 calls, total=5.9ms, avg=5.95ms, max=5.9ms | evaluate_breakdown=1 calls, total=9.0ms, avg=8.95ms, max=9.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=29.1, selected_actions=1
+[OpponentEngine] Selected plan diagnostics: score=54.3, score_delta=30.42, actions={"play_card" => 1, "attack" => 1, "move" => 2, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=464 calls, total=2959.2ms, avg=6.38ms, max=30.6ms | available_actions=79 calls, total=7.1ms, avg=0.09ms, max=1.0ms | simulate=463 calls, total=478.5ms, avg=1.03ms, max=3.5ms | evaluate_breakdown=18 calls, total=165.3ms, avg=9.18ms, max=15.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=463, elapsed_ms=3787.8, selected_actions=5
+[OpponentEngine] Selected plan diagnostics: score=54.3, score_delta=3.72, actions={"attack" => 1, "move" => 2, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=147 calls, total=962.0ms, avg=6.54ms, max=27.2ms | available_actions=50 calls, total=2.9ms, avg=0.06ms, max=0.1ms | simulate=146 calls, total=156.7ms, avg=1.07ms, max=7.1ms | evaluate_breakdown=9 calls, total=108.7ms, avg=12.08ms, max=26.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=146, elapsed_ms=1291.5, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=68.075, score_delta=41.9, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=521 calls, total=7703.7ms, avg=14.79ms, max=71.0ms | available_actions=114 calls, total=8.6ms, avg=0.08ms, max=0.3ms | simulate=520 calls, total=594.9ms, avg=1.14ms, max=6.5ms | evaluate_breakdown=18 calls, total=344.0ms, avg=19.11ms, max=42.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=520, elapsed_ms=8875.7, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=68.075, score_delta=16.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=236 calls, total=3830.4ms, avg=16.23ms, max=64.4ms | available_actions=86 calls, total=5.5ms, avg=0.06ms, max=0.2ms | simulate=235 calls, total=250.3ms, avg=1.07ms, max=2.5ms | evaluate_breakdown=7 calls, total=132.4ms, avg=18.92ms, max=45.2ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=235, elapsed_ms=4316.3, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=58.35, score_delta=54.33, actions={"move" => 1, "play_card" => 1, "attack" => 3, "end_turn" => 1}, attackers={"technique" => 2, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=550 calls, total=9098.8ms, avg=16.54ms, max=67.2ms | available_actions=116 calls, total=8.6ms, avg=0.07ms, max=0.3ms | simulate=549 calls, total=623.6ms, avg=1.14ms, max=6.1ms | evaluate_breakdown=15 calls, total=362.4ms, avg=24.16ms, max=53.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=549, elapsed_ms=10323.6, selected_actions=6
+[OpponentEngine] Selected plan diagnostics: score=58.35, score_delta=29.63, actions={"attack" => 3, "end_turn" => 1}, attackers={"technique" => 2, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=192 calls, total=3541.5ms, avg=18.45ms, max=89.5ms | available_actions=78 calls, total=5.3ms, avg=0.07ms, max=0.3ms | simulate=191 calls, total=214.7ms, avg=1.12ms, max=2.4ms | evaluate_breakdown=7 calls, total=140.7ms, avg=20.1ms, max=49.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=191, elapsed_ms=3986.1, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=48.0, score_delta=31.0, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=22 calls, total=9.2ms, avg=0.42ms, max=0.6ms | available_actions=12 calls, total=0.4ms, avg=0.04ms, max=0.1ms | simulate=21 calls, total=13.6ms, avg=0.65ms, max=0.8ms | evaluate_breakdown=5 calls, total=1.6ms, avg=0.31ms, max=0.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=21, elapsed_ms=30.8, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=48.0, score_delta=-7.0, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=2 calls, total=2.9ms, avg=1.47ms, max=1.6ms | available_actions=2 calls, total=0.1ms, avg=0.07ms, max=0.1ms | simulate=1 calls, total=1.9ms, avg=1.92ms, max=1.9ms | evaluate_breakdown=1 calls, total=1.3ms, avg=1.26ms, max=1.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=8.1, selected_actions=1
+[OpponentEngine] Selected plan diagnostics: score=49.55, score_delta=24.55, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=162 calls, total=403.8ms, avg=2.49ms, max=10.0ms | available_actions=52 calls, total=3.3ms, avg=0.06ms, max=0.3ms | simulate=161 calls, total=136.2ms, avg=0.85ms, max=3.3ms | evaluate_breakdown=11 calls, total=27.7ms, avg=2.52ms, max=3.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=161, elapsed_ms=632.7, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=49.55, score_delta=1.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=21.7ms, avg=5.43ms, max=6.5ms | available_actions=3 calls, total=0.2ms, avg=0.08ms, max=0.1ms | simulate=3 calls, total=5.5ms, avg=1.83ms, max=2.8ms | evaluate_breakdown=2 calls, total=7.3ms, avg=3.65ms, max=5.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=37.9, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=72.25, score_delta=40.2, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=348 calls, total=2180.6ms, avg=6.27ms, max=34.0ms | available_actions=76 calls, total=5.6ms, avg=0.07ms, max=0.3ms | simulate=347 calls, total=379.2ms, avg=1.09ms, max=6.4ms | evaluate_breakdown=15 calls, total=105.0ms, avg=7.0ms, max=12.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=347, elapsed_ms=2817.7, selected_actions=3
+[OpponentEngine] Selected plan diagnostics: score=72.25, score_delta=13.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=108 calls, total=670.3ms, avg=6.21ms, max=20.8ms | available_actions=47 calls, total=2.7ms, avg=0.06ms, max=0.1ms | simulate=107 calls, total=117.2ms, avg=1.1ms, max=6.8ms | evaluate_breakdown=6 calls, total=52.1ms, avg=8.68ms, max=12.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=107, elapsed_ms=881.8, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=84.025, score_delta=17.85, actions={"move" => 1, "play_card" => 2, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=752 calls, total=14786.3ms, avg=19.66ms, max=85.0ms | available_actions=113 calls, total=9.9ms, avg=0.09ms, max=0.3ms | simulate=751 calls, total=850.6ms, avg=1.13ms, max=4.7ms | evaluate_breakdown=12 calls, total=320.2ms, avg=26.68ms, max=49.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=751, elapsed_ms=16289.1, selected_actions=5
+[OpponentEngine] Selected plan diagnostics: score=90.8125, score_delta=13.79, actions={"move" => 2, "play_card" => 1, "attack" => 3, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search profile: evaluate=587 calls, total=11224.9ms, avg=19.12ms, max=104.3ms | available_actions=113 calls, total=9.7ms, avg=0.09ms, max=0.9ms | simulate=586 calls, total=655.2ms, avg=1.12ms, max=5.3ms | evaluate_breakdown=12 calls, total=354.7ms, avg=29.56ms, max=70.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=586, elapsed_ms=12490.2, selected_actions=7
+[OpponentEngine] Selected plan diagnostics: score=90.8125, score_delta=3.14, actions={"attack" => 3, "move" => 1, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search profile: evaluate=294 calls, total=5766.9ms, avg=19.62ms, max=81.2ms | available_actions=90 calls, total=6.9ms, avg=0.08ms, max=0.8ms | simulate=293 calls, total=318.2ms, avg=1.09ms, max=4.8ms | evaluate_breakdown=9 calls, total=254.9ms, avg=28.32ms, max=81.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=293, elapsed_ms=6469.4, selected_actions=5
+[OpponentEngine] Selected plan diagnostics: score=97.05, score_delta=48.6, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=1246 calls, total=48011.5ms, avg=38.53ms, max=300.1ms | available_actions=122 calls, total=12.6ms, avg=0.1ms, max=0.3ms | simulate=1245 calls, total=1476.6ms, avg=1.19ms, max=6.3ms | evaluate_breakdown=23 calls, total=1965.1ms, avg=85.44ms, max=262.2ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1245, elapsed_ms=52035.0, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=97.05, score_delta=16.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=372 calls, total=9416.0ms, avg=25.31ms, max=132.5ms | available_actions=91 calls, total=8.5ms, avg=0.09ms, max=1.0ms | simulate=371 calls, total=444.5ms, avg=1.2ms, max=6.0ms | evaluate_breakdown=10 calls, total=392.7ms, avg=39.27ms, max=122.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=371, elapsed_ms=10432.2, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=79.55, score_delta=32.4, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=1180 calls, total=44097.6ms, avg=37.37ms, max=192.9ms | available_actions=119 calls, total=11.5ms, avg=0.1ms, max=0.3ms | simulate=1179 calls, total=1439.5ms, avg=1.22ms, max=5.5ms | evaluate_breakdown=18 calls, total=1381.5ms, avg=76.75ms, max=194.1ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1179, elapsed_ms=47481.9, selected_actions=4
+[OpponentEngine] Selected plan diagnostics: score=79.55, score_delta=9.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=678 calls, total=18712.2ms, avg=27.6ms, max=168.1ms | available_actions=113 calls, total=10.3ms, avg=0.09ms, max=1.3ms | simulate=677 calls, total=801.4ms, avg=1.18ms, max=5.7ms | evaluate_breakdown=12 calls, total=683.3ms, avg=56.94ms, max=176.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=677, elapsed_ms=20514.6, selected_actions=2
+[OpponentEngine] Selected plan diagnostics: score=1000000, score_delta=1000026.33, actions={"attack" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=995 calls, total=15153.8ms, avg=15.23ms, max=83.1ms | available_actions=122 calls, total=10.1ms, avg=0.08ms, max=0.3ms | simulate=994 calls, total=1163.0ms, avg=1.17ms, max=5.8ms | evaluate_breakdown=22 calls, total=842.9ms, avg=38.31ms, max=57.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=994, elapsed_ms=17588.8, selected_actions=1
