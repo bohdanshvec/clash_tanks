@@ -106,6 +106,7 @@ module DecisionProviders
           # Живут только в пределах одного StrategicEvaluator.
           @potential_movement_states = {}
           @attack_positions_cache = {}
+          @force_coordination_analyses = {}
 
           # Состояние evaluator не изменяется при расчётах.
           # Поэтому списки объектов поля и техники можно переиспользовать.
@@ -726,24 +727,41 @@ module DecisionProviders
           ) unless own_turn?
 
           enemy_techniques.sum do |target, target_position|
-            attackers = potential_attackers(
+            analysis = force_coordination_analysis_for(
               target,
               target_position
             )
 
-            next 0 if attackers.length < COMBINED_ATTACK_MIN_TECHNIQUES
+            next 0 unless analysis
 
-            coordination_bonus =
-              ForceCoordinationEvaluator.call(
+            analysis.coordination_bonus *
+              COMBINED_ATTACK_OPPORTUNITY_WEIGHT
+          end
+        end
+
+        def force_coordination_analysis_for(target, target_position)
+          return @force_coordination_analyses[target_position] if
+            @force_coordination_analyses.key?(target_position)
+
+          attackers = potential_attackers(
+            target,
+            target_position
+          )
+
+          analysis =
+            if attackers.length < COMBINED_ATTACK_MIN_TECHNIQUES
+              nil
+            else
+              ForceCoordinationEvaluator.analyze(
                 visible_state: @visible_state,
                 player_id: @player_id,
                 target_position: target_position,
                 attackers: attackers,
                 material_scorer: method(:combat_material_score)
               )
+            end
 
-            coordination_bonus * COMBINED_ATTACK_OPPORTUNITY_WEIGHT
-          end
+          @force_coordination_analyses[target_position] = analysis
         end
 
         # --------------------------------------------------------------
@@ -794,23 +812,12 @@ module DecisionProviders
 
         def best_combined_attack_gain
           enemy_techniques.map do |target, target_position|
-            attackers = potential_attackers(
+            analysis = force_coordination_analysis_for(
               target,
               target_position
             )
 
-            next 0 if attackers.length < COMBINED_ATTACK_MIN_TECHNIQUES
-
-            analysis =
-              ForceCoordinationEvaluator.analyze(
-                visible_state: @visible_state,
-                player_id: @player_id,
-                target_position: target_position,
-                attackers: attackers,
-                material_scorer: method(:combat_material_score)
-              )
-
-            analysis.best_combined_gain
+            analysis&.best_combined_gain || 0
           end.max || 0
         end
 
@@ -1164,16 +1171,31 @@ module DecisionProviders
         def enemy_threat_score
           return @enemy_threat_score if defined?(@enemy_threat_score)
 
-          total_threat = enemy_techniques.sum do |technique, position|
+          # Наши потенциальные цели не меняются при перемещении противника.
+          own_targets = field_objects.select do |target, _position|
+            owner_sign(target["player_id"]) == 1 &&
+              %w[technique headquarters].include?(target["type"])
+          end
+
+          attackers = enemy_techniques
+
+          return @enemy_threat_score = 0 if
+            attackers.empty? || own_targets.empty?
+
+          score_before = combat_material_score(@visible_state)
+
+          total_threat = attackers.sum do |technique, position|
             potential_enemy_positions(technique, position).map do |state, attacker, attacker_position|
-              target_positions = state_field_objects(state).filter_map do |target, target_position|
-                next unless owner_sign(target["player_id"]) == 1
-                next unless %w[technique headquarters].include?(target["type"])
+              target_positions = own_targets.filter_map do |target, target_position|
+                simulated_target =
+                  state["field"][target_position[0]][target_position[1]]
+
+                next unless simulated_target
 
                 next unless GameEngine::Rules::AttackTarget.valid?(
                   state: state,
                   attacker: attacker,
-                  target: target,
+                  target: simulated_target,
                   attacker_position: attacker_position,
                   target_position: target_position
                 )
@@ -1182,10 +1204,6 @@ module DecisionProviders
               end
 
               next 0 if target_positions.empty?
-
-              # Исходная материальная оценка одинакова для всех
-              # потенциальных атак из одной позиции.
-              score_before = combat_material_score(state)
 
               target_positions.map do |target_position|
                 potential_attack_threat(
@@ -1479,7 +1497,7 @@ module DecisionProviders
             end
           end.freeze
         end
-        
+
         def object_at(position)
           @field.dig(position[0], position[1])
         end

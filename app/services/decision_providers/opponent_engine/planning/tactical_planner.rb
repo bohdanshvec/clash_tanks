@@ -427,6 +427,40 @@ module DecisionProviders
           end
         end
 
+        def second_action_category(node)
+          action = node.actions[1]
+          return "single_action" unless action
+
+          payload = action["payload"] || {}
+
+          case action["type"]
+          when "attack"
+            attacker = Array(payload["attacker"]).join(",")
+            target = Array(payload["target"]).join(",")
+
+            "attack:#{attacker}:#{target}"
+
+          when "move"
+            from = Array(payload["from"]).join(",")
+            to = Array(payload["to"]).join(",")
+
+            "move:#{from}:#{to}"
+
+          when "play_card"
+            card_id = payload["card_id"].to_s
+            card_type = @root_card_types[card_id] || "unknown"
+
+            targets =
+              payload["targets"] ||
+              [payload["row"], payload["column"]]
+
+            "play_card:#{card_type}:#{card_id}:#{targets.inspect}"
+
+          else
+            action["type"]
+          end
+        end
+
         def root_deployment_positions
           @visible_state.fetch("field").each_with_index do |row, row_index|
             row.each_with_index do |object, column_index|
@@ -536,7 +570,12 @@ module DecisionProviders
 
           category_representatives =
             ranked_nodes
-              .group_by { |node| first_action_category(node) }
+              .group_by do |node|
+                [
+                  first_action_category(node),
+                  second_action_category(node)
+                ]
+              end
               .values
               .map(&:first)
 

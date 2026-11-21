@@ -716,6 +716,84 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     assert_includes selected_attackers, [0, 2]
   end
 
+  test "preserves different follow-up attacks within the same root branch" do
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 4
+      )
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    first_action = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [0, 4],
+        "target" => [2, 0]
+      }
+    }
+
+    first_tank_attack = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [0, 2],
+        "target" => [1, 1]
+      }
+    }
+
+    second_tank_attack = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 2],
+        "target" => [1, 1]
+      }
+    }
+
+    third_tank_move = {
+      "type" => "move",
+      "payload" => {
+        "from" => [2, 3],
+        "to" => [2, 2]
+      }
+    }
+
+    nodes = [
+      node_class.new(
+        visible_state: visible_state,
+        actions: [first_action, first_tank_attack],
+        steps: [],
+        score: 100,
+        terminal: false
+      ),
+      node_class.new(
+        visible_state: visible_state,
+        actions: [first_action, third_tank_move],
+        steps: [],
+        score: 90,
+        terminal: false
+      ),
+      node_class.new(
+        visible_state: visible_state,
+        actions: [first_action, second_tank_attack],
+        steps: [],
+        score: 80,
+        terminal: false
+      )
+    ]
+
+    ranked = planner.send(:rank, nodes)
+
+    assert_includes ranked, nodes[0]
+    assert_includes ranked, nodes[1]
+    assert_includes ranked, nodes[2]
+  end
+
   test "preserves move and card branches when many attack targets dominate the beam" do
     visible_state = visible_state_for_ai
 

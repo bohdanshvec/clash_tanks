@@ -548,6 +548,41 @@ class DecisionProviders::OpponentEngine::Planning::StrategicEvaluatorTest <
     )
   end
 
+  test "reuses force coordination analysis for the same target" do
+    state = @state.deep_dup
+
+    state["field"][0][3] = test_technique(57)
+    state["field"][2][2] = test_technique(42)
+    state["field"][2][4] = test_technique(42)
+
+    visible_state = GameEngine::VisibleState.call(
+      state: state,
+      player_id: @ai_player_id
+    )
+
+    evaluator =
+      DecisionProviders::OpponentEngine::Planning::StrategicEvaluator.new(
+        visible_state: visible_state,
+        player_id: @ai_player_id
+      )
+
+    combined_score =
+      evaluator.send(:combined_attack_opportunity_score)
+
+    best_gain =
+      evaluator.send(:best_combined_attack_gain)
+
+    assert_operator combined_score, :>, 0
+    assert_operator best_gain, :>, 0
+
+    analyses = evaluator.instance_variable_get(
+      :@force_coordination_analyses
+    )
+
+    assert_equal 1, analyses.size
+    assert analyses.values.first
+  end
+
   test "does not reward proximity alone when no attack target exists" do
     close_state = @state.deep_dup
     scattered_state = @state.deep_dup
