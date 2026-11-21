@@ -400,27 +400,6 @@ html.mobile-game-fullscreen body.game-page .game .game-board__action--end-turn b
    ========================================================= */
 
 /* ---------------------------------------------------------
-   1. Карты в руке — увеличение при наведении и выборе
-   --------------------------------------------------------- */
-
-/* Увеличение при настоящем наведении */
-html.mobile-game-fullscreen body.game-page
-.game .hand .catalog-card--hand:hover {
-  z-index: 100;
-  transform: translateY(-30px) scale(1.725);
-}
-
-/* Увеличение выбранной карты на сенсорном экране */
-@media (hover: none) {
-  html.mobile-game-fullscreen body.game-page
-  .game .hand .catalog-card.catalog-card--hand.game-object--selected {
-    z-index: 100;
-    transform: translateY(-27px) scale(1.5);
-    transition: transform 0.15s ease;
-  }
-}
-
-/* ---------------------------------------------------------
    2. Информационные колонки:
       количество карт, урон от пустой колоды,
       текущие и прогнозируемые ресурсы
