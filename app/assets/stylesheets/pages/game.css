@@ -392,3 +392,77 @@ html.mobile-game-fullscreen body.game-page .game .game-board__action--end-turn b
     padding: 8px 20px;
   }
 }
+
+
+/* =========================================================
+   Mobile Fullscreen — увеличение характеристик в 1,5 раза
+   Только мобильный полноэкранный режим.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. Карты в руке — увеличение при наведении и выборе
+   --------------------------------------------------------- */
+
+/* Увеличение при настоящем наведении */
+html.mobile-game-fullscreen body.game-page
+.game .hand .catalog-card--hand:hover {
+  z-index: 100;
+  transform: translateY(-30px) scale(1.725);
+}
+
+/* Увеличение выбранной карты на сенсорном экране */
+@media (hover: none) {
+  html.mobile-game-fullscreen body.game-page
+  .game .hand .catalog-card.catalog-card--hand.game-object--selected {
+    z-index: 100;
+    transform: translateY(-27px) scale(1.5);
+    transition: transform 0.15s ease;
+  }
+}
+
+/* ---------------------------------------------------------
+   2. Информационные колонки:
+      количество карт, урон от пустой колоды,
+      текущие и прогнозируемые ресурсы
+   --------------------------------------------------------- */
+
+/* Количество карт и ресурсов */
+html.mobile-game-fullscreen body.game-page
+.game .game-board__info-item > strong.game-board__info-value {
+  font-size: 36px;
+}
+
+/* Прогноз ресурсов от объектов на поле */
+html.mobile-game-fullscreen body.game-page
+.game .game-board__info-item .game-board__fuel-on-field strong {
+  font-size: 24px;
+}
+
+/* ---------------------------------------------------------
+   3–6. Характеристики штабов, техники и взводов на поле
+   --------------------------------------------------------- */
+
+html.mobile-game-fullscreen body.game-page
+.game .headquarters-field__stat,
+html.mobile-game-fullscreen body.game-page
+.game .technique-field__stat,
+html.mobile-game-fullscreen body.game-page
+.game .platoon-field__stat {
+  font-size: clamp(13.5px, 1.875vw, 25.5px);
+}
+
+/* ---------------------------------------------------------
+   7. Характеристики и цена карт в руке
+   --------------------------------------------------------- */
+
+/* ОМ, НР и топливо */
+html.mobile-game-fullscreen body.game-page
+.game .hand .catalog-card--hand .catalog-card__stat {
+  font-size: clamp(18px, 2.175vw, 28.5px);
+}
+
+/* Цена розыгрыша */
+html.mobile-game-fullscreen body.game-page
+.game .hand .catalog-card--hand .catalog-card__price {
+  font-size: clamp(15px, 1.65vw, 22.5px);
+}
