@@ -6,6 +6,12 @@ module DecisionProviders
         DEFAULT_DEPTH = 7
         DEFAULT_WIDTH = 20
 
+        # Дополнительная ценность урона по технике,
+        # которая уже использовала ответную атаку.
+        # Базовая оценка HP техники равна 2.5,
+        # поэтому бонус 1.5 увеличивает ценность такого урона на 60%.
+        COUNTERATTACK_SPENT_DAMAGE_BONUS = 1.5
+
         Node = Data.define(
           :visible_state,
           :actions,
@@ -138,12 +144,30 @@ module DecisionProviders
                   next
                 end
 
-                child_score = evaluate(simulation.visible_state)
+                action_copy = action.deep_dup
+                expected_state = simulation.visible_state.deep_dup
+
+                actions = node.actions + [action_copy]
+
+                step = Step.new(
+                  action: action_copy.deep_dup,
+                  expected_visible_state: expected_state.deep_dup
+                )
+
+                steps = node.steps + [step]
+
+                tactical_bonus = counterattack_exploitation_bonus(
+                  actions,
+                  steps
+                )
+
+                child_score =
+                  evaluate(expected_state) + tactical_bonus
 
                 if node.actions.empty?
-                  breakdown = evaluate_breakdown(
-                    simulation.visible_state
-                  )
+                  breakdown = evaluate_breakdown(expected_state)
+
+                  breakdown[:counterattack_exploitation_bonus] = tactical_bonus
 
                   Rails.logger.info(
                     "[OpponentEngine] Root candidate: " \
@@ -156,20 +180,10 @@ module DecisionProviders
 
                 expanded_nodes += 1
 
-                action_copy = action.deep_dup
-                expected_state = simulation.visible_state.deep_dup
-
-                actions = node.actions + [action_copy]
-
-                step = Step.new(
-                  action: action_copy.deep_dup,
-                  expected_visible_state: expected_state.deep_dup
-                )
-
                 child = Node.new(
                   visible_state: expected_state,
                   actions: actions,
-                  steps: node.steps + [step],
+                  steps: steps,
                   score: child_score,
                   terminal: terminal_action?(
                     action,
@@ -310,9 +324,69 @@ module DecisionProviders
             visible_state: expected_state,
             actions: node.actions + [action.deep_dup],
             steps: node.steps + [step],
-            score: evaluate(expected_state),
+            score: evaluate(expected_state) +
+              counterattack_exploitation_bonus(
+                node.actions,
+                node.steps
+              ),
             terminal: true
           )
+        end
+
+        # --------------------------------------------------------------
+        # Приоритет атаки по технике с использованной контратакой
+        # --------------------------------------------------------------
+
+        def counterattack_exploitation_bonus(actions, steps)
+          actions.each_with_index.sum do |action, index|
+            previous_state =
+              if index.zero?
+                @visible_state
+              else
+                steps[index - 1].expected_visible_state
+              end
+
+            counterattack_exploitation_bonus_for_action(
+              visible_state: previous_state,
+              action: action,
+              expected_visible_state: steps[index].expected_visible_state
+            )
+          end
+        end
+
+        def counterattack_exploitation_bonus_for_action(
+          visible_state:,
+          action:,
+          expected_visible_state:
+        )
+          return 0.0 unless action["type"] == "attack"
+
+          target_position = action.dig("payload", "target")
+
+          return 0.0 unless
+            target_position.is_a?(Array) &&
+            target_position.length == 2
+
+          row, column = target_position
+
+          target = visible_state.dig("field", row, column)
+
+          return 0.0 unless target
+          return 0.0 unless target["type"] == "technique"
+          return 0.0 unless target["player_id"].to_s != @player_id
+          return 0.0 unless target["has_counterattacked"]
+
+          target_after =
+            expected_visible_state.dig("field", row, column)
+
+          hp_after = target_after ? target_after["hp"].to_i : 0
+
+          damage = [
+            target["hp"].to_i - hp_after,
+            0
+          ].max
+
+          damage * COUNTERATTACK_SPENT_DAMAGE_BONUS
         end
 
         def first_action_category(node)

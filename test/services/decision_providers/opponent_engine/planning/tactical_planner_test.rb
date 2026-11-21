@@ -126,6 +126,107 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
+  test "continues a two-technique attack after the first tank receives a counterattack" do
+    first_tank = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    second_tank = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 8,
+      firepower: 4
+    )
+
+    @state["field"][2][1] = first_tank
+    @state["field"][2][3] = second_tank
+    @state["field"][1][2] = target
+
+    # Исключаем штаб из числа доступных атакующих.
+    @state["field"][2][0]["has_attacked"] = true
+
+    visible_state = visible_state_for_ai
+
+    first_attack = {
+      "type" => "attack",
+      "payload" => {
+      "attacker" => [2, 1],
+      "target" => [1, 2]
+      }
+    }
+
+    simulation =
+      DecisionProviders::OpponentEngine::Planning::StateSimulator.call(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        action: first_attack,
+        current_time: @current_time
+      )
+
+    assert simulation.success?
+
+    state_after_first_attack = simulation.visible_state
+
+    # Первая атака должна вызвать ответную атаку противника.
+    assert(
+      state_after_first_attack.dig(
+        "field", 1, 2, "has_counterattacked"
+      )
+    )
+
+    # Второй танк должен получить возможность атаковать ту же цель.
+    follow_up_actions =
+      DecisionProviders::ActionOptions.call(state_after_first_attack)
+
+    assert_includes(
+      follow_up_actions,
+      {
+        "type" => "attack",
+        "payload" => {
+          "attacker" => [2, 3],
+          "target" => [1, 2]
+        }
+      }
+    )
+
+    # Планировщик должен сохранить и выбрать совместную атаку.
+    result = plan(visible_state)
+
+    assert_operator result.actions.length, :>=, 2
+
+    first_action, second_action = result.actions.first(2)
+
+    assert_equal "attack", first_action["type"]
+    assert_equal "attack", second_action["type"]
+
+    assert_equal(
+      [1, 2],
+      first_action.dig("payload", "target")
+    )
+
+    assert_equal(
+      [1, 2],
+      second_action.dig("payload", "target")
+    )
+
+    refute_equal(
+      first_action.dig("payload", "attacker"),
+      second_action.dig("payload", "attacker")
+    )
+
+    # После второго выстрела цель должна быть уничтожена.
+    assert_nil result.steps[1].expected_visible_state.dig(
+      "field", 1, 2
+    )
+  end
+
   test "chooses a profitable ranged attack by a single technique" do
     @state["field"][2][0]["has_attacked"] = true
 
@@ -690,6 +791,82 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
 
     assert first_actions.any? { |action| action["type"] == "move" }
     assert first_actions.any? { |action| action["type"] == "play_card" }
+  end
+
+  test "rewards damage against a technique after its counterattack" do
+    @state["field"][1][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 8,
+      firepower: 4
+    )
+
+    target["has_counterattacked"] = true
+
+    @state["field"][1][2] = target
+
+    visible_state = visible_state_for_ai
+
+    expected_state = visible_state.deep_dup
+    expected_state["field"][1][2]["hp"] = 4
+
+    action = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 1],
+        "target" => [1, 2]
+      }
+    }
+
+    step =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Step.new(
+        action: action,
+        expected_visible_state: expected_state
+      )
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 3,
+        width: 5
+      )
+
+    bonus = planner.send(
+      :counterattack_exploitation_bonus,
+      [action],
+      [step]
+    )
+
+    assert_equal 6.0, bonus
+
+    # Если цель ещё может контратаковать, дополнительного бонуса нет.
+    available_state = visible_state.deep_dup
+    available_state["field"][1][2]["has_counterattacked"] = false
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: available_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 3,
+        width: 5
+      )
+
+    assert_equal(
+      0.0,
+      planner.send(
+        :counterattack_exploitation_bonus,
+        [action],
+        [step]
+      )
+    )
   end
 
   private
