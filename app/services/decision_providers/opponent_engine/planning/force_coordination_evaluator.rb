@@ -172,8 +172,16 @@ module DecisionProviders
                 technique_count +
                 (candidate[:kind] == :technique ? 1 : 0)
 
-              total_gain =
-                state_score(next_state) - @initial_score
+              terminal_score = terminal_score_for(next_state)
+
+              next_state_score =
+                if terminal_score.nil?
+                  @material_scorer.call(next_state)
+                else
+                  terminal_score
+                end
+
+              total_gain = next_state_score - @initial_score
 
               if used_keys.empty?
                 @best_single_gain = [
@@ -185,12 +193,16 @@ module DecisionProviders
               target_destroyed =
                 object_at(next_state, @target_position).nil?
 
+              # Штаб и техника образуют совместную атаку и в случае, когда
+              # цель ещё не уничтожена. Иначе последовательный огонь по
+              # опасной технике не получает стратегической ценности до
+              # последнего HP цели, хотя следующий участник атаки уже может
+              # завершить её уничтожение.
               combined_attack =
                 next_technique_count >= 2 ||
                 (
                   next_technique_count >= 1 &&
-                  next_used_keys.any? { |key| key.first == :headquarters } &&
-                  target_destroyed
+                  next_used_keys.any? { |key| key.first == :headquarters }
                 )
 
               if combined_attack
@@ -205,7 +217,8 @@ module DecisionProviders
               next if target_destroyed
 
               # После уничтожения любого штаба партия завершена.
-              next if terminal_state?(next_state)
+              # terminal_score уже вычислен выше.
+              next unless terminal_score.nil?
 
               # Штаб и три техники — максимальная
               # последовательность для одной цели.
@@ -313,20 +326,25 @@ module DecisionProviders
           @material_scorer.call(state)
         end
 
-        def terminal_state?(state)
-          !terminal_score_for(state).nil?
-        end
-
         def terminal_score_for(state)
-          own_headquarters = headquarters_for(
-            state,
-            @player_id
-          )
+          own_headquarters = nil
+          enemy_headquarters = nil
 
-          enemy_headquarters = headquarters_for(
-            state,
-            @opponent_id
-          )
+          state.fetch("field").each do |row|
+            row.each do |object|
+              next unless object
+              next unless object["type"] == "headquarters"
+
+              player_id = object["player_id"].to_s
+
+              own_headquarters ||= object if player_id == @player_id
+              enemy_headquarters ||= object if player_id == @opponent_id
+
+              break if own_headquarters && enemy_headquarters
+            end
+
+            break if own_headquarters && enemy_headquarters
+          end
 
           return -StrategicEvaluator::WIN_SCORE unless
             own_headquarters &&

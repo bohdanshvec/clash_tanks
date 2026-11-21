@@ -29,7 +29,10 @@ module DecisionProviders
         "payload" => {}
       }
 
-      actions
+      # Несколько копий одной карты могут создавать одинаковые действия.
+      # Для GameEngine они эквивалентны: PlayCard выбирает первую карту
+      # с соответствующим card_id.
+      actions.uniq
     end
 
     private

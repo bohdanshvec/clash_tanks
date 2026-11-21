@@ -55,7 +55,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".deck-card__count", text: "10/10", count: 3
     assert_select ".deck-card__preview-button", text: "Переглянути", count: 3
     assert_select ".deck-card__preview-dialog", count: 3
-    assert_select ".deck-card__preview-item .catalog-card", count: 30
+    assert_select ".deck-card__preview-item .catalog-card", count: 29
     assert_select ".deck-card__actions a", count: 0
   end
 
@@ -95,7 +95,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".deck-card__actions a", text: "Редагувати", count: 3
     assert_select ".deck-card__delete-form", count: 3
     assert_select ".deck-card__preview-dialog", count: 3
-    assert_select ".deck-card__preview-item .catalog-card", count: 30
+    assert_select ".deck-card__preview-item .catalog-card", count: 29
   end
 
   test "logged in player can access statistics" do

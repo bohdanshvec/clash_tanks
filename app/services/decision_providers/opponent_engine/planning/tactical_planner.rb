@@ -6,6 +6,12 @@ module DecisionProviders
         DEFAULT_DEPTH = 7
         DEFAULT_WIDTH = 20
 
+        # Дополнительная ценность урона по технике,
+        # которая уже использовала ответную атаку.
+        # Базовая оценка HP техники равна 2.5,
+        # поэтому бонус 1.5 увеличивает ценность такого урона на 60%.
+        COUNTERATTACK_SPENT_DAMAGE_BONUS = 1.5
+
         Node = Data.define(
           :visible_state,
           :actions,
@@ -61,7 +67,7 @@ module DecisionProviders
             result[card["card_id"].to_s] = card["card_type"]
           end
 
-@root_deployment_positions = root_deployment_positions
+          @root_deployment_positions = root_deployment_positions
 
           raise ArgumentError, "Depth must be positive" unless @depth.positive?
           raise ArgumentError, "Width must be positive" unless @width.positive?
@@ -69,6 +75,16 @@ module DecisionProviders
 
         def call
           started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+          @phase_timings = Hash.new do |hash, key|
+            hash[key] = {
+              calls: 0,
+              total_ms: 0.0,
+              max_ms: 0.0
+            }
+          end
+
+          @strategic_component_timings = {}
 
           initial_score = evaluate(@visible_state)
 
@@ -102,6 +118,7 @@ module DecisionProviders
 
           completed = []
           expanded_nodes = 0
+          frontier_expanded = false
 
           @depth.times do
             candidates = []
@@ -115,25 +132,17 @@ module DecisionProviders
                   action
                 )
 
-                if node.actions.empty? && action["type"] == "move"
-                  if simulation.success?
-                    Rails.logger.info(
-                      "[OpponentEngine] Move simulation SUCCESS: " \
-                      "#{action["payload"].inspect}, " \
-                      "score: #{evaluate(simulation.visible_state)}"
-                    )
-                  else
+                unless simulation.success?
+                  if node.actions.empty? && action["type"] == "move"
                     Rails.logger.warn(
                       "[OpponentEngine] Move simulation FAILED: " \
                       "#{action["payload"].inspect}, " \
                       "error: #{simulation.error}"
                     )
                   end
+
+                  next
                 end
-
-                next unless simulation.success?
-
-                expanded_nodes += 1
 
                 action_copy = action.deep_dup
                 expected_state = simulation.visible_state.deep_dup
@@ -145,11 +154,37 @@ module DecisionProviders
                   expected_visible_state: expected_state.deep_dup
                 )
 
+                steps = node.steps + [step]
+
+                tactical_bonus = counterattack_exploitation_bonus(
+                  actions,
+                  steps
+                )
+
+                child_score =
+                  evaluate(expected_state) + tactical_bonus
+
+                if node.actions.empty?
+                  breakdown = evaluate_breakdown(expected_state)
+
+                  breakdown[:counterattack_exploitation_bonus] = tactical_bonus
+
+                  Rails.logger.info(
+                    "[OpponentEngine] Root candidate: " \
+                    "type=#{action["type"]}, " \
+                    "payload=#{action["payload"].inspect}, " \
+                    "score=#{child_score.round(2)}, " \
+                    "breakdown=#{breakdown.transform_values { |value| value.round(2) }.inspect}"
+                  )
+                end
+
+                expanded_nodes += 1
+
                 child = Node.new(
                   visible_state: expected_state,
                   actions: actions,
-                  steps: node.steps + [step],
-                  score: evaluate(expected_state),
+                  steps: steps,
+                  score: child_score,
                   terminal: terminal_action?(
                     action,
                     expected_state
@@ -164,12 +199,41 @@ module DecisionProviders
               end
             end
 
-            break if candidates.empty?
+            if candidates.empty?
+              frontier_expanded = true
+              break
+            end
 
             frontier = rank(candidates).first(@width)
           end
 
-          best_node = (completed + frontier)
+          # Узел без end_turn оценён «посреди хода». Его нельзя сравнивать
+          # с завершённым ходом: у него нет пополнения топлива противника,
+          # штрафов и бонусов конца хода, поэтому он выглядит лучше.
+          # Достраиваем такие узлы до end_turn и выбираем только среди
+          # завершённых ходов.
+          unless frontier_expanded
+            frontier.each do |node|
+              next if node.actions.empty?
+
+              finished = finish_turn(node)
+              next unless finished
+
+              expanded_nodes += 1
+              completed << finished
+            end
+          end
+
+          best_node = completed
+            .reject { |node| node.actions.empty? }
+            .max_by do |node|
+              [
+                node.score,
+                -node.actions.length
+              ]
+            end
+
+          best_node ||= frontier
             .reject { |node| node.actions.empty? }
             .max_by do |node|
               [
@@ -182,9 +246,46 @@ module DecisionProviders
             "[OpponentEngine] Selected plan: #{best_node&.actions.inspect}"
           )
 
+          Rails.logger.info(
+            "[OpponentEngine] Selected plan diagnostics: " \
+            "score=#{best_node&.score || initial_score}, " \
+            "score_delta=#{((best_node&.score || initial_score) - initial_score).round(2)}, " \
+            "actions=#{plan_action_counts(best_node)}, " \
+            "attackers=#{plan_attacker_types(best_node)}"
+          )
+
           elapsed_ms = (
             Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
           ) * 1000
+
+          phase_summary = @phase_timings.map do |name, stats|
+            average_ms = stats[:total_ms] / stats[:calls]
+
+            "#{name}=#{stats[:calls]} calls, " \
+              "total=#{stats[:total_ms].round(1)}ms, " \
+              "avg=#{average_ms.round(2)}ms, " \
+              "max=#{stats[:max_ms].round(1)}ms"
+          end.join(" | ")
+
+          strategic_summary = @strategic_component_timings
+            .sort_by { |name, _stats| name.to_s }
+            .map do |name, stats|
+              average_ms = stats[:total_ms] / stats[:calls]
+
+              "#{name}=#{stats[:calls]} calls, " \
+                "total=#{stats[:total_ms].round(1)}ms, " \
+                "avg=#{average_ms.round(2)}ms, " \
+                "max=#{stats[:max_ms].round(1)}ms"
+            end
+            .join(" | ")
+
+          Rails.logger.info(
+            "[OpponentEngine] Strategic profile: #{strategic_summary}"
+          )
+
+          Rails.logger.info(
+            "[OpponentEngine] Search profile: #{phase_summary}"
+          )
 
           Rails.logger.info(
             "[OpponentEngine] Search completed: " \
@@ -204,6 +305,89 @@ module DecisionProviders
         end
 
         private
+
+        # Достраивает незавершённый узел действием end_turn.
+        def finish_turn(node)
+          action = { "type" => "end_turn", "payload" => {} }
+
+          simulation = simulate(node.visible_state, action)
+          return nil unless simulation.success?
+
+          expected_state = simulation.visible_state.deep_dup
+
+          step = Step.new(
+            action: action.deep_dup,
+            expected_visible_state: expected_state.deep_dup
+          )
+
+          Node.new(
+            visible_state: expected_state,
+            actions: node.actions + [action.deep_dup],
+            steps: node.steps + [step],
+            score: evaluate(expected_state) +
+              counterattack_exploitation_bonus(
+                node.actions,
+                node.steps
+              ),
+            terminal: true
+          )
+        end
+
+        # --------------------------------------------------------------
+        # Приоритет атаки по технике с использованной контратакой
+        # --------------------------------------------------------------
+
+        def counterattack_exploitation_bonus(actions, steps)
+          actions.each_with_index.sum do |action, index|
+            previous_state =
+              if index.zero?
+                @visible_state
+              else
+                steps[index - 1].expected_visible_state
+              end
+
+            counterattack_exploitation_bonus_for_action(
+              visible_state: previous_state,
+              action: action,
+              expected_visible_state: steps[index].expected_visible_state
+            )
+          end
+        end
+
+        def counterattack_exploitation_bonus_for_action(
+          visible_state:,
+          action:,
+          expected_visible_state:
+        )
+          return 0.0 unless action["type"] == "attack"
+
+          target_position = action.dig("payload", "target")
+
+          return 0.0 unless
+            target_position.is_a?(Array) &&
+            target_position.length == 2
+
+          row, column = target_position
+
+          target = visible_state.dig("field", row, column)
+
+          return 0.0 unless target
+          return 0.0 unless target["type"] == "technique"
+          return 0.0 unless target["player_id"].to_s != @player_id
+          return 0.0 unless target["has_counterattacked"]
+
+          target_after =
+            expected_visible_state.dig("field", row, column)
+
+          hp_after = target_after ? target_after["hp"].to_i : 0
+
+          damage = [
+            target["hp"].to_i - hp_after,
+            0
+          ].max
+
+          damage * COUNTERATTACK_SPENT_DAMAGE_BONUS
+        end
 
         def first_action_category(node)
           action = node.actions.first
@@ -230,8 +414,47 @@ module DecisionProviders
 
           when "attack"
             attacker = Array(payload["attacker"]).join(",")
+            target = Array(payload["target"]).join(",")
 
-            "attack:#{attacker}"
+            # Для одного атакующего цели могут иметь принципиально разные
+            # продолжения: например, штаб может давить вражеский штаб или
+            # начать последовательную атаку по технике вместе с танком.
+            # Нельзя оставлять в beam только одну из таких веток.
+            "attack:#{attacker}:#{target}"
+
+          else
+            action["type"]
+          end
+        end
+
+        def second_action_category(node)
+          action = node.actions[1]
+          return "single_action" unless action
+
+          payload = action["payload"] || {}
+
+          case action["type"]
+          when "attack"
+            attacker = Array(payload["attacker"]).join(",")
+            target = Array(payload["target"]).join(",")
+
+            "attack:#{attacker}:#{target}"
+
+          when "move"
+            from = Array(payload["from"]).join(",")
+            to = Array(payload["to"]).join(",")
+
+            "move:#{from}:#{to}"
+
+          when "play_card"
+            card_id = payload["card_id"].to_s
+            card_type = @root_card_types[card_id] || "unknown"
+
+            targets =
+              payload["targets"] ||
+              [payload["row"], payload["column"]]
+
+            "play_card:#{card_type}:#{card_id}:#{targets.inspect}"
 
           else
             action["type"]
@@ -259,7 +482,9 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def available_actions(visible_state)
-          DecisionProviders::ActionOptions.call(visible_state)
+          measure_phase(:available_actions) do
+            DecisionProviders::ActionOptions.call(visible_state)
+          end
         end
 
         # --------------------------------------------------------------
@@ -267,23 +492,58 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def simulate(visible_state, action)
-          StateSimulator.call(
-            visible_state: visible_state,
-            player_id: @player_id,
-            action: action,
-            current_time: @current_time
-          )
+          measure_phase(:simulate) do
+            StateSimulator.call(
+              visible_state: visible_state,
+              player_id: @player_id,
+              action: action,
+              current_time: @current_time
+            )
+          end
         end
 
         # --------------------------------------------------------------
         # Стратегическая оценка
         # --------------------------------------------------------------
-
         def evaluate(visible_state)
-          StrategicEvaluator.call(
-            visible_state: visible_state,
-            player_id: @player_id
-          )
+          measure_phase(:evaluate) do
+            StrategicEvaluator.call(
+              visible_state: visible_state,
+              player_id: @player_id,
+              profile: @strategic_component_timings
+            )
+          end
+        end
+
+        def evaluate_breakdown(visible_state)
+          measure_phase(:evaluate_breakdown) do
+            StrategicEvaluator.new(
+              visible_state: visible_state,
+              player_id: @player_id,
+              profile: @strategic_component_timings,
+              profile_scope: :breakdown
+            ).score_breakdown
+          end
+        end
+
+        # --------------------------------------------------------------
+        # Профилирование
+        # --------------------------------------------------------------
+
+        def measure_phase(name)
+          started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+          yield
+        ensure
+          elapsed_ms = (
+            Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+          ) * 1000
+
+          stats = @phase_timings[name]
+
+          stats[:calls] += 1
+          stats[:total_ms] += elapsed_ms
+          stats[:max_ms] = [stats[:max_ms], elapsed_ms].max
         end
 
         # --------------------------------------------------------------
@@ -310,20 +570,89 @@ module DecisionProviders
 
           category_representatives =
             ranked_nodes
-              .group_by { |node| first_action_category(node) }
+              .group_by do |node|
+                [
+                  first_action_category(node),
+                  second_action_category(node)
+                ]
+              end
               .values
               .map(&:first)
-              .first(@width)
 
-          representative_ids =
-            category_representatives.each_with_object({}) do |node, result|
-              result[node.object_id] = true
+          action_type_representatives =
+            ranked_nodes
+              .group_by { |node| node.actions.first&.dig("type") }
+              .values
+              .map(&:first)
+
+          actor_representatives =
+            ranked_nodes
+              .group_by { |node| first_action_actor_category(node) }
+              .values
+              .map(&:first)
+
+          selected = []
+
+          [
+            action_type_representatives,
+            actor_representatives,
+            category_representatives,
+            ranked_nodes
+          ].each do |collection|
+            collection.each do |node|
+              selected << node unless selected.any? { |item| item.equal?(node) }
+
+              break if selected.length >= @width
             end
 
-          category_representatives +
-            ranked_nodes.reject do |node|
-              representative_ids.key?(node.object_id)
-            end
+            break if selected.length >= @width
+          end
+
+          selected
+        end
+
+        def first_action_actor_category(node)
+          action = node.actions.first
+          return "empty" unless action
+
+          payload = action["payload"] || {}
+
+          case action["type"]
+          when "attack"
+            "attack:#{Array(payload["attacker"]).join(",")}"
+
+          when "move"
+            "move:#{Array(payload["from"]).join(",")}"
+
+          when "play_card"
+            card_id = payload["card_id"].to_s
+            card_type = @root_card_types[card_id] || "unknown"
+
+            "play_card:#{card_type}:#{card_id}"
+
+          else
+            action["type"]
+          end
+        end
+
+        def plan_action_counts(node)
+          Array(node&.actions).map { |action| action["type"] }.tally
+        end
+
+        def plan_attacker_types(node)
+          Array(node&.steps).filter_map do |step|
+            action = step.action
+            next unless action["type"] == "attack"
+
+            position = action.dig("payload", "attacker")
+            attacker = step.expected_visible_state.dig(
+              "field",
+              position[0],
+              position[1]
+            )
+
+            attacker ? attacker["type"] : "destroyed"
+          end.tally
         end
 
         def empty_result(score)

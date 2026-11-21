@@ -68,6 +68,165 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
+  test "attacks with headquarters first to protect a vulnerable technique" do
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 4,
+      firepower: 8
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 12,
+      firepower: 4
+    )
+
+    @state["field"][1][2] = attacker
+    @state["field"][1][1] = target
+
+    result = plan
+
+    assert_operator result.actions.length, :>=, 2
+
+    first_attack = result.actions[0]
+    second_attack = result.actions[1]
+
+    assert_equal "attack", first_attack["type"]
+    assert_equal [2, 0], first_attack.dig("payload", "attacker")
+    assert_equal [1, 1], first_attack.dig("payload", "target")
+
+    assert_equal "attack", second_attack["type"]
+    assert_equal [1, 2], second_attack.dig("payload", "attacker")
+    assert_equal [1, 1], second_attack.dig("payload", "target")
+
+    # После атаки штабом противник использовал контратаку.
+    hq_step_state = result.steps[0].expected_visible_state
+
+    assert(
+      hq_step_state.dig("field", 1, 1, "has_counterattacked")
+    )
+
+    # Собственная техника не пострадала от первого выстрела.
+    assert_equal(
+      4,
+      hq_step_state.dig("field", 1, 2, "hp")
+    )
+
+    # Последующая атака техники уничтожила цель.
+    technique_step_state = result.steps[1].expected_visible_state
+
+    assert_nil(
+      technique_step_state.dig("field", 1, 1)
+    )
+
+    # Техника не получила ответного урона.
+    assert_equal(
+      4,
+      technique_step_state.dig("field", 1, 2, "hp")
+    )
+  end
+
+  test "continues a two-technique attack after the first tank receives a counterattack" do
+    first_tank = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    second_tank = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 8,
+      firepower: 4
+    )
+
+    @state["field"][2][1] = first_tank
+    @state["field"][2][3] = second_tank
+    @state["field"][1][2] = target
+
+    # Исключаем штаб из числа доступных атакующих.
+    @state["field"][2][0]["has_attacked"] = true
+
+    visible_state = visible_state_for_ai
+
+    first_attack = {
+      "type" => "attack",
+      "payload" => {
+      "attacker" => [2, 1],
+      "target" => [1, 2]
+      }
+    }
+
+    simulation =
+      DecisionProviders::OpponentEngine::Planning::StateSimulator.call(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        action: first_attack,
+        current_time: @current_time
+      )
+
+    assert simulation.success?
+
+    state_after_first_attack = simulation.visible_state
+
+    # Первая атака должна вызвать ответную атаку противника.
+    assert(
+      state_after_first_attack.dig(
+        "field", 1, 2, "has_counterattacked"
+      )
+    )
+
+    # Второй танк должен получить возможность атаковать ту же цель.
+    follow_up_actions =
+      DecisionProviders::ActionOptions.call(state_after_first_attack)
+
+    assert_includes(
+      follow_up_actions,
+      {
+        "type" => "attack",
+        "payload" => {
+          "attacker" => [2, 3],
+          "target" => [1, 2]
+        }
+      }
+    )
+
+    # Планировщик должен сохранить и выбрать совместную атаку.
+    result = plan(visible_state)
+
+    assert_operator result.actions.length, :>=, 2
+
+    first_action, second_action = result.actions.first(2)
+
+    assert_equal "attack", first_action["type"]
+    assert_equal "attack", second_action["type"]
+
+    assert_equal(
+      [1, 2],
+      first_action.dig("payload", "target")
+    )
+
+    assert_equal(
+      [1, 2],
+      second_action.dig("payload", "target")
+    )
+
+    refute_equal(
+      first_action.dig("payload", "attacker"),
+      second_action.dig("payload", "attacker")
+    )
+
+    # После второго выстрела цель должна быть уничтожена.
+    assert_nil result.steps[1].expected_visible_state.dig(
+      "field", 1, 2
+    )
+  end
+
   test "chooses a profitable ranged attack by a single technique" do
     @state["field"][2][0]["has_attacked"] = true
 
@@ -105,7 +264,7 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
-  test "waits for headquarters support instead of making a nonlethal solo attack" do
+  test "makes a safe solo attack when headquarters support is unavailable" do
     headquarters = @state["field"][2][0]
     headquarters["has_attacked"] = true
 
@@ -133,7 +292,17 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     result = plan
 
     assert_not_empty result.actions
-    assert_equal "end_turn", result.actions.first["type"]
+    assert_equal "attack", result.actions.first["type"]
+
+    assert_equal(
+      [1, 2],
+      result.actions.first.dig("payload", "attacker")
+    )
+
+    assert_equal(
+      [0, 3],
+      result.actions.first.dig("payload", "target")
+    )
   end
 
   test "does not sacrifice a technique to a tank destroyer that shoots first" do
@@ -545,6 +714,237 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
 
     assert_includes selected_attackers, [0, 1]
     assert_includes selected_attackers, [0, 2]
+  end
+
+  test "preserves different follow-up attacks within the same root branch" do
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 4
+      )
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    first_action = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [0, 4],
+        "target" => [2, 0]
+      }
+    }
+
+    first_tank_attack = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [0, 2],
+        "target" => [1, 1]
+      }
+    }
+
+    second_tank_attack = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 2],
+        "target" => [1, 1]
+      }
+    }
+
+    third_tank_move = {
+      "type" => "move",
+      "payload" => {
+        "from" => [2, 3],
+        "to" => [2, 2]
+      }
+    }
+
+    nodes = [
+      node_class.new(
+        visible_state: visible_state,
+        actions: [first_action, first_tank_attack],
+        steps: [],
+        score: 100,
+        terminal: false
+      ),
+      node_class.new(
+        visible_state: visible_state,
+        actions: [first_action, third_tank_move],
+        steps: [],
+        score: 90,
+        terminal: false
+      ),
+      node_class.new(
+        visible_state: visible_state,
+        actions: [first_action, second_tank_attack],
+        steps: [],
+        score: 80,
+        terminal: false
+      )
+    ]
+
+    ranked = planner.send(:rank, nodes)
+
+    assert_includes ranked, nodes[0]
+    assert_includes ranked, nodes[1]
+    assert_includes ranked, nodes[2]
+  end
+
+  test "preserves move and card branches when many attack targets dominate the beam" do
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 10
+      )
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    attack_nodes = 12.times.map do |index|
+      node_class.new(
+        visible_state: visible_state,
+        actions: [
+          {
+            "type" => "attack",
+            "payload" => {
+              "attacker" => [1, 1],
+              "target" => [index / 5, index % 5]
+            }
+          }
+        ],
+        steps: [],
+        score: 100 - index,
+        terminal: false
+      )
+    end
+
+    move_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "move",
+          "payload" => {
+            "from" => [1, 1],
+            "to" => [1, 2]
+          }
+        }
+      ],
+      steps: [],
+      score: 1,
+      terminal: false
+    )
+
+    card_node = node_class.new(
+      visible_state: visible_state,
+      actions: [
+        {
+          "type" => "play_card",
+          "payload" => {
+            "card_id" => 99
+          }
+        }
+      ],
+      steps: [],
+      score: 0,
+      terminal: false
+    )
+
+    ranked = planner.send(
+      :rank,
+      attack_nodes + [move_node, card_node]
+    )
+
+    first_actions = ranked.first(10).map do |node|
+      node.actions.first
+    end
+
+    assert first_actions.any? { |action| action["type"] == "move" }
+    assert first_actions.any? { |action| action["type"] == "play_card" }
+  end
+
+  test "rewards damage against a technique after its counterattack" do
+    @state["field"][1][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 8,
+      firepower: 4
+    )
+
+    target["has_counterattacked"] = true
+
+    @state["field"][1][2] = target
+
+    visible_state = visible_state_for_ai
+
+    expected_state = visible_state.deep_dup
+    expected_state["field"][1][2]["hp"] = 4
+
+    action = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 1],
+        "target" => [1, 2]
+      }
+    }
+
+    step =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Step.new(
+        action: action,
+        expected_visible_state: expected_state
+      )
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 3,
+        width: 5
+      )
+
+    bonus = planner.send(
+      :counterattack_exploitation_bonus,
+      [action],
+      [step]
+    )
+
+    assert_equal 6.0, bonus
+
+    # Если цель ещё может контратаковать, дополнительного бонуса нет.
+    available_state = visible_state.deep_dup
+    available_state["field"][1][2]["has_counterattacked"] = false
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: available_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 3,
+        width: 5
+      )
+
+    assert_equal(
+      0.0,
+      planner.send(
+        :counterattack_exploitation_bonus,
+        [action],
+        [step]
+      )
+    )
   end
 
   private
