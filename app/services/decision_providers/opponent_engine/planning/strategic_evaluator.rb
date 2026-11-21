@@ -101,6 +101,11 @@ module DecisionProviders
 
           @profile = profile
           @profile_scope = profile_scope
+
+          # Локальные кэши производных расчётов.
+          # Живут только в пределах одного StrategicEvaluator.
+          @potential_movement_states = {}
+          @attack_positions_cache = {}
         end
 
         def call
@@ -1051,6 +1056,12 @@ module DecisionProviders
         )
           return [] if technique["has_attacked"]
 
+          cache_key = [position, target_position]
+
+          cached_positions = @attack_positions_cache[cache_key]
+
+          return cached_positions.dup if cached_positions
+
           possible_positions = [
             position,
             *available_move_positions(
@@ -1059,7 +1070,7 @@ module DecisionProviders
             )
           ].uniq
 
-          possible_positions.filter_map do |attack_position|
+          attack_positions = possible_positions.filter_map do |attack_position|
             state, attacker = potential_movement_state(
               position,
               attack_position
@@ -1081,6 +1092,10 @@ module DecisionProviders
 
             attack_position
           end
+
+          @attack_positions_cache[cache_key] = attack_positions
+
+          attack_positions.dup
         end
 
         def available_move_positions(position, technique:)
@@ -1114,22 +1129,26 @@ module DecisionProviders
             @visible_state["field"][from[0]][from[1]]
           ] if from == to
 
-          state = @visible_state.deep_dup
+          cache_key = [from, to]
 
-          technique = state["field"][from[0]][from[1]]
+          @potential_movement_states[cache_key] ||= begin
+            state = @visible_state.deep_dup
 
-          technique["movement_count"] = [
-            numeric(technique, "movement_count").to_i - 1,
-            0
-          ].max
+            technique = state["field"][from[0]][from[1]]
 
-          state["field"][from[0]][from[1]] = nil
-          state["field"][to[0]][to[1]] = technique
+            technique["movement_count"] = [
+              numeric(technique, "movement_count").to_i - 1,
+              0
+            ].max
 
-          [
-            state,
-            technique
-          ]
+            state["field"][from[0]][from[1]] = nil
+            state["field"][to[0]][to[1]] = technique
+
+            [
+              state,
+              technique
+            ]
+          end
         end
 
         # --------------------------------------------------------------
@@ -1137,6 +1156,8 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def enemy_threat_score
+          return @enemy_threat_score if defined?(@enemy_threat_score)
+
           total_threat = enemy_techniques.sum do |technique, position|
             potential_enemy_positions(technique, position).map do |state, attacker, attacker_position|
               state_field_objects(state).filter_map do |target, target_position|
@@ -1160,7 +1181,7 @@ module DecisionProviders
             end.max || 0
           end
 
-          total_threat * ENEMY_THREAT_WEIGHT
+          @enemy_threat_score = total_threat * ENEMY_THREAT_WEIGHT
         end
 
         def enemy_techniques
