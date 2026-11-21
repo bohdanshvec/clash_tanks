@@ -1160,7 +1160,7 @@ module DecisionProviders
 
           total_threat = enemy_techniques.sum do |technique, position|
             potential_enemy_positions(technique, position).map do |state, attacker, attacker_position|
-              state_field_objects(state).filter_map do |target, target_position|
+              target_positions = state_field_objects(state).filter_map do |target, target_position|
                 next unless owner_sign(target["player_id"]) == 1
                 next unless %w[technique headquarters].include?(target["type"])
 
@@ -1172,10 +1172,21 @@ module DecisionProviders
                   target_position: target_position
                 )
 
+                target_position
+              end
+
+              next 0 if target_positions.empty?
+
+              # Исходная материальная оценка одинакова для всех
+              # потенциальных атак из одной позиции.
+              score_before = combat_material_score(state)
+
+              target_positions.map do |target_position|
                 potential_attack_threat(
                   state: state,
                   attacker_position: attacker_position,
-                  target_position: target_position
+                  target_position: target_position,
+                  score_before: score_before
                 )
               end.max || 0
             end.max || 0
@@ -1257,7 +1268,12 @@ module DecisionProviders
           candidates
         end
 
-        def potential_attack_threat(state:, attacker_position:, target_position:)
+        def potential_attack_threat(
+          state:,
+          attacker_position:,
+          target_position:,
+          score_before:
+        )
           simulated_state = state.deep_dup
 
           # VisibleState не содержит настоящие кладбища игроков.
@@ -1279,8 +1295,6 @@ module DecisionProviders
             attacker_position: attacker_position,
             target_position: target_position
           )
-
-          score_before = combat_material_score(simulated_state)
 
           GameEngine::Attacks::CombatExecutor.call(
             state: simulated_state,
