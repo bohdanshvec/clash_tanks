@@ -1621,8 +1621,10 @@ export default class extends Controller {
   // --------------------------------------------------
 
   edgeOffset(rect, directionX, directionY) {
-    const halfWidth = Math.max(rect.width / 2 - 8, 1)
-    const halfHeight = Math.max(rect.height / 2 - 8, 1)
+    const layoutScale = this.layoutScale()
+
+    const halfWidth = Math.max(rect.width / layoutScale / 2 - 8, 1)
+    const halfHeight = Math.max(rect.height / layoutScale / 2 - 8, 1)
 
     const scaleX =
       directionX === 0
@@ -1640,6 +1642,19 @@ export default class extends Controller {
       x: directionX * scale,
       y: directionY * scale
     }
+  }
+
+  // Текущий масштаб игровой композиции в мобильном режиме.
+  layoutScale() {
+    const root = document.documentElement
+
+    if (!root.classList.contains("mobile-game-fullscreen")) return 1
+
+    const value = parseFloat(
+      getComputedStyle(root).getPropertyValue("--game-scale")
+    )
+
+    return value > 0 ? value : 1
   }
 
   // --------------------------------------------------

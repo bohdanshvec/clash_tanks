@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html data-controller="site-fullscreen">
   <head>
     <title><%= content_for(:title) || "Clash Tanks" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Clash Tanks">
     <meta name="mobile-web-app-capable" content="yes">
@@ -34,10 +34,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body
-    class="<%= 'game-page' if controller_name == 'games' %>"
-    data-controller="site-fullscreen"
-  >
+  <body class="<%= 'game-page' if controller_name == 'games' %>">
     <header class="app-header" role="banner">
       <div class="app-header__inner">
 
