@@ -106,6 +106,12 @@ module DecisionProviders
           # Живут только в пределах одного StrategicEvaluator.
           @potential_movement_states = {}
           @attack_positions_cache = {}
+
+          # Состояние evaluator не изменяется при расчётах.
+          # Поэтому списки объектов поля и техники можно переиспользовать.
+          @field_objects_cache = nil
+          @own_techniques_cache = nil
+          @enemy_techniques_cache = nil
         end
 
         def call
@@ -280,10 +286,10 @@ module DecisionProviders
         end
 
         def own_techniques
-          field_objects.select do |object, _position|
+          @own_techniques_cache ||= field_objects.select do |object, _position|
             object["type"] == "technique" &&
               owner_sign(object["player_id"]) == 1
-          end
+          end.freeze
         end
 
         # --------------------------------------------------------------
@@ -1196,10 +1202,10 @@ module DecisionProviders
         end
 
         def enemy_techniques
-          field_objects.select do |object, _position|
+          @enemy_techniques_cache ||= field_objects.select do |object, _position|
             object["type"] == "technique" &&
               owner_sign(object["player_id"]) == -1
-          end
+          end.freeze
         end
 
         def potential_enemy_positions(technique, position)
@@ -1462,7 +1468,7 @@ module DecisionProviders
         # --------------------------------------------------------------
 
         def field_objects
-          @field.each_with_index.flat_map do |row, row_index|
+          @field_objects_cache ||= @field.each_with_index.flat_map do |row, row_index|
             row.each_with_index.filter_map do |object, column_index|
               next unless object
 
@@ -1471,9 +1477,9 @@ module DecisionProviders
                 [row_index, column_index]
               ]
             end
-          end
+          end.freeze
         end
-
+        
         def object_at(position)
           @field.dig(position[0], position[1])
         end
