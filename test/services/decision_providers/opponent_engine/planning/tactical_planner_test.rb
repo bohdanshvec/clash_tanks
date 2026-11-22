@@ -126,6 +126,86 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     )
   end
 
+  test "uses distant headquarters attack before technique destroys the target without counterattack" do
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 8,
+      firepower: 4
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 8,
+      firepower: 4
+    )
+
+    # Наша техника находится рядом с целью и обеспечивает разведку.
+    @state["field"][1][3] = attacker
+    @state["field"][0][3] = target
+
+    # Штаб находится далеко от цели.
+    headquarters_position = [2, 0]
+    target_position = [0, 3]
+    attacker_position = [1, 3]
+
+    assert_not(
+      GameEngine::Rules::Position.adjacent?(
+        headquarters_position,
+        target_position
+      )
+    )
+
+    result = plan
+
+    assert_operator result.actions.length, :>=, 2
+
+    headquarters_attack = result.actions[0]
+    technique_attack = result.actions[1]
+
+    assert_equal "attack", headquarters_attack["type"]
+    assert_equal headquarters_position,
+      headquarters_attack.dig("payload", "attacker")
+    assert_equal target_position,
+      headquarters_attack.dig("payload", "target")
+
+    assert_equal "attack", technique_attack["type"]
+    assert_equal attacker_position,
+      technique_attack.dig("payload", "attacker")
+    assert_equal target_position,
+      technique_attack.dig("payload", "target")
+
+    # После дальней атаки штаба цель жива, но ослаблена.
+    headquarters_state = result.steps[0].expected_visible_state
+
+    assert_equal 4,
+      headquarters_state.dig("field", 0, 3, "hp")
+
+    assert_not(
+      headquarters_state.dig(
+        "field", 0, 3, "has_counterattacked"
+      )
+    )
+
+    # Наша техника не получила ответного урона.
+    assert_equal 8,
+      headquarters_state.dig("field", 1, 3, "hp")
+
+    # Следующая атака уничтожает цель без контратаки.
+    final_state = result.steps[1].expected_visible_state
+
+    assert_nil final_state.dig("field", 0, 3)
+
+    assert_equal 8,
+      final_state.dig("field", 1, 3, "hp")
+
+    refute(
+      result.steps[1].then do |step|
+        step.expected_visible_state
+          .dig("field", 1, 3, "hp") < 8
+      end
+    )
+  end
+
   test "continues a two-technique attack after the first tank receives a counterattack" do
     first_tank = technique(
       player_id: AI_PLAYER_ID,

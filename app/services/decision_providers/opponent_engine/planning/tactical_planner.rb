@@ -130,6 +130,14 @@ module DecisionProviders
               node_actions = available_actions(node.visible_state)
 
               node_actions.each do |action|
+                # Если штаб может безопасно подготовить уничтожение цели,
+                # сначала рассматриваем его дальнюю атаку.
+                next if defer_technique_attack_for_headquarters_setup?(
+                  node,
+                  action,
+                  node_actions
+                )
+
                 simulation = simulate(
                   node.visible_state,
                   action
@@ -330,6 +338,152 @@ module DecisionProviders
         # ------------------------------------------------------------
         # Порядок совместной атаки: штаб первым
         # ------------------------------------------------------------
+
+        # ------------------------------------------------------------
+        # Дальняя атака штаба перед добиванием техникой
+        # ------------------------------------------------------------
+
+        def defer_technique_attack_for_headquarters_setup?(
+          node,
+          action,
+          node_actions
+        )
+          return false unless action["type"] == "attack"
+
+          attacker_position = action.dig("payload", "attacker")
+          target_position = action.dig("payload", "target")
+
+          return false unless
+            attacker_position.is_a?(Array) &&
+            attacker_position.length == 2 &&
+            target_position.is_a?(Array) &&
+            target_position.length == 2
+
+          attacker = node.visible_state.dig(
+            "field",
+            attacker_position[0],
+            attacker_position[1]
+          )
+
+          target = node.visible_state.dig(
+            "field",
+            target_position[0],
+            target_position[1]
+          )
+
+          return false unless attacker&.dig("type") == "technique"
+          return false unless attacker["player_id"].to_s == @player_id
+
+          return false unless target&.dig("type") == "technique"
+          return false if target["player_id"].to_s == @player_id
+
+          # Если цель уже использовала контратаку,
+          # это не рассматриваемый сценарий.
+          return false if target["has_counterattacked"]
+
+          headquarters_position = own_headquarters_position
+          return false unless headquarters_position
+
+          # Штаб должен атаковать именно эту цель.
+          # И обязательно дальней атакой.
+          return false if GameEngine::Rules::Position.adjacent?(
+            headquarters_position,
+            target_position
+          )
+
+          headquarters_action = node_actions.find do |candidate|
+            candidate["type"] == "attack" &&
+              candidate.dig("payload", "attacker") == headquarters_position &&
+              candidate.dig("payload", "target") == target_position
+          end
+
+          return false unless headquarters_action
+
+          # Симулируем дальнюю атаку штаба.
+          headquarters_simulation = simulate(
+            node.visible_state,
+            headquarters_action
+          )
+
+          return false unless headquarters_simulation.success?
+
+          state_after_headquarters = headquarters_simulation.visible_state
+
+          target_after_headquarters = state_after_headquarters.dig(
+            "field",
+            target_position[0],
+            target_position[1]
+          )
+
+          attacker_after_headquarters = state_after_headquarters.dig(
+            "field",
+            attacker_position[0],
+            attacker_position[1]
+          )
+
+          # Цель должна пережить выстрел штаба, но получить урон.
+          return false unless target_after_headquarters
+          return false unless target_after_headquarters["type"] == "technique"
+          return false unless
+            target_after_headquarters["hp"].to_i < target["hp"].to_i
+
+          # Дальняя атака штаба не должна расходовать контратаку цели.
+          return false if target_after_headquarters["has_counterattacked"]
+
+          # Наша техника должна остаться на месте.
+          return false unless attacker_after_headquarters
+          return false unless attacker_after_headquarters["type"] == "technique"
+
+          # После выстрела штаба ищем атаку той же техникой
+          # по той же цели.
+          follow_up_actions = available_actions(state_after_headquarters)
+
+          follow_up_action = follow_up_actions.find do |candidate|
+            candidate["type"] == "attack" &&
+              candidate.dig("payload", "attacker") == attacker_position &&
+              candidate.dig("payload", "target") == target_position
+          end
+
+          return false unless follow_up_action
+
+          # Проверяем добивание через настоящий GameEngine.
+          follow_up_simulation = simulate(
+            state_after_headquarters,
+            follow_up_action
+          )
+
+          return false unless follow_up_simulation.success?
+
+          final_state = follow_up_simulation.visible_state
+
+          # Цель должна быть уничтожена.
+          return false if final_state.dig(
+            "field",
+            target_position[0],
+            target_position[1]
+          )
+
+          final_attacker = final_state.dig(
+            "field",
+            attacker_position[0],
+            attacker_position[1]
+          )
+
+          return false unless final_attacker
+
+          # Техника не должна получить ответный урон.
+          return false unless
+            final_attacker["hp"].to_i == attacker["hp"].to_i
+
+          # Дополнительная проверка: в бою не должно быть события контратаки.
+          counterattack_fired = follow_up_simulation.events.any? do |event|
+            (event[:type] || event["type"]).to_s == "counterattack_fired"
+          end
+
+          return false if counterattack_fired
+
+          true
+        end
 
         def headquarters_after_technique_on_same_target?(node, action)
           return false unless action["type"] == "attack"
@@ -851,7 +1005,14 @@ module DecisionProviders
 
           case action["type"]
           when "attack"
-            "attack:#{Array(payload["attacker"]).join(",")}"
+            attacker = Array(payload["attacker"]).join(",")
+            target = Array(payload["target"]).join(",")
+
+            if payload["attacker"] == own_headquarters_position
+              "attack:headquarters:#{target}"
+            else
+              "attack:#{attacker}"
+            end
 
           when "move"
             "move:#{Array(payload["from"]).join(",")}"
