@@ -62,14 +62,14 @@
 
 | Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
 |---|---|---|---:|---:|---:|---:|---:|---|
-| Pz.II | `germany_pz_ii` | LT | 1 | 1 | 1 | 1 | - | — |
-| Sd.222 | `germany_sd_222` | LT | 2 | 2 | 1 | 2 | - | — |
-| Pz.III Ausf | `germany_pz_iii_ausf` | ST | 3 | 3 | 3 | 2 | - | — |
+| Pz.II | `germany_pz_ii` | LT | 1 | 1 | 1 | 1 | 0 | — |
+| Sd.222 | `germany_sd_222` | LT | 2 | 2 | 1 | 2 | 0 | — |
+| Pz.III Ausf | `germany_pz_iii_ausf` | ST | 3 | 3 | 3 | 2 | 0 | — |
 | Pz.IV Ausf | `germany_pz_iv_ausf` | ST | 4 | 4 | 4 | 1 | 1 | — |
 | Hetzer | `germany_hetzer` | PT-SAU | 4 | 4 | 3 | 2 | 1 | Перший постріл |
-| Jagdpanther IV | `germany_jagdpanther_iv` | PT-SAU | 5 | 4 | 4 | 2 | 1 | Перший постріл |
-| Jagdpanther | `germany_jagdpanther` | PT-SAU | 6 | 6 | 6 | 2 | 2 | Перший постріл |
-| Pz.VI Tiger I | `germany_tiger_i` | TT | 7 | 6 | 7 | 2 | 1 | — |
+| Jagdpanther IV | `germany_jagdpanther_iv` | PT-SAU | 5 | 5 | 5 | 2 | 1 | Перший постріл |
+| Jagdpanther | `germany_jagdpanther` | PT-SAU | 7 | 6 | 6 | 2 | 2 | Перший постріл |
+| Pz.VI Tiger I | `germany_tiger_i` | TT | 7 | 6 | 6 | 2 | 1 | — |
 | Sturmpanzer IV | `germany_sturmpanzer_iv` | SAU | 8 | 6 | 2 | 2 | 1 | Spotting / дальня атака |
 
 ### 4.2. Накази
@@ -92,15 +92,15 @@
 
 | Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
 |---|---|---|---:|---:|---:|---:|---:|---|
-| M3 Stuart | `usa_m3_stuart` | LT | 1 | 2 | 1 | 1 | - | — |
+| M3 Stuart | `usa_m3_stuart` | LT | 1 | 2 | 1 | 1 | 0 | — |
 | M8 Greyhound | `usa_m8_greyhound` | LT | 2 | 4 | 2 | 1 | 1 | — |
 | M3 Lee/Grant | `usa_m3_lee_grant` | ST | 3 | 4 | 3 | 1 | 1 | — |
-| M4 Sherman | `usa_m4_sherman` | ST | 4 | 4 | 4 | 2 | 1 | — |
-| M4A3E8 | `usa_m4a3e8` | ST | 4 | 6 | 5 | 2 | 1 | — |
-| M4A3E2 | `usa_m4a3e2` | ST | 5 | 6 | 5 | 2 | 1 | — |
+| M4 Sherman | `usa_m4_sherman` | ST | 4 | 5 | 4 | 2 | 1 | — |
+| M4A3E8 | `usa_m4a3e8` | ST | 4 | 5 | 3 | 2 | 0 | — |
+| M4A3E2 | `usa_m4a3e2` | ST | 5 | 6 | 4 | 2 | 1 | — |
 | M10 Wolverine | `usa_m10_wolverine` | PT-SAU | 6 | 7 | 5 | 2 | 1 | Перший постріл |
 | M26 Pershing | `usa_m26_pershing` | TT | 7 | 7 | 6 | 2 | 1 | — |
-| M8 HMC Scott | `usa_m8_hmc_scott` | SAU | 8 | 7 | 3 | 1 | 1 | Spotting / дальня атака |
+| M8 HMC Scott | `usa_m8_hmc_scott` | SAU | 8 | 8 | 3 | 1 | 1 | Spotting / дальня атака |
 
 ### 5.2. Накази
 
@@ -122,15 +122,15 @@
 
 | Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
 |---|---|---|---:|---:|---:|---:|---:|---|
-| БТ-7 | `ussr_bt_7` | LT | 1 | 1 | 1 | 1 | - | — |
+| БТ-7 | `ussr_bt_7` | LT | 1 | 1 | 1 | 1 | 0 | — |
 | Т-60 | `ussr_t_60` | LT | 2 | 3 | 2 | 1 | 1 | — |
-| Т-34 | `ussr_t_34` | ST | 3 | 3 | 3 | 1 | 1 | — |
+| Т-34 | `ussr_t_34` | ST | 3 | 4 | 3 | 1 | 0 | — |
 | Т-34-76 | `ussr_t_34_76` | ST | 4 | 5 | 4 | 2 | 1 | — |
-| СУ-85 | `ussr_su_85` | PT-SAU | 4 | 5 | 3 | 3 | - | Перший постріл |
-| СУ-100 | `ussr_su_100` | PT-SAU | 6 | 6 | 5 | 2 | 1 | Перший постріл |
-| T-35 | `ussr_t_35` | TT | 5 | 5 | 6 | 1 | 1 | — |
+| СУ-85 | `ussr_su_85` | PT-SAU | 4 | 5 | 3 | 2 | 0 | Перший постріл |
+| СУ-100 | `ussr_su_100` | PT-SAU | 6 | 7 | 5 | 2 | 1 | Перший постріл |
+| T-35 | `ussr_t_35` | TT | 5 | 5 | 5 | 1 | 1 | — |
 | КВ-1 | `ussr_kv_1` | TT | 7 | 6 | 6 | 2 | 1 | — |
-| СУ-76М | `ussr_su_76m` | SAU | 8 | 5 | 3 | 1 | - | Spotting / дальня атака |
+| СУ-76М | `ussr_su_76m` | SAU | 8 | 7 | 3 | 1 | 0 | Spotting / дальня атака |
 
 ### 6.2. Накази
 
