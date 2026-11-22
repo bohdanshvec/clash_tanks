@@ -124,6 +124,82 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     assert_nil planner.send(:finish_turn, node)
   end
 
+  test "rewards a safe move followed by an attack on enemy headquarters" do
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    @state["field"][1][2] = attacker
+
+    visible_state = visible_state_for_ai
+
+    move_action = {
+      "type" => "move",
+      "payload" => {
+        "from" => [1, 2],
+        "to" => [1, 3]
+      }
+    }
+
+    attack_action = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 3],
+        "target" => [0, 4]
+      }
+    }
+
+    moved_state = @state.deep_dup
+    moved_state["field"][1][3] = moved_state["field"][1][2]
+    moved_state["field"][1][2] = nil
+
+    attacked_state = moved_state.deep_dup
+    attacked_state["field"][0][4]["hp"] -= 1
+
+    moved_visible_state = GameEngine::VisibleState.call(
+      state: moved_state,
+      player_id: AI_PLAYER_ID
+    )
+
+    attacked_visible_state = GameEngine::VisibleState.call(
+      state: attacked_state,
+      player_id: AI_PLAYER_ID
+    )
+
+    step_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Step
+
+    steps = [
+      step_class.new(
+        action: move_action,
+        expected_visible_state: moved_visible_state
+      ),
+      step_class.new(
+        action: attack_action,
+        expected_visible_state: attacked_visible_state
+      )
+    ]
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 10
+      )
+
+    bonus = planner.send(
+      :safe_headquarters_raid_bonus,
+      [move_action, attack_action],
+      steps
+    )
+
+    assert_equal 8.0, bonus
+  end
+
   test "chooses an attack that destroys an enemy technique" do
     @state["field"][2][0]["has_attacked"] = true
 

@@ -14,6 +14,14 @@ module DecisionProviders
         # после предварительной дальней атаки штаба.
         SAFE_HEADQUARTERS_FOLLOW_UP_BONUS = 10.0
 
+        # Бонус за перемещение техники с последующей атакой вражеского штаба.
+        # Начисляется только после успешной симуляции атаки.
+        SAFE_HEADQUARTERS_RAID_BONUS = 8.0
+
+        # Дополнительный множитель для атаки по ослабленному штабу.
+        CRITICAL_HEADQUARTERS_HP_RATIO = 0.3
+        CRITICAL_HEADQUARTERS_RAID_MULTIPLIER = 1.5
+
         # Штраф за продвижение с клетки плацдарма без последующей атаки.
         IDLE_ADVANCE_PENALTY = 30.0
         IDLE_MIN_PATIENCE = 0.5
@@ -820,7 +828,116 @@ module DecisionProviders
 
         def tactical_sequence_bonus(actions, steps)
           counterattack_exploitation_bonus(actions, steps) +
-            safe_headquarters_follow_up_bonus(actions, steps)
+            safe_headquarters_follow_up_bonus(actions, steps) +
+            safe_headquarters_raid_bonus(actions, steps)
+        end
+
+        def safe_headquarters_raid_bonus(actions, steps)
+          return 0.0 if actions.length < 2
+
+          actions.each_cons(2).with_index do |(move_action, attack_action), index|
+            next unless move_action["type"] == "move"
+            next unless attack_action["type"] == "attack"
+
+            from = move_action.dig("payload", "from")
+            to = move_action.dig("payload", "to")
+
+            attacker_position = attack_action.dig("payload", "attacker")
+            target_position = attack_action.dig("payload", "target")
+
+            # Атаковать должен тот же танк, который только что переместился.
+            next unless to == attacker_position
+
+            next unless from.is_a?(Array) && from.length == 2
+            next unless to.is_a?(Array) && to.length == 2
+            next unless target_position.is_a?(Array) && target_position.length == 2
+
+            next unless steps[index] && steps[index + 1]
+
+            previous_state =
+              index.zero? ?
+                @visible_state :
+                steps[index - 1].expected_visible_state
+
+            state_after_move = steps[index].expected_visible_state
+            state_after_attack = steps[index + 1].expected_visible_state
+
+            attacker_before = previous_state.dig(
+              "field",
+              from[0],
+              from[1]
+            )
+
+            attacker_after_move = state_after_move.dig(
+              "field",
+              to[0],
+              to[1]
+            )
+
+            headquarters_before = state_after_move.dig(
+              "field",
+              target_position[0],
+              target_position[1]
+            )
+
+            headquarters_after = state_after_attack.dig(
+              "field",
+              target_position[0],
+              target_position[1]
+            )
+
+            # Перемещаться и атаковать должна наша техника.
+            next unless attacker_before&.dig("type") == "technique"
+            next unless attacker_before["player_id"].to_s == @player_id
+
+            # Целью должен быть именно вражеский штаб.
+            next unless headquarters_before&.dig("type") == "headquarters"
+            next if headquarters_before["player_id"].to_s == @player_id
+
+            # Техника должна пережить перемещение и атаку.
+            next unless attacker_after_move
+            next unless attacker_after_move["type"] == "technique"
+
+            attacker_after_attack = state_after_attack.dig(
+              "field",
+              to[0],
+              to[1]
+            )
+
+            next unless attacker_after_attack
+            next unless attacker_after_attack["type"] == "technique"
+
+            # Атака должна действительно нанести урон штабу.
+            next unless headquarters_after
+            next unless headquarters_after["type"] == "headquarters"
+
+            damage =
+              headquarters_before["hp"].to_i -
+              headquarters_after["hp"].to_i
+
+            next unless damage.positive?
+
+            # Не поощряем рискованную атаку, если техника потеряла HP.
+            next unless
+              attacker_after_attack["hp"].to_i ==
+                attacker_before["hp"].to_i
+
+            bonus = SAFE_HEADQUARTERS_RAID_BONUS
+
+            # Если в состоянии явно указано максимальное HP штаба,
+            # усиливаем бонус при критически низком здоровье.
+            max_hp = headquarters_before["max_hp"].to_i
+            current_hp = headquarters_before["hp"].to_i
+
+            if max_hp.positive? &&
+                current_hp.to_f / max_hp <= CRITICAL_HEADQUARTERS_HP_RATIO
+              bonus *= CRITICAL_HEADQUARTERS_RAID_MULTIPLIER
+            end
+
+            return bonus
+          end
+
+          0.0
         end
 
         def safe_headquarters_follow_up_bonus(actions, steps)
