@@ -68,8 +68,8 @@
 | Pz.IV Ausf | `germany_pz_iv_ausf` | ST | 4 | 4 | 4 | 1 | 1 | — |
 | Hetzer | `germany_hetzer` | PT-SAU | 4 | 4 | 3 | 2 | 1 | Перший постріл |
 | Jagdpanther IV | `germany_jagdpanther_iv` | PT-SAU | 5 | 5 | 5 | 2 | 1 | Перший постріл |
-| Jagdpanther | `germany_jagdpanther` | PT-SAU | 6 | 6 | 6 | 2 | 2 | Перший постріл |
-| Pz.VI Tiger I | `germany_tiger_i` | TT | 7 | 6 | 7 | 2 | 1 | — |
+| Jagdpanther | `germany_jagdpanther` | PT-SAU | 7 | 6 | 6 | 2 | 2 | Перший постріл |
+| Pz.VI Tiger I | `germany_tiger_i` | TT | 7 | 6 | 6 | 2 | 1 | — |
 | Sturmpanzer IV | `germany_sturmpanzer_iv` | SAU | 8 | 6 | 2 | 2 | 1 | Spotting / дальня атака |
 
 ### 4.2. Накази
@@ -96,7 +96,7 @@
 | M8 Greyhound | `usa_m8_greyhound` | LT | 2 | 4 | 2 | 1 | 1 | — |
 | M3 Lee/Grant | `usa_m3_lee_grant` | ST | 3 | 4 | 3 | 1 | 1 | — |
 | M4 Sherman | `usa_m4_sherman` | ST | 4 | 5 | 4 | 2 | 1 | — |
-| M4A3E8 | `usa_m4a3e8` | ST | 4 | 5 | 3 | 2 | 1 | — |
+| M4A3E8 | `usa_m4a3e8` | ST | 4 | 5 | 3 | 2 | 0 | — |
 | M4A3E2 | `usa_m4a3e2` | ST | 5 | 6 | 4 | 2 | 1 | — |
 | M10 Wolverine | `usa_m10_wolverine` | PT-SAU | 6 | 7 | 5 | 2 | 1 | Перший постріл |
 | M26 Pershing | `usa_m26_pershing` | TT | 7 | 7 | 6 | 2 | 1 | — |

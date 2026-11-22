@@ -53,7 +53,7 @@ technique_rows = [
   ["germany_hetzer", :germany, "Hetzer", "tank_destroyer", 4, 4, 3, 2, 1],
   ["germany_jagdpanther_iv", :germany, "Jagdpanther IV", "tank_destroyer", 5, 5, 5, 2, 1],
   ["germany_jagdpanther", :germany, "Jagdpanther", "tank_destroyer", 7, 6, 6, 2, 2],
-  ["germany_tiger_i", :germany, "Pz.VI Tiger I", "heavy_tank", 7, 6, 7, 2, 1],
+  ["germany_tiger_i", :germany, "Pz.VI Tiger I", "heavy_tank", 7, 6, 6, 2, 1],
   ["germany_sturmpanzer_iv", :germany, "Sturmpanzer IV", "artillery", 8, 6, 2, 2, 1],
 
   ["usa_m3_stuart", :usa, "M3 Stuart", "light_tank", 1, 2, 1, 1, 0],
