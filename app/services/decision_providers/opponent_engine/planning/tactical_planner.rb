@@ -10,6 +10,10 @@ module DecisionProviders
         # которая уже использовала ответную атаку.
         COUNTERATTACK_SPENT_DAMAGE_BONUS = 1.5
 
+        # Бонус за безопасное уничтожение техники
+        # после предварительной дальней атаки штаба.
+        SAFE_HEADQUARTERS_FOLLOW_UP_BONUS = 10.0
+
         # Штраф за продвижение с клетки плацдарма без последующей атаки.
         IDLE_ADVANCE_PENALTY = 30.0
         IDLE_MIN_PATIENCE = 0.5
@@ -173,7 +177,7 @@ module DecisionProviders
 
                 steps = node.steps + [step]
 
-                tactical_bonus = counterattack_exploitation_bonus(
+                tactical_bonus = tactical_sequence_bonus(
                   actions,
                   steps
                 )
@@ -556,7 +560,7 @@ module DecisionProviders
             actions: actions,
             steps: steps,
             score: evaluate(expected_state) +
-              counterattack_exploitation_bonus(
+              tactical_sequence_bonus(
                 node.actions,
                 node.steps
               ) -
@@ -723,6 +727,195 @@ module DecisionProviders
               expected_visible_state: steps[index].expected_visible_state
             )
           end
+        end
+
+        def tactical_sequence_bonus(actions, steps)
+          counterattack_exploitation_bonus(actions, steps) +
+            safe_headquarters_follow_up_bonus(actions, steps)
+        end
+
+        def safe_headquarters_follow_up_bonus(actions, steps)
+          return 0.0 if actions.length < 2
+
+          actions.each_cons(2).with_index do |(
+            headquarters_action,
+            technique_action
+          ), index|
+            next unless headquarters_action["type"] == "attack"
+            next unless technique_action["type"] == "attack"
+
+            headquarters_position =
+              headquarters_action.dig("payload", "attacker")
+
+            target_position =
+              headquarters_action.dig("payload", "target")
+
+            technique_position =
+              technique_action.dig("payload", "attacker")
+
+            next unless headquarters_position == own_headquarters_position
+            next unless technique_action.dig("payload", "target") == target_position
+
+            next if GameEngine::Rules::Position.adjacent?(
+              headquarters_position,
+              target_position
+            )
+
+            next unless steps[index] && steps[index + 1]
+
+            state_after_headquarters =
+              steps[index].expected_visible_state
+
+            state_after_technique =
+              steps[index + 1].expected_visible_state
+
+            cache = (
+              @safe_headquarters_follow_up_bonus_cache ||= {}
+            )
+
+            cache_key = [
+              index,
+              target_position,
+              technique_position,
+              state_after_headquarters.hash
+            ]
+
+            next if cache.key?(cache_key) && !cache[cache_key]
+
+            unless cache.key?(cache_key)
+              cache[cache_key] = safe_headquarters_follow_up_sequence?(
+                headquarters_position: headquarters_position,
+                target_position: target_position,
+                technique_position: technique_position,
+                headquarters_action: headquarters_action,
+                technique_action: technique_action,
+                state_after_headquarters: state_after_headquarters,
+                state_after_technique: state_after_technique,
+                previous_state: (
+                  index.zero? ?
+                    @visible_state :
+                    steps[index - 1].expected_visible_state
+                )
+              )
+            end
+
+            return SAFE_HEADQUARTERS_FOLLOW_UP_BONUS if cache[cache_key]
+          end
+
+          0.0
+        end
+
+        def safe_headquarters_follow_up_sequence?(
+          headquarters_position:,
+          target_position:,
+          technique_position:,
+          headquarters_action:,
+          technique_action:,
+          state_after_headquarters:,
+          state_after_technique:,
+          previous_state:
+        )
+          target_before = previous_state.dig(
+            "field",
+            target_position[0],
+            target_position[1]
+          )
+
+          target_after_headquarters = state_after_headquarters.dig(
+            "field",
+            target_position[0],
+            target_position[1]
+          )
+
+          # Цель должна быть вражеской техникой.
+          return false unless target_before&.dig("type") == "technique"
+          return false if target_before["player_id"].to_s == @player_id
+          return false if target_before["has_counterattacked"]
+
+          # Штаб должен ослабить цель, но не уничтожить её.
+          return false unless target_after_headquarters
+          return false unless target_after_headquarters["type"] == "technique"
+          return false unless
+            target_after_headquarters["hp"].to_i < target_before["hp"].to_i
+
+          # Дальняя атака штаба не должна вызывать контратаку.
+          return false if target_after_headquarters["has_counterattacked"]
+
+          headquarters_before = previous_state.dig(
+            "field",
+            headquarters_position[0],
+            headquarters_position[1]
+          )
+
+          headquarters_after = state_after_headquarters.dig(
+            "field",
+            headquarters_position[0],
+            headquarters_position[1]
+          )
+
+          return false unless headquarters_before && headquarters_after
+          return false unless
+            headquarters_before["hp"].to_i == headquarters_after["hp"].to_i
+
+          # После выстрела штаба наша техника должна оставаться на поле.
+          technique_before = state_after_headquarters.dig(
+            "field",
+            technique_position[0],
+            technique_position[1]
+          )
+
+          technique_after = state_after_technique.dig(
+            "field",
+            technique_position[0],
+            technique_position[1]
+          )
+
+          return false unless technique_before&.dig("type") == "technique"
+          return false unless technique_before["player_id"].to_s == @player_id
+          return false unless technique_after
+          return false unless technique_after["type"] == "technique"
+
+          # Техника должна уничтожить именно эту цель.
+          return false if state_after_technique.dig(
+            "field",
+            target_position[0],
+            target_position[1]
+          )
+
+          # Проверяем последующую атаку настоящим GameEngine.
+          simulation = simulate(
+            state_after_headquarters,
+            technique_action
+          )
+
+          return false unless simulation.success?
+
+          final_state = simulation.visible_state
+
+          return false if final_state.dig(
+            "field",
+            target_position[0],
+            target_position[1]
+          )
+
+          final_technique = final_state.dig(
+            "field",
+            technique_position[0],
+            technique_position[1]
+          )
+
+          return false unless final_technique
+          return false unless
+            final_technique["hp"].to_i == technique_before["hp"].to_i
+
+          # Никакой контратаки во время добивания.
+          counterattack_fired = simulation.events.any? do |event|
+            (event[:type] || event["type"]).to_s == "counterattack_fired"
+          end
+
+          return false if counterattack_fired
+
+          true
         end
 
         def counterattack_exploitation_bonus_for_action(
