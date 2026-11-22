@@ -711,9 +711,6 @@ module DecisionProviders
             if technique["has_attacked"]
               LONE_ADVANCE_PENALTY * LONE_ADVANCE_FIRED_FACTOR *
                 formation_patience
-            elsif moved_this_turn?(technique)
-              LONE_ADVANCE_PENALTY * formation_patience +
-                IDLE_ADVANCE_PENALTY * idle_patience
             else
               LONE_ADVANCE_PENALTY * formation_patience
             end

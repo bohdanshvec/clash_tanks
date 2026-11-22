@@ -411,6 +411,176 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     end
   end
 
+  test "penalizes idle forward movement but not vertical or rear movement" do
+    @state["field"][1][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 10
+      )
+
+    forward_move = {
+      "type" => "move",
+      "payload" => {
+        "from" => [1, 1],
+        "to" => [1, 2]
+      }
+    }
+
+    vertical_move = {
+      "type" => "move",
+      "payload" => {
+        "from" => [1, 1],
+        "to" => [0, 1]
+      }
+    }
+
+    rear_move = {
+      "type" => "move",
+      "payload" => {
+        "from" => [1, 1],
+        "to" => [1, 0]
+      }
+    }
+
+    forward_penalty = planner.send(
+      :idle_advance_penalty,
+      [forward_move],
+      []
+    )
+
+    vertical_penalty = planner.send(
+      :idle_advance_penalty,
+      [vertical_move],
+      []
+    )
+
+    rear_penalty = planner.send(
+      :idle_advance_penalty,
+      [rear_move],
+      []
+    )
+
+    assert_operator forward_penalty, :>, 0
+    assert_equal 0.0, vertical_penalty
+    assert_equal 0.0, rear_penalty
+  end
+
+  test "does not penalize forward movement followed by an attack from the new position" do
+    @state["field"][1][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    visible_state = visible_state_for_ai
+
+    moved_state = @state.deep_dup
+    moved_state["field"][1][2] = moved_state["field"][1][1]
+    moved_state["field"][1][1] = nil
+
+    moved_visible_state = GameEngine::VisibleState.call(
+      state: moved_state,
+      player_id: AI_PLAYER_ID
+    )
+
+    move_action = {
+      "type" => "move",
+      "payload" => {
+        "from" => [1, 1],
+        "to" => [1, 2]
+      }
+    }
+
+    attack_action = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 2],
+        "target" => [0, 3]
+      }
+    }
+
+    step = DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Step.new(
+      action: move_action,
+      expected_visible_state: moved_visible_state
+    )
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 10
+      )
+
+    penalty = planner.send(
+      :idle_advance_penalty,
+      [move_action, attack_action],
+      [step]
+    )
+
+    assert_equal 0.0, penalty
+  end
+
+  test "does not treat an attack before forward movement as protection from idle advance" do
+    @state["field"][1][1] = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    visible_state = visible_state_for_ai
+
+    attack_action = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 1],
+        "target" => [0, 3]
+      }
+    }
+
+    move_action = {
+      "type" => "move",
+      "payload" => {
+        "from" => [1, 1],
+        "to" => [1, 2]
+      }
+    }
+
+    step = DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Step.new(
+      action: attack_action,
+      expected_visible_state: visible_state
+    )
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 5,
+        width: 10
+      )
+
+    penalty = planner.send(
+      :idle_advance_penalty,
+      [attack_action, move_action],
+      [step]
+    )
+
+    assert_operator penalty, :>, 0
+  end
+
   test "moves technique to free a deployment position before playing new technique" do
     @state["field"][2][0]["has_attacked"] = true
 
@@ -476,6 +646,10 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
 
     assert_includes deployment_positions, from
     refute_equal from, to
+
+    # Освобождение клетки не должно сопровождаться
+    # одиночным продвижением машины к противнику.
+    assert_equal from[1], to[1]
 
     simulated_state = result.steps.first.expected_visible_state
 

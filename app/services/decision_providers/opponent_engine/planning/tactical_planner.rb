@@ -8,9 +8,11 @@ module DecisionProviders
 
         # Дополнительная ценность урона по технике,
         # которая уже использовала ответную атаку.
-        # Базовая оценка HP техники равна 2.5,
-        # поэтому бонус 1.5 увеличивает ценность такого урона на 60%.
         COUNTERATTACK_SPENT_DAMAGE_BONUS = 1.5
+
+        # Штраф за продвижение с клетки плацдарма без последующей атаки.
+        IDLE_ADVANCE_PENALTY = 30.0
+        IDLE_MIN_PATIENCE = 0.5
 
         Node = Data.define(
           :visible_state,
@@ -61,6 +63,7 @@ module DecisionProviders
 
           @depth = Integer(depth)
           @width = Integer(width)
+
           @root_card_types = Array(
             @visible_state.dig("players", @player_id, "hand")
           ).each_with_object({}) do |card, result|
@@ -167,13 +170,28 @@ module DecisionProviders
                   steps
                 )
 
+                # Штраф применяется только при завершении хода.
+                # До этого момента техника ещё может успеть атаковать.
+                idle_penalty =
+                  if action["type"] == "end_turn"
+                    idle_advance_penalty(actions, steps)
+                  else
+                    0.0
+                  end
+
                 child_score =
-                  evaluate(expected_state) + tactical_bonus
+                  evaluate(expected_state) +
+                  tactical_bonus -
+                  idle_penalty
 
                 if node.actions.empty?
                   breakdown = evaluate_breakdown(expected_state)
 
-                  breakdown[:counterattack_exploitation_bonus] = tactical_bonus
+                  breakdown[:counterattack_exploitation_bonus] =
+                    tactical_bonus
+
+                  breakdown[:idle_advance_penalty] =
+                    idle_penalty
 
                   Rails.logger.info(
                     "[OpponentEngine] Root candidate: " \
@@ -213,11 +231,8 @@ module DecisionProviders
             frontier = rank(candidates).first(@width)
           end
 
-          # Узел без end_turn оценён «посреди хода». Его нельзя сравнивать
-          # с завершённым ходом: у него нет пополнения топлива противника,
-          # штрафов и бонусов конца хода, поэтому он выглядит лучше.
-          # Достраиваем такие узлы до end_turn и выбираем только среди
-          # завершённых ходов.
+          # Узел без end_turn оценён посреди хода.
+          # Достраиваем такие узлы до завершения хода.
           unless frontier_expanded
             frontier.each do |node|
               next if node.actions.empty?
@@ -316,13 +331,6 @@ module DecisionProviders
         # Порядок совместной атаки: штаб первым
         # ------------------------------------------------------------
 
-        # Штаб бьёт технику издалека, и цель не отвечает на его выстрел.
-        # Если техника бьёт первой, выжившая цель отвечает ей. Поэтому при
-        # совместной атаке штаб всегда должен стрелять до техники:
-        # результат по урону тот же, но танк не получает ответа там,
-        # где его можно избежать. Перестановка «штаб -> техника» всегда
-        # достижима поиском (перемещение разведчика остаётся перед
-        # выстрелом штаба), поэтому ветка с обратным порядком отсекается.
         def headquarters_after_technique_on_same_target?(node, action)
           return false unless action["type"] == "attack"
 
@@ -367,7 +375,10 @@ module DecisionProviders
           nil
         end
 
-        # Достраивает незавершённый узел действием end_turn.
+        # ------------------------------------------------------------
+        # Завершение хода
+        # ------------------------------------------------------------
+
         def finish_turn(node)
           action = { "type" => "end_turn", "payload" => {} }
 
@@ -381,17 +392,162 @@ module DecisionProviders
             expected_visible_state: expected_state.deep_dup
           )
 
+          actions = node.actions + [action.deep_dup]
+          steps = node.steps + [step]
+
+          idle_penalty = idle_advance_penalty(actions, steps)
+
           Node.new(
             visible_state: expected_state,
-            actions: node.actions + [action.deep_dup],
-            steps: node.steps + [step],
+            actions: actions,
+            steps: steps,
             score: evaluate(expected_state) +
               counterattack_exploitation_bonus(
                 node.actions,
                 node.steps
-              ),
+              ) -
+              idle_penalty,
             terminal: true
           )
+        end
+
+        # ------------------------------------------------------------
+        # Безопасное освобождение клеток плацдарма
+        # ------------------------------------------------------------
+
+        # Учитываем только перемещения техники, которая начинала
+        # движение с клетки, соседней с собственным штабом.
+        #
+        # Продвижение к штабу противника без последующей атаки
+        # получает штраф.
+        #
+        # Вертикальное перемещение и отход назад не штрафуются.
+        # Атака после последнего перемещения снимает штраф.
+        def idle_advance_penalty(actions, steps)
+          enemy_headquarters = enemy_headquarters_position
+          return 0.0 unless enemy_headquarters
+
+          tracks = []
+
+          actions.each_with_index do |action, index|
+            payload = action["payload"] || {}
+
+            previous_state =
+              if index.zero?
+                @visible_state
+              else
+                steps[index - 1]&.expected_visible_state
+              end
+
+            next unless previous_state
+
+            case action["type"]
+            when "move"
+              from = payload["from"]
+              to = payload["to"]
+
+              next unless from.is_a?(Array) && to.is_a?(Array)
+
+              technique = previous_state.dig(
+                "field",
+                from[0],
+                from[1]
+              )
+
+              next unless technique
+              next unless technique["type"] == "technique"
+              next unless technique["player_id"].to_s == @player_id
+
+              # Учитываем только освобождение исходной клетки плацдарма.
+              existing_track = tracks.find do |track|
+                track[:to] == from
+              end
+
+              if existing_track
+                existing_track[:to] = to.dup
+                existing_track[:last_move_index] = index
+                existing_track[:attacked_after_move] = false
+              elsif @root_deployment_positions.include?(from)
+                tracks << {
+                  from: from.dup,
+                  to: to.dup,
+                  last_move_index: index,
+                  attacked_after_move: false
+                }
+              end
+
+            when "attack"
+              attacker = payload["attacker"]
+
+              next unless attacker.is_a?(Array)
+
+              track = tracks.find do |item|
+                item[:to] == attacker &&
+                  index > item[:last_move_index]
+              end
+
+              next unless track
+
+              attacker_object = previous_state.dig(
+                "field",
+                attacker[0],
+                attacker[1]
+              )
+
+              next unless attacker_object
+              next unless attacker_object["type"] == "technique"
+              next unless attacker_object["player_id"].to_s == @player_id
+
+              track[:attacked_after_move] = true
+            end
+          end
+
+          idle_advances = tracks.count do |track|
+            source_distance = (
+              track[:from][1] - enemy_headquarters[1]
+            ).abs
+
+            destination_distance = (
+              track[:to][1] - enemy_headquarters[1]
+            ).abs
+
+            destination_distance < source_distance &&
+              !track[:attacked_after_move]
+          end
+
+          return 0.0 if idle_advances.zero?
+
+          deck_count = @visible_state
+            .dig("players", @player_id, "deck_count")
+            .to_f
+
+          patience = [
+            deck_count / 12.0,
+            1.0
+          ].min
+
+          patience = [
+            patience,
+            IDLE_MIN_PATIENCE
+          ].max
+
+          idle_advances *
+            IDLE_ADVANCE_PENALTY *
+            patience
+        end
+
+        def enemy_headquarters_position
+          @visible_state.fetch("field").each_with_index do |row, row_index|
+            row.each_with_index do |object, column_index|
+              next unless object
+              next unless object["type"] == "headquarters"
+              next if object["player_id"].to_s == @player_id
+
+              return [row_index, column_index]
+            end
+          end
+
+          nil
         end
 
         # --------------------------------------------------------------
@@ -438,9 +594,7 @@ module DecisionProviders
           return 0.0 unless target["has_counterattacked"]
 
           # Штаб бьёт издалека и ответа не получает, поэтому его выстрел
-          # по цели с потраченной контратакой не должен награждаться:
-          # иначе выгодно подставить под ответ танк, а штабу оставить
-          # добивание.
+          # по цели с потраченной контратакой не должен награждаться.
           attacker_position = action.dig("payload", "attacker")
 
           if attacker_position.is_a?(Array)
@@ -465,6 +619,10 @@ module DecisionProviders
 
           damage * COUNTERATTACK_SPENT_DAMAGE_BONUS
         end
+
+        # --------------------------------------------------------------
+        # Разделение веток поиска
+        # --------------------------------------------------------------
 
         def first_action_category(node)
           action = node.actions.first
@@ -493,10 +651,6 @@ module DecisionProviders
             attacker = Array(payload["attacker"]).join(",")
             target = Array(payload["target"]).join(",")
 
-            # Для одного атакующего цели могут иметь принципиально разные
-            # продолжения: например, штаб может давить вражеский штаб или
-            # начать последовательную атаку по технике вместе с танком.
-            # Нельзя оставлять в beam только одну из таких веток.
             "attack:#{attacker}:#{target}"
 
           else
@@ -582,6 +736,7 @@ module DecisionProviders
         # --------------------------------------------------------------
         # Стратегическая оценка
         # --------------------------------------------------------------
+
         def evaluate(visible_state)
           measure_phase(:evaluate) do
             StrategicEvaluator.call(
