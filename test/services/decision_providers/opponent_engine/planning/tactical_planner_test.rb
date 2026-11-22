@@ -37,6 +37,93 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     assert_operator result.expanded_nodes, :>=, 1
   end
 
+  test "does not finish the turn when a safe lethal technique attack is available" do
+    # Штаб и две другие машины уже использовали свои атаки.
+    @state["field"][2][0]["has_attacked"] = true
+
+    first_tank = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+    first_tank["has_attacked"] = true
+
+    second_tank = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+    second_tank["has_attacked"] = true
+
+    third_tank = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 1,
+      firepower: 4
+    )
+    target["has_counterattacked"] = true
+
+    @state["field"][0][1] = first_tank
+    @state["field"][2][1] = second_tank
+    @state["field"][1][2] = third_tank
+    @state["field"][1][1] = target
+
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 7,
+        width: 20
+      )
+
+    # Инициализируем внутренние счётчики и профиль,
+    # которые обычно создаются в начале TacticalPlanner#call.
+    planner.call
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    node = node_class.new(
+      visible_state: visible_state,
+      actions: [],
+      steps: [],
+      score: 0.0,
+      terminal: false
+    )
+
+    actions = DecisionProviders::ActionOptions.call(visible_state)
+
+    lethal_attack = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 2],
+        "target" => [1, 1]
+      }
+    }
+
+    assert_includes actions, lethal_attack
+
+    assert(
+      planner.send(
+        :safe_lethal_attack_available?,
+        node,
+        actions
+      )
+    )
+
+    # finish_turn не должен добавлять end_turn,
+    # пока существует безопасная добивающая атака.
+    assert_nil planner.send(:finish_turn, node)
+  end
+
   test "chooses an attack that destroys an enemy technique" do
     @state["field"][2][0]["has_attacked"] = true
 

@@ -142,6 +142,11 @@ module DecisionProviders
                   node_actions
                 )
 
+                # Не завершаем ход, если доступна безопасная
+                # добивающая атака собственной техники.
+                next if action["type"] == "end_turn" &&
+                        safe_lethal_attack_available?(node, node_actions)
+
                 simulation = simulate(
                   node.visible_state,
                   action
@@ -537,7 +542,91 @@ module DecisionProviders
         # Завершение хода
         # ------------------------------------------------------------
 
+        # Проверяет, есть ли доступная атака собственной техники,
+        # которая уничтожает вражескую технику без ответного урона.
+        def safe_lethal_attack_available?(node, actions)
+          actions.any? do |candidate|
+            next false unless candidate["type"] == "attack"
+
+            attacker_position = candidate.dig("payload", "attacker")
+            target_position = candidate.dig("payload", "target")
+
+            next false unless attacker_position.is_a?(Array)
+            next false unless attacker_position.length == 2
+            next false unless target_position.is_a?(Array)
+            next false unless target_position.length == 2
+
+            attacker = node.visible_state.dig(
+              "field",
+              attacker_position[0],
+              attacker_position[1]
+            )
+
+            target = node.visible_state.dig(
+              "field",
+              target_position[0],
+              target_position[1]
+            )
+
+            # Учитываем только атаки собственной техники
+            # по вражеской технике.
+            next false unless attacker&.dig("type") == "technique"
+            next false unless attacker["player_id"].to_s == @player_id
+
+            next false unless target&.dig("type") == "technique"
+            next false if target["player_id"].to_s == @player_id
+
+            simulation = simulate(
+              node.visible_state,
+              candidate
+            )
+
+            next false unless simulation.success?
+
+            final_state = simulation.visible_state
+
+            # Цель должна быть уничтожена.
+            target_after = final_state.dig(
+              "field",
+              target_position[0],
+              target_position[1]
+            )
+
+            next false unless target_after.nil?
+
+            # Атакующая техника должна выжить и не потерять HP.
+            attacker_after = final_state.dig(
+              "field",
+              attacker_position[0],
+              attacker_position[1]
+            )
+
+            next false unless attacker_after
+            next false unless attacker_after["type"] == "technique"
+            next false unless attacker_after["player_id"].to_s == @player_id
+
+            next false unless
+              attacker_after["hp"].to_i >= attacker["hp"].to_i
+
+            # Дополнительно убеждаемся, что симуляция
+            # не зарегистрировала ответную атаку.
+            counterattack_fired = simulation.events.any? do |event|
+              (event[:type] || event["type"]).to_s == "counterattack_fired"
+            end
+
+            next false if counterattack_fired
+
+            true
+          end
+        end
+
         def finish_turn(node)
+          node_actions = available_actions(node.visible_state)
+
+          # Последний шаг Beam Search тоже не должен обходить
+          # проверку безопасной добивающей атаки.
+          return nil if safe_lethal_attack_available?(node, node_actions)
+
           action = { "type" => "end_turn", "payload" => {} }
 
           simulation = simulate(node.visible_state, action)
