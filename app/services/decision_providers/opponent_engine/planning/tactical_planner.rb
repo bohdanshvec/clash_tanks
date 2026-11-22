@@ -144,6 +144,12 @@ module DecisionProviders
                   next
                 end
 
+                # Если штаб и техника бьют одну цель, штаб стреляет первым.
+                next if headquarters_after_technique_on_same_target?(
+                  node,
+                  action
+                )
+
                 action_copy = action.deep_dup
                 expected_state = simulation.visible_state.deep_dup
 
@@ -306,6 +312,61 @@ module DecisionProviders
 
         private
 
+        # ------------------------------------------------------------
+        # Порядок совместной атаки: штаб первым
+        # ------------------------------------------------------------
+
+        # Штаб бьёт технику издалека, и цель не отвечает на его выстрел.
+        # Если техника бьёт первой, выжившая цель отвечает ей. Поэтому при
+        # совместной атаке штаб всегда должен стрелять до техники:
+        # результат по урону тот же, но танк не получает ответа там,
+        # где его можно избежать. Перестановка «штаб -> техника» всегда
+        # достижима поиском (перемещение разведчика остаётся перед
+        # выстрелом штаба), поэтому ветка с обратным порядком отсекается.
+        def headquarters_after_technique_on_same_target?(node, action)
+          return false unless action["type"] == "attack"
+
+          attacker = action.dig("payload", "attacker")
+          target = action.dig("payload", "target")
+
+          return false unless attacker.is_a?(Array) && target.is_a?(Array)
+          return false unless attacker == own_headquarters_position
+
+          # Штаб, стоящий вплотную к цели, получает ответ как обычная
+          # техника: там выбор порядка остаётся за оценкой состояния.
+          return false if GameEngine::Rules::Position.adjacent?(
+            attacker,
+            target
+          )
+
+          node.actions.any? do |previous|
+            previous["type"] == "attack" &&
+              previous.dig("payload", "target") == target &&
+              previous.dig("payload", "attacker") != attacker
+          end
+        end
+
+        def own_headquarters_position
+          return @own_headquarters_position if
+            defined?(@own_headquarters_position)
+
+          @own_headquarters_position = find_own_headquarters_position
+        end
+
+        def find_own_headquarters_position
+          @visible_state.fetch("field").each_with_index do |row, row_index|
+            row.each_with_index do |object, column_index|
+              next unless object
+              next unless object["type"] == "headquarters"
+              next unless object["player_id"].to_s == @player_id
+
+              return [row_index, column_index]
+            end
+          end
+
+          nil
+        end
+
         # Достраивает незавершённый узел действием end_turn.
         def finish_turn(node)
           action = { "type" => "end_turn", "payload" => {} }
@@ -375,6 +436,22 @@ module DecisionProviders
           return 0.0 unless target["type"] == "technique"
           return 0.0 unless target["player_id"].to_s != @player_id
           return 0.0 unless target["has_counterattacked"]
+
+          # Штаб бьёт издалека и ответа не получает, поэтому его выстрел
+          # по цели с потраченной контратакой не должен награждаться:
+          # иначе выгодно подставить под ответ танк, а штабу оставить
+          # добивание.
+          attacker_position = action.dig("payload", "attacker")
+
+          if attacker_position.is_a?(Array)
+            attacker = visible_state.dig(
+              "field",
+              attacker_position[0],
+              attacker_position[1]
+            )
+
+            return 0.0 if attacker && attacker["type"] == "headquarters"
+          end
 
           target_after =
             expected_visible_state.dig("field", row, column)
