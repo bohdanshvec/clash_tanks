@@ -64,13 +64,6 @@ module DecisionProviders
         LONE_ADVANCE_FIRED_FACTOR = 0.5
         FORMATION_PATIENCE_DECK_CARDS = 4.0
 
-        # Дополнительный штраф за выход вперёд без выстрела в этом ходу.
-        # Такая машина оказывается рядом с вражеской техникой, не нанеся
-        # урона, и её можно уничтожить без потерь. Освобождать клетку
-        # плацдарма нужно отводом техники назад или по колонке.
-        IDLE_ADVANCE_PENALTY = 30.0
-        IDLE_MIN_PATIENCE = 0.5
-
         # Гонка пустых колод. Взятие карты из пустой колоды наносит штабу
         # урон 1, 2, 3, ... Проигрывает тот, чей штаб погибнет раньше.
         DECK_RACE_WEIGHT = 6.0
@@ -715,21 +708,6 @@ module DecisionProviders
               LONE_ADVANCE_PENALTY * formation_patience
             end
           end
-        end
-
-        # Холостой выход вперёд бесполезен и при почти пустой колоде:
-        # выстрела в этом ходу всё равно не будет. Поэтому терпение
-        # ослабляет этот штраф не до нуля, а лишь вдвое.
-        def idle_patience
-          [formation_patience, IDLE_MIN_PATIENCE].max
-        end
-
-        # Свежевыставленная техника имеет movement_count = 0, но стоит на
-        # клетке плацдарма и «выдвинутой» не считается, поэтому здесь
-        # достаточно сравнить остаток перемещений с лимитом.
-        def moved_this_turn?(technique)
-          numeric(technique, "movement_count") <
-            numeric(technique, "movement_limit")
         end
 
         # Когда собственная колода почти пуста, ожидание становится
