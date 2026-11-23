@@ -210,7 +210,7 @@ module GameEngine
           "firepower" => technique["firepower"],
           "fuel" => technique["fuel"],
           "attack_range" => technique["attack_range"],
-          "movement_count" => 0,
+          "movement_count" => technique["technique_type"] == "light_tank" ? 1 : 0,
           "movement_limit" => technique["movement_count"],
           "movement_type" => technique["movement_type"],
           "has_attacked" => false,

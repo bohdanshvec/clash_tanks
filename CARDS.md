@@ -62,8 +62,8 @@
 
 | Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
 |---|---|---|---:|---:|---:|---:|---:|---|
-| Pz.II | `germany_pz_ii` | LT | 1 | 1 | 1 | 1 | 0 | — |
-| Sd.222 | `germany_sd_222` | LT | 2 | 2 | 1 | 2 | 0 | — |
+| Pz.II | `germany_pz_ii` | LT | 1 | 1 | 1 | 1 | 0 | 1 переміження при розігриші |
+| Sd.222 | `germany_sd_222` | LT | 2 | 2 | 1 | 2 | 0 | 1 переміження при розігриші |
 | Pz.III Ausf | `germany_pz_iii_ausf` | ST | 3 | 3 | 3 | 2 | 0 | — |
 | Pz.IV Ausf | `germany_pz_iv_ausf` | ST | 4 | 4 | 4 | 1 | 1 | — |
 | Hetzer | `germany_hetzer` | PT-SAU | 4 | 4 | 3 | 2 | 1 | Перший постріл |
@@ -92,8 +92,8 @@
 
 | Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
 |---|---|---|---:|---:|---:|---:|---:|---|
-| M3 Stuart | `usa_m3_stuart` | LT | 1 | 2 | 1 | 1 | 0 | — |
-| M8 Greyhound | `usa_m8_greyhound` | LT | 2 | 4 | 2 | 1 | 1 | — |
+| M3 Stuart | `usa_m3_stuart` | LT | 1 | 2 | 1 | 1 | 0 | 1 переміження при розігриші |
+| M8 Greyhound | `usa_m8_greyhound` | LT | 2 | 4 | 2 | 1 | 1 | 1 переміження при розігриші |
 | M3 Lee/Grant | `usa_m3_lee_grant` | ST | 3 | 4 | 3 | 1 | 1 | — |
 | M4 Sherman | `usa_m4_sherman` | ST | 4 | 5 | 4 | 2 | 1 | — |
 | M4A3E8 | `usa_m4a3e8` | ST | 4 | 5 | 3 | 2 | 0 | — |
@@ -122,8 +122,8 @@
 
 | Card | Code | Class | Weight | Price | HP | Firepower | Fuel | Special |
 |---|---|---|---:|---:|---:|---:|---:|---|
-| БТ-7 | `ussr_bt_7` | LT | 1 | 1 | 1 | 1 | 0 | — |
-| Т-60 | `ussr_t_60` | LT | 2 | 3 | 2 | 1 | 1 | — |
+| БТ-7 | `ussr_bt_7` | LT | 1 | 1 | 1 | 1 | 0 | 1 переміження при розігриші |
+| Т-60 | `ussr_t_60` | LT | 2 | 3 | 2 | 1 | 1 | 1 переміження при розігриші |
 | Т-34 | `ussr_t_34` | ST | 3 | 4 | 3 | 1 | 0 | — |
 | Т-34-76 | `ussr_t_34_76` | ST | 4 | 5 | 4 | 2 | 1 | — |
 | СУ-85 | `ussr_su_85` | PT-SAU | 4 | 5 | 3 | 2 | 0 | Перший постріл |

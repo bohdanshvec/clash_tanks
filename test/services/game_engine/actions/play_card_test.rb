@@ -103,6 +103,64 @@ class GameEngine::Actions::PlayCardTest < ActiveSupport::TestCase
 		assert_equal "No movement remaining", move_result.error
 	end
 
+  test "newly played light tank can move once during the same turn" do
+    player = @state["players"][PLAYER_ID.to_s]
+    light_tank = player["hand"].first.deep_dup
+
+    light_tank["card_id"] = 16
+    light_tank["name"] = "ЛТ"
+    light_tank["technique"].merge!(
+      "technique_type" => "light_tank",
+      "movement_count" => 2,
+      "movement_type" => "orthogonal"
+    )
+
+    player["hand"] = [light_tank]
+
+    play_action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "play_card",
+      payload: {
+        card_id: 16,
+        row: 1,
+        column: 0
+      }
+    )
+
+    play_result = GameEngine::Actions::PlayCard.new(
+      @state,
+      play_action
+    ).call
+
+    assert play_result.success?
+
+    technique = play_result.state["field"][1][0]
+
+    assert_equal 1, technique["movement_count"]
+    assert_equal 2, technique["movement_limit"]
+
+    move_action = GameEngine::Action.new(
+      player_id: PLAYER_ID,
+      type: "move",
+      payload: {
+        from: [1, 0],
+        to: [0, 0]
+      }
+    )
+
+    move_result = GameEngine::Actions::Move.new(
+      play_result.state,
+      move_action
+    ).call
+
+    assert move_result.success?, move_result.error
+
+    moved_technique = move_result.state["field"][0][0]
+
+    assert_equal 0, moved_technique["movement_count"]
+    assert_equal 2, moved_technique["movement_limit"]
+  end
+
   test "removes played card from hand" do
     action = GameEngine::Action.new(
       player_id: PLAYER_ID,
