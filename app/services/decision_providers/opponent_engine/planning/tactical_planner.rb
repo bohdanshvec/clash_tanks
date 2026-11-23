@@ -153,7 +153,7 @@ module DecisionProviders
                 # Не завершаем ход, если доступна безопасная
                 # добивающая атака собственной техники.
                 next if action["type"] == "end_turn" &&
-                        safe_lethal_attack_available?(node, node_actions)
+                        safe_end_turn_attack_available?(node, node_actions)
 
                 simulation = simulate(
                   node.visible_state,
@@ -628,12 +628,117 @@ module DecisionProviders
           end
         end
 
+        # Проверяет, остались ли безопасные атаки, которые AI должен выполнить
+        # до завершения хода.
+        #
+        # Сначала проверяем добивающие атаки существующим быстрым механизмом.
+        # Затем проверяем атаки по технике, уже потратившей контратаку.
+        def safe_end_turn_attack_available?(node, actions)
+          safe_lethal_attack_available?(node, actions) ||
+            safe_counterattack_spent_attack_available?(node, actions)
+        end
+
+        def safe_counterattack_spent_attack_available?(node, actions)
+          actions.each do |candidate|
+            next unless candidate["type"] == "attack"
+
+            attacker_position = candidate.dig("payload", "attacker")
+            target_position = candidate.dig("payload", "target")
+
+            next unless attacker_position.is_a?(Array) &&
+                        attacker_position.length == 2
+            next unless target_position.is_a?(Array) &&
+                        target_position.length == 2
+
+            attacker = node.visible_state.dig(
+              "field",
+              attacker_position[0],
+              attacker_position[1]
+            )
+
+            target = node.visible_state.dig(
+              "field",
+              target_position[0],
+              target_position[1]
+            )
+
+            # Проверяем только атаки собственной техники
+            # по вражеской технике.
+            next unless attacker&.dig("type") == "technique"
+            next unless attacker["player_id"].to_s == @player_id
+
+            next unless target&.dig("type") == "technique"
+            next if target["player_id"].to_s == @player_id
+
+            # Если противник уже использовал контратаку,
+            # наша атака не должна оставаться невыполненной.
+            next unless target["has_counterattacked"]
+
+            simulation = simulate(
+              node.visible_state,
+              candidate
+            )
+
+            next unless simulation.success?
+
+            final_state = simulation.visible_state
+
+            target_after = final_state.dig(
+              "field",
+              target_position[0],
+              target_position[1]
+            )
+
+            # Атака должна нанести реальный урон или уничтожить цель.
+            damage_dealt =
+              if target_after.nil?
+                target["hp"].to_i
+              else
+                target["hp"].to_i - target_after["hp"].to_i
+              end
+
+            next unless damage_dealt.positive?
+
+            attacker_after = final_state.dig(
+              "field",
+              attacker_position[0],
+              attacker_position[1]
+            )
+
+            # Не заставляем технику атаковать, если она погибает
+            # или получает ответный урон.
+            next unless attacker_after
+            next unless attacker_after["type"] == "technique"
+            next unless attacker_after["player_id"].to_s == @player_id
+
+            next unless
+              attacker_after["hp"].to_i >= attacker["hp"].to_i
+
+            counterattack_fired = simulation.events.any? do |event|
+              (event[:type] || event["type"]).to_s == "counterattack_fired"
+            end
+
+            next if counterattack_fired
+
+            Rails.logger.info(
+              "[OpponentEngine] Safe attack before end turn: " \
+              "attacker=#{attacker_position.inspect}, " \
+              "target=#{target_position.inspect}, " \
+              "damage=#{damage_dealt}"
+            )
+
+            return true
+          end
+
+          false
+        end
+
         def finish_turn(node)
           node_actions = available_actions(node.visible_state)
 
           # Последний шаг Beam Search тоже не должен обходить
           # проверку безопасной добивающей атаки.
-          return nil if safe_lethal_attack_available?(node, node_actions)
+          return nil if safe_end_turn_attack_available?(node, node_actions)
 
           action = { "type" => "end_turn", "payload" => {} }
 

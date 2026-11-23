@@ -200,6 +200,71 @@ class DecisionProviders::OpponentEngine::Planning::TacticalPlannerTest <
     assert_equal 8.0, bonus
   end
 
+  test "does not finish turn while a safe attack on a counterattack-spent technique is available" do
+    attacker = technique(
+      player_id: AI_PLAYER_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    target = technique(
+      player_id: OPPONENT_ID,
+      hp: 10,
+      firepower: 4
+    )
+
+    target["has_counterattacked"] = true
+
+    @state["field"][1][1] = attacker
+    @state["field"][1][2] = target
+
+    visible_state = visible_state_for_ai
+
+    planner =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner.new(
+        visible_state: visible_state,
+        player_id: AI_PLAYER_ID,
+        current_time: @current_time,
+        depth: 7,
+        width: 20
+      )
+
+    planner.call
+
+    node_class =
+      DecisionProviders::OpponentEngine::Planning::TacticalPlanner::Node
+
+    node = node_class.new(
+      visible_state: visible_state,
+      actions: [],
+      steps: [],
+      score: 0.0,
+      terminal: false
+    )
+
+    actions = DecisionProviders::ActionOptions.call(visible_state)
+
+    attack = {
+      "type" => "attack",
+      "payload" => {
+        "attacker" => [1, 1],
+        "target" => [1, 2]
+      }
+    }
+
+    assert_includes actions, attack
+
+    assert(
+      planner.send(
+        :safe_counterattack_spent_attack_available?,
+        node,
+        actions
+      )
+    )
+
+    assert_nil planner.send(:finish_turn, node)
+  end
+
   test "chooses an attack that destroys an enemy technique" do
     @state["field"][2][0]["has_attacked"] = true
 

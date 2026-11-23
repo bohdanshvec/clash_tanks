@@ -1,0 +1,719 @@
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 26, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-6.0, score_delta=10.5, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=58 calls, total=141.5ms, avg=2.44ms, max=11.1ms | available_actions=30 calls, total=4.2ms, avg=0.14ms, max=1.1ms | simulate=57 calls, total=53.1ms, avg=0.93ms, max=2.7ms | evaluate_breakdown=11 calls, total=27.4ms, avg=2.49ms, max=9.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=57, elapsed_ms=252.4, selected_actions=3
+[OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-6.0, score_delta=-2.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=10.3ms, avg=2.58ms, max=3.6ms | available_actions=3 calls, total=0.2ms, avg=0.05ms, max=0.1ms | simulate=3 calls, total=3.6ms, avg=1.2ms, max=1.8ms | evaluate_breakdown=2 calls, total=5.1ms, avg=2.57ms, max=2.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=21.4, selected_actions=2
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 9, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 26, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-33.0, score_delta=7.5, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=58 calls, total=142.6ms, avg=2.46ms, max=8.8ms | available_actions=30 calls, total=1.8ms, avg=0.06ms, max=0.3ms | simulate=57 calls, total=57.6ms, avg=1.01ms, max=2.6ms | evaluate_breakdown=11 calls, total=17.5ms, avg=1.59ms, max=3.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=57, elapsed_ms=246.3, selected_actions=3
+[OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-33.0, score_delta=-5.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=17.5ms, avg=4.37ms, max=7.4ms | available_actions=3 calls, total=0.3ms, avg=0.09ms, max=0.1ms | simulate=3 calls, total=6.1ms, avg=2.04ms, max=3.1ms | evaluate_breakdown=2 calls, total=10.0ms, avg=5.0ms, max=6.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=37.7, selected_actions=2
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 6, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 26, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-6.349999999999998, score_delta=26.9, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=255 calls, total=1798.9ms, avg=7.05ms, max=41.1ms | available_actions=99 calls, total=7.1ms, avg=0.07ms, max=0.7ms | simulate=360 calls, total=376.3ms, avg=1.05ms, max=5.1ms | evaluate_breakdown=12 calls, total=73.7ms, avg=6.14ms, max=10.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=254, elapsed_ms=2376.5, selected_actions=3
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [1, 1]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-4.625, score_delta=7.72, actions={"move" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=47 calls, total=404.4ms, avg=8.6ms, max=21.1ms | available_actions=27 calls, total=2.1ms, avg=0.08ms, max=0.7ms | simulate=62 calls, total=61.3ms, avg=0.99ms, max=1.7ms | evaluate_breakdown=5 calls, total=42.9ms, avg=8.58ms, max=19.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=46, elapsed_ms=534.7, selected_actions=4
+[OpponentEngine] Root actions: {"move" => 2, "attack" => 1, "play_card" => 4, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [1, 3]}}, {"type" => "play_card", "payload" => {"card_id" => 25, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-21.025, score_delta=28.1, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=166 calls, total=1408.2ms, avg=8.48ms, max=45.2ms | available_actions=70 calls, total=5.8ms, avg=0.08ms, max=0.8ms | simulate=202 calls, total=240.6ms, avg=1.19ms, max=4.2ms | evaluate_breakdown=8 calls, total=51.1ms, avg=6.39ms, max=10.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=165, elapsed_ms=1787.8, selected_actions=4
+[OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-21.025, score_delta=11.75, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=69.7ms, avg=17.42ms, max=20.3ms | available_actions=3 calls, total=0.3ms, avg=0.1ms, max=0.2ms | simulate=3 calls, total=7.3ms, avg=2.43ms, max=3.2ms | evaluate_breakdown=2 calls, total=30.9ms, avg=15.47ms, max=19.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=112.5, selected_actions=2
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 6, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [1, 3]}}, {"type" => "play_card", "payload" => {"card_id" => 29, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-26.2, score_delta=24.18, actions={"move" => 1, "play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=380 calls, total=4555.7ms, avg=11.99ms, max=77.2ms | available_actions=145 calls, total=12.4ms, avg=0.09ms, max=0.9ms | simulate=609 calls, total=656.0ms, avg=1.08ms, max=5.6ms | evaluate_breakdown=12 calls, total=185.9ms, avg=15.49ms, max=27.2ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=379, elapsed_ms=5609.3, selected_actions=5
+[OpponentEngine] Root actions: {"attack" => 3, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-26.2, score_delta=6.0, actions={"attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=14 calls, total=201.2ms, avg=14.37ms, max=25.0ms | available_actions=9 calls, total=0.6ms, avg=0.07ms, max=0.2ms | simulate=20 calls, total=22.8ms, avg=1.14ms, max=1.9ms | evaluate_breakdown=4 calls, total=52.4ms, avg=13.1ms, max=22.1ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=13, elapsed_ms=292.0, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 7, "attack" => 1, "play_card" => 2, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 25, "row" => 1, "column" => 3}}, {"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [0, 1]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [0, 1]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [0, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-29.0, score_delta=19.75, actions={"move" => 2, "play_card" => 1, "attack" => 3, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search profile: evaluate=669 calls, total=8697.8ms, avg=13.0ms, max=88.8ms | available_actions=243 calls, total=22.7ms, avg=0.09ms, max=1.1ms | simulate=1181 calls, total=1314.0ms, avg=1.11ms, max=5.7ms | evaluate_breakdown=11 calls, total=250.3ms, avg=22.76ms, max=53.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=668, elapsed_ms=10631.8, selected_actions=7
+[OpponentEngine] Root actions: {"move" => 1, "attack" => 7, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [0, 1]}}, {"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [0, 1]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [0, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-29.0, score_delta=4.0, actions={"attack" => 3, "move" => 1, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search profile: evaluate=205 calls, total=2942.9ms, avg=14.36ms, max=73.2ms | available_actions=82 calls, total=5.6ms, avg=0.07ms, max=0.2ms | simulate=355 calls, total=355.7ms, avg=1.0ms, max=5.0ms | evaluate_breakdown=9 calls, total=146.1ms, avg=16.23ms, max=59.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=204, elapsed_ms=3560.2, selected_actions=5
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 7, "play_card" => 4, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 25, "row" => 0, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-38.65, score_delta=34.1, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=322 calls, total=2927.0ms, avg=9.09ms, max=60.2ms | available_actions=113 calls, total=7.4ms, avg=0.07ms, max=0.3ms | simulate=474 calls, total=473.7ms, avg=1.0ms, max=7.9ms | evaluate_breakdown=13 calls, total=145.4ms, avg=11.19ms, max=25.2ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=321, elapsed_ms=3699.2, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 6, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-38.65, score_delta=24.75, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=28 calls, total=342.6ms, avg=12.24ms, max=32.2ms | available_actions=15 calls, total=0.9ms, avg=0.06ms, max=0.2ms | simulate=34 calls, total=34.2ms, avg=1.0ms, max=2.4ms | evaluate_breakdown=7 calls, total=66.9ms, avg=9.56ms, max=31.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=27, elapsed_ms=461.1, selected_actions=1
+[OpponentEngine] Root actions: {"move" => 9, "attack" => 1, "play_card" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [0, 1]}}, {"type" => "play_card", "payload" => {"card_id" => 24, "row" => 0, "column" => 3}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "attack", "payload" => {"attacker" => [2, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-35.625, score_delta=24.1, actions={"move" => 2, "attack" => 3, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search profile: evaluate=661 calls, total=8248.9ms, avg=12.48ms, max=66.5ms | available_actions=230 calls, total=17.9ms, avg=0.08ms, max=0.9ms | simulate=1161 calls, total=1164.0ms, avg=1.0ms, max=5.8ms | evaluate_breakdown=12 calls, total=317.4ms, avg=26.45ms, max=49.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=660, elapsed_ms=10052.9, selected_actions=7
+[OpponentEngine] Root actions: {"attack" => 3, "move" => 5, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [2, 2], "target" => [2, 1]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-33.375, score_delta=17.21, actions={"move" => 1, "attack" => 2, "end_turn" => 1}, attackers={"technique" => 2}
+[OpponentEngine] Search profile: evaluate=109 calls, total=1485.7ms, avg=13.63ms, max=54.9ms | available_actions=50 calls, total=3.2ms, avg=0.06ms, max=0.4ms | simulate=149 calls, total=152.9ms, avg=1.03ms, max=5.2ms | evaluate_breakdown=9 calls, total=132.0ms, avg=14.67ms, max=61.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=108, elapsed_ms=1831.9, selected_actions=4
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 6, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=48.0, score_delta=31.0, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=40 calls, total=22.7ms, avg=0.57ms, max=2.1ms | available_actions=21 calls, total=1.3ms, avg=0.06ms, max=0.1ms | simulate=39 calls, total=53.1ms, avg=1.36ms, max=3.9ms | evaluate_breakdown=8 calls, total=3.0ms, avg=0.38ms, max=1.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=39, elapsed_ms=100.1, selected_actions=3
+[OpponentEngine] Root actions: {"end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=48.0, score_delta=-7.0, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=2 calls, total=1.4ms, avg=0.72ms, max=1.0ms | available_actions=2 calls, total=0.1ms, avg=0.07ms, max=0.1ms | simulate=1 calls, total=2.1ms, avg=2.07ms, max=2.1ms | evaluate_breakdown=1 calls, total=0.9ms, avg=0.93ms, max=0.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=6.3, selected_actions=1
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 5, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=44.05, score_delta=24.55, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=158 calls, total=217.4ms, avg=1.38ms, max=8.1ms | available_actions=52 calls, total=2.9ms, avg=0.05ms, max=0.1ms | simulate=157 calls, total=135.7ms, avg=0.86ms, max=2.7ms | evaluate_breakdown=11 calls, total=20.1ms, avg=1.83ms, max=2.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=157, elapsed_ms=437.6, selected_actions=4
+[OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=44.05, score_delta=1.5, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=9.8ms, avg=2.45ms, max=4.4ms | available_actions=3 calls, total=0.2ms, avg=0.07ms, max=0.1ms | simulate=3 calls, total=3.6ms, avg=1.21ms, max=1.3ms | evaluate_breakdown=2 calls, total=3.7ms, avg=1.86ms, max=2.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=19.9, selected_actions=2
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 5, "play_card" => 6, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 0, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=55.25, score_delta=32.2, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=354 calls, total=1119.6ms, avg=3.16ms, max=11.1ms | available_actions=74 calls, total=7.4ms, avg=0.1ms, max=1.2ms | simulate=353 calls, total=365.4ms, avg=1.04ms, max=6.4ms | evaluate_breakdown=13 calls, total=54.1ms, avg=4.16ms, max=7.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=353, elapsed_ms=1701.9, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 4, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=55.25, score_delta=-10.0, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=34 calls, total=147.2ms, avg=4.33ms, max=9.6ms | available_actions=18 calls, total=1.2ms, avg=0.07ms, max=0.2ms | simulate=33 calls, total=37.6ms, avg=1.14ms, max=2.6ms | evaluate_breakdown=5 calls, total=26.5ms, avg=5.3ms, max=8.1ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=33, elapsed_ms=229.0, selected_actions=1
+[OpponentEngine] Root actions: {"move" => 5, "attack" => 1, "play_card" => 6, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[2, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[2, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 31, "targets" => [[0, 0]]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=61.55, score_delta=16.0, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=548 calls, total=5527.3ms, avg=10.09ms, max=66.9ms | available_actions=133 calls, total=11.0ms, avg=0.08ms, max=0.8ms | simulate=638 calls, total=699.1ms, avg=1.1ms, max=5.8ms | evaluate_breakdown=13 calls, total=143.6ms, avg=11.05ms, max=16.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=547, elapsed_ms=6648.8, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 5, "attack" => 1, "play_card" => 4, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 10, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=91.525, score_delta=37.23, actions={"move" => 1, "play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 1}
+[OpponentEngine] Search profile: evaluate=693 calls, total=11349.2ms, avg=16.38ms, max=84.5ms | available_actions=150 calls, total=13.1ms, avg=0.09ms, max=0.5ms | simulate=1008 calls, total=1085.2ms, avg=1.08ms, max=6.0ms | evaluate_breakdown=11 calls, total=265.7ms, avg=24.16ms, max=40.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=692, elapsed_ms=13082.2, selected_actions=5
+[OpponentEngine] Root actions: {"attack" => 3, "move" => 4, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [1, 1]}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [2, 3], "to" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "attack", "payload" => {"attacker" => [2, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=94.875, score_delta=19.15, actions={"attack" => 4, "move" => 2, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 3}
+[OpponentEngine] Search profile: evaluate=406 calls, total=4869.8ms, avg=11.99ms, max=77.7ms | available_actions=127 calls, total=17.2ms, avg=0.14ms, max=5.2ms | simulate=654 calls, total=691.5ms, avg=1.06ms, max=5.5ms | evaluate_breakdown=8 calls, total=214.3ms, avg=26.79ms, max=60.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=405, elapsed_ms=6018.1, selected_actions=7
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 5, "play_card" => 6, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 9, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=105.225, score_delta=44.2, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=548 calls, total=5457.8ms, avg=9.96ms, max=41.7ms | available_actions=157 calls, total=11.4ms, avg=0.07ms, max=0.3ms | simulate=860 calls, total=887.3ms, avg=1.03ms, max=6.9ms | evaluate_breakdown=14 calls, total=278.9ms, avg=19.92ms, max=35.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=547, elapsed_ms=6901.1, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 3, "attack" => 5, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [2, 2], "target" => [2, 1]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=108.025, score_delta=17.5, actions={"attack" => 2, "end_turn" => 1}, attackers={"technique" => 1, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=318 calls, total=2832.8ms, avg=8.91ms, max=49.3ms | available_actions=111 calls, total=8.4ms, avg=0.08ms, max=1.1ms | simulate=536 calls, total=498.0ms, avg=0.93ms, max=3.2ms | evaluate_breakdown=7 calls, total=103.7ms, avg=14.81ms, max=28.1ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=317, elapsed_ms=3599.9, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 4, "attack" => 1, "play_card" => 2, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [0, 1]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 1]}}, {"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [0, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=1000003.0, score_delta=999956.2, actions={"move" => 2, "attack" => 3, "play_card" => 1, "end_turn" => 1}, attackers={"technique" => 2, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=408 calls, total=2469.8ms, avg=6.05ms, max=30.4ms | available_actions=146 calls, total=12.7ms, avg=0.09ms, max=2.0ms | simulate=668 calls, total=712.0ms, avg=1.07ms, max=5.1ms | evaluate_breakdown=8 calls, total=71.3ms, avg=8.92ms, max=18.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=407, elapsed_ms=3470.4, selected_actions=7
+[OpponentEngine] Root actions: {"move" => 1, "attack" => 3, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[0, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[0, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [0, 1]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}]
+[OpponentEngine] Selected plan diagnostics: score=1000003.0, score_delta=999947.85, actions={"move" => 1, "attack" => 2}, attackers={"technique" => 1, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=26 calls, total=111.1ms, avg=4.27ms, max=25.4ms | available_actions=15 calls, total=2.9ms, avg=0.19ms, max=1.9ms | simulate=34 calls, total=40.5ms, avg=1.19ms, max=2.7ms | evaluate_breakdown=5 calls, total=25.8ms, avg=5.16ms, max=13.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=25, elapsed_ms=196.6, selected_actions=3
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 3, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 7, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=35.5, score_delta=22.5, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=22 calls, total=24.7ms, avg=1.12ms, max=11.0ms | available_actions=12 calls, total=1.2ms, avg=0.1ms, max=0.3ms | simulate=21 calls, total=35.1ms, avg=1.67ms, max=4.0ms | evaluate_breakdown=5 calls, total=1.9ms, avg=0.38ms, max=0.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=21, elapsed_ms=79.9, selected_actions=3
+[OpponentEngine] Root actions: {"end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=35.5, score_delta=-10.0, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=2 calls, total=1.4ms, avg=0.7ms, max=1.0ms | available_actions=2 calls, total=0.2ms, avg=0.08ms, max=0.1ms | simulate=1 calls, total=1.9ms, avg=1.95ms, max=1.9ms | evaluate_breakdown=1 calls, total=1.0ms, avg=1.04ms, max=1.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=6.4, selected_actions=1
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 7, "play_card" => 7, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [1, 3], "to" => [2, 3]}}, {"type" => "play_card", "payload" => {"card_id" => 9, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=46.652941176470584, score_delta=29.53, actions={"move" => 1, "play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=297 calls, total=1194.4ms, avg=4.02ms, max=21.1ms | available_actions=66 calls, total=4.1ms, avg=0.06ms, max=0.1ms | simulate=315 calls, total=283.0ms, avg=0.9ms, max=6.9ms | evaluate_breakdown=16 calls, total=78.4ms, avg=4.9ms, max=11.3ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=296, elapsed_ms=1685.4, selected_actions=4
+[OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=46.652941176470584, score_delta=4.85, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=48.5ms, avg=12.14ms, max=23.5ms | available_actions=3 calls, total=0.5ms, avg=0.15ms, max=0.2ms | simulate=3 calls, total=7.4ms, avg=2.45ms, max=3.1ms | evaluate_breakdown=2 calls, total=21.8ms, avg=10.92ms, max=15.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=82.3, selected_actions=2
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 7, "play_card" => 8, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 11, "row" => 0, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=75.425, score_delta=21.0, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=643 calls, total=7122.4ms, avg=11.08ms, max=94.2ms | available_actions=162 calls, total=12.9ms, avg=0.08ms, max=0.5ms | simulate=909 calls, total=902.3ms, avg=0.99ms, max=5.8ms | evaluate_breakdown=17 calls, total=292.9ms, avg=17.23ms, max=27.2ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=642, elapsed_ms=8657.4, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 6, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[2, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[2, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[2, 1], damage=1
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=75.425, score_delta=9.13, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=138 calls, total=1531.2ms, avg=11.1ms, max=41.9ms | available_actions=60 calls, total=4.5ms, avg=0.07ms, max=0.9ms | simulate=185 calls, total=183.0ms, avg=0.99ms, max=5.0ms | evaluate_breakdown=7 calls, total=73.9ms, avg=10.56ms, max=33.2ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=137, elapsed_ms=1857.0, selected_actions=1
+[OpponentEngine] Root actions: {"move" => 7, "attack" => 1, "play_card" => 6, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 31, "targets" => [[0, 0]]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=93.775, score_delta=24.0, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=782 calls, total=14831.4ms, avg=18.97ms, max=133.1ms | available_actions=160 calls, total=14.2ms, avg=0.09ms, max=0.3ms | simulate=1004 calls, total=1108.4ms, avg=1.1ms, max=4.9ms | evaluate_breakdown=15 calls, total=461.2ms, avg=30.75ms, max=66.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=781, elapsed_ms=16834.7, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 7, "attack" => 1, "play_card" => 4, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 10, "row" => 1, "column" => 4}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=110.075, score_delta=21.3, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=800 calls, total=15790.4ms, avg=19.74ms, max=106.4ms | available_actions=191 calls, total=22.8ms, avg=0.12ms, max=1.3ms | simulate=1258 calls, total=1432.2ms, avg=1.14ms, max=5.8ms | evaluate_breakdown=13 calls, total=429.8ms, avg=33.06ms, max=58.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=799, elapsed_ms=18128.8, selected_actions=3
+[OpponentEngine] Root actions: {"move" => 5, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[2, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=110.075, score_delta=13.63, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=340 calls, total=5039.3ms, avg=14.82ms, max=102.6ms | available_actions=107 calls, total=12.9ms, avg=0.12ms, max=3.2ms | simulate=528 calls, total=541.3ms, avg=1.03ms, max=4.9ms | evaluate_breakdown=6 calls, total=117.5ms, avg=19.58ms, max=60.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=339, elapsed_ms=5899.0, selected_actions=1
+[OpponentEngine] Root actions: {"move" => 6, "attack" => 1, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "move", "payload" => {"from" => [0, 3], "to" => [0, 2]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 0, "column" => 3}}, {"type" => "move", "payload" => {"from" => [1, 4], "to" => [2, 4]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 4}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=102.3, score_delta=20.22, actions={"move" => 2, "play_card" => 2, "attack" => 1, "end_turn" => 1}, attackers={"technique" => 1}
+[OpponentEngine] Search profile: evaluate=844 calls, total=24347.7ms, avg=28.85ms, max=153.9ms | available_actions=212 calls, total=23.8ms, avg=0.11ms, max=3.4ms | simulate=1318 calls, total=1700.2ms, avg=1.29ms, max=6.3ms | evaluate_breakdown=8 calls, total=357.9ms, avg=44.73ms, max=79.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=843, elapsed_ms=26911.6, selected_actions=6
+[OpponentEngine] Root actions: {"attack" => 3, "move" => 5, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "move", "payload" => {"from" => [1, 4], "to" => [2, 4]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 4}}, {"type" => "move", "payload" => {"from" => [1, 3], "to" => [1, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [1, 1]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=106.1, score_delta=10.9, actions={"attack" => 3, "move" => 2, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1, "technique" => 2}
+[OpponentEngine] Search profile: evaluate=711 calls, total=16370.2ms, avg=23.02ms, max=113.0ms | available_actions=217 calls, total=22.8ms, avg=0.11ms, max=0.5ms | simulate=1289 calls, total=1615.9ms, avg=1.25ms, max=5.8ms | evaluate_breakdown=9 calls, total=368.4ms, avg=40.93ms, max=113.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=710, elapsed_ms=18814.8, selected_actions=7
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[0, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 2], target=[1, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[1, 1], damage=2
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 2], "target" => [1, 1]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=106.3, score_delta=8.72, actions={"attack" => 1, "end_turn" => 1}, attackers={"technique" => 1}
+[OpponentEngine] Search profile: evaluate=204 calls, total=3612.1ms, avg=17.71ms, max=124.0ms | available_actions=83 calls, total=8.2ms, avg=0.1ms, max=0.3ms | simulate=359 calls, total=409.3ms, avg=1.14ms, max=6.2ms | evaluate_breakdown=5 calls, total=195.4ms, avg=39.07ms, max=98.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=203, elapsed_ms=4344.0, selected_actions=2
+[OpponentEngine] Root actions: {"move" => 5, "attack" => 3, "play_card" => 2, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 3], target=[2, 2], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 3], target=[2, 2], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[0, 1], damage=1
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 11, "row" => 1, "column" => 3}}, {"type" => "move", "payload" => {"from" => [2, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [2, 4], "to" => [2, 3]}}, {"type" => "move", "payload" => {"from" => [1, 4], "to" => [2, 4]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=80.6, score_delta=44.37, actions={"play_card" => 1, "move" => 3, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=885 calls, total=22765.9ms, avg=25.72ms, max=116.9ms | available_actions=393 calls, total=37.0ms, avg=0.09ms, max=1.0ms | simulate=1968 calls, total=2381.3ms, avg=1.21ms, max=5.6ms | evaluate_breakdown=11 calls, total=385.9ms, avg=35.08ms, max=73.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=884, elapsed_ms=26062.5, selected_actions=6
+[OpponentEngine] Root actions: {"move" => 2, "attack" => 4, "end_turn" => 1}
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 3], target=[2, 2], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[2, 3], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 3], target=[2, 2], damage=2
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Safe attack before end turn: attacker=[1, 2], target=[2, 2], damage=1
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [1, 3], "target" => [2, 2]}}, {"type" => "move", "payload" => {"from" => [2, 3], "to" => [1, 2]}}, {"type" => "move", "payload" => {"from" => [2, 4], "to" => [2, 3]}}, {"type" => "move", "payload" => {"from" => [1, 4], "to" => [2, 4]}}, {"type" => "attack", "payload" => {"attacker" => [2, 3], "target" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [1, 2], "target" => [2, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=93.925, score_delta=36.95, actions={"attack" => 4, "move" => 3, "end_turn" => 1}, attackers={"technique" => 3, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=710 calls, total=13162.1ms, avg=18.54ms, max=93.5ms | available_actions=236 calls, total=23.7ms, avg=0.1ms, max=1.6ms | simulate=1489 calls, total=1668.2ms, avg=1.12ms, max=5.6ms | evaluate_breakdown=7 calls, total=208.2ms, avg=29.74ms, max=52.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=709, elapsed_ms=15470.2, selected_actions=8
+[OpponentEngine] Root actions: {"move" => 5, "attack" => 1, "play_card" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=1000000.0, score_delta=999932.35, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=811 calls, total=9832.1ms, avg=12.12ms, max=48.1ms | available_actions=183 calls, total=19.6ms, avg=0.11ms, max=2.8ms | simulate=1387 calls, total=1673.7ms, avg=1.21ms, max=7.1ms | evaluate_breakdown=8 calls, total=233.0ms, avg=29.12ms, max=55.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=810, elapsed_ms=12190.6, selected_actions=1
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 7, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-21.25, score_delta=22.75, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=46 calls, total=101.4ms, avg=2.2ms, max=4.7ms | available_actions=24 calls, total=1.1ms, avg=0.04ms, max=0.2ms | simulate=45 calls, total=47.7ms, avg=1.06ms, max=4.9ms | evaluate_breakdown=9 calls, total=18.7ms, avg=2.08ms, max=5.2ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=45, elapsed_ms=186.4, selected_actions=3
+[OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-21.25, score_delta=6.75, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=4 calls, total=20.7ms, avg=5.18ms, max=6.2ms | available_actions=3 calls, total=0.2ms, avg=0.07ms, max=0.1ms | simulate=3 calls, total=4.3ms, avg=1.42ms, max=1.7ms | evaluate_breakdown=2 calls, total=8.6ms, avg=4.32ms, max=5.4ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=36.7, selected_actions=2
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 8, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 8, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-16.25, score_delta=33.25, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=52 calls, total=165.2ms, avg=3.18ms, max=12.2ms | available_actions=27 calls, total=1.4ms, avg=0.05ms, max=0.2ms | simulate=51 calls, total=53.5ms, avg=1.05ms, max=4.7ms | evaluate_breakdown=10 calls, total=27.2ms, avg=2.72ms, max=5.5ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=51, elapsed_ms=268.8, selected_actions=3
+[OpponentEngine] Root actions: {"end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-16.25, score_delta=-4.75, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=2 calls, total=18.6ms, avg=9.28ms, max=13.0ms | available_actions=2 calls, total=0.2ms, avg=0.08ms, max=0.1ms | simulate=1 calls, total=3.4ms, avg=3.45ms, max=3.4ms | evaluate_breakdown=1 calls, total=10.9ms, avg=10.94ms, max=10.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=1, elapsed_ms=35.0, selected_actions=1
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 4, "play_card" => 7, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 9, "row" => 0, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=2.4499999999999993, score_delta=24.58, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=257 calls, total=1940.2ms, avg=7.55ms, max=25.2ms | available_actions=94 calls, total=6.1ms, avg=0.07ms, max=0.7ms | simulate=344 calls, total=351.1ms, avg=1.02ms, max=6.0ms | evaluate_breakdown=13 calls, total=104.7ms, avg=8.06ms, max=12.8ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=256, elapsed_ms=2531.2, selected_actions=3
+[OpponentEngine] Root actions: {"attack" => 1, "move" => 3, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=2.4499999999999993, score_delta=-3.0, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=47 calls, total=457.0ms, avg=9.72ms, max=22.0ms | available_actions=27 calls, total=1.5ms, avg=0.06ms, max=0.1ms | simulate=61 calls, total=66.2ms, avg=1.09ms, max=2.9ms | evaluate_breakdown=5 calls, total=53.2ms, avg=10.64ms, max=20.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=46, elapsed_ms=601.1, selected_actions=2
+[OpponentEngine] Root actions: {"move" => 1, "attack" => 5, "play_card" => 6, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 31, "targets" => [[1, 0]]}}, {"type" => "attack", "payload" => {"attacker" => [0, 3], "target" => [0, 2]}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-16.75, score_delta=35.5, actions={"play_card" => 1, "attack" => 2, "end_turn" => 1}, attackers={"technique" => 1, "headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=307 calls, total=2056.0ms, avg=6.7ms, max=38.1ms | available_actions=89 calls, total=7.1ms, avg=0.08ms, max=1.2ms | simulate=372 calls, total=372.5ms, avg=1.0ms, max=6.4ms | evaluate_breakdown=12 calls, total=126.6ms, avg=10.55ms, max=19.7ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=306, elapsed_ms=2709.9, selected_actions=4
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 3, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [2, 0]}}, {"type" => "play_card", "payload" => {"card_id" => 7, "row" => 1, "column" => 3}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-33.25, score_delta=28.25, actions={"attack" => 1, "play_card" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=46 calls, total=295.2ms, avg=6.42ms, max=14.9ms | available_actions=26 calls, total=1.6ms, avg=0.06ms, max=0.2ms | simulate=59 calls, total=57.9ms, avg=0.98ms, max=2.6ms | evaluate_breakdown=5 calls, total=27.9ms, avg=5.59ms, max=8.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=45, elapsed_ms=403.7, selected_actions=3
+[OpponentEngine] Root actions: {"attack" => 1, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-33.25, score_delta=-5.5, actions={"end_turn" => 1}, attackers={}
+[OpponentEngine] Search profile: evaluate=4 calls, total=57.4ms, avg=14.34ms, max=19.8ms | available_actions=3 calls, total=0.3ms, avg=0.11ms, max=0.2ms | simulate=4 calls, total=11.1ms, avg=2.77ms, max=5.0ms | evaluate_breakdown=2 calls, total=21.8ms, avg=10.88ms, max=15.6ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=3, elapsed_ms=94.4, selected_actions=1
+[OpponentEngine] Root actions: {"attack" => 1, "play_card" => 3, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "play_card", "payload" => {"card_id" => 7, "row" => 1, "column" => 3}}, {"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [0, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-65.5, score_delta=23.0, actions={"play_card" => 1, "attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=82 calls, total=775.6ms, avg=9.46ms, max=20.5ms | available_actions=44 calls, total=3.8ms, avg=0.09ms, max=1.4ms | simulate=113 calls, total=122.2ms, avg=1.08ms, max=5.5ms | evaluate_breakdown=5 calls, total=32.6ms, avg=6.53ms, max=10.0ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=81, elapsed_ms=972.8, selected_actions=3
+[OpponentEngine] Root actions: {"attack" => 5, "end_turn" => 1}
+[OpponentEngine] Selected plan: [{"type" => "attack", "payload" => {"attacker" => [0, 4], "target" => [0, 2]}}, {"type" => "end_turn", "payload" => {}}]
+[OpponentEngine] Selected plan diagnostics: score=-65.5, score_delta=11.25, actions={"attack" => 1, "end_turn" => 1}, attackers={"headquarters" => 1}
+[OpponentEngine] Search profile: evaluate=32 calls, total=334.6ms, avg=10.46ms, max=21.9ms | available_actions=19 calls, total=0.9ms, avg=0.05ms, max=0.1ms | simulate=45 calls, total=45.9ms, avg=1.02ms, max=3.0ms | evaluate_breakdown=6 calls, total=50.0ms, avg=8.34ms, max=23.9ms
+[OpponentEngine] Search completed: depth=7, width=20, expanded_nodes=31, elapsed_ms=447.1, selected_actions=2
