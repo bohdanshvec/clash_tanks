@@ -19,7 +19,8 @@ class PagesController < ApplicationController
               :technique,
               :platoon,
               :headquarters,
-              :abilities
+              :abilities,
+              { card_abilities: :ability }
             ]
           }
         )

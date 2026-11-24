@@ -35,17 +35,11 @@
     variant: border_variant
   )
 
-  order_descriptions = card.card_abilities.filter_map do |card_ability|
-    parameters = card_ability.parameters.to_h
-
-    case card_ability.ability.code
-    when "damage_technique"
-      damage = parameters["damage"]
-      "Завдає техніці #{damage} од. шкоди" if damage.present?
-    when "draw_cards"
-      count = parameters["count"]
-      "Добрати карт: #{count}" if count.present?
-    end
+  ability_descriptions = card.card_abilities.filter_map do |card_ability|
+    ability_description(
+      code: card_ability.ability.code,
+      parameters: card_ability.parameters
+    )
   end
 
   article_classes = [
@@ -170,6 +164,26 @@
 
       </div>
 
+      <% if card.card_abilities.any? %>
+
+        <div class="catalog-card__description">
+
+          <% if ability_descriptions.any? %>
+
+            <% ability_descriptions.each do |description| %>
+              <p><%= description %></p>
+            <% end %>
+
+          <% else %>
+
+            <p><%= card.abilities.map(&:name).to_sentence %></p>
+
+          <% end %>
+
+        </div>
+
+      <% end %>
+
     <% elsif card.card_type == "platoon" && card.platoon %>
 
       <div class="catalog-card__stats">
@@ -192,9 +206,9 @@
 
       <div class="catalog-card__description">
 
-        <% if order_descriptions.any? %>
+        <% if ability_descriptions.any? %>
 
-          <% order_descriptions.each do |description| %>
+          <% ability_descriptions.each do |description| %>
             <p><%= description %></p>
           <% end %>
 

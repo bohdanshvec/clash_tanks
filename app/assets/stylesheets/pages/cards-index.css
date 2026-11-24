@@ -695,6 +695,10 @@
   pointer-events: none;
 }
 
+.catalog-card--technique .catalog-card__description {
+  height: 29%;
+}
+
 .catalog-card__description p {
   margin: 0 0 8px;
 }

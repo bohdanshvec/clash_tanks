@@ -70,7 +70,8 @@ class DecksController < ApplicationController
         :technique,
         :platoon,
         :headquarters,
-        :abilities
+        :abilities,
+        { card_abilities: :ability }
       )
       .where.not(card_type: "headquarters")
       .order(:nation_id, :card_type, :name)
