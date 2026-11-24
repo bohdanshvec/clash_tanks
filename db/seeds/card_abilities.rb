@@ -1,6 +1,7 @@
 abilities = {
   damage_technique: Ability.find_by!(code: "damage_technique"),
-  draw_cards: Ability.find_by!(code: "draw_cards")
+  draw_cards: Ability.find_by!(code: "draw_cards"),
+  headquarters_defender: Ability.find_by!(code: "headquarters_defender")
 }
 
 card_abilities = [
@@ -9,7 +10,10 @@ card_abilities = [
   { card_code: "usa_lend_liz", ability: abilities[:draw_cards], parameters: { count: 1 } },
   { card_code: "usa_vognevij_nalit", ability: abilities[:damage_technique], parameters: { damage: 2 } },
   { card_code: "ussr_zalp_katyushi", ability: abilities[:damage_technique], parameters: { damage: 3 } },
-  { card_code: "ussr_popovnena", ability: abilities[:draw_cards], parameters: { count: 1 } }
+  { card_code: "ussr_popovnena", ability: abilities[:draw_cards], parameters: { count: 1 } },
+  { card_code: "germany_pz_iv_ausf", ability: abilities[:headquarters_defender], parameters: {} },
+  { card_code: "usa_m4a3e8", ability: abilities[:headquarters_defender], parameters: {} },
+  { card_code: "ussr_t_34", ability: abilities[:headquarters_defender], parameters: {} }
 ]
 
 card_abilities.each do |attributes|

@@ -7,12 +7,12 @@ class SeedsTest < ActiveSupport::TestCase
 
   test "creates base game content" do
     assert_equal 3, Nation.count
-    assert_equal 2, Ability.count
+    assert_equal 3, Ability.count
     assert_equal 42, Card.count
     assert_equal 27, Technique.count
     assert_equal 6, Platoon.count
     assert_equal 3, Headquarters.count
-    assert_equal 6, CardAbility.count
+    assert_equal 9, CardAbility.count
   end
 
   test "creates all nations" do
@@ -20,7 +20,8 @@ class SeedsTest < ActiveSupport::TestCase
   end
 
   test "creates all abilities" do
-    assert_equal %w[damage_technique draw_cards], Ability.order(:code).pluck(:code)
+    assert_equal %w[damage_technique draw_cards headquarters_defender],
+             Ability.order(:code).pluck(:code)
   end
 
   test "creates three headquarters" do
@@ -43,7 +44,7 @@ class SeedsTest < ActiveSupport::TestCase
   end
 
   test "creates six card abilities" do
-    assert_equal 6, CardAbility.count
+    assert_equal 9, CardAbility.count
   end
 
   test "seed is idempotent" do
@@ -52,12 +53,12 @@ class SeedsTest < ActiveSupport::TestCase
     end
 
     assert_equal 3, Nation.count
-    assert_equal 2, Ability.count
+    assert_equal 3, Ability.count
     assert_equal 42, Card.count
     assert_equal 27, Technique.count
     assert_equal 6, Platoon.count
     assert_equal 3, Headquarters.count
-    assert_equal 6, CardAbility.count
+    assert_equal 9, CardAbility.count
   end
 
   test "creates permanent AI player and three complete AI decks" do
