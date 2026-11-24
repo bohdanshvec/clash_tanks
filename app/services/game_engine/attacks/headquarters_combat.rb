@@ -2,7 +2,6 @@
 module GameEngine
   module Attacks
     class HeadquartersCombat
-      HEADQUARTERS_DEFENDER_ABILITY = "headquarters_defender"
 
       def self.firepower_for_shot(state:, headquarters:, events: nil)
         new(state, events: events).firepower_for_shot(headquarters)
@@ -213,7 +212,7 @@ module GameEngine
 
       def has_headquarters_defender_ability?(technique)
         Array(technique["abilities"]).any? do |ability|
-          ability["code"] == HEADQUARTERS_DEFENDER_ABILITY
+          ability["code"] == GameEngine::Abilities::Techniques::HeadquartersDefender::CODE
         end
       end
 

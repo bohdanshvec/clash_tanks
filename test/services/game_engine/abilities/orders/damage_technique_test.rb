@@ -1,6 +1,6 @@
 require "test_helper"
 
-class GameEngine::Abilities::DamageTechniqueTest < ActiveSupport::TestCase
+class GameEngine::Abilities::Orders::DamageTechniqueTest < ActiveSupport::TestCase
   setup do
     @state = GameEngine::GameState.initial(
       current_player_id: 42,
@@ -158,7 +158,7 @@ class GameEngine::Abilities::DamageTechniqueTest < ActiveSupport::TestCase
   end
 
   test "rejects invalid target coordinates" do
-    result = GameEngine::Abilities::DamageTechnique.new(
+    result = GameEngine::Abilities::Orders::DamageTechnique.new(
       state: @state,
       ability: @ability,
       player_id: 42,
@@ -172,7 +172,7 @@ class GameEngine::Abilities::DamageTechniqueTest < ActiveSupport::TestCase
   private
 
   def execute_ability
-    GameEngine::Abilities::DamageTechnique.new(
+    GameEngine::Abilities::Orders::DamageTechnique.new(
       state: @state,
       ability: @ability,
       player_id: 42,

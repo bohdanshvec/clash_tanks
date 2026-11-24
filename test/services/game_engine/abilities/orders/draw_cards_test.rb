@@ -1,6 +1,6 @@
 require "test_helper"
 
-class GameEngine::Abilities::DrawCardsTest < ActiveSupport::TestCase
+class GameEngine::Abilities::Orders::DrawCardsTest < ActiveSupport::TestCase
   test "draws the requested number of cards" do
     player_id = 1
 
@@ -27,7 +27,7 @@ class GameEngine::Abilities::DrawCardsTest < ActiveSupport::TestCase
       ]
     }
 
-    result = GameEngine::Abilities::DrawCards.new(
+    result = GameEngine::Abilities::Orders::DrawCards.new(
       state: state,
       ability: {
         "code" => "draw_cards",
@@ -58,7 +58,7 @@ class GameEngine::Abilities::DrawCardsTest < ActiveSupport::TestCase
       "field" => []
     }
 
-    result = GameEngine::Abilities::DrawCards.new(
+    result = GameEngine::Abilities::Orders::DrawCards.new(
       state: state,
       ability: {
         "code" => "draw_cards",

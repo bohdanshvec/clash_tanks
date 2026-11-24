@@ -1,9 +1,10 @@
+
 module GameEngine
   module Abilities
     class Executor
       HANDLERS = {
-        "damage_technique" => DamageTechnique,
-        "draw_cards" => DrawCards
+        Orders::DamageTechnique::CODE => Orders::DamageTechnique,
+        Orders::DrawCards::CODE => Orders::DrawCards
       }.freeze
 
       def initialize(state:, ability:, player_id:, targets:)
