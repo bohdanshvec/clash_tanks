@@ -8,6 +8,9 @@
 
   is_headquarters = card.card_type == "headquarters"
 
+  has_ability =
+    card.card_type == "technique" && card.card_abilities.any?
+
   platoon_variant =
     if card.card_type == "platoon"
       card.platoon&.firepower.to_i.positive? ? "attack" : "defense"
@@ -16,7 +19,7 @@
   border_variant =
     case card.card_type
     when "technique"
-      "ability" if card.abilities.any?
+      "ability" if has_ability
     when "platoon"
       platoon_variant
     end
@@ -80,6 +83,15 @@
           <%= card.weight %>
         </span>
       </div>
+
+    <% end %>
+
+    <% if has_ability %>
+
+      <%= image_tag "icons/shield.webp",
+        class: "catalog-card__shield",
+        alt: "",
+        draggable: false %>
 
     <% end %>
 

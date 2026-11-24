@@ -451,6 +451,12 @@
                         technique_card_code =
                           card_codes_by_id[cell["card_id"].to_i]
 
+                        technique_card =
+                          cards_by_id[cell["card_id"].to_i]
+
+                        technique_has_ability =
+                          technique_card&.card_abilities&.any?
+
                         technique_type = cell["technique_type"].to_s
 
                         supported_technique_types =
@@ -541,6 +547,17 @@
                             alt: "",
                             draggable: false
                           ) %>
+
+                          <% if technique_has_ability %>
+
+                            <%= image_tag(
+                              "icons/shield_in_circle.webp",
+                              class: "technique-field__shield",
+                              alt: "",
+                              draggable: false
+                            ) %>
+
+                          <% end %>
 
                           <div class="technique-field__name">
                             <%= cell["name"] %>
