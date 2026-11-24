@@ -10,7 +10,7 @@ class GameEngine::Abilities::Techniques::HeadquartersDefenderTest < ActiveSuppor
 
   test "provides ability description" do
     assert_equal(
-      "Приймає урон штабу, знаходячись на плацдармі.",
+      "Приймає урон штабу на плацдармі.",
       GameEngine::Abilities::Techniques::HeadquartersDefender.description
     )
   end

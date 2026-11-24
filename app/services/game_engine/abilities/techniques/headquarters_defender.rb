@@ -5,7 +5,7 @@ module GameEngine
       class HeadquartersDefender
         CODE = "headquarters_defender"
 
-        DESCRIPTION = "Приймає урон штабу, знаходячись на плацдармі."
+        DESCRIPTION = "Приймає урон штабу на плацдармі."
 
         def self.description(_parameters = {})
           DESCRIPTION
