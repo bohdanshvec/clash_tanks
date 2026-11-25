@@ -25,7 +25,7 @@ class ApplicationHelperTest < ActiveSupport::TestCase
 
   test "describes headquarters defender ability" do
     assert_equal(
-      "Приймає урон штабу, знаходячись на плацдармі.",
+      "Приймає урон штабу на плацдармі.",
       ability_description(
         code: GameEngine::Abilities::Techniques::HeadquartersDefender::CODE
       )
