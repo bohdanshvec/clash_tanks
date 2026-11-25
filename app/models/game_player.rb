@@ -2,7 +2,7 @@ class GamePlayer < ApplicationRecord
   belongs_to :game
   belongs_to :player
   belongs_to :nation
-  belongs_to :deck
+  belongs_to :deck, optional: true
   belongs_to :headquarters_card, class_name: "Card"
 
   validate :headquarters_card_is_headquarters

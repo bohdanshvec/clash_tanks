@@ -257,6 +257,155 @@ class DecksControllerTest < ActionDispatch::IntegrationTest
 
 		assert_response :unprocessable_entity
 	end
+
+	test "destroying deck cancels its waiting PvP game" do
+	  post login_path, params: {
+	    email: @player.email,
+	    password: "password"
+	  }
+
+	  game = Game.create!(
+	    mode: "pvp",
+	    status: "waiting"
+	  )
+
+	  game_player = game.game_players.create!(
+	    player: @player,
+	    nation: @deck.nation,
+	    deck: @deck,
+	    headquarters_card: @deck.headquarters_card
+	  )
+
+	  assert_difference("Deck.count", -1) do
+	    assert_difference("Game.count", -1) do
+	      assert_difference("GamePlayer.count", -1) do
+	        delete deck_path(@deck)
+	      end
+	    end
+	  end
+
+	  assert_redirected_to decks_path
+
+	  assert_not Deck.exists?(@deck.id)
+	  assert_not Game.exists?(game.id)
+	  assert_not GamePlayer.exists?(game_player.id)
+	end
+
+	test "destroying deck surrenders in started PvP game" do
+	  opponent = create_player(email: "opponent@example.com")
+	  opponent_deck = create_complete_deck(player: opponent)
+
+	  game = create_started_pvp_game(
+	    first_player: @player,
+	    first_deck: @deck,
+	    second_player: opponent,
+	    second_deck: opponent_deck
+	  )
+
+	  player_game_record = game.game_players.find_by!(player: @player)
+	  opponent_game_record = game.game_players.find_by!(player: opponent)
+
+	  player_statistics_before = player_statistics(@player)
+	  opponent_statistics_before = player_statistics(opponent)
+
+	  post login_path, params: {
+	    email: @player.email,
+	    password: "password"
+	  }
+
+	  assert_difference("Deck.count", -1) do
+	    delete deck_path(@deck)
+	  end
+
+	  assert_redirected_to decks_path
+
+	  game.reload
+
+	  assert Game.exists?(game.id)
+	  assert game.finished?
+
+	  result = game.state.fetch("result")
+
+	  assert_equal "surrender", result.fetch("reason")
+		assert_equal opponent.id, result.fetch("winner_id").to_i
+		assert_equal @player.id, result.fetch("loser_id").to_i
+
+	  assert_nil player_game_record.reload.deck_id
+	  assert_equal opponent_deck.id, opponent_game_record.reload.deck_id
+
+	  assert_equal(
+	    player_statistics_before.merge(
+	      "battles_count" => player_statistics_before["battles_count"] + 1,
+	      "losses_count" => player_statistics_before["losses_count"] + 1
+	    ),
+	    player_statistics(@player)
+	  )
+
+	  assert_equal(
+	    opponent_statistics_before.merge(
+	      "battles_count" => opponent_statistics_before["battles_count"] + 1,
+	      "wins_count" => opponent_statistics_before["wins_count"] + 1
+	    ),
+	    player_statistics(opponent)
+	  )
+	end
+
+	test "destroying deck preserves finished PvP game history and statistics" do
+	  opponent = create_player(email: "opponent@example.com")
+	  opponent_deck = create_complete_deck(player: opponent)
+
+	  game = create_started_pvp_game(
+	    first_player: @player,
+	    first_deck: @deck,
+	    second_player: opponent,
+	    second_deck: opponent_deck
+	  )
+
+	  # Противник сдаётся, чтобы завершить партию
+	  # через настоящий GameActionRunner.
+	  surrender_game!(
+	    game: game,
+	    player: opponent
+	  )
+
+	  game.reload
+
+	  original_result = game.state.fetch("result").deep_dup
+	  original_statistics = {
+	    player: player_statistics(@player),
+	    opponent: player_statistics(opponent)
+	  }
+
+	  player_game_record = game.game_players.find_by!(player: @player)
+	  opponent_game_record = game.game_players.find_by!(player: opponent)
+
+	  post login_path, params: {
+	    email: @player.email,
+	    password: "password"
+	  }
+
+	  assert_difference("Deck.count", -1) do
+	    delete deck_path(@deck)
+	  end
+
+	  assert_redirected_to decks_path
+
+	  game.reload
+
+	  assert Game.exists?(game.id)
+	  assert game.finished?
+
+	  assert_equal original_result, game.state.fetch("result")
+
+	  assert GamePlayer.exists?(player_game_record.id)
+	  assert GamePlayer.exists?(opponent_game_record.id)
+
+	  assert_nil player_game_record.reload.deck_id
+	  assert_equal opponent_deck.id, opponent_game_record.reload.deck_id
+
+	  assert_equal original_statistics[:player], player_statistics(@player)
+	  assert_equal original_statistics[:opponent], player_statistics(opponent)
+	end
 	
 	test "logged in player can destroy their deck" do
 		post login_path, params: {
@@ -336,5 +485,54 @@ class DecksControllerTest < ActionDispatch::IntegrationTest
 
 		assert_response :forbidden
 		assert Deck.exists?(deck.id)
+	end
+
+	private
+
+	def create_started_pvp_game(first_player:, first_deck:, second_player:, second_deck:)
+	  game = Game.create!(
+	    mode: "pvp",
+	    status: "waiting"
+	  )
+
+	  [
+	    [first_player, first_deck],
+	    [second_player, second_deck]
+	  ].each do |player, deck|
+	    game.game_players.create!(
+	      player: player,
+	      nation: deck.nation,
+	      deck: deck,
+	      headquarters_card: deck.headquarters_card
+	    )
+	  end
+
+	  GameEngine::StartGame.call(game)
+
+	  game.reload
+	end
+
+	def surrender_game!(game:, player:)
+	  action = DecisionProviders::Human.new(
+	    player_id: player.id.to_s,
+	    type: "surrender"
+	  ).call
+
+	  result = GameActionRunner.call(
+	    game: game,
+	    action: action
+	  )
+
+	  assert_predicate result, :success?, result.error
+
+	  game.reload
+	end
+
+	def player_statistics(player)
+	  player.reload.attributes.slice(
+	    "battles_count",
+	    "wins_count",
+	    "losses_count"
+	  )
 	end
 end
