@@ -1,3 +1,4 @@
+
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
@@ -72,18 +73,15 @@ export default class extends Controller {
       )
     })
 
-    // Отменяем все активные анимации.
     this.animations?.forEach((animation) => {
       animation.cancel()
     })
 
     this.animations?.clear()
 
-    // Удаляем стрелку направления перемещения.
     this.moveDirectionArrow?.remove()
     this.moveDirectionArrow = null
 
-    // Удаляем временные слои эффектов приказов.
     this.element
       .querySelectorAll(".game-order-effect-layer")
       .forEach((element) => element.remove())
@@ -107,10 +105,13 @@ export default class extends Controller {
       let currentStat = null
 
       if (
-        event.type === "damage_applied" &&
+        [
+          "damage_applied",
+          "technique_damaged"
+        ].includes(event.type) &&
         event.damage > 0
       ) {
-        const target = event.target
+        const target = this.techniqueData(event)
         const position = target?.position
 
         if (!position) return
@@ -165,9 +166,6 @@ export default class extends Controller {
 
       if (event.hp_before == null) return
 
-      // Оставляем старое значение до завершения анимации.
-      // Если объект получает несколько повреждений,
-      // сохраняем HP перед первым повреждением.
       currentStat.textContent = String(event.hp_before)
 
       preserved.add(key)
@@ -211,11 +209,8 @@ export default class extends Controller {
       return
     }
 
-    // Сохраняем прежние значения HP до обновления DOM.
     this.preserveDamageHp(events, incomingGame)
 
-    // При уничтожении штаба временно скрываем результат игры.
-    // Покажем его после завершения анимации.
     const headquartersDestroyed = events.some((item) => {
       return (
         item.type === "game_finished" &&
@@ -243,7 +238,8 @@ export default class extends Controller {
     )
 
     destroyedEvents.forEach((destroyedEvent) => {
-      const position = destroyedEvent.target?.position
+      const technique = this.techniqueData(destroyedEvent)
+      const position = technique?.position
       const key = this.positionKey(position)
 
       if (!key) return
@@ -260,8 +256,6 @@ export default class extends Controller {
       this.destroyedVisuals.set(key, queue)
     })
 
-    // Сохраняем изображения уничтожаемых взводов
-    // до замены игрового DOM через Turbo.
     const destroyedPlatoons = events.filter(
       (item) => item.type === "platoon_destroyed"
     )
@@ -323,8 +317,6 @@ export default class extends Controller {
       )
     })
 
-    // При уничтожении штаба пустой колодой
-    // координаты находятся в damage_applied.
     const emptyDeckDamage = events.find((event) => {
       return (
         event.type === "damage_applied" &&
@@ -333,9 +325,6 @@ export default class extends Controller {
       )
     })
 
-    // Выбираем одно событие для существующей вспышки
-    // около счётчика колоды.
-    // Остальные события урона также попадут в очередь.
     const emptyDeckDamageEvent = events.find((event) => {
       return (
         event.type === "platoon_damaged" &&
@@ -354,6 +343,7 @@ export default class extends Controller {
     const combatEvents = events.filter((event) => {
       const isDamageEvent = [
         "damage_applied",
+        "technique_damaged",
         "platoon_damaged"
       ].includes(event.type)
 
@@ -379,7 +369,6 @@ export default class extends Controller {
       )
     })
 
-    // Отдельно выбираем события розыгрыша приказов.
     const orderEvents = events.filter((event) => {
       return event.type === "order_played"
     })
@@ -391,19 +380,12 @@ export default class extends Controller {
       return
     }
 
-    // Сервер отправляет order_played после событий
-    // выполнения способности. Визуально приказ должен
-    // показываться первым, до урона и уничтожения.
     const queuedEvents = [
       ...orderEvents,
       ...combatEvents
     ]
 
     queuedEvents.forEach((event) => {
-      // ------------------------------------------------
-      // Подготовка визуальных данных приказа
-      // ------------------------------------------------
-
       if (event.type === "order_played") {
         const preview = Array.from(
           this.element.querySelectorAll(
@@ -422,8 +404,6 @@ export default class extends Controller {
         event.orderAbilityCodes =
           preview?.dataset.orderAbilityCodes?.split(" ") || []
 
-        // Получаем координаты цели из фактического
-        // события нанесения урона приказом.
         const damageEvent = events.find((item) => {
           return (
             item.type === "damage_applied" &&
@@ -436,18 +416,14 @@ export default class extends Controller {
           damageEvent?.target?.position || null
       }
 
-      // ------------------------------------------------
-      // Существующая обработка боевых событий
-      // ------------------------------------------------
-
       if (event === emptyDeckDamageEvent) {
         event.emptyDeckBurst = true
       }
 
       if (event.type === "technique_destroyed") {
-        const key = this.positionKey(
-          event.target?.position
-        )
+        const technique = this.techniqueData(event)
+        const position = technique?.position
+        const key = this.positionKey(position)
 
         if (key) {
           const visuals = this.destroyedVisuals.get(key) || []
@@ -461,9 +437,7 @@ export default class extends Controller {
           }
         }
 
-        // Возвращаем сохранённую картинку на поле сразу,
-        // до запуска анимаций выстрела и попадания.
-        const cell = this.findCell(event.target?.position)
+        const cell = this.findCell(position)
         const visual = event.destroyedVisual
 
         if (cell && visual) {
@@ -496,8 +470,6 @@ export default class extends Controller {
           this.destroyedPlatoonVisuals.delete(key)
         }
 
-        // Возвращаем изображение уничтоженного взвода
-        // в освободившийся слот до запуска анимации.
         const slot = this.findPlatoonSlot(playerId, slotIndex)
         const visual = event.destroyedVisual
 
@@ -520,13 +492,9 @@ export default class extends Controller {
         ].includes(event.reason)
       ) {
         if (event.reason === "empty_deck_damage") {
-          // Координаты штаба берём из фактического
-          // события нанесения урона пустой колодой.
           event.destroyedHeadquartersPosition =
             emptyDeckDamage?.target?.position
         } else {
-          // При боевом уничтожении штаба координаты
-          // берём из события атаки штаба.
           event.destroyedHeadquartersPosition =
             headquartersAttack?.target?.position
         }
@@ -557,7 +525,6 @@ export default class extends Controller {
       return
     }
 
-    // Источником может быть только собственная техника.
     const sourceCell = this.element.querySelector(
       ".battlefield__cell.game-object--selected[data-object-type='technique']"
     )
@@ -587,7 +554,6 @@ export default class extends Controller {
       return
     }
 
-    // Убираем предыдущую стрелку.
     this.moveDirectionArrow?.remove()
 
     const sourceX =
@@ -612,7 +578,6 @@ export default class extends Controller {
     const directionX = deltaX / distance
     const directionY = deltaY / distance
 
-    // Стрелка не закрывает полностью изображения объектов.
     const startOffset =
       Math.min(sourceRect.width, sourceRect.height) * 0.12
 
@@ -642,7 +607,6 @@ export default class extends Controller {
     arrow.setAttribute("preserveAspectRatio", "none")
     arrow.setAttribute("aria-hidden", "true")
 
-    // Наконечник стрелки.
     const defs = document.createElementNS(
       svgNamespace,
       "defs"
@@ -677,7 +641,6 @@ export default class extends Controller {
     defs.appendChild(marker)
     arrow.appendChild(defs)
 
-    // Внешнее зелёное свечение.
     const glow = document.createElementNS(
       svgNamespace,
       "line"
@@ -687,7 +650,6 @@ export default class extends Controller {
       "game-move-direction-arrow__glow"
     )
 
-    // Основная стрелка.
     const line = document.createElementNS(
       svgNamespace,
       "line"
@@ -758,13 +720,11 @@ export default class extends Controller {
       while (this.queue.length > 0) {
         const event = this.queue.shift()
 
-        // Сначала показываем визуальный розыгрыш приказа.
         if (event.type === "order_played") {
           await this.animateOrderPlayed(event)
           continue
         }
 
-        // Существующая вспышка при опустевшей колоде.
         if (event.emptyDeckBurst) {
           await this.animateEmptyDeckDamage(event)
         }
@@ -780,6 +740,7 @@ export default class extends Controller {
 
         } else if (
           event.type === "damage_applied" ||
+          event.type === "technique_damaged" ||
           event.type === "platoon_damaged"
         ) {
           await this.animateDamage(event)
@@ -821,7 +782,6 @@ export default class extends Controller {
 
     if (!field) return
 
-    // 1. Показываем вертикальную карту приказа.
     if (event.orderCardVisual) {
       const overlay = document.createElement("div")
 
@@ -875,7 +835,6 @@ export default class extends Controller {
       }
     }
 
-    // 2. Определяем способность приказа.
     if (event.orderAbilityCodes?.includes("damage_technique")) {
       await this.animateOrderTarget(
         event.orderTargetPosition
@@ -1084,7 +1043,6 @@ export default class extends Controller {
       "(prefers-reduced-motion: reduce)"
     ).matches
 
-    // Вспышка в центре клетки атакующего.
     await this.animateMuzzleFlash(attackerCell)
 
     if (reducedMotion) {
@@ -1092,23 +1050,18 @@ export default class extends Controller {
       return
     }
 
-    // Снаряд движется от центра клетки атакующего
-    // к ближайшей границе в направлении цели.
     await this.animateProjectile(
       attackerCell,
       sourceOffset,
       angle
     )
 
-    // В клетке цели снаряд появляется со стороны
-    // атакующего и движется к центру.
     await this.animateIncomingProjectile(
       targetCell,
       targetOffset,
       angle
     )
 
-    // Вспышка попадания в центре клетки цели.
     await this.animateImpact(targetCell)
   }
 
@@ -1142,8 +1095,11 @@ export default class extends Controller {
         ".platoon-field__stat--hp"
       )
 
-    } else if (event.type === "damage_applied") {
-      const target = event.target
+    } else if (
+      event.type === "damage_applied" ||
+      event.type === "technique_damaged"
+    ) {
+      const target = this.techniqueData(event)
       const position = target?.position
 
       if (!position) return
@@ -1163,13 +1119,10 @@ export default class extends Controller {
 
     if (!hpElement) return
 
-    // На время анимации сохраняем прежнее значение.
     hpElement.textContent = String(event.hp_before)
 
-    // Сначала разлом щита.
     await this.animateShieldBreak(hpElement)
 
-    // Только после завершения эффекта меняем HP.
     hpElement.textContent = String(event.hp_after)
   }
 
@@ -1227,7 +1180,8 @@ export default class extends Controller {
   // --------------------------------------------------
 
   async animateTechniqueDestroyed(event) {
-    const position = event.target?.position
+    const technique = this.techniqueData(event)
+    const position = technique?.position
 
     if (!position) return
 
@@ -1294,7 +1248,6 @@ export default class extends Controller {
       "(prefers-reduced-motion: reduce)"
     ).matches
 
-    // 1. Существующая вспышка на счётчике пустой колоды.
     const burst = document.createElement("span")
 
     burst.className =
@@ -1334,7 +1287,6 @@ export default class extends Controller {
       burst.remove()
     }
 
-    // 2. После вспышки показываем величину нанесённого урона.
     const damageNumber = document.createElement("span")
 
     damageNumber.className =
@@ -1408,7 +1360,6 @@ export default class extends Controller {
 
     await this.animateDestroyedVisual(cell, visual)
 
-    // Показываем результат только после уничтожения штаба.
     this.revealGameResult()
   }
 
@@ -1421,8 +1372,6 @@ export default class extends Controller {
       "(prefers-reduced-motion: reduce)"
     ).matches
 
-    // При включённом уменьшении движения —
-    // только короткое плавное исчезновение.
     if (reducedMotion) {
       await this.playAnimation(
         visual,
@@ -1440,7 +1389,6 @@ export default class extends Controller {
       return
     }
 
-    // Создаём визуальные слои огня и дыма.
     const fire = document.createElement("div")
 
     fire.className =
@@ -1470,7 +1418,6 @@ export default class extends Controller {
     cell.appendChild(fire)
     cell.appendChild(smoke)
 
-    // 1. Короткий импульс от попадания.
     await this.playAnimation(
       visual,
       compact
@@ -1516,9 +1463,6 @@ export default class extends Controller {
       }
     )
 
-    // 2. Огонь появляется на объекте.
-    // 3. Изображение темнеет и исчезает.
-    // 4. Дым поднимается и рассеивается.
     await Promise.all([
       this.playAnimation(
         visual,
@@ -1644,7 +1588,6 @@ export default class extends Controller {
     }
   }
 
-  // Текущий масштаб игровой композиции в мобильном режиме.
   layoutScale() {
     const root = document.documentElement
 
@@ -1900,6 +1843,13 @@ export default class extends Controller {
         slot.dataset.platoonSlot === String(slotIndex)
       )
     }) || null
+  }
+
+  // Поддержка двух форматов событий:
+  // техника от HeadquartersCombat — event.technique;
+  // обычная техника — event.target.
+  techniqueData(event) {
+    return event?.technique || event?.target || null
   }
 
   positionKey(position) {

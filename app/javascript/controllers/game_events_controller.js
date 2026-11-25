@@ -53,6 +53,10 @@ export default class extends Controller {
         this.highlightPlatoonDamaged(event)
         break
 
+      case "technique_damaged":
+        this.highlightTechniqueDamaged(event)
+        break
+
       default:
         break
     }
@@ -717,6 +721,16 @@ export default class extends Controller {
     const target = this.element.querySelector(
       `[data-platoon-slot="${platoon.slot}"][data-player-id="${platoon.player_id}"]`
     )
+
+    this.flash(target)
+  }
+
+  highlightTechniqueDamaged(event) {
+    const technique = event.technique
+
+    if (!technique?.position) return
+
+    const target = this.findPosition(technique.position)
 
     this.flash(target)
   }
