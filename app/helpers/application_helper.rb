@@ -1,3 +1,4 @@
+
 module ApplicationHelper
   CARD_IMAGE_NATIONS = %w[usa germany ussr].freeze
   CARD_IMAGE_TYPES = %w[headquarters technique order platoon].freeze
@@ -10,6 +11,17 @@ module ApplicationHelper
     "technique" => %w[ability],
     "order" => [],
     "platoon" => %w[attack defense]
+  }.freeze
+
+  ABILITY_DESCRIPTION_CLASSES = {
+    GameEngine::Abilities::Orders::DamageTechnique::CODE =>
+      GameEngine::Abilities::Orders::DamageTechnique,
+
+    GameEngine::Abilities::Orders::DrawCards::CODE =>
+      GameEngine::Abilities::Orders::DrawCards,
+
+    GameEngine::Abilities::Techniques::HeadquartersDefender::CODE =>
+      GameEngine::Abilities::Techniques::HeadquartersDefender
   }.freeze
 
   def card_image_path(nation:, display:, type:, code:)
@@ -60,6 +72,12 @@ module ApplicationHelper
       end
 
     "cards/#{nation}/#{type}/#{filename}"
+  end
+
+  def ability_description(code:, parameters: {})
+    description_class = ABILITY_DESCRIPTION_CLASSES[code.to_s]
+
+    description_class&.description(parameters)
   end
 
   private

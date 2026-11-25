@@ -214,7 +214,8 @@ module GameEngine
           "movement_limit" => technique["movement_count"],
           "movement_type" => technique["movement_type"],
           "has_attacked" => false,
-          "has_counterattacked" => false
+          "has_counterattacked" => false,
+          "abilities" => card["abilities"] || []
         }
       end
 

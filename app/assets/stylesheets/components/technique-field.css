@@ -58,6 +58,24 @@
   pointer-events: none;
 }
 
+/* ---------------------------------------------------------
+   ИКОНКА СПОСОБНОСТИ ТЕХНИКИ
+   Заменяет национальную символику в верхнем левом круге.
+   --------------------------------------------------------- */
+
+.technique-field__shield {
+  position: absolute;
+  left: 12.5%;
+  top: 12%;
+  z-index: 4;
+  display: block;
+  width: 19%;
+  height: 19%;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
 /* Название: одна строка */
 
 .technique-field__name {

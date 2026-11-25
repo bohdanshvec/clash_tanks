@@ -1,19 +1,63 @@
+
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   initialize() {
     this.handlePointerOver = this.handlePointerOver.bind(this)
     this.handlePointerOut = this.handlePointerOut.bind(this)
+    this.updateLastDeckRows = this.updateLastDeckRows.bind(this)
   }
 
   connect() {
     this.element.addEventListener("pointerover", this.handlePointerOver)
     this.element.addEventListener("pointerout", this.handlePointerOut)
+
+    this.deckLists = Array.from(
+      this.element.querySelectorAll(".decks-grid, .play-decks")
+    )
+
+    this.updateLastDeckRows()
+
+    this.deckResizeObserver = new ResizeObserver(
+      this.updateLastDeckRows
+    )
+
+    this.deckLists.forEach(list => {
+      this.deckResizeObserver.observe(list)
+    })
+
+    window.addEventListener("resize", this.updateLastDeckRows)
   }
 
   disconnect() {
     this.element.removeEventListener("pointerover", this.handlePointerOver)
     this.element.removeEventListener("pointerout", this.handlePointerOut)
+
+    this.deckResizeObserver?.disconnect()
+    window.removeEventListener("resize", this.updateLastDeckRows)
+  }
+
+  updateLastDeckRows() {
+    this.deckLists?.forEach(list => {
+      const cards = Array.from(
+        list.querySelectorAll(":scope > .deck-card")
+      )
+
+      if (cards.length === 0) return
+
+      const lastRowTop = Math.max(
+        ...cards.map(card => card.getBoundingClientRect().top)
+      )
+
+      cards.forEach(card => {
+        const cardTop = card.getBoundingClientRect().top
+
+        card.classList.toggle(
+          "deck-card--last-row",
+          Math.abs(cardTop - lastRowTop) < 2
+        )
+      })
+    })
   }
 
   handlePointerOver(event) {

@@ -252,3 +252,60 @@
     max-width: 100%;
   }
 }
+
+/* =========================================================
+   Единое увеличение штаба, информации и кнопок колоды
+   ========================================================= */
+
+/* Карточка колоды располагается поверх соседних при наведении */
+
+.deck-card {
+  position: relative;
+  z-index: 1;
+}
+
+.deck-card:hover {
+  z-index: 100;
+}
+
+/* Общий блок: штаб + информация + кнопки */
+
+.deck-card__hover-area {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+
+  width: 100%;
+
+  position: relative;
+  transform-origin: center top;
+
+  transition:
+    transform 0.25s ease,
+    filter 0.2s ease;
+}
+
+/* Увеличиваем весь блок, а не только изображение штаба */
+
+.deck-card__hover-area:hover {
+  transform: scale(1.18);
+  filter: brightness(1.04);
+}
+
+/* Нижний ряд увеличивается вверх, сохраняя нижнюю границу */
+
+.deck-card--last-row .deck-card__hover-area {
+  transform-origin: center bottom;
+}
+
+/* Отключаем самостоятельное увеличение изображения штаба.
+   Теперь оно увеличивается вместе с общей карточкой. */
+
+.deck-card__hover-area .catalog-card:hover {
+  z-index: 1;
+
+  transform: none;
+
+  filter: brightness(1.08);
+}

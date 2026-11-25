@@ -47,9 +47,17 @@ class DecksController < ApplicationController
   end
 
   def destroy
-    @deck.destroy!
+    Decks::Destroy.call(deck: @deck)
 
-    redirect_to decks_path, notice: "Колода видалена."
+    redirect_to decks_path, notice: "Колоду видалено."
+  rescue Decks::Destroy::Error => error
+    Rails.logger.error(
+      "[DecksController] Could not destroy deck ##{@deck.id}: " \
+      "#{error.message}"
+    )
+
+    redirect_to decks_path,
+      alert: "Не вдалося видалити колоду. Пов'язані партії не були змінені."
   end
 
   private
@@ -70,7 +78,8 @@ class DecksController < ApplicationController
         :technique,
         :platoon,
         :headquarters,
-        :abilities
+        :abilities,
+        { card_abilities: :ability }
       )
       .where.not(card_type: "headquarters")
       .order(:nation_id, :card_type, :name)

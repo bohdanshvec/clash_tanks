@@ -1,4 +1,8 @@
-<div class="play-decks-page">
+
+<div
+  class="play-decks-page"
+  data-controller="deck-preview"
+>
   <header class="cards-page__header page-title-panel">
     <h1>Грати</h1>
 
@@ -22,52 +26,54 @@
 
         <article class="deck-card">
 
-          <div class="deck-card__headquarters">
+          <div class="deck-card__hover-area">
 
-            <%= render "cards/card",
-                       card: deck.headquarters_card %>
-
-          </div>
-
-          <section class="deck-card__info">
-
-            <h2>
-              <%= deck.name %>
-            </h2>
-
-            <div class="deck-card__metrics">
-
-              <p class="deck-card__metric">
-                <span>Вага</span>
-
-                <strong>
-                  <%= deck.weight %>
-                </strong>
-              </p>
-
+            <div class="deck-card__headquarters">
+              <%= render "cards/card",
+                         card: deck.headquarters_card %>
             </div>
 
-          </section>
+            <section class="deck-card__info">
 
-          <div class="deck-card__actions">
+              <h2>
+                <%= deck.name %>
+              </h2>
 
-            <%= button_to "В бій — PvP",
-                          games_path,
-                          method: :post,
-                          params: {
-                            deck_id: deck.id,
-                            mode: "pvp"
-                          } %>
+              <div class="deck-card__metrics">
 
-            <% if @ai_decks_by_deck_id[deck.id].present? %>
-              <%= button_to "В бій — АІ",
+                <p class="deck-card__metric">
+                  <span>Вага</span>
+
+                  <strong>
+                    <%= deck.weight %>
+                  </strong>
+                </p>
+
+              </div>
+
+            </section>
+
+            <div class="deck-card__actions">
+
+              <%= button_to "В бій — PvP",
                             games_path,
                             method: :post,
                             params: {
                               deck_id: deck.id,
-                              mode: "ai"
+                              mode: "pvp"
                             } %>
-            <% end %>
+
+              <% if @ai_decks_by_deck_id[deck.id].present? %>
+                <%= button_to "В бій — АІ",
+                              games_path,
+                              method: :post,
+                              params: {
+                                deck_id: deck.id,
+                                mode: "ai"
+                              } %>
+              <% end %>
+
+            </div>
 
           </div>
 

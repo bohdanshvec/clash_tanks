@@ -51,67 +51,71 @@
 
           <article class="deck-card">
 
-            <div class="deck-card__headquarters">
+            <div class="deck-card__hover-area">
 
-              <%= render "cards/card",
-                         card: deck.headquarters_card %>
+              <div class="deck-card__headquarters">
 
-            </div>
-
-            <section class="deck-card__info">
-
-              <h2>
-                <%= deck.name %>
-              </h2>
-
-              <div class="deck-card__metrics">
-
-                <p class="deck-card__metric">
-
-                  <span>Карт</span>
-
-                  <strong class="deck-card__count <%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
-                    <%= card_count %>/<%= Deck::DECK_SIZE %>
-                  </strong>
-
-                </p>
-
-                <p class="deck-card__metric">
-
-                  <span>Вага</span>
-
-                  <strong>
-                    <%= deck.weight %>
-                  </strong>
-
-                </p>
+                <%= render "cards/card",
+                           card: deck.headquarters_card %>
 
               </div>
 
-            </section>
+              <section class="deck-card__info">
 
-            <div class="deck-card__actions">
+                <h2>
+                  <%= deck.name %>
+                </h2>
 
-              <button
-                type="button"
-                class="deck-card__preview-button"
-                data-action="click->deck-preview#open"
-              >
-                Переглянути
-              </button>
+                <div class="deck-card__metrics">
 
-              <%= link_to "Редагувати",
-                          edit_deck_path(deck),
-                          class: "deck-card__edit-button" %>
+                  <p class="deck-card__metric">
 
-              <%= button_to "Видалити",
-                            deck_path(deck),
-                            method: :delete,
-                            form_class: "deck-card__delete-form",
-                            class: "deck-card__delete-button",
-                            data: {
-                              turbo_confirm: "Видалити колоду?"
-                            } %>
+                    <span>Карт</span>
+
+                    <strong class="deck-card__count <%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
+                      <%= card_count %>/<%= Deck::DECK_SIZE %>
+                    </strong>
+
+                  </p>
+
+                  <p class="deck-card__metric">
+
+                    <span>Вага</span>
+
+                    <strong>
+                      <%= deck.weight %>
+                    </strong>
+
+                  </p>
+
+                </div>
+
+              </section>
+
+              <div class="deck-card__actions">
+
+                <button
+                  type="button"
+                  class="deck-card__preview-button"
+                  data-action="click->deck-preview#open"
+                >
+                  Переглянути
+                </button>
+
+                <%= link_to "Редагувати",
+                            edit_deck_path(deck),
+                            class: "deck-card__edit-button" %>
+
+                <%= button_to "Видалити",
+                              deck_path(deck),
+                              method: :delete,
+                              form_class: "deck-card__delete-form",
+                              class: "deck-card__delete-button",
+                              data: {
+                                turbo_confirm: "Видалити колоду?"
+                              } %>
+
+              </div>
 
             </div>
 
@@ -145,56 +149,60 @@
 
         <article class="deck-card">
 
-          <div class="deck-card__headquarters">
+          <div class="deck-card__hover-area">
 
-            <%= render "cards/card",
-                       card: headquarters_card %>
+            <div class="deck-card__headquarters">
 
-          </div>
-
-          <section class="deck-card__info">
-
-            <h2>
-              <%= deck[:name] %>
-            </h2>
-
-            <div class="deck-card__metrics">
-
-              <p class="deck-card__metric">
-
-                <span>Карт</span>
-
-                <strong class="deck-card__count <%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
-                  <%= card_count %>/<%= Deck::DECK_SIZE %>
-                </strong>
-
-              </p>
-
-              <p class="deck-card__metric">
-
-                <span>Вага</span>
-
-                <strong>
-                  <%= deck[:cards].sum { |card|
-                    card.weight * deck[:card_quantities].fetch(card.code)
-                  } %>
-                </strong>
-
-              </p>
+              <%= render "cards/card",
+                         card: headquarters_card %>
 
             </div>
 
-          </section>
+            <section class="deck-card__info">
 
-          <div class="deck-card__actions">
+              <h2>
+                <%= deck[:name] %>
+              </h2>
 
-            <button
-              type="button"
-              class="deck-card__preview-button"
-              data-action="click->deck-preview#open"
-            >
-              Переглянути
-            </button>
+              <div class="deck-card__metrics">
+
+                <p class="deck-card__metric">
+
+                  <span>Карт</span>
+
+                  <strong class="deck-card__count <%= 'deck-card__count--incomplete' if card_count != Deck::DECK_SIZE %>">
+                    <%= card_count %>/<%= Deck::DECK_SIZE %>
+                  </strong>
+
+                </p>
+
+                <p class="deck-card__metric">
+
+                  <span>Вага</span>
+
+                  <strong>
+                    <%= deck[:cards].sum { |card|
+                      card.weight * deck[:card_quantities].fetch(card.code)
+                    } %>
+                  </strong>
+
+                </p>
+
+              </div>
+
+            </section>
+
+            <div class="deck-card__actions">
+
+              <button
+                type="button"
+                class="deck-card__preview-button"
+                data-action="click->deck-preview#open"
+              >
+                Переглянути
+              </button>
+
+            </div>
 
           </div>
 
@@ -202,8 +210,8 @@
                      dialog_id: "starter-#{headquarters_card.id}",
                      title: deck[:name],
                      cards: deck[:cards].map { |card|
-                        [card, deck[:card_quantities].fetch(card.code)]
-                      }%>
+                       [card, deck[:card_quantities].fetch(card.code)]
+                     } %>
 
         </article>
 
