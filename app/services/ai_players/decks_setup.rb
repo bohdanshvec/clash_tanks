@@ -7,10 +7,11 @@ module AiPlayers
         nation_code: "usa",
         headquarters_code: "usa_headquarters_second_front",
         card_codes: {
-          "usa_m4_sherman" => 1,
+          "usa_m4_sherman" => 3,
+          "usa_m4a3e8" => 3,
           "usa_m4a3e2" => 3,
           "usa_m10_wolverine" => 3,
-          "usa_m26_pershing" => 3
+          "usa_m26_pershing" => 3,
         }
       },
       {
@@ -21,7 +22,9 @@ module AiPlayers
           "ussr_t_34" => 3,
           "ussr_t_34_76" => 3,
           "ussr_su_85" => 3,
-          "ussr_kv_1" => 1
+          "ussr_t_35" => 2,
+          "ussr_kv_1" => 2,
+          "ussr_zalp_katyushi"=> 2,
         }
       },
       {
@@ -31,10 +34,11 @@ module AiPlayers
         card_codes: {
           "germany_tiger_i" => 2,
           "germany_jagdpanther" => 1,
-          "germany_jagdpanther_iv" => 1,
-          "germany_hetzer" => 2,
+          "germany_jagdpanther_iv" => 3,
+          "germany_hetzer" => 3,
           "germany_pz_iv_ausf" => 3,
-          "germany_postril" => 1
+          "germany_postril" => 2,
+          "germany_ukripleniy" => 1
         }
       }
     ].freeze

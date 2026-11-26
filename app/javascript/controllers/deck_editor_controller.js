@@ -146,7 +146,7 @@ export default class extends Controller {
       .closest("strong")
       .classList.toggle(
         "deck-editor__summary--over-limit",
-        count > 10
+        count > 15
       )
   }
 }
