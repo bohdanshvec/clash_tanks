@@ -84,17 +84,24 @@ module ActiveSupport
       )
 
       if card_codes
-        card_codes.each do |card_code|
+        card_entries =
+          if card_codes.is_a?(Hash)
+            card_codes
+          else
+            card_codes.index_with { 1 }
+          end
+
+        card_entries.each do |card_code, quantity|
           card = Card.find_by!(code: card_code)
 
           DeckCard.create!(
             deck: deck,
             card: card,
-            quantity: 1
+            quantity: quantity
           )
         end
       else
-        10.times do |index|
+        15.times do |index|
           card = Card.create!(
             code: "#{nation.code}_card_#{index}_#{SecureRandom.hex(4)}",
             nation: nation,

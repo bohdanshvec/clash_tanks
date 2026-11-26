@@ -110,6 +110,8 @@ class PagesController < ApplicationController
         .includes(:nation, :headquarters, :abilities)
         .find_by!(code: definition[:headquarters_code])
 
+      card_codes = definition[:card_codes]
+
       cards = Card
         .includes(
           :nation,
@@ -119,16 +121,14 @@ class PagesController < ApplicationController
           :abilities,
           { card_abilities: :ability }
         )
-        .where(code: definition[:card_codes])
-        .sort_by { |card| definition[:card_codes].index(card.code) }
-
-        card_quantities = definition[:card_codes].tally
+        .where(code: card_codes.keys)
+        .sort_by { |card| card_codes.keys.index(card.code) }
 
       {
         name: definition[:name],
         headquarters_card: headquarters_card,
         cards: cards,
-        card_quantities: card_quantities
+        card_quantities: card_codes
       }
     end
   end

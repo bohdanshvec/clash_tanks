@@ -35,7 +35,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
   
-  test "creates three starter decks with ten cards each" do
+  test "creates three starter decks with fifteen cards each" do
     post register_path, params: {
       player: {
         email: "starter-decks@example.com",
@@ -67,9 +67,9 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
 
     decks.each do |deck|
       assert deck.complete?
-      assert_equal 10, deck.card_count
+      assert_equal 15, deck.card_count
       assert_equal expected_unique_cards.fetch(deck.name), deck.deck_cards.size
-      assert_equal 10, deck.deck_cards.sum(&:quantity)
+      assert_equal 15, deck.deck_cards.sum(&:quantity)
       assert_equal "headquarters", deck.headquarters_card.card_type
       assert_equal deck.nation_id, deck.headquarters_card.nation_id
     end

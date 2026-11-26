@@ -231,7 +231,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       headquarters_card: headquarters2
     )
 
-    10.times do |index|
+    15.times do |index|
       card1 = Card.create!(
         code: "nation_1_card_#{index}",
         nation: nation1,
@@ -287,13 +287,13 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
     player2_state = game.state["players"][player2.id.to_s]
 
     assert_equal 6, player1_state["hand"].size
-    assert_equal 4, player1_state["deck"].size
+    assert_equal 9, player1_state["deck"].size
 
     assert_equal 6, player2_state["hand"].size
-    assert_equal 4, player2_state["deck"].size
+    assert_equal 9, player2_state["deck"].size
 
-    assert_equal 10, player1_state["hand"].size + player1_state["deck"].size
-    assert_equal 10, player2_state["hand"].size + player2_state["deck"].size
+    assert_equal 15, player1_state["hand"].size + player1_state["deck"].size
+    assert_equal 15, player2_state["hand"].size + player2_state["deck"].size
     refute_includes player1_state["hand"] + player1_state["deck"], headquarters1.id
     refute_includes player2_state["hand"] + player2_state["deck"], headquarters2.id
   end
@@ -331,7 +331,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       headquarters_card: headquarters2
     )
 
-    10.times do |index|
+    15.times do |index|
       card1 = Card.create!(
         code: "nation_1_card_#{index}",
         nation: nation1,
@@ -379,15 +379,15 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       headquarters_card: headquarters2
     )
 
-    assert_equal 10, deck1.card_count
-    assert_equal 10, deck2.card_count
+    assert_equal 15, deck1.card_count
+    assert_equal 15, deck2.card_count
 
     GameEngine::StartGame.call(game)
 
-    assert_equal 10, deck1.reload.card_count
-    assert_equal 10, deck2.reload.card_count
-    assert_equal 10, deck1.deck_cards.count
-    assert_equal 10, deck2.deck_cards.count
+    assert_equal 15, deck1.reload.card_count
+    assert_equal 15, deck2.reload.card_count
+    assert_equal 15, deck1.deck_cards.count
+    assert_equal 15, deck2.deck_cards.count
   end
 
   test "serializes headquarters abilities without ability names" do
@@ -615,7 +615,7 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
       headquarters_card: headquarters2
     )
 
-    10.times do |index|
+    15.times do |index|
       card1 = Card.create!(
         code: "nation_1_card_#{index}",
         nation: nation1,
@@ -671,10 +671,10 @@ class GameEngine::StartGameTest < ActiveSupport::TestCase
     player2_state = game.state["players"][player2.id.to_s]
 
     assert_equal 6, player1_state["hand"].size
-    assert_equal 4, player1_state["deck"].size
+    assert_equal 9, player1_state["deck"].size
 
     assert_equal 6, player2_state["hand"].size
-    assert_equal 4, player2_state["deck"].size
+    assert_equal 9, player2_state["deck"].size
   end
 
   private

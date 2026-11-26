@@ -8,12 +8,12 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
     decks = AiPlayers::DecksSetup.call
 
     assert_equal 3, decks.size
-    assert_equal [40, 51, 58], decks.map(&:weight).sort
+    assert_equal [67, 73, 78], decks.map(&:weight).sort
 
     decks.each do |deck|
       assert deck.persisted?
       assert deck.complete?
-      assert_equal 10, deck.card_count
+      assert_equal 15, deck.card_count
       assert deck.player.ai?
       assert_equal deck.nation_id, deck.headquarters_card.nation_id
       assert_equal "headquarters", deck.headquarters_card.card_type
@@ -62,16 +62,18 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
 
       assert updated_deck
       assert_equal original_id, updated_deck.id
-      assert_equal 10, updated_deck.card_count
+      assert_equal 15, updated_deck.card_count
       assert updated_deck.complete?
       refute_equal original_cards, deck_composition(updated_deck)
 
       assert_equal(
         {
           "usa_m4_sherman" => 2,
-          "usa_m4a3e2" => 2,
+          "usa_m4a3e8" => 3,
+          "usa_m4a3e2" => 3,
           "usa_m10_wolverine" => 3,
-          "usa_m26_pershing" => 3
+          "usa_m26_pershing" => 3,
+          "usa_m8_greyhound" => 1
         },
         deck_composition(updated_deck)
       )
@@ -98,7 +100,7 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
       assert_not GamePlayer.exists?(game_player.id)
 
       deck.reload
-      assert_equal 10, deck.card_count
+      assert_equal 15, deck.card_count
       assert_equal deck.id, Deck.find(deck.id).id
       assert_equal 2, deck.deck_cards.find_by!(
         card: Card.find_by!(code: "usa_m4_sherman")
@@ -142,7 +144,7 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
       assert_equal opponent_statistics_before, player_statistics(opponent)
 
       assert_equal deck.id, Deck.find(deck.id).id
-      assert_equal 10, deck.reload.card_count
+      assert_equal 15, deck.reload.card_count
     end
   end
 
@@ -183,7 +185,7 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
       assert_equal opponent_statistics_before, player_statistics(opponent)
 
       assert_equal deck.id, Deck.find(deck.id).id
-      assert_equal 10, deck.reload.card_count
+      assert_equal 15, deck.reload.card_count
     end
   end
 
@@ -230,9 +232,11 @@ class AiPlayers::DecksSetupTest < ActiveSupport::TestCase
     AiPlayers::DecksSetup::DECKS.map(&:deep_dup).tap do |definitions|
       definitions.first[:card_codes] = {
         "usa_m4_sherman" => 2,
-        "usa_m4a3e2" => 2,
+        "usa_m4a3e8" => 3,
+        "usa_m4a3e2" => 3,
         "usa_m10_wolverine" => 3,
-        "usa_m26_pershing" => 3
+        "usa_m26_pershing" => 3,
+        "usa_m8_greyhound" => 1
       }
     end
   end
