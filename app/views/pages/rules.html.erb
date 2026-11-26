@@ -6,9 +6,30 @@
   та намагаються перемогти суперника.
 </p>
 
+<style>
+  .rules-toc__list {
+    columns: 2;
+    column-gap: 2rem;
+    column-fill: balance;
+    padding-left: 1.5rem;
+  }
+
+  .rules-toc__list li {
+    break-inside: avoid;
+    padding-right: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+
+  @media (max-width: 600px) {
+    .rules-toc__list {
+      columns: 1;
+    }
+  }
+</style>
+
 <nav aria-label="Зміст правил">
   <h2>Зміст</h2>
-  <ol>
+  <ol class="rules-toc__list">
     <li><a href="#goal">Мета гри</a></li>
     <li><a href="#deck">Колода та початок гри</a></li>
     <li><a href="#field">Ігрове поле</a></li>
@@ -48,9 +69,7 @@
 
   <p>
     Перед початком гри кожен гравець обирає колоду однієї нації.
-    На етапі тестування використовуються колоди з
-    <strong>10 карт</strong>. Запланований максимальний розмір колоди —
-    до <strong>40 карт</strong>.
+    Колода повинна містити <strong>рівно 15 карт</strong>.
   </p>
 
   <p>
