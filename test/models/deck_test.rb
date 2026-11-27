@@ -206,7 +206,7 @@ class DeckTest < ActiveSupport::TestCase
     assert_includes deck.errors[:headquarters_card], "must belong to the same nation as the deck"
   end
 
-  test "complete when headquarters and ten cards are present" do
+  test "complete when headquarters and fifteen cards are present" do
     player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
     headquarters_card = create_headquarters_card(nation)
@@ -218,7 +218,7 @@ class DeckTest < ActiveSupport::TestCase
       name: "Основная колода"
     )
 
-    10.times do |index|
+    15.times do |index|
       card = Card.create!(
         code: "test_complete_#{index}",
         nation: nation,
@@ -251,7 +251,7 @@ class DeckTest < ActiveSupport::TestCase
     assert_not deck.complete?
   end
 
-  test "not complete with fewer than ten cards" do
+  test "not complete with fewer than fifteen cards" do
     player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
     headquarters_card = create_headquarters_card(nation)
@@ -263,7 +263,7 @@ class DeckTest < ActiveSupport::TestCase
       name: "Основная колода"
     )
 
-    9.times do |index|
+    14.times do |index|
       card = Card.create!(
         code: "test_incomplete_#{index}",
         nation: nation,
@@ -334,7 +334,7 @@ class DeckTest < ActiveSupport::TestCase
     assert_includes deck.errors[:name], "can't be blank"
   end
   
-  test "rejects more than ten cards" do
+  test "rejects more than fifteen cards" do
     player = create_player
     nation = Nation.create!(name: "СССР", code: "ussr")
     headquarters_card = create_headquarters_card(nation)
@@ -346,7 +346,7 @@ class DeckTest < ActiveSupport::TestCase
       name: "Основная колода"
     )
 
-    11.times do |index|
+    16.times do |index|
       card = Card.create!(
         code: "test_limit_#{index}",
         nation: nation,
@@ -364,7 +364,7 @@ class DeckTest < ActiveSupport::TestCase
     end
 
     assert_not deck.valid?
-    assert_includes deck.errors[:base], "Колода не може містити більше 10 карт"
+    assert_includes deck.errors[:base], "Колода не може містити більше 15 карт"
   end
 
   private

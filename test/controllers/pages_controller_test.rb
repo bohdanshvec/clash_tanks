@@ -52,7 +52,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".deck-card", text: /Second front/
     assert_select ".deck-card", text: /Західний фронт/
     assert_select ".deck-card__headquarters .catalog-card--headquarters", count: 3
-    assert_select ".deck-card__count", text: "10/10", count: 3
+    assert_select ".deck-card__count", text: "15/15", count: 3
     assert_select ".deck-card__preview-button", text: "Переглянути", count: 3
     assert_select ".deck-card__preview-dialog", count: 3
     assert_select ".deck-card__preview-item .catalog-card", count: 29

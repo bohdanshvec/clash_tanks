@@ -228,7 +228,7 @@ class DecksControllerTest < ActionDispatch::IntegrationTest
 		assert_response :unprocessable_entity
 	end
 	
-	test "logged in player cannot create a deck with more than ten cards" do
+	test "logged in player cannot create a deck with more than fifteen cards" do
 		post login_path, params: {
 			email: @player.email,
 			password: "password"
@@ -239,11 +239,11 @@ class DecksControllerTest < ActionDispatch::IntegrationTest
 		cards = Card
 		.where(nation_id: headquarters_card.nation_id)
 		.where.not(card_type: "headquarters")
-		.limit(4)
+		.limit(6)
 
 		card_quantities = cards.index_with { 3 }
 
-		assert_equal 12, card_quantities.values.sum
+		assert_equal 18, card_quantities.values.sum
 
 		assert_no_difference("Deck.count") do
 			post decks_path, params: {

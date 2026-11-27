@@ -1251,8 +1251,8 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 6, state["players"][first_player.id.to_s]["hand"].size
     assert_equal 6, state["players"][second_player.id.to_s]["hand"].size
 
-    assert_equal 4, state["players"][first_player.id.to_s]["deck"].size
-    assert_equal 4, state["players"][second_player.id.to_s]["deck"].size
+    assert_equal 9, state["players"][first_player.id.to_s]["deck"].size
+    assert_equal 9, state["players"][second_player.id.to_s]["deck"].size
 
     assert_equal(
       [2, 0],
@@ -1278,36 +1278,38 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
       player: first_player,
       nation_code: "usa",
       headquarters_code: "usa_headquarters_second_front",
-      card_codes: %w[
-        usa_m3_stuart
-        usa_m8_greyhound
-        usa_m3_lee_grant
-        usa_m4_sherman
-        usa_m4a3e8
-        usa_m4a3e2
-        usa_m10_wolverine
-        usa_m26_pershing
-        usa_m8_hmc_scott
-        usa_lend_liz
-      ]
+      card_codes: {
+        "usa_m3_stuart" => 1,
+        "usa_m8_greyhound" => 2,
+        "usa_m3_lee_grant" => 1,
+        "usa_m4_sherman" => 2,
+        "usa_m4a3e8" => 2,
+        "usa_m4a3e2" => 2,
+        "usa_m10_wolverine" => 1,
+        "usa_m26_pershing" => 1,
+        "usa_m8_hmc_scott" => 1,
+        "usa_lend_liz" => 1,
+        "usa_vognevij_nalit" => 1
+      }
     )
 
     second_deck = create_complete_deck(
       player: second_player,
       nation_code: "germany",
       headquarters_code: "germany_headquarters_operation_weiß",
-      card_codes: %w[
-        germany_pz_ii
-        germany_sd_222
-        germany_pz_iii_ausf
-        germany_pz_iv_ausf
-        germany_hetzer
-        germany_jagdpanther_iv
-        germany_jagdpanther
-        germany_tiger_i
-        germany_sturmpanzer_iv
-        germany_postril
-      ]
+      card_codes: {
+        "germany_pz_ii" => 1,
+        "germany_sd_222" => 3,
+        "germany_pz_iii_ausf" => 2,
+        "germany_pz_iv_ausf" => 2,
+        "germany_hetzer" => 1,
+        "germany_jagdpanther_iv" => 1,
+        "germany_jagdpanther" => 1,
+        "germany_tiger_i" => 1,
+        "germany_sturmpanzer_iv" => 1,
+        "germany_postril" => 1,
+        "germany_grenaderi" => 1
+      }
     )
 
 		# Player 1 входит в игру через /play.
@@ -1398,7 +1400,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 		  assert player_state.key?("empty_deck_draw_attempts")
 
 		  assert_equal 6, player_state["hand"].size
-		  assert_equal 4, player_state["deck"].size
+		  assert_equal 9, player_state["deck"].size
 		  assert_empty player_state["graveyard"]
 		  assert_equal 4, player_state["platoons"].size
 		  assert_equal 600, player_state["remaining_time"]

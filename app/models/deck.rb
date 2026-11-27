@@ -1,5 +1,5 @@
 class Deck < ApplicationRecord
-  DECK_SIZE = 10
+  DECK_SIZE = 15
 
   belongs_to :player
   belongs_to :nation
